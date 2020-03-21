@@ -149,9 +149,14 @@ Once user consent is obtained, the user agent can send a POST request to the tar
 POST /oidc HTTP/1.1
 Host: accounts.idp.example
 Content-Type: application/x-www-form-urlencoded
-Content-Length: 31
+Content-Length: 120
 
-requestContext=419A9DAAC6F28301
+state=419A9DAAC6F28301
+scope=openid
+client_id=s8ty349a
+response_type=code
+destination=https://login.rp.example
+
 ```
 
 The user agent then expects an IdToken to be generated, which contains a header:
