@@ -50,44 +50,22 @@ The [RP calls a browser native API](https://github.com/mozilla/id-specs/blob/pro
  });
 ```
 
-
 The postmortem analysis [here](https://wiki.mozilla.org/Identity/Persona_AAR) is very insightful in understanding what were the challenges faced and gives this proposal a solid place to work from. In many ways, we think some of these insights are rooted in the observation we made earlier about backwards compatibility with RPs and user’s current behavior, which we are deliberately trying to avoid. 
 
+# Strawman Proposal
 
-# Proposal
+This strawman proposal is broken down into two parts: a baseline proposal and a series of privacy enhancing extensions.
 
-In this proposal, the browser-mediated federated identity can be broken down into four distinct stages, each with its own set of design considerations:
+The baseline proposal addresses the **classification problem**: turn some of the otherwise opaque data exchange that uses low level primitives (i.e. identity agnostic, e.g. redirects) into an exchange that is transparent to browsers with high level primitives (e.g. identity specific). The extensions build from that baseline tightening up the privacy properties of the data exchange.
 
-1. Initiation: The user interacts with the RP page, triggering the RP to initiate a request for identity in an imperative or declarative fashion. The RP specifies which IDP to use.
-1. Account Selection and Authentication: The browser assists the user in selecting which identity to use with the selected IDP, and authenticating to the IDP for that identity.
-1. Consent: The browser displays to the user relevant information about the data sharing that is about to take place, and ensures the user consents to that sharing.
-1. Data Exchange: The identity request from the RP is passed to the IDP and the IDP responds with a token that is sufficient to identify the user. The RP receives the token.
+# The Baseline Proposal
+ 
+The goal of the baseline proposal is to provide a **high level**, identity specific API that allows browsers to **classify** the otherwise **opaque** transactions that are enabled by **low level**, general purpose APIs (e.g. redirects).
 
-## Initiation
+By classifying as an identity data exchange, browsers can (a) provide high level guidance to users regarding the consequences of the specific identity transaction and/or (b) demote / disencourage / prevent the opaque data exchange (e.g. opaque link decoration). 
+Currently, RP sign-in flows usually begin with a login screen that provides the user options to use federated identity, as illustrated in the mock below. Today, clicking the button for an IDP usually initiates a top level navigation to a designated IDP sign-in page. 
 
-RP sign-in flows usually begin with a login screen that provides the user options to use federated identity, as illustrated in the mock below. Today, clicking the button for an IDP usually initiates a navigation to a designated IDP sign-in page. We propose that it be replaced by invocation of a new API, described in [a later section](#Request).
-
-## Account Selection and Authentication
-
-Next the user must select an account with the given IDP that they want to use for federated sign-in, and authenticate to that account if they do not already have a valid session. In current flows this is done on the IDP’s page following a top-level navigation, but we suggest that it would be better placed in a popup window or a tab-modal dialog resembling what is used for [PaymentHandler windows](https://www.w3.org/TR/payment-handler/#windows) or the proposed [modal-window](https://github.com/adrianhopebailie/modal-window/blob/master/explainer.md).
-
-Importantly, at this stage the user has not provided explicit consent for data sharing, and therefore the IDP should not be provided with any details of the RP’s identity request. The IDP will call a browser API to signal that this step has been completed.
-
-## Consent
-
-At this point the user agent must make an attempt to gain assurance that the user is informed that information is about to be shared between the RP and IDP, and that they consent to its sharing. The details of this step are left to the discretion of the user agent, which must decide the amount of information to provide that would sufficiently make them aware of the exchange, and also may take into account available contextual information. For example, if the user has previously signed in to the current RP with the same account, then it might be reasonable to streamline this step and presume that consent previously given still applies.
-
-In the below mock we suggest what it might look like to combine the account selection/authentication step with the consent step, with a bottom sheet that combines IDP-supplied and browser-supplied UI to accomplish both tasks.
-
-## Data Exchange
-
-Finally, with the user having selected an account to use for federated sign-in, and consent having been obtained to the user agent’s satisfaction, a data exchange can occur in accordance with OpenID Connect or SAML standards. The user agent conveys the RP’s identity request to the IDP, and an ID token is returned that is provided to the RP in order to fulfill the Promise initiated at the beginning.
-
-# Proposed Usage
-
-## Request
-
-The data exchange flow starts with RPs requesting an IdToken given a specific IDP. While largely to be determined, a good source of inspiration and analogy can be drawn from the PaymentsRequest API: it has similar UX flows, number of players and privacy requirements. As a starting point, in this proposal, the RP can invoke the IdentityRequest process through an asynchronous imperative API, or a declarative API, roughly illustrated below, but we expect the exact shape of this API to evolve a lot over time.
+In this formulation, the redirect flow gets replaced by the invocation of a **new high level identity specific API**. While largely to be determined, a good source of inspiration and analogy can be drawn from the PaymentsRequest API (it has similar UX flows, number of players and privacy requirements):
 
 ```javascript
 async function signup() {
@@ -108,49 +86,19 @@ The exact shape of the API is still largely to be determined. Here is a declarat
 <input type="idtoken" provider="https://accounts.idp.example">
 ```
 
-## Response
+In current flows this is done on the IDP’s page following a top-level navigation, but we suggest that it could be better placed in a popup window or a tab-modal dialog resembling what is used for PaymentHandler windows or the proposed modal-window.
 
-Once the request is made, the user agent intermediates the request in coordination with the IDP. Since the IDP controls the user’s account selection and authentication process, an IDP page must be loaded in some type of browser window. When the user has completed necessary actions (described in the Account Selection section) the IDP must signal the user agent so that subsequent steps can proceed. The IDP should provide two values: a method path that the user agent can use to fetch an IDToken once user consent has been granted, and a random nonce that will correlate that fetch with the authenticated user. A nonce could be unnecessary if the IDP could set a cookie at this point and the subsequent fetch is credentialed, but we think the nonce provides more flexibility by removing assumptions about cookie availability.
+In this step, the browser intercepts the invocation and knows which IDP to load. The details of this step are left to the discretion of the user agent, which must decide the amount of information to provide that would sufficiently make them aware of the exchange, and also may take into account available contextual information. For example, if the user has previously signed in to the current RP with the same account, then it might be reasonable to streamline this step and presume that consent previously given still applies.
 
-```javascript
-// The first argument represents the method URL:
-//     https://accounts.idp.example/oidc
-// The second argument is a nonce to correlate the account selection
-// that just happened with the ID request that will come next.
-new IdentityResponse()
-  .respond("/oidc", {"requestContext": "419A9DAAC6F28301"});
-```
+In the mock below we suggest what it might look like to combine the account selection / authentication step with the consent step, with a bottom sheet that combines IDP-supplied and browser-supplied UI to accomplish both tasks.
 
-## Obtaining an IDToken
-
-Once user consent is obtained, the user agent can send a POST request to the target indicated in the last step (in the above example, it would be sent to `https://accounts.idp.example/oidc`), containing the specified nonce as well as the details of the identity request from the RP. The response to the request would contain a special token, the IDToken, which can be supplied to the RP that initiated the IdentityRequest, completing the process.
+From this point, the user selects an account with the given IDP that they want to use for federated sign-in, and authenticates to that account if they do not already have a valid session. The IDP prompts the user for consent to share the information with the RP and provides an IdToken, which looks more or less like the following:
 
 ```
-POST /oidc HTTP/1.1
-Host: accounts.idp.example
-Content-Type: application/x-www-form-urlencoded
-Content-Length: 120
-
-state=419A9DAAC6F28301
-scope=openid
-client_id=s8ty349a
-response_type=code
-destination=https://login.rp.example
-
-```
-
-The user agent then expects an IdToken to be generated, which contains a header:
-
-```json
 {
-  "alg": "HS256",
+  "alg": "RS256",
   "typ": "JWT"
 }
-```
-
-A payload:
-
-```json
 {
  "iss": "https://accounts.idp.example",
  "sub": "110169484474386276334",
@@ -162,28 +110,51 @@ A payload:
  "email": "jane.doe@idp.example",
  "email_verified": "true",
 }
-```
-
-And a signature:
-
-```
-HMACSHA256(
+RSASHA256(
   base64UrlEncode(header) + "." +
   base64UrlEncode(payload),  
-  SECRET
+  PUBLIC_KEY, PRIVATE_KEY
 )
 ```
 
-# Future Direction
+The IDP then uses a new Web API to return back the newly created IdToken.
 
-A number of privacy and usability proposals around identity management are under consideration but are not within the current scope of this proposal. The following is a non-exhaustive list:
+```
+navigator.id.registerIdToken(idToken};
+```
 
-- Blinded federated identity (i.e. hiding the RP’s identity from the IDP, and/or vice versa)
-- Logged-in session management (i.e. the problem being addressed by [isLoggedIn](https://github.com/WebKit/explainers/tree/master/IsLoggedIn))
-- User agent mediation of IDP selection
-- User agent tracking of user’s federated accounts
-- Obfuscation of user data during federated sign-in to mitigate tracking via back-end joins
-- Alternative or ephemeral email addresses for federated sign-in (e.g. Apple’s [Hide my Email](https://support.apple.com/en-us/HT210425))
+Finally, In possession of the IdToken and with the confidence of consent having been obtained to the user agent’s satisfaction, a data exchange can occur in accordance with OpenID Connect or SAML standards. The user agent conveys the RP’s identity request to the IDP, and an ID token is returned that is provided to the RP in order to fulfill the Promise initiated at the beginning.
+
+# Next Steps
+
+From the baseline proposal, a number of privacy and usability enhancements around identity management are under consideration. They each deserve to be discussed on their own merit separately, both for their technical sophistication as well as for their deployment challenges, so we’ll only cover them briefly and **we encourage you to discuss them separately on their own merits**. 
+
+Nonetheless, here is a short summary of where we think things can go from this baseline.
+
+## Privacy Extensions
+
+Much of this proposal is based on the premise that we’ll achieve better privacy properties. Here are two concrete problems that we think we are going to be better positioned to tackle from this baseline.
+
+### Third-Party Tracking
+
+The baseline proposal isn’t sufficient to prevent third party tracking because it doesn’t get rid of global identifiers (e.g. emails, usernames). While it helps making the transaction consensual, what it does though, is to position the user agent in a place where it can mediate the data exchange and enforce policies. Much of this is still largely to be determined, but we think there will be a combination of:
+
+- **Technical enforcement**: crypto algorithms that guarantee that the identifiers being exchanged are directed rather than global. For example, an agreed upon one-way hash function and convention on how to build directed identifiers that browsers can verify before passing back to RPs (e.g. HASH(GLOBAL_ID+ origin) == LOCAL_ID).
+- **Policy enforcement**: because of the multiple ways IDPs and RPs can collude, we can imagine some attack vectors not being able to solve entirely programmatically. In those cases, because of the number of IDPs, some level of certification could mitigate some of the challenges.
+
+Much of this is still largely to be determined and we believe it can only be looked at from the viewpoint of this baseline proposal.
+
+### IDP Tracking
+
+The baseline proposal isn’t changing the amount of information (nor its timing) exchanged between RPs and IDPs, especially non consensually. What it does though, is to position the user agent in a place where it intermediates interaction between RPs and IDPs, enabling it to tighten up the privacy properties of the data exchange. For example:
+
+- the user agent could choose to prompt the user for permission early on
+- the user agent could choose to delay revealing the origin of the RP to the IDP upon user consent. In this formulation, the user agent could load the IDP without telling it which RP is requesting it and only let that information be passed upon further stages of the transaction when the user understands better what’s involved.
+- the user agent could step up and mint IdTokens itself on behalf of the user, using the (cryptographically signed) identity from the IDP. In this formulation, the RP could still use information from the IDP, but without the IDP ever knowing who the RP is, along the lines of the infrastructure built by BrowseID.
+
+## Friction
+
+The baseline proposal hopefully has a comparable or better completion rates compared to the status quo, or else IDPs will just move to other mechanisms. Nonetheless, from this viewpoint, there are a series of friction enhancements that browsers could provide, specifically around its unique ability to aggregate data across origin boundaries, for example mediating across IDPs and addressing the **NASCAR flag** problem.
 
 # Related Work
 
