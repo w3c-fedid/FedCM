@@ -65,6 +65,8 @@ The goal of the baseline proposal is to provide a **high level**, identity speci
 By classifying as an identity data exchange, browsers can (a) provide high level guidance to users regarding the consequences of the specific identity transaction and/or (b) demote / disencourage / prevent the opaque data exchange (e.g. opaque link decoration). 
 Currently, RP sign-in flows usually begin with a login screen that provides the user options to use federated identity, as illustrated in the mock below. Today, clicking the button for an IDP usually initiates a top level navigation to a designated IDP sign-in page. 
 
+![Typical SSO flow](mock1.svg)
+
 In this formulation, the redirect flow gets replaced by the invocation of a **new high level identity specific API**. While largely to be determined, a good source of inspiration and analogy can be drawn from the PaymentsRequest API (it has similar UX flows, number of players and privacy requirements):
 
 ```javascript
@@ -91,6 +93,8 @@ In current flows this is done on the IDP’s page following a top-level navigati
 In this step, the browser intercepts the invocation and knows which IDP to load. The details of this step are left to the discretion of the user agent, which must decide the amount of information to provide that would sufficiently make them aware of the exchange, and also may take into account available contextual information. For example, if the user has previously signed in to the current RP with the same account, then it might be reasonable to streamline this step and presume that consent previously given still applies.
 
 In the mock below we suggest what it might look like to combine the account selection / authentication step with the consent step, with a bottom sheet that combines IDP-supplied and browser-supplied UI to accomplish both tasks.
+
+![Intermediation](mock2.svg)
 
 From this point, the user selects an account with the given IDP that they want to use for federated sign-in, and authenticates to that account if they do not already have a valid session. The IDP prompts the user for consent to share the information with the RP and provides an IdToken, which looks more or less like the following:
 
