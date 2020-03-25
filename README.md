@@ -4,43 +4,29 @@ layout: post
 title: WebID
 ---
 
-**TL;DR**: This is a proposal for a new API that will allow websites ([relying parties](https://en.wikipedia.org/wiki/Relying_party), or RPs) to access verified identity information about a user in a consensual and privacy-preserving manner.
+**TL;DR**; This is a strawman proposal for a new Web API that allows websites to use single sign-on federation with tighter privacy properties, namely making **third party tracking** and **identity provider tracking** substantially harder.
 
-Initially this API will serve to permit browser intermediation of existing federated sign-in flows on the web, over [OpenID Connect](https://openid.net/connect/) or [SAML](http://docs.oasis-open.org/security/saml/Post2.0/sstc-saml-tech-overview-2.0.html), between RPs and federated [identity providers](https://en.wikipedia.org/wiki/Identity_provider) (IDPs for short). It will also add flexibility in the future for user agents to support identity protocols with better privacy properties.
+It is composed of (a) a **baseline proposal** that starts with a **high level API** that permits browser intermediation of existing federated sign-in flows on the web in a **backwards compatible** manner where it matters most and (b) a series of privacy enhancements are suggested as **next steps**, some requiring longer deployment windows (to be discussed more separately).
 
-# Why is this important?
+# Why?
 
-Over the last decade, identity federation has played a central role in raising the bar for authentication on the web, in terms of ease-of-use (e.g. passwordless single sign on), security (e.g. improved resistance to phishing and credential stuffing attacks) and trustworthiness compared to its preceding common pattern: per-site usernames and passwords.
+Over the last decade, identity federation has unquestionably played a central role in raising the bar for authentication on the web, in terms of ease-of-use (e.g. passwordless single sign on), security (e.g. improved resistance to phishing and credential stuffing attacks) and trustworthiness compared to its preceding common pattern: per-site usernames and passwords.
 
-The standards that define how identity federation works today were built independent of the web platform, and their designers had to work around its limitations. Accordingly, existing user authentication flows rely on simple web capabilities such as top-level navigation, link decoration, window popups and cookies.
+The standards that define how identity federation works today were built independently of the web platform, and their designers had to work around its limitations rather than extending them. Because of that, existing user authentication flows rely on general web capabilities such as top-level navigation, link decoration, window popups and cookies.
 
-Unfortunately, these same low-level capabilities that facilitate cross-origin data transmission are increasingly being abused to pass identifying information about users without their knowledge or consent.
+Unfortunately, these same **low-level** capabilities that facilitate cross-origin data transmission are increasingly being abused to pass identifying information about users without their knowledge or consent. Most notably, global identifiers (e.g. email addresses, usernames) can be used to **link accounts** when two or more relying parties collude.
 
-This proposal provides a way forward for browsers to support federated identity over an explicit channel that will eliminate RP and IDP reliance on those lower level capabilities. Accordingly the user agent will be better able to protect user privacy during authentication flows, and also the web platform can make privacy-enhancing changes without concern for breaking federated identity flows.
-
-Goals: 
-
-- Allow the user to share identity information between an IDP and an RP over a browser-controlled channel.
-- Allow the user agent to ensure that the user is aware and has expressed intent to share personal information between sites before the data is shared.
-- Make the exchange of information as easy for the user as possible, where privacy constraints are satisfied.
-- Lessen disruption to the web ecosystem from future privacy enhancements.
-- Support extensibility such that more private authentication protocols and/or usability improvements can be added to this API in future without breaking existing usage.
-
-Non-goals:
-
-- To prescribe the specific manner in which user agents provide information to or gain consent from users regarding information being shared during account creation or authentication.
+This proposal provides a way forward for browsers to support federated identity over an explicit channel that will eliminate RP and IDP reliance on those lower level capabilities. From that baseline, the user agent will be better able to protect user privacy during authentication flows, and also the web platform can make privacy-enhancing changes without concern for breaking federated identity flows.
 
 # Considerations
 
-We would like to address a wide set of privacy and usability goals for identity sharing on the web, but this proposal is specifically narrowed in order to minimize barriers to activation on the web. In particular we must give consideration to **user acceptance** and **ease of adoption**.
+We would like to address a wide set of privacy and usability goals for identity sharing on the web, but this proposal is specifically designed and optimized for a plausible deployment strategy on the web, namely giving much consideration to **user acceptance** and **website adoption**.
 
-A notable property of identity federation on the web today is that there are relatively few public IDPs in use (say, tens), particularly in comparison to the number of RPs (say, millions) that use them. From that observation, activation will be much easier if it only requires adoption by IDPs and no changes or engagement on the part of RPs. Since the canonical way for RPs to implement federated identity today involves them dynamically importing a script from supported IDPs, this is a feasible goal. However, it means that this proposal must exclude any approaches or features that are non-backwards compatible (e.g. backend storage changes) and would require active participation by (the millions of) RPs.
+A noteworthy observation of identity federation on the web today is that there are relatively few public IDPs in use (say, tens), particularly in comparison to the number of RPs (say, millions) and their users (say, billions). From that observation, it follows that any deployment will be much easier if it only requires adoption by IDPs and no changes or engagement on the part of RPs. Fortunately, in more cases than not, RPs implement federated identity importing a script provided by - and under the control of - IDPs, giving us a major deployment vehicle: IDP SDKs loaded into RPs. Nonetheless, while much of the client side code is under the (few) IDPs to control (e.g. we can replace redirects by other means), all of the server side code is under the (many) RPs to control, meaning that that’s harder to change. The cases where RPs implement federated identity without a dynamically loaded SDK will have a longer deployment window and will be discussed separately. 
 
-User acceptance is important because unfamiliar or uncertain login flows could result in users declining to use federated options, and instead opting for username/password credentials during RP account creation. To address that, this proposal aims to provide an experience that minimizes the divergence from existing federated identity user experience as much as possible.
+Likewise, changing user behavior and norms is hard because of the number of people involved (say, billions). Unfamiliar login flows could result in users declining to use federated options, and instead opting for username/password credentials during RP account creation. To address that, this proposal aims to provide an experience that minimizes the divergence from existing federated identity user experience as much it possibly can (e.g. introducing new user decisions to be made).
 
 # Prior Art
-
-## BrowserID
 
 By far, the closest analogy to this work is the great work of [BrowserID](https://github.com/mozilla/id-specs/blob/prod/browserid/index.md#web-site-signin-flow) during the [Mozilla Personas](https://developer.mozilla.org/en-US/docs/Archive/Mozilla/Persona/The_navigator.id_API) effort (postmortem [here](https://wiki.mozilla.org/Identity/Persona_AAR)). In many ways, the goals that BrowserID was trying to achieve as well as the mechanisms that were created are a lot alike what’s being proposed here. There are significant differences in strategy and design, but let’s start with the similarities first because there are many.
 
@@ -64,15 +50,9 @@ The [RP calls a browser native API](https://github.com/mozilla/id-specs/blob/pro
  });
 ```
 
-The postmortem analysis is very insightful in understanding what were the challenges faced and gives this proposal a solid place to work from. Some of the noteworthy points there that we empathise with are:
 
-- "We were in a three-way cold-start between users, providers, and websites. More info on Hacker News."
-- "We made Persona a user-visible brand but that competed with a site's own brand."
-- "We looked at Facebook Connect as our main competitor, but we can't offer the same incentives (access to user data)."
-- "Persona should be built natively into Firefox, Fennec and Firefox OS to make the JavaScript shim unnecessary on these platforms. The base functionality should be cross-browser, but the experience should be optimized for the native platforms."
-- "Sites should control most of the user flow and Persona should be almost invisible to users."
+The postmortem analysis [here](https://wiki.mozilla.org/Identity/Persona_AAR) is very insightful in understanding what were the challenges faced and gives this proposal a solid place to work from. In many ways, we think some of these insights are rooted in the observation we made earlier about backwards compatibility with RPs and user’s current behavior, which we are deliberately trying to avoid. 
 
-In some ways, we think some of these insights are rooted in the observation we made earlier about backwards compatibility with RPs and user’s current behavior. 
 
 # Proposal
 
