@@ -70,16 +70,11 @@ Currently, RP sign-in flows usually begin with a login screen that provides the 
 In this formulation, the redirect flow gets replaced by the invocation of a **new high level identity specific API**. While largely to be determined, a good source of inspiration and analogy can be drawn from the PaymentsRequest API (it has similar UX flows, number of players and privacy requirements):
 
 ```javascript
-async function signup() {
-  // a possible starting point
-  let request = new IdentityRequest({
-    federated: {
-      provider: "https://accounts.idp.example"
-    }
-  });
-  let {idtoken} = await request.show();
-  return idtoken;
-}
+// a possible starting point
+let request = new IdentityRequest({
+  provider: "https://accounts.idp.example"
+});
+let {idtoken} = await request.show();
 ```
 
 The exact shape of the API is still largely to be determined. Here is a declarative formulation that could work too:
@@ -98,7 +93,7 @@ In the mock below we suggest what it might look like to combine the account sele
 
 From this point, the user selects an account with the given IDP that they want to use for federated sign-in, and authenticates to that account if they do not already have a valid session. The IDP prompts the user for consent to share the information with the RP and provides an IdToken, which looks more or less like the following:
 
-```
+```JSON
 {
   "alg": "RS256",
   "typ": "JWT"
@@ -123,7 +118,7 @@ RSASHA256(
 
 The IDP then uses a new Web API to return back the newly created IdToken.
 
-```
+```javascript
 navigator.id.registerIdToken(idToken};
 ```
 
