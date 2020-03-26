@@ -6,13 +6,13 @@ title: WebID
 
 **TL;DR**; This is a strawman proposal for a new Web API that allows websites to use single sign-on federation with tighter privacy properties, namely making **third party tracking** and **identity provider tracking** substantially harder.
 
-It is composed of (a) a **baseline proposal** that starts with a **high level API** that permits browser intermediation of existing federated sign-in flows on the web in a **backwards compatible** manner where it matters most and (b) a series of privacy enhancements are suggested as **next steps**, some requiring longer deployment windows (to be discussed more separately).
+It is composed of (a) a **baseline proposal** that starts with a **high level API** that permits browser intermediation of existing federated sign-in flows on the web in a **backwards compatible** manner where it matters most and (b) a series of privacy enhancements are suggested as **next steps**, some requiring longer deployment windows (i.e. to be discussed separately).
 
 # Why?
 
 Over the last decade, identity federation has unquestionably played a central role in raising the bar for authentication on the web, in terms of ease-of-use (e.g. passwordless single sign on), security (e.g. improved resistance to phishing and credential stuffing attacks) and trustworthiness compared to its preceding common pattern: per-site usernames and passwords.
 
-The standards that define how identity federation works today were built independently of the web platform, and their designers had to work around its limitations rather than extending them. Because of that, existing user authentication flows rely on general web capabilities such as top-level navigation, link decoration, window popups and cookies.
+The standards that define how identity federation works today were built independently of the web platform, and their designers had to work **around** its limitations rather than extending them. Because of that, existing user authentication flows rely on general web capabilities such as top-level navigation, link decoration, window popups and cookies.
 
 Unfortunately, these same **low-level** capabilities that facilitate cross-origin data transmission are increasingly being abused to pass identifying information about users without their knowledge or consent. Most notably, global identifiers (e.g. email addresses, usernames) can be used to **link accounts** when two or more relying parties collude.
 
@@ -22,7 +22,7 @@ This proposal provides a way forward for browsers to support federated identity 
 
 We would like to address a wide set of privacy and usability goals for identity sharing on the web, but this proposal is specifically designed and optimized for a plausible deployment strategy on the web, namely giving much consideration to **user acceptance** and **website adoption**.
 
-A noteworthy observation of identity federation on the web today is that there are relatively few public IDPs in use (say, tens), particularly in comparison to the number of RPs (say, millions) and their users (say, billions). From that observation, it follows that any deployment will be much easier if it only requires adoption by IDPs and no changes or engagement on the part of RPs. Fortunately, in more cases than not, RPs implement federated identity importing a script provided by - and under the control of - IDPs, giving us a major deployment vehicle: IDP SDKs loaded into RPs. Nonetheless, while much of the client side code is under the (few) IDPs to control (e.g. we can replace redirects by other means), all of the server side code is under the (many) RPs to control, meaning that that’s harder to change. The cases where RPs implement federated identity without a dynamically loaded SDK will have a longer deployment window and will be discussed separately. 
+A noteworthy observation of identity federation on the web today is that there are **relatively few public IDPs** in use (say, tens), particularly in comparison to the number of RPs (say, millions) and their users (say, billions). From that observation, it follows that any deployment will be much easier if it only requires adoption by IDPs and no changes or engagement on the part of RPs. Fortunately, in more cases than not, RPs implement federated identity importing a script provided by - and under the control of - IDPs, giving us a major deployment vehicle: IDP SDKs loaded into RPs. Nonetheless, while much of the client side code is under the (few) IDPs to control (e.g. we can replace redirects by other means), all of the server side code is under the (many) RPs to control, meaning that that’s harder to change. The cases where RPs implement federated identity without a dynamically loaded SDK will have a longer deployment window and will be discussed separately. 
 
 Likewise, changing user behavior and norms is hard because of the number of people involved (say, billions). Unfamiliar login flows could result in users declining to use federated options, and instead opting for username/password credentials during RP account creation. To address that, this proposal aims to provide an experience that minimizes the divergence from existing federated identity user experience as much it possibly can (e.g. introducing new user decisions to be made).
 
@@ -41,13 +41,13 @@ navigator.id.get((assertion) => {}, {
 });
 ```
 
-The [RP calls a browser native API](https://github.com/mozilla/id-specs/blob/prod/browserid/index.md#web-site-signin-flow) to fetch an assertion which gets mediated by the [browser in coordination with the IDP](https://github.com/mozilla/id-specs/blob/prod/browserid/index.md#identity-provisioning-flow).  
+The [RP calls a browser native API](https://github.com/mozilla/id-specs/blob/prod/browserid/index.md#web-site-signin-flow) to fetch an assertion which gets mediated by the [browser in coordination with the IDP](https://github.com/mozilla/id-specs/blob/prod/browserid/index.md#identity-provisioning-flow).
 
 ```javascript
 // set up UI
- navigator.id.beginAuthentication(function(email) {
-   // update UI to display the email address
- });
+navigator.id.beginAuthentication(function(email) {
+  // update UI to display the email address
+});
 ```
 
 The postmortem analysis [here](https://wiki.mozilla.org/Identity/Persona_AAR) is very insightful in understanding what were the challenges faced and gives this proposal a solid place to work from. In many ways, we think some of these insights are rooted in the observation we made earlier about backwards compatibility with RPs and user’s current behavior, which we are deliberately trying to avoid. 
@@ -58,69 +58,50 @@ This strawman proposal is broken down into two parts: a baseline proposal and a 
 
 The baseline proposal addresses the **classification problem**: turn some of the otherwise opaque data exchange that uses low level primitives (i.e. identity agnostic, e.g. redirects) into an exchange that is transparent to browsers with high level primitives (e.g. identity specific). The extensions build from that baseline tightening up the privacy properties of the data exchange.
 
-# The Baseline Proposal
- 
-The goal of the baseline proposal is to provide a **high level**, identity specific API that allows browsers to **classify** the otherwise **opaque** transactions that are enabled by **low level**, general purpose APIs (e.g. redirects).
+## The Baseline Proposal
+
+The goal of the baseline proposal is to provide a **high level**, identity specific API that allows browsers to **classify** the otherwise **opaque** transactions that are enabled by low level, general purpose APIs (e.g. redirects).
 
 By classifying as an identity data exchange, browsers can (a) provide high level guidance to users regarding the consequences of the specific identity transaction and/or (b) demote / disencourage / prevent the opaque data exchange (e.g. opaque link decoration). 
 Currently, RP sign-in flows usually begin with a login screen that provides the user options to use federated identity, as illustrated in the mock below. Today, clicking the button for an IDP usually initiates a top level navigation to a designated IDP sign-in page. 
 
-![Typical SSO flow](mock1.svg)
+![](mock1.svg)
 
-In this formulation, the redirect flow gets replaced by the invocation of a **new high level identity specific API**. While largely to be determined, a good source of inspiration and analogy can be drawn from the PaymentsRequest API (it has similar UX flows, number of players and privacy requirements):
+### WebSite Sign-In Flow
+
+In this formulation, the redirect flow gets replaced by the invocation of a new **high level** identity specific API that enables RPs to request IdTokens. While largely to be determined, a good source of inspiration and analogy can be drawn from the PaymentsRequest API (it has similar UX flows, number of players and privacy requirements):
 
 ```javascript
-// a possible starting point
-let request = new IdentityRequest({
-  provider: "https://accounts.idp.example"
-});
-let {idtoken} = await request.show();
+// This is just a possible starting point, largely TBD.
+let {idToken} = await new IdentityRequest({
+  provider: "https://accounts.example.com",
+  // other OpenId connect parameters
+}).show();
 ```
 
-The exact shape of the API is still largely to be determined. Here is a declarative formulation that could work too:
+Here is a declarative formulation that could potentially work too:
 
 ```html
-<input type="idtoken" provider="https://accounts.idp.example">
+<input type=”idtoken” provider=”https://accounts.example.com”>
 ```
 
-In current flows this is done on the IDP’s page following a top-level navigation, but we suggest that it could be better placed in a popup window or a tab-modal dialog resembling what is used for PaymentHandler windows or the proposed modal-window.
+In current flows this is done on the IDP’s page following a top-level navigation, but we suggest that it could be better placed in a popup window or a tab-modal dialog resembling what is used for PaymentHandler [windows](https://www.w3.org/TR/payment-handler/#windows) or the proposed [modal-window](https://github.com/adrianhopebailie/modal-window/blob/master/explainer.md), for example combining the account selection / authentication step with the consent step, with a bottom sheet that combines IDP-supplied and browser-supplied UI to accomplish both tasks.
+
+![](mock2.svg)
 
 In this step, the browser intercepts the invocation and knows which IDP to load. The details of this step are left to the discretion of the user agent, which must decide the amount of information to provide that would sufficiently make them aware of the exchange, and also may take into account available contextual information. For example, if the user has previously signed in to the current RP with the same account, then it might be reasonable to streamline this step and presume that consent previously given still applies.
 
-In the mock below we suggest what it might look like to combine the account selection / authentication step with the consent step, with a bottom sheet that combines IDP-supplied and browser-supplied UI to accomplish both tasks.
+### Identity Provisioning Flow
 
-![Intermediation](mock2.svg)
-
-From this point, the user selects an account with the given IDP that they want to use for federated sign-in, and authenticates to that account if they do not already have a valid session. The IDP prompts the user for consent to share the information with the RP and provides an IdToken, which looks more or less like the following:
-
-```JSON
-{
-  "alg": "RS256",
-  "typ": "JWT"
-}
-{
- "iss": "https://accounts.idp.example",
- "sub": "110169484474386276334",
- "aud": "https://rp.example",
-
- "name": "Jane Doe",
- "given_name": "Jane",
- "family_name": "Doe",
- "email": "jane.doe@idp.example",
- "email_verified": "true",
-}
-RSASHA256(
-  base64UrlEncode(header) + "." +
-  base64UrlEncode(payload),  
-  PUBLIC_KEY, PRIVATE_KEY
-)
-```
-
-The IDP then uses a new Web API to return back the newly created IdToken.
+From this point, the user selects an account with the given IDP that they want to use for federated sign-in, and authenticates to that account if they do not already have a valid session. The IDP prompts the user for consent to share the information with the RP and provides an IdToken with a newly created API:
 
 ```javascript
-navigator.id.registerIdToken(idToken};
+// This API is still largely to be determined. But here is an idea
+// to get the ball rolling:
+new IdentityResponse().resolve(idToken};
 ```
+
+The IdToken is largely opaque to the browser in this baseline proposal, so the browser needs to gather the user consent assuming that global identifiers are being exchanged. Inspecting the data exchange and enforcing the absence of global identifiers are left as next step from this baseline. 
 
 Finally, In possession of the IdToken and with the confidence of consent having been obtained to the user agent’s satisfaction, a data exchange can occur in accordance with OpenID Connect or SAML standards. The user agent conveys the RP’s identity request to the IDP, and an ID token is returned that is provided to the RP in order to fulfill the Promise initiated at the beginning.
 
