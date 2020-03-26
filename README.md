@@ -4,7 +4,7 @@ layout: post
 title: WebID
 ---
 
-**TL;DR;**: In this document we outline the privacy challenges of single sign-on federation on the Web. An early exploration of ways to address them can be found [here](draft.md).
+**TL;DR;**: In this document we outline the privacy challenges of single sign-on federation on the Web. An early exploration of ways to address them can be found [here](proposal.md).
 
 # Problem Statement
 
@@ -12,14 +12,14 @@ Identity federation has played an important role in raising the bar for authenti
 
 However, from a **privacy perspective**, federation has some adversarial challenges, namely:
 
-- tracking by relying parties (RPs)
-- tracking by identity providers (IDPs)
+- tracking by [relying parties](#rp-tracking-and-joinability) (RPs)
+- tracking by [identity providers](#idp-tracking-and-opaque-data-exchange) (IDPs)
 
 
 And several usability problems with room from improvement, namely:
 
-- the NASCAR screen
-- cumbersome navigation
+- the [NASCAR screen](#friction)
+- [cumbersome](#friction) navigation
 
 We’ll go over each of these below.
 
