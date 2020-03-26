@@ -4,7 +4,7 @@ layout: post
 title: WebID
 ---
 
-**TL;DR;**: In this document we outline the privacy challenges of single sign-on federation on the Web. An early exploration of ways to address them can be found [here](proposal.md).
+**TL;DR;**: In this document we outline the privacy challenges of single sign-on federation on the Web. An early exploration of ways to address them can be found [here](#strawman-proposal).
 
 # Problem Statement
 
@@ -59,3 +59,9 @@ Verifying phone numbers and emails is tedious: currently, verification often don
 ## Cross device sign-in
 
 Because cookies are not propagated across devices, a user has to sign back in (and remember account info, etc) on new devices. Often they end up having to go through a recovery flow, creating a duplicate account, or abandoning completely. Identity providers play an important role in facilitating cross-device sign-in, but we may be able to solve this more generally for user irrespective of their chosen authentication mechanism by expanding on web platform functionality such as the [Credential Management API](https://www.w3.org/TR/credential-management-1/).
+
+# Strawman Proposal
+
+While this is still very much in formation and evolving rapidly, the following seems to be firm enough to serve as a baseline for discussion.
+
+You can read more about in the [strawman proposal](proposal.md) document.

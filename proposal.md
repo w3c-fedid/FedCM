@@ -1,12 +1,11 @@
 ---
-permalink: draft.html
 layout: post
 title: WebID
 ---
 
-**TL;DR**; This is a strawman proposal for a new Web API that allows websites to use single sign-on federation with tighter privacy properties, namely making **third party tracking** and **identity provider tracking** substantially harder.
+**TL;DR**; This is a strawman proposal for a new Web API that allows websites to use single sign-on federation with tighter privacy properties, namely making [third party tracking](README.md#rp-tracking-and-joinability) and [identity provider tracking](README.md#idp-tracking-and-opaque-data-exchange) substantially harder.
 
-It is composed of (a) a **baseline proposal** that starts with a **high level API** that permits browser intermediation of existing federated sign-in flows on the web in a **backwards compatible** manner where it matters most and (b) a series of privacy enhancements are suggested as **next steps**, some requiring longer deployment windows (i.e. to be discussed separately).
+It is composed of (a) a [baseline proposal](#the-baseline-proposal) that starts with a **high level API** that permits browser intermediation of existing federated sign-in flows on the web in a [backwards compatible](#considerations) manner where it matters most and (b) a series of privacy enhancements are suggested as [next steps](#next-steps), some requiring longer deployment windows (i.e. to be discussed separately).
 
 # Why?
 
@@ -107,7 +106,7 @@ Finally, In possession of the IdToken and with the confidence of consent having 
 
 # Next Steps
 
-From the baseline proposal, a number of privacy and usability enhancements around identity management are under consideration. They each deserve to be discussed on their own merit separately, both for their technical sophistication as well as for their deployment challenges, so we’ll only cover them briefly and **we encourage you to discuss them separately on their own merits**. 
+From the baseline proposal, a number of [privacy](#privacy-extensions) and [usability](#friction-extensions) enhancements around identity management are under consideration. They each deserve to be discussed on their own merit separately, both for their technical sophistication as well as for their deployment challenges, so we’ll only cover them briefly and **we encourage you to discuss them separately on their own merits**. 
 
 Nonetheless, here is a short summary of where we think things can go from this baseline.
 
@@ -117,7 +116,7 @@ Much of this proposal is based on the premise that we’ll achieve better privac
 
 ### Third-Party Tracking
 
-The baseline proposal isn’t sufficient to prevent third party tracking because it doesn’t get rid of global identifiers (e.g. emails, usernames). While it helps making the transaction consensual, what it does though, is to position the user agent in a place where it can mediate the data exchange and enforce policies. Much of this is still largely to be determined, but we think there will be a combination of:
+The [baseline proposal](#the-baseline-proposal) isn’t sufficient to prevent [third party tracking](README.md#rp-tracking-and-joinability) because it doesn’t get rid of global identifiers (e.g. emails, usernames). While it helps making the transaction consensual, what it does though, is to position the user agent in a place where it can mediate the data exchange and enforce policies. Much of this is still largely to be determined, but we think there will be a combination of:
 
 - **Technical enforcement**: crypto algorithms that guarantee that the identifiers being exchanged are directed rather than global. For example, an agreed upon one-way hash function and convention on how to build directed identifiers that browsers can verify before passing back to RPs (e.g. HASH(GLOBAL_ID+ origin) == LOCAL_ID).
 - **Policy enforcement**: because of the multiple ways IDPs and RPs can collude, we can imagine some attack vectors not being able to solve entirely programmatically. In those cases, because of the number of IDPs, some level of certification could mitigate some of the challenges.
@@ -126,15 +125,15 @@ Much of this is still largely to be determined and we believe it can only be loo
 
 ### IDP Tracking
 
-The baseline proposal isn’t changing the amount of information (nor its timing) exchanged between RPs and IDPs, especially non consensually. What it does though, is to position the user agent in a place where it intermediates interaction between RPs and IDPs, enabling it to tighten up the privacy properties of the data exchange. For example:
+The [baseline proposal](#the-baseline-proposal) isn’t changing the amount of information (nor its timing) exchanged between RPs and IDPs, especially non consensually. What it does though, is to position the user agent in a place where it intermediates interaction between RPs and IDPs, enabling it to tighten up the privacy properties of the data exchange. For example:
 
 - the user agent could choose to prompt the user for permission early on
 - the user agent could choose to delay revealing the origin of the RP to the IDP upon user consent. In this formulation, the user agent could load the IDP without telling it which RP is requesting it and only let that information be passed upon further stages of the transaction when the user understands better what’s involved.
 - the user agent could step up and mint IdTokens itself on behalf of the user, using the (cryptographically signed) identity from the IDP. In this formulation, the RP could still use information from the IDP, but without the IDP ever knowing who the RP is, along the lines of the infrastructure built by BrowseID.
 
-## Friction
+## Friction Extensions
 
-The baseline proposal hopefully has a comparable or better completion rates compared to the status quo, or else IDPs will just move to other mechanisms. Nonetheless, from this viewpoint, there are a series of friction enhancements that browsers could provide, specifically around its unique ability to aggregate data across origin boundaries, for example mediating across IDPs and addressing the **NASCAR flag** problem.
+The [baseline proposal](#the-baseline-proposal) hopefully has a comparable or better completion rates compared to the status quo, or else IDPs will just move to other mechanisms. Nonetheless, from this viewpoint, there are a series of friction enhancements that browsers could provide, specifically around its unique ability to aggregate data across origin boundaries, for example mediating across IDPs and addressing the **NASCAR flag** problem.
 
 # Related Work
 
