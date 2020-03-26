@@ -4,7 +4,7 @@ layout: post
 title: WebID
 ---
 
-**TL;DR;**: In this document we outline the privacy challenges of single sign-on federation on the Web. An early exploration of ways to address them can be found [here](#strawman-proposal).
+**TL;DR;**: In this document we outline the privacy challenges of single sign-on federation on the Web. An early exploration of ways to address them can be found [here](proposal.md).
 
 # Problem Statement
 

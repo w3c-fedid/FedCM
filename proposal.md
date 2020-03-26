@@ -3,7 +3,7 @@ layout: post
 title: WebID
 ---
 
-**TL;DR**; This is a strawman proposal for a new Web API that allows websites to use single sign-on federation with tighter privacy properties, namely making [third party tracking](README.md#rp-tracking-and-joinability) and [identity provider tracking](README.md#idp-tracking-and-opaque-data-exchange) substantially harder.
+**TL;DR**; This is a **strawman proposal** for a new Web API that allows websites to use single sign-on federation with tighter privacy properties, namely making [third party tracking](README.md#rp-tracking-and-joinability) and [identity provider tracking](README.md#idp-tracking-and-opaque-data-exchange) substantially harder.
 
 It is composed of (a) a [baseline proposal](#the-baseline-proposal) that starts with a **high level API** that permits browser intermediation of existing federated sign-in flows on the web in a [backwards compatible](#considerations) manner where it matters most and (b) a series of privacy enhancements are suggested as [next steps](#next-steps), some requiring longer deployment windows (i.e. to be discussed separately).
 
