@@ -1,5 +1,5 @@
 ---
-permalink: index.html
+permalink: proposal.html
 layout: post
 title: WebID
 ---
