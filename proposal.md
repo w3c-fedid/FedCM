@@ -3,12 +3,12 @@ layout: post
 title: WebID
 ---
 
-**TL;DR**; This is a **strawman proposal** for a new Web API to allow websites to keep using identity federation while the ecosystem [tightens up](https://www.blog.google/products/chrome/building-a-more-private-web/) privacy, namely making exchanging [global identifiers](README.md#rp-tracking-and-joinability) harder.
+**TL;DR**; This is a **draft proposal** for a new Web API to allow websites to keep using identity federation in the [privacy sandbox](https://web.dev/digging-into-the-privacy-sandbox/), helping users make safe decisions about what data they share with websites (most notably, [global identifiers](README.md#rp-tracking-and-joinability)). 
 
 This proposal has two parts:
 
-1. An API that websites (relying parties, or RPs) can use to [request the user's identity](#relying-party-api) and
-1. An API that identity providers (IDPs) can use to [provide the user's identity](#identity-provider-api) and mechanism to declare their [privacy agreements](#well-knownwebid)
+1. An API that websites ([RPs](#rp)) can use to [request](#relying-party-api) the user's identity and
+1. An API that identity providers ([IDPs](#idp)) can use to [provide](#identity-provider-api) the user's identity and a mechanism to declare their privacy [agreements](#well-knownwebid)
 
 # Why?
 
@@ -16,15 +16,17 @@ Over the last decade, identity federation has unquestionably played a central ro
 
 The standards that define how identity federation works today were built independently of the web platform, and their designers had to work **around** its limitations rather than extending them. Because of that, existing user authentication flows rely on general web capabilities such as top-level navigation, link decoration, window popups and cookies.
 
-Unfortunately, these same **low-level** capabilities that facilitate cross-origin data transmission are increasingly being abused to pass identifying information about users without their knowledge or consent. Most notably, global identifiers (e.g. email addresses, usernames) can be used to **link accounts** when two or more relying parties collude.
+Unfortunately, these same [low-level](#low-level) capabilities that facilitate cross-origin data transmission are increasingly being used to pass identifying information about users without their knowledge or consent. Most notably, global identifiers (e.g. email addresses, usernames) can be used to [link accounts](README.md#rp-tracking-and-joinability) when two or more relying parties collude.
 
-This proposal provides a way forward for browsers to support federated identity over an explicit channel that will eliminate RP and IDP reliance on those lower level capabilities. From that baseline, the user agent will be better able to protect user privacy during authentication flows, and also the web platform can make privacy-enhancing changes without concern for breaking federated identity flows.
+This proposal provides a way forward for browsers to support federated identity over an [identity specific](#high-level) channel that will eliminate RP and IDP reliance on those lower level capabilities. From that stepping stone, the user agent will be better able to protect the user's privacy during authentication flows, and also the web platform can make privacy-enhancing changes without concern for breaking federated identity flows.
 
 # Considerations
 
-We would like to address a wide set of privacy and usability goals for identity sharing on the web, but this proposal is specifically designed and optimized for a plausible deployment strategy on the web, namely giving much consideration to **user acceptance** and **website adoption**.
+There is a wide set of privacy and usability goals for identity sharing on the web, but this proposal is largely optimized for a plausible deployment on the web, specifically maintaining **user behavior** and **website infrastructure** backwards compatible.
 
-A noteworthy observation of identity federation on the web today is that there are **relatively few public IDPs** in use (say, tens), particularly in comparison to the number of RPs (say, millions) and their users (say, billions). From that observation, it is clear to see that any deployment will be much easier if it only requires adoption by IDPs and no changes or engagement on the part of RPs. Fortunately, in more cases than not, RPs implement federated identity importing a script provided by - and under the control of - IDPs, giving us a major deployment vehicle: IDP SDKs loaded into RPs. Nonetheless, while much of the client side code is under the (few) IDPs to control (e.g. we can replace redirects by other means), all of the server side code is under the (many) RPs to control, meaning that that’s harder to change. The cases where RPs implement federated identity without a dynamically loaded SDK will have a longer deployment window and will be discussed separately. 
+A noteworthy observation of identity federation on the web today is that there are relatively few public [IDPs](#idp) in use (say, tens), particularly in comparison to the number of [RPs](#rp) (say, millions) and their users (say, billions). Any deployment will be much easier if it only requires adoption by IDPs and no changes or engagement on the part of RPs and users. Fortunately, in more cases than not, RPs implement federated identity importing a script provided by - and under the control of - IDPs, giving us a major deployment vehicle: IDP SDKs loaded into RPs. 
+
+Nonetheless, while much of the client side code is under the (few) IDPs to control (e.g. we can replace redirects by other means), all of the server side code is under the (many) RPs to control, meaning that that is significantly harder to change (say, years). The cases where RPs implement federated identity without a dynamically loaded SDK will have a longer deployment window and will be discussed separately. 
 
 Likewise, changing user behavior and norms is hard because of the number of people involved (say, billions). Unfamiliar login flows could result in users declining to use federated options, and instead opting for username/password credentials during RP account creation. To address that, this proposal aims to provide an experience that minimizes the divergence from existing federated identity user experience as much it possibly can (e.g. introducing new user decisions to be made).
 
@@ -54,29 +56,24 @@ navigator.id.beginAuthentication(function(email) {
 
 The postmortem analysis [here](https://wiki.mozilla.org/Identity/Persona_AAR) is very insightful in understanding what were the challenges faced and gives this proposal a solid place to work from. In many ways, we think some of these insights are rooted in the observation we made earlier about backwards compatibility with RPs and user’s current behavior, which we are deliberately trying to avoid. 
 
-# Strawman Proposal
+# Draft Proposal
 
-This strawman proposal is broken down into two parts:
-
-1. An API that websites (relying parties, or RPs) can use to [request the user's identity](#relying-party-api) and
-1. An API that identity providers (IDPs) can use to [provide the user's identity](#identity-provider-api) and declare their [privacy agreements](#well-knownwebid) (which informs the browser permission model) 
-
-Together, they addresses the **classification problem**: they turn the current low-level primitives used in federation (namely, redirects, iframes and popups) into high-level primitives that make the exchange explicit and transparent to browsers.
-
-In doing so, browsers can enforce that the appropriate level of awareness and consent is raised during the exchange. 
-
-## The Baseline Proposal
-
-The goal of the baseline proposal is to provide a **high-level**, identity-specific API that allows browsers to **classify** the otherwise **opaque** transactions that are enabled by low-level, general-purpose APIs (e.g. redirects).
-
-By classifying as an identity data exchange, browsers can (a) provide high-level guidance to users regarding the consequences of the specific identity transaction and/or (b) demote / discourage / prevent the opaque data exchange (e.g. opaque link decoration). 
-Currently, RP sign-in flows usually begin with a login screen that provides the user options to use federated identity, as illustrated in the mock below. Today, clicking the button for an IDP usually initiates a top-level navigation to a designated IDP sign-in page. 
+Currently, sign-in flows on websites usually begin with a login screen that provides the user options to use federated identity, as illustrated in the mock below. Today, clicking the button for an IDP relies on general purpose primitives (typically [redirects or popups](#low-level)) to an IDP sign-in flow. 
 
 ![](mock1.svg)
 
+This proposal provides a [high-level](#high-level), identity-specific API that allows browsers to **classify** the otherwise **opaque** transactions that are enabled by [low-level](#low-level) APIs.
+
+By classifying as an identity data exchange, browsers can provide domain specific guidance to users regarding the consequences of the specific identity transaction.
+
+The high level API is broken down into two parts:
+
+- A [Relying Party API](#relying-party-api)
+- An [Identity Provider API](#identity-provider-api)
+
 ### Relying Party API
 
-In this formulation, the redirect flow gets replaced by the invocation of a new **high-level** identity-specific API that enables RPs to request IdTokens. While largely to be determined, a good source of inspiration and analogy can be drawn from the PaymentsRequest API (it has similar UX flows, number of players and privacy requirements):
+In this formulation, the current redirect/popup flow gets replaced by the invocation of a new **high-level** identity-specific API that enables RPs to request IdTokens. While largely to be determined, a good starting point and source of inspiration can be drawn from the [PaymentsRequest API](https://developers.google.com/web/fundamentals/payments/merchant-guide/deep-dive-into-payment-request) because it has similar UX flows, number of players and privacy requirements:
 
 ```javascript
 // This is just a possible starting point, largely TBD.
@@ -112,13 +109,7 @@ new IdentityResponse().resolve(idToken};
 
 Browsers intermediate the data exchange according to their assessment of the privacy properties involved: the more it believes that the exchange is respecting the user's privacy the less it has to raise the user's awareness of the perils involved (e.g. scary permission prompts). 
  
-Browsers can use a variety of mechanisms to help them make an assessment:
-
-- **IdToken introspection**: browsers could observe when global identifiers (e.g. email addresses) are being passed to different origins
-- **Crypto**: browsers and IDPs could agree upon a one-way hash function to build verifiably directed identifiers (e.g. `HASH(GLOBAL_ID+ origin) == LOCAL_ID`).
-- **Certification**: a neutral party could certify IDPs that comply to certain agreed upon rules.
-
-We believe a combination of strategies are going to be involved, but it seems hard to escape some form of agreement on policy, specifically because of server-side collusion. So, as a starting point, this strawman proposal starts with a mechanism and convention that allows IDPs to explicit acknowledge certain service agreements.
+We believe a combination of strategies are going to be involved, but it seems hard to escape some form of agreement on policy, specifically because of server-side / out-of-band collusion where browsers aren't involved. So, as a starting point, this strawman proposal starts with a mechanism and convention that allows IDPs to explicit acknowledge certain service agreements.
 
 
 ```js
@@ -136,18 +127,56 @@ We believe a combination of strategies are going to be involved, but it seems ha
 }
 ```
 
-IDPs host the `.well-known/webid` file to acknowledge and express agreement on privacy policies. Browsers load the file and inform the user accordingly.
+The IDPs host the `.well-known/webid` file to acknowledge and express agreement on privacy policies. Browsers load the file and inform the user accordingly.
 
-Aside from the mechanisms, from a sequencing perspective, our intuition is that supporting directed identifiers by IDPs is:
+In addition to that, browsers could choose to use a variety of other mechanisms to help them further assess, for example:
 
-1. philosophically desirable but
+- **IdToken introspection**: browsers could observe when global identifiers (e.g. email addresses) are being passed to different origins and warn users.
+- **Crypto**: browsers and IDPs could agree upon a one-way hash function to build verifiably directed identifiers (e.g. `HASH(GLOBAL_ID+ origin) == LOCAL_ID`).
+
+Aside from the mechanisms, from a deployment perspective, our intuition is that supporting directed identifiers by IDPs is:
+
+1. **directionally** correct but
 2. a large architectural change
 
 Because of that, we imagine that the enforcement of these policies are going to be deployed in multiple phases in coordination with IDPs.
-  
+
+# Future Work
+
+## Friction
+
+The proposal hopefully has a comparable or better completion rates compared to the status quo, or else IDPs will just move to other mechanisms. Nonetheless, from this viewpoint, there are a series of friction enhancements that browsers could provide, specifically around its unique ability to aggregate data across origin boundaries, for example mediating across IDPs and addressing the **NASCAR flag** problem.
+
+## IDP Tracking
+
+The proposal isn’t changing the amount of information (nor its timing) exchanged between RPs and IDPs. A few possible ways [IDP tracking](README.md#idp-tracking-and-opaque-data-exchange) can be improved:
+
+- the user agent could choose to prompt the user for permission before the RP is revealed
+- the user agent could choose to delay revealing the origin of the RP to the IDP upon user consent. In this formulation, the user agent could load the IDP without telling it which RP is requesting it and only let that information be passed upon further stages of the transaction when the user understands better what’s involved.
+- the user agent could step up and mint IdTokens itself on behalf of the user, using the (cryptographically signed) identity from the IDP. In this formulation, the RP could still use information from the IDP, but without the IDP ever knowing who the RP is, along the lines of the infrastructure built by BrowserID.
+
+
 # Related Work
 
 - [Building a More Private Web](https://blog.chromium.org/2020/01/building-more-private-web-path-towards.html)
 - [Personas](https://wiki.mozilla.org/Identity/Persona_AAR) and [navigator.id](https://developer.mozilla.org/en-US/docs/Archive/Mozilla/Persona/The_navigator.id_API)
 - [Credential Manager](https://w3c.github.io/webappsec-credential-management/#federated)
 - Add your work [here](https://github.com/samuelgoto/WebID/issues/new)
+
+# Terminology
+
+## RP
+
+Relying Parties.
+
+## IDP
+
+Identity Providers.
+
+## low level
+
+General Purpose APIs, namely redicts and iframes.
+
+## high level
+
+Domains Specific APIs.
