@@ -18,6 +18,8 @@ The standards that define how identity federation works today were built indepen
 
 Unfortunately, these same [low-level](#low-level) capabilities that facilitate cross-origin data transmission are increasingly being used to pass identifying information about users without their knowledge or consent. Most notably, global identifiers (e.g. email addresses, usernames) can be used to [link accounts](README.md#rp-tracking-and-joinability) when two or more relying parties collude.
 
+![](mock3.svg)
+
 This proposal provides a way forward for browsers to support federated identity over an [identity specific](#high-level) channel that will eliminate RP and IDP reliance on those lower level capabilities. From that stepping stone, the user agent will be better able to protect the user's privacy during authentication flows, and also the web platform can make privacy-enhancing changes without concern for breaking federated identity flows.
 
 # Considerations
@@ -117,13 +119,11 @@ We believe a combination of strategies are going to be involved, but it seems ha
 {
   "@context": "https://www.w3.org/ns/webid",
   "@type": "IdentityProvider",
-  "certificate": {
-    "supports_ephemeral_emails": true,
-    "shards_identifiers": true,
-    "server_side_protections": true,
-    ... TBD ...
-    // possibly signed by a neutral authority that verifies the claims?
-  }
+  "policies": [
+    "https://tbd.org/policies/privacy/1.0"
+  ]
+  ... TBD ...
+  // possibly signed by a neutral authority that verifies the claims?
 }
 ```
 
