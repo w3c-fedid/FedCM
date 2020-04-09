@@ -21,7 +21,7 @@ The standards that define how identity federation works today were built indepen
 
 Unfortunately, these same [low-level](#low-level) capabilities that facilitate cross-origin data transmission are increasingly being used to pass identifying information about users without their knowledge or consent. Most notably, global identifiers (e.g. email addresses, usernames) can be used to [link accounts](problem.md#rp-tracking-and-joinability) when two or more relying parties collude.
 
-![](mock3.svg)
+![](static/mock3.svg)
 
 This proposal provides a way forward for browsers to support federated identity over an [identity specific](#high-level) channel that will eliminate RP and IDP reliance on those lower level capabilities. From that stepping stone, the user agent will be better able to protect the user's privacy during authentication flows, and also the web platform can make privacy-enhancing changes without concern for breaking federated identity flows.
 
@@ -31,7 +31,7 @@ There is a wide set of privacy and usability goals for identity sharing on the w
 
 A noteworthy observation of identity federation on the web today is that there are relatively few public [IDPs](#idp) in use (say, tens), particularly in comparison to the number of [RPs](#rp) (say, millions) and their users (say, billions). Any deployment will be much easier if it only requires adoption by IDPs and no changes or engagement on the part of RPs and users. Fortunately, in more cases than not, RPs implement federated identity importing a script provided by - and under the control of - IDPs, giving us a major deployment vehicle: IDP SDKs loaded into RPs. 
 
-![](mock7.svg)
+![](static/mock7.svg)
 
 Nonetheless, while much of the client side code is under the (few) IDPs to control (e.g. we can replace redirects by other means), all of the server side code is under the (many) RPs to control, meaning that that is significantly harder to change (say, years). The cases where RPs implement federated identity without a dynamically loaded SDK will have a longer deployment window and will be discussed separately. 
 
@@ -67,7 +67,7 @@ The postmortem analysis [here](https://wiki.mozilla.org/Identity/Persona_AAR) is
 
 Currently, sign-in flows on websites usually begin with a login screen that provides the user options to use federated identity, as illustrated in the mock below. Today, clicking the button for an IDP relies on general purpose primitives (typically [redirects or popups](#low-level)) to an IDP sign-in flow. 
 
-![](mock1.svg)
+![](static/mock1.svg)
 
 This proposal provides a [high-level](#high-level), identity-specific API that allows browsers to **classify** the otherwise **opaque** transactions that are enabled by [low-level](#low-level) APIs.
 
@@ -98,7 +98,7 @@ Here is a declarative formulation that could potentially work too:
 
 In current flows this is done on the IDP’s page following a top-level navigation, but we suggest that it could be better placed in a popup window or a tab-modal dialog resembling what is used for PaymentHandler [windows](https://www.w3.org/TR/payment-handler/#windows) or the proposed [modal-window](https://github.com/adrianhopebailie/modal-window/blob/master/explainer.md), for performing the Identity Provisioning Flow step that follows. The mock below shows an example of a bottom sheet that combines IDP-supplied and browser-supplied UI.
 
-![](mock2.svg)
+![](static/mock2.svg)
 
 ### Identity Provider API
 

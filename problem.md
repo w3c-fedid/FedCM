@@ -1,4 +1,5 @@
 ---
+permalink: problem.html
 layout: post
 title: The Problem
 ---
@@ -24,13 +25,13 @@ We’ll go over each of these below.
 
 Relying party tracking is enabled through federation when services that the user signs in to **collude** with each other and other entities to deterministically or probabilistically **link** their user's accounts to build and get access to a richer user profile (e.g. one site selling data on browsing history for ads targeting to another service). While this could be enabled without federation per se (user could manually provide a joinable email address or phone number), federated identity providers have an opportunity to address this problem by providing the user with service-specific data and directed identifiers, and, potentially, for browsers to enforce this. 
 
-![](mock3.svg)
+![](static/mock3.svg)
 
 # IDP Tracking and Opaque Data Exchange
 
 Even if identity providers were to provide site-specific data and directly identifiers, IDPs and RPs can exchange data without the user explicitly being aware of what information is flowing between the parties, and that the IDP may have insight into the user’s activity across sites. Federation is implemented via parameters on redirects / top level navigation, which allow for arbitrary data exchange, without insight or controls by the user’s browser.
 
-![](mock4.svg)
+![](static/mock4.svg)
 
 # Friction
 
@@ -47,7 +48,7 @@ Although not directly related to federation per se, there exist a number of othe
 
 Because session state management is implemented via general purpose low level primitives (e.g. cookies), when users intend to “log-out” there are no guarantee that anything necessarily happens (e.g. the origin can still know who you are, but it can pretend it doesn’t). Only clearing all cookies currently guarantees that an origin is not **adversarially tracking** you post log-out. There are proposals such as [IsLoggedIn](https://github.com/WebKit/explainers/tree/master/IsLoggedIn) to address this issue.
 
-![](mock5.svg)
+![](static/mock5.svg)
 
 ## Identity Attribute Verification
 
