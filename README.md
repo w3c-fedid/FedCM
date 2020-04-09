@@ -112,6 +112,10 @@ Once the IDP has gathered enough consent from the user, it uses a newly exposed 
 new IdentityResponse().resolve(idToken};
 ```
 
+The `IdentityResponse` would be created and `resolved` upon the user consent in the IDP UI. Here is an example of what that could look like on desktop:
+
+![](static/mock8.png)
+
 #### `.well-known/webid`
 
 Browsers intermediate the data exchange according to their assessment of the privacy properties involved: the more it believes that the exchange is respecting the user's privacy the less it has to raise the user's awareness of the perils involved (e.g. scary permission prompts). 
