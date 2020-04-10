@@ -47,7 +47,7 @@ Relying party tracking is enabled through federation when services that the user
 
 Even if identity providers were to provide site-specific data and directly identifiers, IDPs and RPs can exchange data without the user explicitly being aware of what information is flowing between the parties, and that the IDP may have insight into the user’s activity across sites. Federation is implemented via parameters on redirects / top level navigation, which allow for arbitrary data exchange, without insight or controls by the user’s browser.
 
-![](static/mock4.svg)
+![](static/mock10.svg)
 
 # Friction
 
