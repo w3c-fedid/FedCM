@@ -4,12 +4,12 @@ layout: post
 title: WebID
 ---
 
-**TL;DR**; This is an **exploration** of a new Web API to allow websites to keep using identity federation in the [privacy sandbox](https://web.dev/digging-into-the-privacy-sandbox/), helping users make safe decisions about what data they share with websites (most notably, [global identifiers](problem.md#rp-tracking-and-joinability)). 
+**TL;DR**; This is an **exploration** of a new Web API to allow websites to keep using identity federation in the [privacy sandbox](https://web.dev/digging-into-the-privacy-sandbox/), helping users make safe decisions about what data they share with websites more efficiently, most notably addressing the [classification](problem.md#the-classification-problem) problem, the [cumbersome](problem.md#the-cumbersome-navigation-problem) navigation problem and the the [RP tracking](problem.md#the-rp-tracking-problem) problem. 
 
 This proposal has two parts:
 
-1. An API that websites ([RPs](#rp)) can use to [request](#relying-party-api) the user's identity and
-1. An API that identity providers ([IDPs](#idp)) can use to [provide](#identity-provider-api) the user's identity and a mechanism to declare their privacy [agreements](#well-knownwebid)
+1. An [high level](#high-level) JS API that websites ([RPs](#rp)) and identity providers ([IDPs](#idp)) can use to [request](#relying-party-api) and [provide](#identity-provider-api) the user's identity to address the [classification](problem.md#the-classification-problem) and the [cumbersome](problem.md#the-cumbersome-navigation-problem) navigation problem and
+1. An API that identity providers can use to declare their privacy [policies](#well-knownwebid) to inform browsers, to address the [RP tracking](problem.md#the-rp-tracking-problem) problem
 
 # Why?
 
@@ -19,7 +19,11 @@ Over the last decade, identity federation has unquestionably played a central ro
 
 The standards that define how identity federation works today were built independently of the web platform, and their designers had to work **around** its limitations rather than extending them. Because of that, existing user authentication flows rely on general web capabilities such as top-level navigation, link decoration, window popups and cookies.
 
-Unfortunately, these same [low-level](#low-level) capabilities that facilitate cross-origin data transmission are increasingly being used to pass identifying information about users without their knowledge or consent. Most notably, global identifiers (e.g. email addresses, usernames) can be used to [link accounts](problem.md#rp-tracking-and-joinability) when two or more relying parties collude.
+Unfortunately, these same [general purpose](#low-level) capabilities that facilitate cross-origin data transmission can be used to pass identifying information about users without their knowledge or consent and without the browser's ability to [classify them](problem.md#the-classification-problem) either way. These general purpose APIs also lead to navigations that are more [cumbersome](problem.md#the-cumbersome-navigation-problem) than needed.
+
+![](static/mock9.svg)
+
+Notably, global identifiers (e.g. email addresses, usernames) can be used to link users and [track them](problem.md#the-rp-tracking-problem) when two or more relying parties collude.
 
 ![](static/mock3.svg)
 
@@ -69,7 +73,7 @@ Currently, sign-in flows on websites usually begin with a login screen that prov
 
 ![](static/mock1.svg)
 
-This proposal provides a [high-level](#high-level), identity-specific API that allows browsers to **classify** the otherwise **opaque** transactions that are enabled by [low-level](#low-level) APIs.
+This proposal provides a [high-level](#high-level), identity-specific API that allows browsers to [classify](problem.md#the-classification-problem) the otherwise **opaque** transactions that are enabled by [low-level](#low-level) APIs.
 
 By classifying as an identity data exchange, browsers can provide domain specific guidance to users regarding the consequences of the specific identity transaction.
 
@@ -158,7 +162,7 @@ The proposal hopefully has a comparable or better completion rates compared to t
 
 ## IDP Tracking
 
-The proposal isn’t changing the amount of information (nor its timing) exchanged between RPs and IDPs. A few possible ways [IDP tracking](problem.md#idp-tracking-and-opaque-data-exchange) can be improved:
+The proposal isn’t changing the amount of information (nor its timing) exchanged between RPs and IDPs. A few possible ways [IDP tracking](problem.md#the-idp-tracking-problem) can be improved:
 
 - the user agent could choose to prompt the user for permission before the RP is revealed
 - the user agent could choose to delay revealing the origin of the RP to the IDP upon user consent. In this formulation, the user agent could load the IDP without telling it which RP is requesting it and only let that information be passed upon further stages of the transaction when the user understands better what’s involved.

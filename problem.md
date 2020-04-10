@@ -10,24 +10,40 @@ Identity federation has played an important role in raising the bar for authenti
 
 However, from a **privacy perspective**, federation has some adversarial challenges, namely:
 
-- tracking by [relying parties](#rp-tracking-and-joinability) (RPs)
-- tracking by [identity providers](#idp-tracking-and-opaque-data-exchange) (IDPs)
-
+- it can't be [classified](#the-classification-problem) by browsers
+- it enables cross-site [relying parties](#the-rp-tracking-problem) tracking
+- it enables [identity providers](#the-idp-tracking-problem) tracking
 
 And several usability problems with room from improvement, namely:
 
-- the [NASCAR screen](#friction)
-- [cumbersome](#friction) navigation
+- the [NASCAR](#the-nascar-flag-problem) problem
+- the [cumbersome](#the-cumbersome-navigation-problem) navigation problem
+
+More generally, orthogonal to federation, we find that there is a related problem:
+
+- The [session state opacity](#the-session-state-opacity-problem) problem
 
 We’ll go over each of these below.
 
-# RP Tracking and Joinability
+# The classification problem
+
+When federation was first designed, it was rightfully designed **around** the existing capabilities of the web, rather than **changing** them. Specifically, federation worked with callbacks on top of **redirects** or **popup windows**, which didn't require any redesign, redeployment or negotiation with browser vendors.
+
+These **general purpose** primitives enabled a variety of use cases, which include, among other things, federation. However, they also enable cross-site communication, which isn't always consented or acknowledged by users, namely via [decorating links](https://www.chromium.org/Home/chromium-privacy/privacy-sandbox).
+
+Because the cross-site communication takes place in a general purpose medium, it is hard for browsers to tell the difference between cross-site communication that is used for exchanging identity data or other cases where intervention is needed.
+
+The classification problem is the problem of taking the existing federation mechanisms built on top of general purpose primitives and classify them such that they can be told apart.
+
+![](static/mock9.svg)
+
+# The RP Tracking problem
 
 Relying party tracking is enabled through federation when services that the user signs in to **collude** with each other and other entities to deterministically or probabilistically **link** their user's accounts to build and get access to a richer user profile (e.g. one site selling data on browsing history for ads targeting to another service). While this could be enabled without federation per se (user could manually provide a joinable email address or phone number), federated identity providers have an opportunity to address this problem by providing the user with service-specific data and directed identifiers, and, potentially, for browsers to enforce this. 
 
 ![](static/mock3.svg)
 
-# IDP Tracking and Opaque Data Exchange
+# The IDP Tracking problem
 
 Even if identity providers were to provide site-specific data and directly identifiers, IDPs and RPs can exchange data without the user explicitly being aware of what information is flowing between the parties, and that the IDP may have insight into the user’s activity across sites. Federation is implemented via parameters on redirects / top level navigation, which allow for arbitrary data exchange, without insight or controls by the user’s browser.
 
@@ -37,14 +53,19 @@ Even if identity providers were to provide site-specific data and directly ident
 
 From a **usability perspective**, there are also some problems with federation:
 
-- **The [NASCAR](https://developers.google.com/identity/toolkit/web/federated-login#the_nascar_page) screen**: every website has a different sign-in process and has to show a list of supported identity providers for the users to choose. The user is left to determine which identity provider to use, which one they may have used last time, what might happen if they pick a different IDP this time, and what what data might get shared, typically without any support from the browser in remembering the user’s past choice or highlight relevant options. We believe that, by pulling some of the responsibility for the browser, we can offer a personalized IDP disambiguation UI which can lead to higher conversion rates, but yet maintain user privacy.
-- **Cumbersome navigation**: full page redirects take the user out of context of the site they were trying to use. IDPs also try using pop-up windows, but often because browsers are unaware of the use federation makes of popups, it has to apply a general rule across all usages, often blocking an IDP popup that would be otherwise helpful.
+## The NASCAR flag problem
+
+**The [NASCAR](https://developers.google.com/identity/toolkit/web/federated-login#the_nascar_page) screen**: every website has a different sign-in process and has to show a list of supported identity providers for the users to choose. The user is left to determine which identity provider to use, which one they may have used last time, what might happen if they pick a different IDP this time, and what what data might get shared, typically without any support from the browser in remembering the user’s past choice or highlight relevant options. We believe that, by pulling some of the responsibility for the browser, we can offer a personalized IDP disambiguation UI which can lead to higher conversion rates, but yet maintain user privacy.
+
+## The cumbersome navigation problem
+
+**Cumbersome navigation**: full page redirects take the user out of context of the site they were trying to use. IDPs also try using pop-up windows, but often because browsers are unaware of the use federation makes of popups, it has to apply a general rule across all usages, often blocking an IDP popup that would be otherwise helpful.
 
 # Related Problems
 
 Although not directly related to federation per se, there exist a number of other authentication and identity related problems that are worth mentioning, which an be addressed by other efforts that may be related to, but pursued independently of efforts to improve federation.
 
-## Session State Opacity
+## The Session State Opacity Problem
 
 Because session state management is implemented via general purpose low level primitives (e.g. cookies), when users intend to “log-out” there are no guarantee that anything necessarily happens (e.g. the origin can still know who you are, but it can pretend it doesn’t). Only clearing all cookies currently guarantees that an origin is not **adversarially tracking** you post log-out. There are proposals such as [IsLoggedIn](https://github.com/WebKit/explainers/tree/master/IsLoggedIn) to address this issue.
 
