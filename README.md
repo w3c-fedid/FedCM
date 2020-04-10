@@ -8,8 +8,8 @@ title: WebID
 
 This proposal has two parts:
 
-1. An [high level](#high-level) JS API that websites ([RPs](#rp)) and identity providers ([IDPs](#idp)) can use to [request](#relying-party-api) and [provide](#identity-provider-api) the user's identity to address the [classification](problem.md#the-classification-problem) and the [cumbersome](problem.md#the-cumbersome-navigation-problem) navigation problem and
-1. An API that identity providers can use to declare their privacy [policies](#well-knownwebid) to inform browsers, to address the [RP tracking](problem.md#the-rp-tracking-problem) problem
+1. A [high level](#high-level) JS API that websites ([RPs](#rp)) and identity providers ([IDPs](#idp)) can use to [request](#relying-party-api) and [provide](#identity-provider-api) the user's identity to address the [classification](problem.md#the-classification-problem) and the [cumbersome](problem.md#the-cumbersome-navigation-problem) navigation problem and
+1. An API that identity providers can use to declare their privacy [policies](#well-knownwebid) to inform browser UI, to address the [RP tracking](problem.md#the-rp-tracking-problem) problem
 
 # Why?
 
@@ -173,6 +173,7 @@ The proposal isn’t changing the amount of information (nor its timing) exchang
 
 - [Building a More Private Web](https://blog.chromium.org/2020/01/building-more-private-web-path-towards.html)
 - [Personas](https://wiki.mozilla.org/Identity/Persona_AAR) and [navigator.id](https://developer.mozilla.org/en-US/docs/Archive/Mozilla/Persona/The_navigator.id_API)
+- [WebOTP](https://github.com/WICG/WebOTP)
 - [Credential Manager](https://w3c.github.io/webappsec-credential-management/#federated)
 - Add your work [here](https://github.com/samuelgoto/WebID/issues/new)
 
