@@ -59,7 +59,9 @@ From a **usability perspective**, there are also some problems with federation:
 
 ## The cumbersome navigation problem
 
-**Cumbersome navigation**: full page redirects take the user out of context of the site they were trying to use. IDPs also try using pop-up windows, but often because browsers are unaware of the use federation makes of popups, it has to apply a general rule across all usages, often blocking an IDP popup that would be otherwise helpful.
+Full page redirects take the user out of context of the site they were trying to use. IDPs also try using pop-up windows, but often because browsers are unaware of the use federation makes of popups, it has to apply a general rule across all usages, often blocking an IDP popup that would be otherwise helpful.
+
+![](static/mock11.svg)
 
 # Related Problems
 
@@ -79,8 +81,8 @@ Verifying phone numbers and emails is tedious: currently, verification often don
 
 Because cookies are not propagated across devices, a user has to sign back in (and remember account info, etc) on new devices. Often they end up having to go through a recovery flow, creating a duplicate account, or abandoning completely. Identity providers play an important role in facilitating cross-device sign-in, but we may be able to solve this more generally for user irrespective of their chosen authentication mechanism by expanding on web platform functionality such as the [Credential Management API](https://www.w3.org/TR/credential-management-1/).
 
-# Strawman Proposal
+# Proposal
 
 While this is still very much in formation and evolving rapidly, the following seems to be firm enough to serve as a baseline for discussion.
 
-You can read more about in the [strawman proposal](README.md) document.
+You can read more about in the [proposal](README.md) document.
