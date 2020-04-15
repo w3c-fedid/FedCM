@@ -4,7 +4,7 @@ layout: post
 title: WebID
 ---
 
-**TL;DR**; This is an **early exploration** of ways that Browsers can help users make [safe](#privacy)  and [frictionless](#friction) decisions about what data from [identity providers](#idp) they share with [websites](#rp). 
+**TL;DR**; This is an **early exploration** of ways that Browsers can help users make [safer](#privacy) and [easier](#friction) decisions about what data from [identity providers](#idp) they share with [websites](#rp). 
 
 This explainer is broken down into:
 
