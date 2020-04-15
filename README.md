@@ -4,7 +4,7 @@ layout: post
 title: WebID
 ---
 
-**TL;DR**; This is an **early exploration** of ways that Browsers can help users make [frictionless](#friction) and [safe](#privacy) decisions about what data from [identity providers](#idp) they share with [websites](#rp). 
+**TL;DR**; This is an **early exploration** of ways that Browsers can help users make [safe](#privacy)  and [frictionless](#friction) decisions about what data from [identity providers](#idp) they share with [websites](#rp). 
 
 This explainer is broken down into:
 
@@ -21,20 +21,20 @@ The standards that define how identity federation works today were built indepen
 
 Because these general purpose primitives can be used for a variety of use cases, browsers have to apply policies that capture the **lowest common denominator**, including entirely [blocking](https://www.chromium.org/Home/chromium-privacy/privacy-sandbox) them.
 
-We call that the [classification problem](#the-classification-problem).
+We call that the [classification problem](#the-classification-problem): the user agent's inability to tell the difference between identity data exchanges and otherwise.
 
 Because of that, from a [usability](#friction) perspective:
 
 - user agents have to apply general purpose and [cumbersome](#the-cumbersome-navigation-problem) permissions
-- user agents can't assist users across identity providers (the [NASCAR flag](#the-nascar-flag-problem) problem)
+- user agents can't assist users across different identity providers (resulting in the [NASCAR flag](#the-nascar-flag-problem) problem)
 
-From a [privacy](#privacy) perspective, federation has some adversarial challenges, namely:
+From a [privacy](#privacy) perspective, federation has some adversarial challenges too, namely:
 
-- user agents can't help users prevent cross-site [relying parties](#the-rp-tracking-problem) tracking
-- user agents can't help users prevent [identity providers](#the-idp-tracking-problem) tracking
+- user agents can't help users prevent cross-site [relying parties tracking](#the-rp-tracking-problem)
+- user agents can't help users prevent [identity providers tracking](#the-idp-tracking-problem)
 - user agents can't inform users whether they are logged out or not: [session state opacity](#the-session-state-opacity-problem) problem
 
-Lets go over each of these.
+Lets go over each of these, starting from the root of all problems: the classification problem.
 
 ## The classification problem
 
@@ -122,9 +122,11 @@ The postmortem analysis [here](https://wiki.mozilla.org/Identity/Persona_AAR) is
 
 # Early Exploration
 
-There is a wide set of [privacy](#privacy) and [usability](#friction) goals for identity sharing on the web, but this proposal is largely optimized for a plausible deployment on the web, specifically maintaining **user behavior** and **website infrastructure** backwards compatible.
+There is a wide set of [privacy](#privacy) and [usability](#friction) goals for identity sharing on the web, but early on we ran into better understanding the structural deployment of federation on the web, specifically the properties that make different strategies more or less plausible.
 
-A noteworthy observation of identity federation on the web today is that there are relatively few public [IDPs](#idp) in use (say, tens), particularly in comparison to the number of [RPs](#rp) (say, millions) and their users (say, billions). Any deployment will be much easier if it only requires adoption by IDPs and no changes or engagement on the part of RPs and users. Fortunately, in more cases than not, RPs implement federated identity importing a script provided by - and under the control of - IDPs, giving us a major deployment vehicle: IDP SDKs loaded into RPs. 
+For example, it is clear that there are relatively few public [IDPs](#idp) in use (say, tens), particularly in comparison to the number of [RPs](#rp) (say, millions) and their users (say, billions). A structural change that only requires adoption by IDPs and no changes or engagement on the part of RPs and users is significantly easier compared to redeploying millions of RPs or retraining billions of users.
+
+Fortunately, in more cases than not, RPs implement federated identity importing a script provided by - and under the control of - IDPs, giving us a major deployment vehicle: IDP SDKs loaded into RPs. 
 
 ![](static/mock7.svg)
 
@@ -132,13 +134,15 @@ Nonetheless, while much of the client side code is under the (few) IDPs to contr
 
 Likewise, changing user behavior and norms is hard because of the number of people involved (say, billions). Unfamiliar login flows could result in users declining to use federated options, and instead opting for username/password credentials during RP account creation. To address that, this proposal aims to provide an experience that minimizes the divergence from existing federated identity user experience as much it possibly can (e.g. introducing new user decisions to be made).
 
+So, with this deployment constraint in mind, lets look at what can be done.
+
 ## Browser APIs
 
 Currently, sign-in flows on websites usually begin with a login screen that provides the user options to use federated identity, as illustrated in the mock below. Today, clicking the button for an IDP relies on general purpose primitives (typically [redirects or popups](#low-level)) to an IDP sign-in flow. 
 
 ![](static/mock1.svg)
 
-This proposal provides a [high-level](#high-level), identity-specific API that allows browsers to [classify](#the-classification-problem) the otherwise **opaque** transactions that are enabled by [low-level](#low-level) APIs.
+In this exploration, we could provide a [high-level](#high-level), identity-specific API that allows browsers to [classify](#the-classification-problem) the otherwise **opaque** transactions that are enabled by [low-level](#low-level) APIs.
 
 By classifying as an identity data exchange, browsers can provide domain specific guidance to users regarding the consequences of the specific identity transaction.
 
