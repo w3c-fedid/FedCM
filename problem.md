@@ -57,6 +57,8 @@ From a **usability perspective**, there are also some problems with federation:
 
 **The [NASCAR](https://developers.google.com/identity/toolkit/web/federated-login#the_nascar_page) screen**: every website has a different sign-in process and has to show a list of supported identity providers for the users to choose. The user is left to determine which identity provider to use, which one they may have used last time, what might happen if they pick a different IDP this time, and what what data might get shared, typically without any support from the browser in remembering the user’s past choice or highlight relevant options. We believe that, by pulling some of the responsibility for the browser, we can offer a personalized IDP disambiguation UI which can lead to higher conversion rates, but yet maintain user privacy.
 
+![](static/mock12.svg)
+
 ## The cumbersome navigation problem
 
 Full page redirects take the user out of context of the site they were trying to use. IDPs also try using pop-up windows, but often because browsers are unaware of the use federation makes of popups, it has to apply a general rule across all usages, often blocking an IDP popup that would be otherwise helpful.
