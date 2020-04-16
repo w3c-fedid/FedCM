@@ -48,6 +48,18 @@ The classification problem is the problem of taking the existing federation mech
 
 ![](static/mock9.svg)
 
+### The cumbersome navigation problem
+
+As a concrete example of general purpose policies applied because of the classification problem, IDPs use full page redirects which take the user out of context of the site they were trying to use. IDPs also try to use the general purpose pop-up window, but often because browsers are unaware of the use federation makes of popups, it has to apply a general rule across all usages, often blocking an IDP popup that would be otherwise helpful.
+
+![](static/mock11.svg)
+
+### The Session State Opacity Problem
+
+Because session state management is implemented via general purpose low level primitives (namely, cookies), when users intend to “log-out” there are no guarantees that anything necessarily happens (e.g. the origin can still know who you are, but it can pretend it doesn’t). Only clearing all cookies currently guarantees that an origin is not **adversarially tracking** you post log-out. There are proposals such as [IsLoggedIn](https://github.com/WebKit/explainers/tree/master/IsLoggedIn) to address this issue.
+
+![](static/mock5.svg)
+
 ## Privacy
 
 ### The RP Tracking problem
@@ -70,21 +82,9 @@ Every website has a different sign-in process and has to show a list of supporte
 
 ![](static/mock12.svg)
 
-### The cumbersome navigation problem
-
-Full page redirects take the user out of context of the site they were trying to use. IDPs also try using pop-up windows, but often because browsers are unaware of the use federation makes of popups, it has to apply a general rule across all usages, often blocking an IDP popup that would be otherwise helpful.
-
-![](static/mock11.svg)
-
 ## Related Problems
 
 Although not directly related to federation per se, there exist a number of other authentication and identity related problems that are worth mentioning, which an be addressed by other efforts that may be related to, but pursued independently of efforts to improve federation.
-
-### The Session State Opacity Problem
-
-Because session state management is implemented via general purpose low level primitives (e.g. cookies), when users intend to “log-out” there are no guarantee that anything necessarily happens (e.g. the origin can still know who you are, but it can pretend it doesn’t). Only clearing all cookies currently guarantees that an origin is not **adversarially tracking** you post log-out. There are proposals such as [IsLoggedIn](https://github.com/WebKit/explainers/tree/master/IsLoggedIn) to address this issue.
-
-![](static/mock5.svg)
 
 ### Identity Attribute Verification
 
