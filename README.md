@@ -4,7 +4,7 @@ layout: post
 title: WebID
 ---
 
-**TL;DR**; This is an **early exploration** of ways that Browsers can help users make safer decisions about what data from identity providers they share with websites, specifically with regards to user's exposure to [non-consensual tracking](#privacy). 
+**TL;DR**; This is an **early exploration** of ways that Browsers can help users make [safer](#the-rp-tracking-problem) decisions about what data from identity providers they share with websites. 
 
 This explainer is broken down into:
 
