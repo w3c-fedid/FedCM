@@ -19,9 +19,9 @@ Over the last decade, identity federation has unquestionably played a central ro
 
 The standards that define how identity federation works today were built independently of the web platform, and their designers had to work **around** its limitations rather than extending them. Because of that, existing user authentication flows rely on general web capabilities such as top-level navigation, link decoration, window popups and cookies.
 
-Because these general purpose primitives can be used for an open ended number of use cases (some of them increasingly allowing users the be tracked), browsers have to apply policies that capture the **lowest common denominator**, at best applying cumbersome permissions (e.g. popup blockers) but at worst entirely [blocking](https://www.chromium.org/Home/chromium-privacy/privacy-sandbox) them.
+Because these general purpose primitives can be used for an open ended number of use cases (some of them increasingly allowing users to be tracked), browsers have to apply policies that capture the **lowest common denominator**, at best applying cumbersome permissions (e.g. popup blockers) but at worst entirely [blocking](https://www.chromium.org/Home/chromium-privacy/privacy-sandbox) them.
 
-If the low level primitives are being abused for tracking purposes and browsers are applying stricker policies around them, how do we keep identity federation around?
+If the low level primitives are being abused for tracking purposes and browsers are applying stricter policies around them, how do we keep identity federation around?
 
 ## The classification problem
 
@@ -58,7 +58,7 @@ Relying party tracking is enabled through federation when services that the user
 
 ## The IDP Tracking problem
 
-Even if identity providers were to provide site-specific data and directly identifiers, IDPs and RPs can exchange data without the user explicitly being aware of what information is flowing between the parties, and that the IDP may have insight into the user’s activity across sites. Federation is implemented via parameters on redirects / top level navigation, which allow for arbitrary data exchange, without insight or controls by the user’s browser.
+Even if identity providers were to provide site-specific data and directed identifiers, IDPs and RPs can exchange data without the user explicitly being aware of what information is flowing between the parties, and that the IDP may have insight into the user’s activity across sites. Federation is implemented via parameters on redirects / top level navigation, which allow for arbitrary data exchange, without insight or controls by the user’s browser.
 
 ![](static/mock10.svg)
 
@@ -102,7 +102,7 @@ Nonetheless, while much of the client side code is under the (few) IDPs to contr
 
 Likewise, changing user behavior and norms is hard because of the number of people involved (say, billions). Unfamiliar login flows could result in users declining to use federated options, and instead opting for username/password credentials during RP account creation. To address that, this proposal aims to provide an experience that minimizes the divergence from existing federated identity user experience as much it possibly can (e.g. introducing new user decisions to be made).
 
-So, with this deployment constraint in mind, lets look at what can be done.
+So, with this deployment constraint in mind, let's look at what could be done.
 
 ## Browser API
 
@@ -148,11 +148,11 @@ At this stage, the browser makes an assessment of the user's intention, for exam
 
 #### The Provisioning Stage
 
-The browser then proceeds talking to the IDP (e.g. via a **.well-known** convention) and gathering the user's identity token and what properties it holds (e.g. is this a directed identity?). The IDP also makes claims about its policies in protecting user's data:
+The browser then proceeds to talk to the IDP (e.g. via a **.well-known** convention) and gather the user's identity token and what properties it holds (e.g. is this a directed identity?). The IDP also makes claims about its policies in protecting user's data:
 
-Browsers intermediate the data exchange according to their assessment of the privacy properties involved: the more it believes that the exchange is respecting the user's privacy the less it has to raise the user's awareness of the perils involved (e.g. scary permission prompts). 
+The browsers intermediate the data exchange according to its assessment of the privacy properties involved: the more it believes that the exchange is respecting the user's privacy the less it has to raise the user's awareness of the perils involved (e.g. scary permission prompts). 
  
-We believe a combination of strategies are going to be involved, but it seems hard to escape some form of agreement on policy, specifically because of server-side / out-of-band collusion where browsers aren't involved. So, as a starting point, this strawman proposal starts with a mechanism and convention that allows IDPs to explicit acknowledge certain service agreements.
+We believe a combination of strategies are going to be involved, but it seems hard to escape some form of agreement on policy, specifically because of server-side / out-of-band collusion where browsers aren't involved. So, as a starting point, this strawman proposal starts with a mechanism and convention that allows IDPs to explicitly acknowledge certain service agreements.
 
 ```js
 // Available on a .well-known/webid file:
@@ -224,7 +224,7 @@ Although not directly related to federation per se, there exist a number of othe
 
 ## Identity Attribute Verification
 
-Verifying phone numbers and emails is tedious: currently, verification often done manually by users without assistance from the browser or IDP. For example, to verify email addresses a service typically sends an OTP (one-time code) to the user’s inbox to be copied/pasted. Similarly, for phone numbers, an SMS message is sent to the user’s phone to be copied/pasted too. There are clear ways here where the browser can step in to help (e.g. [WebOTP](https://github.com/WICG/WebOTP)), and it would generally preferable for authoritative identity providers to assert these attributes wherever possible.
+Verifying phone numbers and emails is tedious: currently, verification is often done manually by users without assistance from the browser or IDP. For example, to verify email addresses a service typically sends an OTP (one-time code) to the user’s inbox to be copied/pasted. Similarly, for phone numbers, an SMS message is sent to the user’s phone to be copied/pasted too. There are clear ways here where the browser can step in to help (e.g. [WebOTP](https://github.com/WICG/WebOTP)), and it would generally preferable for authoritative identity providers to assert these attributes wherever possible.
 
 ## Cross device sign-in
 
