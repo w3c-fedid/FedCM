@@ -150,7 +150,7 @@ At this stage, the browser makes an assessment of the user's intention, for exam
 
 The browser then proceeds to talk to the IDP (e.g. via a **.well-known** convention) and gather the user's identity token and what properties it holds (e.g. is this a directed identity?). The IDP also makes claims about its policies in protecting user's data:
 
-The browsers intermediate the data exchange according to its assessment of the privacy properties involved: the more it believes that the exchange is respecting the user's privacy the less it has to raise the user's awareness of the perils involved (e.g. scary permission prompts). 
+The browser intermediates the data exchange according to its assessment of the privacy properties involved: the more it believes that the exchange is respecting the user's privacy the less it has to raise the user's awareness of the perils involved (e.g. scary permission prompts). 
  
 We believe a combination of strategies are going to be involved, but it seems hard to escape some form of agreement on policy, specifically because of server-side / out-of-band collusion where browsers aren't involved. So, as a starting point, this strawman proposal starts with a mechanism and convention that allows IDPs to explicitly acknowledge certain service agreements.
 
