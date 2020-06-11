@@ -4,7 +4,7 @@ layout: post
 title: WebID
 ---
 
-**TL;DR**; This is an **early exploration** of ways that Browsers can help users make [safer](#the-rp-tracking-problem) decisions about what data from identity providers they share with websites. 
+**TL;DR**; This is an **early exploration** of ways that Browsers can help users of the Web make [safer](#the-rp-tracking-problem) decisions while logging in on [websites](#rp) with [identity providers](#idp).
 
 This explainer is broken down into:
 
@@ -104,11 +104,13 @@ Likewise, changing user behavior and norms is hard because of the number of peop
 
 So, with this deployment constraint in mind, let's look at what could be done.
 
-## Browser API
+## Status Quo
 
 Currently, sign-in flows on websites begin with a login screen that provides the user options to use federated identity, as illustrated in the mock below. Today, clicking the button for an IDP relies on general purpose primitives (typically [redirects or popups](#low-level)) to an IDP sign-in flow. 
 
 ![](static/mock1.svg)
+
+## Browser API
 
 In this formulation, we provide a [high-level](#high-level), identity-specific API that allows browsers to [classify](#the-classification-problem) the otherwise **opaque** transactions that are enabled by [low-level](#low-level) APIs.
 
@@ -138,7 +140,7 @@ let {idToken} = await navigator.credentials.get({
 });
 ```
 
-It is too early to discuss the specifics of the API, here is a declarative formulation that could potentially work too:
+It is too early to discuss the specifics of the API, here is a declarative formulation that could potentially work too in case embedding inline in the content area is desirable:
 
 ```html
 <input type=”idtoken” provider=”https://accounts.example.com”>
@@ -148,7 +150,7 @@ At this stage, the browser makes an assessment of the user's intention, for exam
 
 #### The Provisioning Stage
 
-The browser then proceeds to talk to the IDP (e.g. via a **.well-known** convention) and gather the user's identity token and what properties it holds (e.g. is this a directed identity?). The IDP also makes claims about its policies in protecting user's data:
+Upon invocation of the API, the browser proceeds to talk to the IDP (e.g. via a **.well-known** convention) and gather the user's identity token and what properties it holds (e.g. is this a directed identity?). The IDP also makes claims about its policies in protecting user's data:
 
 The browser intermediates the data exchange according to its assessment of the privacy properties involved: the more it believes that the exchange is respecting the user's privacy the less it has to raise the user's awareness of the perils involved (e.g. scary permission prompts). 
  
@@ -212,29 +214,22 @@ After the user consents, the browser can now be confident about the user's inten
 
 The IdToken is then returned back to the RP which can effectively get the user logged in.
 
-# Related Problems
+# Alternatives Considered
 
-## The [NASCAR flag](https://developers.google.com/identity/toolkit/web/federated-login#the_nascar_page) problem
+## Mixed Browser UI
 
-Every website has a different sign-in process and has to show a list of supported identity providers for the users to choose. The user is left to determine which identity provider to use, which one they may have used last time, what might happen if they pick a different IDP this time, and what what data might get shared, typically without any support from the browser in remembering the user’s past choice or highlight relevant options. We believe that, by pulling some of the responsibility for the browser, we can offer a personalized IDP disambiguation UI which can lead to higher conversion rates, but yet maintain user privacy.
+The most notable alternative considered is one that gives a greater amount of autonomy and extensibility browsers give to identity providers. In this alternative, at the [consent stage](#the-consent-stage), the browser would load content that is controlled by the IDP giving it the flexibility to own the user journey, while still making sure there is clear attribution (e.g. having the IDP origin clearly stated).
 
-![](static/mock12.svg)
+![](static/mock2.svg)
 
-Although not directly related to federation per se, there exist a number of other authentication and identity related problems that are worth mentioning, which an be addressed by other efforts that may be related to, but pursued independently of efforts to improve federation.
+The benefits of this approach are fairly clear: it gives IDPs the autonomy to cover their various use cases, differentiate between each other, innovate and compete, without the browser pulling them back.
 
-## Identity Attribute Verification
+The drawbacks are clear too:
 
-Verifying phone numbers and emails is tedious: currently, verification is often done manually by users without assistance from the browser or IDP. For example, to verify email addresses a service typically sends an OTP (one-time code) to the user’s inbox to be copied/pasted. Similarly, for phone numbers, an SMS message is sent to the user’s phone to be copied/pasted too. There are clear ways here where the browser can step in to help (e.g. [WebOTP](https://github.com/WICG/WebOTP)), and it would generally preferable for authoritative identity providers to assert these attributes wherever possible.
+1. it constitutes cross-site communication that can be used/abused outside of authentication, putting us back at the [classification problem](#the-classification-problem).
+1. the browser can't be confident about the user's consent, so it is forced to apply general purpose policies.
 
-## Cross device sign-in
-
-Because cookies are not propagated across devices, a user has to sign back in (and remember account info, etc) on new devices. Often they end up having to go through a recovery flow, creating a duplicate account, or abandoning completely. Identity providers play an important role in facilitating cross-device sign-in, but we may be able to solve this more generally for user irrespective of their chosen authentication mechanism by expanding on web platform functionality such as the [Credential Management API](https://www.w3.org/TR/credential-management-1/).
-
-## The Session State Opacity Problem
-
-Because session state management is implemented via general purpose low level primitives (namely, cookies), when users intend to “log-out” there are no guarantees that anything necessarily happens (e.g. the origin can still know who you are, but it can pretend it doesn’t). Only clearing all cookies currently guarantees that an origin is not **adversarially tracking** you post log-out. There are proposals such as [IsLoggedIn](https://github.com/WebKit/explainers/tree/master/IsLoggedIn) to address this issue.
-
-![](static/mock5.svg)
+For those reasons, we think that the browser mediated formulation best fit our goals.
 
 # Related Work
 
