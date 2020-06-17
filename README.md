@@ -202,7 +202,7 @@ For backwards compatibility, we use a restrictive subset of OpenId's [standard c
 | iss            | The issuer, per the OpenID specification                                      |
 | aud            | The intended audience, per the OpenId specification                           |
 | sub            | The user's directed user ids (rather than global user ids)                    |
-| email          | The user's email addresses                                                    |
+| email          | The user's email directed addresses (rather than global)                      |
 | email_verified | Whether the email is verified or not                                          |
 | profile        | static/guest/global/default profile pictures / avatars                        |
 | name           | directed names (e.g. initials, just first names, etc)                         |
