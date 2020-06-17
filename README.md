@@ -116,7 +116,7 @@ In this formulation, we provide a [high-level](#high-level), identity-specific A
 
 By classifying as an identity data exchange, browsers are now in a position to provide domain specific guidance to users regarding the consequences of the specific identity transaction.
 
-There is a spectrum of **positions** to be taken here, but as a starting point, take as an example the most strict of the spectrum where the browser fully mediates the sign-in flow and takes full responsibility over the data exchange:
+The browser intermediates the exchange of the identity token between the RP and the IDP:
 
 ![](static/mock14.svg)
 We can break these down in four stages:
@@ -128,9 +128,9 @@ We can break these down in four stages:
 
 Lets go over each of these stages in more detail.
 
-#### The Triggering Stage
+### The Triggering Stage
 
-In the triggering stage, the [low-level](#low-level) redirect/popup flow gets replaced by the invocation of a new **high-level** identity-specific API that enables RPs to request IdTokens, for example:
+In the triggering stage, the [low-level](#low-level) redirect/popup flow gets replaced by the invocation of a new **high-level** identity-specific API (see [alternatives considered](#alternatives-considered)) that enables RPs to request IdTokens, for example:
 
 ```javascript
 // This is just a possible starting point, largely TBD.
@@ -140,20 +140,30 @@ let {idToken} = await navigator.credentials.get({
 });
 ```
 
-It is too early to discuss the specifics of the API, here is a declarative formulation that could potentially work too in case embedding inline in the content area is desirable:
-
-```html
-<input type=”idtoken” provider=”https://accounts.example.com”>
-```
-
 At this stage, the browser makes an assessment of the user's intention, for example making sure that the API was used as a result of a user gesture.
 
-#### The Provisioning Stage
+### The Provisioning Stage
 
-Upon invocation of the API, the browser proceeds to talk to the IDP (e.g. via a **.well-known** convention) and gather the user's identity token and what properties it holds (e.g. is this a directed identity?). The IDP also makes claims about its policies in protecting user's data:
+Upon invocation of the API, the browser proceeds to talk to the IDP (e.g. via a **.well-known** convention) and gathers the user's basic profile to build the consent UI per the OpenId's [Standard Claims](https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims):
 
-The browser intermediates the data exchange according to its assessment of the privacy properties involved: the more it believes that the exchange is respecting the user's privacy the less it has to raise the user's awareness of the perils involved (e.g. scary permission prompts). 
- 
+| field          | description                                                                   |
+|----------------|-------------------------------------------------------------------------------|
+| name           | the user's fulll name                                                         |
+| email          | the user's email addresses                                                    |
+| email_verified | whether the email is verified or not                                          |
+
+For example:
+
+```json
+{
+ "name": "Sam Goto",
+ "email": "samuelgoto@gmail.com",
+ "email_verified": "true",
+}
+```
+
+The browser also makes an assessment of the privacy policies the IDP follows.
+
 We believe a combination of strategies are going to be involved, but it seems hard to escape some form of agreement on policy, specifically because of server-side / out-of-band collusion where browsers aren't involved. So, as a starting point, this strawman proposal starts with a mechanism and convention that allows IDPs to explicitly acknowledge certain service agreements.
 
 ```js
@@ -169,46 +179,45 @@ We believe a combination of strategies are going to be involved, but it seems ha
 }
 ```
 
-The IDPs host the `.well-known/webid` file to acknowledge and express agreement on privacy policies. Browsers load the file and inform the user accordingly.
-
-Importantly, the browser doesn't unveil who the RP is quite yet, without the user's permission. So, a token is created but not quite yet signed by the IDP:
-
-```json
-{
- "iss": "https://accounts.google.com",
- "sub": "110169484474386276334",
-
- "directed": "true",
-
- "name": "Sam G",
- "given_name": "Sam",
- "family_name": "G",
- "email": "sjkld2093@gmail.com",
- "email_verified": "true",
-}
-```
+At this point, the browser hasn't yet revealed  who the RP is quite yet, without the user's permission. So, a idtoken with well established field is created but not quite yet signed by the IDP:
 
 ### The Consent Stage
 
 With the user's identity information at hand, the browser then proceeds to gathering consent from the user and raising awareness of any peril that may be involved according to the assessment it made in the last stage.
 
-![](static/mock13.svg)
+![](static/mock15.svg)
 
 ### The Creation Stage
 
 After the user consents, the browser can now be confident about the user's intention and finally unveils to the IDP the RP, which the IDP can then use to mint a new token addressed/directed to the specific RP.
+
+The data that is exchanged is designed to be consequence-free: minimize as much as possible the disclosure of information between IDPs and RPs while keeping it (a) viable for signing-in/signing-up and (b) backwards compatible.
+
+By consequence-free, we mean that the data that is exchanged at this stage isn't able to be joined across RPs. By minimally viable and backwards-compatible we mean that it is sufficient for authentication and could be used without RPs changing their servers.
+
+For backwards compatibility, we use a restrictive subset of OpenId's [standard claims](https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims), namely:
+
+| field          | description                                                                   |
+|----------------|-------------------------------------------------------------------------------|
+| iss            | The issuer, per the OpenID specification                                      |
+| aud            | The intended audience, per the OpenId specification                           |
+| sub            | The user's directed user ids (rather than global user ids)                    |
+| email          | The user's email addresses                                                    |
+| email_verified | Whether the email is verified or not                                          |
+| profile        | static/guest/global/default profile pictures / avatars                        |
+| name           | directed names (e.g. initials, just first names, etc)                         |
+
+For example:
 
 ```json
 {
  "iss": "https://accounts.google.com",
  "sub": "110169484474386276334",
  "aud": "https://example.com",
-
  "name": "Sam G",
- "given_name": "Sam",
- "family_name": "G",
  "email": "sjkld2093@gmail.com",
  "email_verified": "true",
+ "profile": "https://accounts.google.com/default-avatar.png",
 }
 ```
 
@@ -230,6 +239,20 @@ The drawbacks are clear too:
 1. the browser can't be confident about the user's consent, so it is forced to apply general purpose policies.
 
 For those reasons, we think that the browser mediated formulation best fit our goals.
+
+## Inline affordance
+
+One notable alternative considered is a declarative formulation that would allow embedding the user experience inline in the content area while still keeping the cross-origin separation before user consent. For example:
+
+```html
+<input type=”idtoken” provider=”https://accounts.example.com”>
+```
+
+From a friction perspective, it seems that users benefit from seeing their names/avatar in the sign-in buttons.
+
+It also seemed to make things more complicated in terms of user comprehension (do users understand the cross-origin separation if that is inline?) and incentives (e.g. is clickjacking now a problem?).
+
+So, seemed like a plausible formulation worth noting, but one that didn't seem right to start from.
 
 # Related Work
 
