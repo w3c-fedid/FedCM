@@ -258,6 +258,25 @@ For example:
 
 The IdToken is signed into a JWT and then returned back to the RP which can effectively get the user logged in. Here is [an example](https://jwt.io/#debugger-io?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmlkcC5jb20iLCJzdWIiOiIxMTAxNjk0ODQ0NzQzODYyNzYzMzQiLCJhdWQiOiJodHRwczovL2V4YW1wbGUuY29tIiwiaWF0IjoiMjM0MjM0MiIsIm5hbWUiOiJTYW0gRyIsImVtYWlsIjoic2prbGQyMDkzQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjoidHJ1ZSIsInByb2ZpbGUiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20vZGVmYXVsdC1hdmF0YXIucG5nIn0.3fGpHH5IeL2fDxbToBLE2DWDf6hfHU5YfiSdfqRGlIA) of what a signed JWT looks like for the payload above.
 
+#### Authorization
+
+Once the [directed basic profile](#directed-basic-profile) has been handed back to the RP, the browser has established that there is a level of trust between the user and the IDP.
+
+RPs often rely on more services from IDPs which are gathered via subsequent flows to get the user's authorization to release access to broader scopes. Notably, there is a long tail of these scopes, with little to no commonalities between them (say, access to calendar, photos, social graphs, etc).
+
+To allow users to continue accessing broader scopes, we propose exposing a new API to mediate that flow. For example:
+
+```javascript
+navigator.credentials.requestAuthZ({
+  scope: "https://idp.com/auth/calendar.readonly",
+  provider: "https://idp.com",
+});
+```
+
+Because of the long tail nature of the scopes and the user's prior consent for the [directed basic profile](#directed-basic-profile), the mediation happens primarily under the control of the IDP:
+
+![](static/mock17.svg)
+
 # Alternatives Considered
 
 As we go along, a lot of variations have been and will be analysed. We'll collect them here and revisit them as we gather more evidence.
