@@ -259,6 +259,8 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmlkcC5jb20
 
 # Alternatives Considered
 
+As we go along, a lot of variations have been and will be analysed. We'll collect them here and revisit them as we gather more evidence.
+
 ## Mixed Browser UI
 
 The most notable alternative considered is one that gives a greater amount of autonomy and extensibility browsers give to identity providers. In this alternative, at the [mediation stage](#the-mediation-stage), the browser would load content that is controlled by the IDP giving it the flexibility to own the user journey, while still making sure there is clear attribution (e.g. having the IDP origin clearly stated).
