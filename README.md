@@ -9,9 +9,15 @@ title: WebID
 This explainer is broken down into:
 
 - [The Problem](#the-problem)
+  - [The classification problem](#the-classification-problem)
+  - [The RP tracking problem](#the-rp-tracking-problem)
+  - [The IDP tracking problem](#the-idp-tracking-problem)
 - [Prior Art](#prior-art)
 - [An early exploration](#early-exploration)
-- [Related Problems](#related-problems)
+  - [Design Principles](#design-principles)
+  - [Browser API](#browser-api)
+  - [Alternatives Considered](#alternatives-considered)
+- [Related Problems](problems.md)
 
 # The Problem
 
