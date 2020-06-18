@@ -112,25 +112,28 @@ Currently, sign-in flows on websites begin with a login screen that provides the
 
 ## Design Principles
 
-- Minimal Disclosure
-- Directed Identifiers
-- Server-Side Backwards compatibility
-
-## Browser API
-
-In this formulation, we provide a [high-level](#high-level), identity-specific API that allows browsers to [classify](#the-classification-problem) the otherwise **opaque** transactions that are enabled by [low-level](#low-level) APIs.
+In this proposal, we provide a [high-level](#high-level), identity-specific API that allows browsers to [classify](#the-classification-problem) the otherwise **opaque** transactions that are enabled by [low-level](#low-level) APIs.
 
 By classifying as an identity data exchange, browsers are now in a position to provide domain specific guidance to users regarding the consequences of the specific identity transaction.
 
-The browser intermediates the exchange of the identity token between the RP and the IDP:
+Some of the guiding principles we identified early on intermediating the data exchange are:
 
-![](static/mock14.svg)
-We can break these down in four stages:
+* **Principle of Least Disclosure**: The data exchange should disclose as little as possible for a use that is as constrained as possible, incrementally increasing the scope of disclosure with additional explicit consent when that's relevant contextually. For example, unbundling overly broad scopes (e.g. unbundling authentication from authorization) into multiple granular steps that are asked independently and incrementally. 
+* **Principle of Least Surprise**: the data exchange should never have consequences that exceeds the level of consent and user understanding (including second-order consequences). For example, enforcing the use of [directed profiles](#directed-basic-profile) for the majority of the cases prevents unnecessary release of correlation handles.
+* **Path Dependence Principle**: the set of design options we have is limited by the decisions that have been made in up to this point, regardless of whether they are relevant or not. For example, it seems clear that breaking **Server-Side Backwards Compatibility** increases the deployment window exponentially and proportionally to the number of relying parties.
+
+## Browser API
+
+To accomplish these goals, we break the data exchange down in four stages:
 
 - The [invocation](#the-invocation-stage) stage: the user makes a user gesture and the RP calls a newly introduced API
 - The [provisioning](#the-provisioning-stage) stage: the browser makes an assessment over the risks involved in exchanging the data (e.g. does it contain a global identifier?),
 - The [mediation](#the-mediation-stage) stage: makes sure the user consents and understands the risks involved (e.g. scarier prompts when a global identifier is found) and
 - The [creation](#the-creationg-stage) stage: with the user's consent established, an IdToken is then created.
+
+In this formulation, here is how the data flows:
+
+![](static/mock14.svg)
 
 Lets go over each of these stages in more detail.
 
