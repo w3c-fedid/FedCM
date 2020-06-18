@@ -110,6 +110,12 @@ Currently, sign-in flows on websites begin with a login screen that provides the
 
 ![](static/mock1.svg)
 
+## Design Principles
+
+- Minimal Disclosure
+- Directed Identifiers
+- Server-Side Backwards compatibility
+
 ## Browser API
 
 In this formulation, we provide a [high-level](#high-level), identity-specific API that allows browsers to [classify](#the-classification-problem) the otherwise **opaque** transactions that are enabled by [low-level](#low-level) APIs.
@@ -121,16 +127,16 @@ The browser intermediates the exchange of the identity token between the RP and 
 ![](static/mock14.svg)
 We can break these down in four stages:
 
-- The [triggering](#the-triggering-stage) stage: the user makes a user gesture and the RP calls a newly introduced API
+- The [invocation](#the-invocation-stage) stage: the user makes a user gesture and the RP calls a newly introduced API
 - The [provisioning](#the-provisioning-stage) stage: the browser makes an assessment over the risks involved in exchanging the data (e.g. does it contain a global identifier?),
-- The [consent](#the-consent-stage) stage: makes sure the user consents and understands the risks involved (e.g. scarier prompts when a global identifier is found) and
-- The [creation](#the-creationg-stage) stage: how much the identity provider knows about the relying party.
+- The [mediation](#the-mediation-stage) stage: makes sure the user consents and understands the risks involved (e.g. scarier prompts when a global identifier is found) and
+- The [creation](#the-creationg-stage) stage: with the user's consent established, an IdToken is then created.
 
 Lets go over each of these stages in more detail.
 
-### The Triggering Stage
+### The Invocation Stage
 
-In the triggering stage, the [low-level](#low-level) redirect/popup flow gets replaced by the invocation of a new **high-level** identity-specific API (see [alternatives considered](#alternatives-considered)) that enables RPs to request IdTokens, for example:
+In the invocation stage, the [low-level](#low-level) redirect/popup flow gets replaced by the invocation of a new **high-level** identity-specific API (see [alternatives considered](#alternatives-considered)) that enables RPs to request IdTokens, for example:
 
 ```javascript
 // This is just a possible starting point, largely TBD.
@@ -164,6 +170,8 @@ For example:
 
 The IDP also gets the opportunity to inform the browser if it needs to walk the user through a custom IDP-specific flow to pick accounts, create accounts and / or reauthenticate.
 
+![](static/mock16.svg)
+
 The browser also makes an assessment of the privacy policies the IDP follows.
 
 We believe a combination of strategies are going to be involved, but it seems hard to escape some form of agreement on policy, specifically because of server-side / out-of-band collusion where browsers aren't involved. So, as a starting point, this strawman proposal starts with a mechanism and convention that allows IDPs to explicitly acknowledge certain service agreements.
@@ -183,7 +191,7 @@ We believe a combination of strategies are going to be involved, but it seems ha
 
 At this point, the browser hasn't yet revealed  who the RP is quite yet, without the user's permission. So, a idtoken with well established field is created but not quite yet signed by the IDP:
 
-### The Consent Stage
+### The Mediation Stage
 
 With the user's identity information at hand, the browser then proceeds to gathering consent from the user and raising awareness of any peril that may be involved according to the assessment it made in the last stage.
 
@@ -192,6 +200,17 @@ With the user's identity information at hand, the browser then proceeds to gathe
 ### The Creation Stage
 
 After the user consents, the browser can now be confident about the user's intention and finally unveils to the IDP the RP, which the IDP can then use to mint a new token addressed/directed to the specific RP.
+
+The browser makes a `POST` request to an agreed-upon endpoint to generated a [directed basic profile](#directed-basic-profile).
+
+```
+POST /.well-known/webid/create HTTP/1.1
+Host: accounts.idp.com
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 27
+
+client_id=1234
+```
 
 #### Directed Basic Profile
 
@@ -205,6 +224,8 @@ For backwards compatibility, we use a restrictive subset of OpenId's [standard c
 |----------------|-------------------------------------------------------------------------------|
 | iss            | The issuer, per the OpenID specification                                      |
 | aud            | The intended audience, per the OpenId specification                           |
+| iat            | The creation time, per the OpenId specification                               |
+| exp            | The expiration time, per the OpenId specification                             |
 | sub            | The user's directed user ids (rather than global user ids)                    |
 | email          | The user's email directed addresses (rather than global)                      |
 | email_verified | Whether the email is verified or not                                          |
@@ -215,9 +236,10 @@ For example:
 
 ```json
 {
- "iss": "https://accounts.google.com",
+ "iss": "https://accounts.idp.com",
  "sub": "110169484474386276334",
  "aud": "https://example.com",
+ "iat": "2342342",
  "name": "Sam G",
  "email": "sjkld2093@gmail.com",
  "email_verified": "true",
@@ -225,13 +247,18 @@ For example:
 }
 ```
 
-The IdToken is then returned back to the RP which can effectively get the user logged in.
+The IdToken is signed into a JWT and then returned back to the RP which can effectively get the user logged in. Here is an example ([decoded](https://jwt.io/#debugger-io?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmlkcC5jb20iLCJzdWIiOiIxMTAxNjk0ODQ0NzQzODYyNzYzMzQiLCJhdWQiOiJodHRwczovL2V4YW1wbGUuY29tIiwiaWF0IjoiMjM0MjM0MiIsIm5hbWUiOiJTYW0gRyIsImVtYWlsIjoic2prbGQyMDkzQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjoidHJ1ZSIsInByb2ZpbGUiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20vZGVmYXVsdC1hdmF0YXIucG5nIn0.3fGpHH5IeL2fDxbToBLE2DWDf6hfHU5YfiSdfqRGlIA)) of what a signed JWT looks like for the payload above:
+
+```
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmlkcC5jb20iLCJzdWIiOiIxMTAxNjk0ODQ0NzQzODYyNzYzMzQiLCJhdWQiOiJodHRwczovL2V4YW1wbGUuY29tIiwiaWF0IjoiMjM0MjM0MiIsIm5hbWUiOiJTYW0gRyIsImVtYWlsIjoic2prbGQyMDkzQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjoidHJ1ZSIsInByb2ZpbGUiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20vZGVmYXVsdC1hdmF0YXIucG5nIn0.3fGpHH5IeL2fDxbToBLE2DWDf6hfHU5YfiSdfqRGlIA
+```
+
 
 # Alternatives Considered
 
 ## Mixed Browser UI
 
-The most notable alternative considered is one that gives a greater amount of autonomy and extensibility browsers give to identity providers. In this alternative, at the [consent stage](#the-consent-stage), the browser would load content that is controlled by the IDP giving it the flexibility to own the user journey, while still making sure there is clear attribution (e.g. having the IDP origin clearly stated).
+The most notable alternative considered is one that gives a greater amount of autonomy and extensibility browsers give to identity providers. In this alternative, at the [mediation stage](#the-mediation-stage), the browser would load content that is controlled by the IDP giving it the flexibility to own the user journey, while still making sure there is clear attribution (e.g. having the IDP origin clearly stated).
 
 ![](static/mock2.svg)
 
