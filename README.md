@@ -267,7 +267,7 @@ RPs often rely on more services from IDPs which are gathered via subsequent flow
 To allow users to continue accessing broader scopes, we propose exposing a new API to mediate that flow. For example:
 
 ```javascript
-navigator.credentials.requestAuthZ({
+navigator.credentials.requestPermission({
   scope: "https://idp.com/auth/calendar.readonly",
   provider: "https://idp.com",
 });
