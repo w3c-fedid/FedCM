@@ -346,9 +346,11 @@ So, seemed like a plausible formulation that is worth noting, but one that didn'
 
 ## navigator.id
 
-It is still unclear to us exactly what is the right set of browser APIs that need to be exposed and at the moment, with what we know, it seems like the credential management API is a reasonable place to start from. We are not entirely dogmatic about it, but it does seem like an API space that correlates with WebAuthn and WebOTP - both built on top of the Credential Management API.
+It is still unclear to us exactly what is the right set of browser APIs that need to be exposed and at the moment, with what we know, it seems like the credential management API is a reasonable place to start from. We are not entirely dogmatic about it, but it does seem like an API space that correlates with password management (including its current support for federated logins), WebAuthn and WebOTP - both built on top of the Credential Management API.
 
 Once we know more about the entire set of API surface and the semantics involved, we can re-evaluate the best home for it.
+
+If you have concerns, suggestions or recommendations, [this](https://github.com/samuelgoto/WebID/issues/17) is a good place to discuss it.
 
 # Related Work
 
