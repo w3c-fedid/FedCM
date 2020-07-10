@@ -344,6 +344,12 @@ The drawback of this part of the protocol is that it leads to a JWT that is not 
 
 So, seemed like a plausible formulation that is worth noting, but one that didn't seem right to start from.
 
+## navigator.id
+
+It is still unclear to us exactly what is the right set of browser APIs that need to be exposed and at the moment, with what we know, it seems like the credential management API is a reasonable place to start from. We are not entirely dogmatic about it, but it does seem like an API space that correlates with WebAuthn and WebOTP - both built on top of the Credential Management API.
+
+Once we know more about the entire set of API surface and the semantics involved, we can re-evaluate the best home for it.
+
 # Related Work
 
 - [Building a More Private Web](https://blog.chromium.org/2020/01/building-more-private-web-path-towards.html)
