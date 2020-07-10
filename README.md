@@ -348,6 +348,7 @@ So, seemed like a plausible formulation that is worth noting, but one that didn'
 
 - [Building a More Private Web](https://blog.chromium.org/2020/01/building-more-private-web-path-towards.html)
 - [Personas](https://wiki.mozilla.org/Identity/Persona_AAR) and [navigator.id](https://developer.mozilla.org/en-US/docs/Archive/Mozilla/Persona/The_navigator.id_API)
+  - Ben's [postmortem](https://threadreaderapp.com/thread/1135716764174753798.html)
 - [WebOTP](https://github.com/WICG/WebOTP)
 - [Credential Manager](https://w3c.github.io/webappsec-credential-management/#federated)
 - Add your work [here](https://github.com/samuelgoto/WebID/issues/new)
