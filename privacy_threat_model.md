@@ -1,4 +1,9 @@
-*WebID Privacy Threat Model*
+---
+title: WebID Privacy Threat Model
+description: A privacy threat model intended to frame privacy risks associated with federated identity on the web.
+---
+Author: @kenrb
+
 # Overview
 ## WebID proposal
 WebID is a proposal to provide a new API that will allow browser intermediation of federated sign-in on the web in a manner that has stronger privacy protections than the flows that exist today.
