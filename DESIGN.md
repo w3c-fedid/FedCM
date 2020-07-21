@@ -1,3 +1,5 @@
+**TL;DR**; This is an **early exploration** of a set of [Browser APIs](#browser-api) and an [ecosystem activation strategy](#deployment-structure).
+
 # Early Exploration
 
 This is an early exploration of the solution space for the problem space described [here](README.md).
