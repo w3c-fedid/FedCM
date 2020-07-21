@@ -1,14 +1,13 @@
 **TL;DR**; This is an **early exploration** of ways that Browsers can help users of the Web make [safer](#the-rp-tracking-problem) decisions while logging in on websites with identity providers with [high-level purpose-specific APIs](design.md).
 
+
 # WebID
 
 This explainer is broken down into:
 
 - [The Problem](#the-problem)
 - [Prior Art](prior.md#prior-art)
-- [The Threat Model](privacy_threat_model.md)
 - [An early exploration](design.md) of the solution space
-- [Related Problems](problems.md)
 
 # The Problem
 
