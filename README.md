@@ -5,9 +5,9 @@
 This explainer is broken down into:
 
 - [The Problem](#the-problem)
-- [Prior Art](PRIOR.md#prior-art)
+- [Prior Art](prior.md#prior-art)
 - [The Threat Model](privacy_threat_model.md)
-- [An early exploration](DESIGN.md)
+- [An early exploration](design.md) of the solution space
 - [Related Problems](problems.md)
 
 # The Problem
@@ -64,4 +64,16 @@ Relying party tracking is enabled through federation when services that the user
 Even if identity providers were to provide site-specific data and directed identifiers, IDPs and RPs can exchange data without the user explicitly being aware of what information is flowing between the parties, and that the IDP may have insight into the user’s activity across sites. Federation is implemented via parameters on redirects / top level navigation, which allow for arbitrary data exchange, without insight or controls by the user’s browser.
 
 ![](static/mock10.svg)
+
+# Next
+
+With a better understanding about the problem statement, you can deep dive into:
+
+- [Prior Art](prior.md#prior-art)
+- [The Threat Model](privacy_threat_model.md)
+- [Related Problems](problems.md)
+
+Or jump straight into the:
+
+- [Early exploration](design.md) of the solution space
 

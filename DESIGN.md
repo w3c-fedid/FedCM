@@ -1,16 +1,27 @@
 # Early Exploration
 
+This is an early exploration of the solution space for the problem space described [here](README.md).
+
 This section is broken into:
 
-- [Design Principles](DESIGN.md#design-principles)
-- [Browser API](DESIGN.md#browser-api)
-- [Alternatives Considered](DESIGN.md#alternatives-considered)
+- [Deployment Structure](#deployment-structure)
+- [Status Quo](#status-quo)
+- [Threat Model](#threat-model)
+- [High Level Design](#high-level-design)
+- [Browser API](#browser-api)
+- [Alternatives Considered](#alternatives-considered)
+  - [Keeping The Status Quo](#keeping-the-status-quo)
+  - [Mixed Browser UI](#mixed-browser-ui)
+  - [Inline Affordance](#inline-affordance)
+  - [Browser Issued JWT](#browser-issued-jwt)
 
-There is a wide set of privacy and usability goals for identity sharing on the web, but early on we ran into better understanding the structural deployment of federation on the web, specifically the properties that make different strategies more or less plausible.
+# Deployment Structure
+
+There is a wide set of privacy and usability goals for identity sharing on the web, but early on we ran into better understanding the structural deployment of federation on the web, specifically the properties that make different activation/adoption strategies more or less plausible.
 
 For example, it is clear that there are relatively few public [IDPs](#idp) in use (say, tens), particularly in comparison to the number of [RPs](#rp) (say, millions) and their users (say, billions). A structural change that only requires adoption by IDPs and no changes or engagement on the part of RPs and users is significantly easier compared to redeploying millions of RPs or retraining billions of users.
 
-Fortunately, in more cases than not, RPs implement federated identity importing a script provided by - and under the control of - IDPs, giving us a major deployment vehicle: IDP SDKs loaded into RPs. 
+Fortunately, in more cases than not (by our estimates, about half of the deployment), RPs implement federated identity importing a script provided by - and under the control of - IDPs, giving us a major deployment vehicle: IDP SDKs loaded into RPs. 
 
 ![](static/mock7.svg)
 
@@ -26,7 +37,11 @@ Currently, sign-in flows on websites begin with a login screen that provides the
 
 ![](static/mock1.svg)
 
-## Design Principles
+## Threat Model
+
+We formalized the threat model [here](privacy_threat_model.md).
+
+## High Level Design
 
 In this proposal, we provide a [high-level](#high-level), identity-specific API that allows browsers to [classify](#the-classification-problem) the otherwise **opaque** transactions that are enabled by [low-level](#low-level) APIs.
 
@@ -191,7 +206,7 @@ Because of the long tail nature of the scopes and the user's prior consent for t
 
 As we go along, a lot of variations have been and will be analysed. We'll collect them here and revisit them as we gather more evidence.
 
-## Status Quo
+## Keeping The Status Quo
 
 A trivial alternative that is worth noting is to "do nothing". That seemed clear to reject based on:
 
