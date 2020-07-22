@@ -7,7 +7,6 @@ This is an early exploration of the solution space for the problem space describ
 This section is broken into:
 
 - [Deployment Structure](#deployment-structure)
-- [Status Quo](#status-quo)
 - [Threat Model](#threat-model)
 - [High Level Design](#high-level-design)
 - [Browser API](#browser-api)
@@ -18,6 +17,10 @@ This section is broken into:
   - [Browser Issued JWT](#browser-issued-jwt)
 
 # Deployment Structure
+
+Currently, sign-in flows on websites begin with a login screen that provides the user options to use federated identity, as illustrated in the mock below. Today, clicking the button for an IDP relies on general purpose primitives (typically [redirects or popups](#low-level)) to an IDP sign-in flow. 
+
+![](static/mock1.svg)
 
 There is a wide set of privacy and usability goals for identity sharing on the web, but early on we ran into better understanding the structural deployment of federation on the web, specifically the properties that make different activation/adoption strategies more or less plausible.
 
@@ -32,12 +35,6 @@ Nonetheless, while much of the client side code is under the (few) IDPs to contr
 Likewise, changing user behavior and norms is hard because of the number of people involved (say, billions). Unfamiliar login flows could result in users declining to use federated options, and instead opting for username/password credentials during RP account creation. To address that, this proposal aims to provide an experience that minimizes the divergence from existing federated identity user experience as much it possibly can (e.g. introducing new user decisions to be made).
 
 So, with this deployment constraint in mind, let's look at what could be done.
-
-## Status Quo
-
-Currently, sign-in flows on websites begin with a login screen that provides the user options to use federated identity, as illustrated in the mock below. Today, clicking the button for an IDP relies on general purpose primitives (typically [redirects or popups](#low-level)) to an IDP sign-in flow. 
-
-![](static/mock1.svg)
 
 ## Threat Model
 
