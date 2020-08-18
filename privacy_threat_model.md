@@ -7,7 +7,7 @@ Author: @kenrb
 # Overview
 ## WebID proposal
 WebID is a proposal to provide a new API that will allow browser intermediation of federated sign-in on the web in a manner that has stronger privacy protections than the flows that exist today.
-The [WebID explainer draft](https://code.sgo.to/WebID/) contains a full description of the problem statement and a strawman solution.
+The [WebID explainer draft](README.md) contains a full description of the problem statement and a strawman solution.
 ## Document purpose
 This document is intended to provide a comprehensive overview of the privacy risks associated with federated identity on the web for the purpose of measuring the privacy risks and benefits of proposed browser intermediation designs.
 # Relevant principals
