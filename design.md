@@ -209,8 +209,8 @@ As we go along, a lot of variations have been and will be analysed. We'll collec
 
 A trivial alternative that is worth noting is to "do nothing". That seemed clear to reject based on:
 
-- the growing sentiment that the [RP tracking problem](#the-rp-tracking-problem) had to be addressed broadly
-- the growing sentiment that the [classification problem](#the-classification-problem) would lead to general purpose policies which increase the friction to existing flows
+- the growing sentiment that the [RP tracking problem](https://github.com/WICG/WebID/blob/master/README.md#the-rp-tracking-problem) had to be addressed broadly
+- the growing sentiment that the [classification problem](https://github.com/WICG/WebID/blob/master/README.md#the-classification-problem) would lead to general purpose policies which increase the friction to existing flows
 - the second order consequences of relying parties moving to less safe options (compared to federation) like usernames/passwords or out of the web
 
 ## Mixed Browser UI
