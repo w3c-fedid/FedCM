@@ -40,14 +40,21 @@ Any API that exposes any kind of client state to the web risk becoming a vector 
 ## Identity Provider collecting information
 ### (IDP1.) Identity Provider tracking user sign-ins to Relying Party sites
 Existing federation protocols require that the Identity Provider know the CLIENT_ID of the Relying Party in order to allow identity federation. Identity providers can use this fact to build profiles of users across sites where the user has decided to use federation with the same account. This profile could be used, for example, to serve targeted advertisements to those users browsing on sites that the IDP controls.
+
+This risk can exist even in the case where the IDP does not having pre-existing user account information (for instance, if it is not a _bona fide_ IDP), because WebID requests sent to the IDP are credentialed. This is more likely to occur if the RP is colluding with the IDP to enable tracking; expanded variants are described in [COL2](#col2-rp-sharing-user-identifying-information-with-the-idp). 
 ### (IDP2.) Identity Provider misusing federated sign-in capabilities
 Since Identity Providers have unconstrained ability to issue ID tokens, they are capable of logging in to users’ federated accounts without user knowledge or action.
 ## Relying Party and Identity Provider colluding to collect information
 ### (COL1.) IDP exceeding user’s information sharing permission
 Existing federated identity protocols are clear on what information an RP is requesting, which the IDP can provide. While the browser can inspect the request and response and consider whether user permission has been granted for that transfer, it is difficult to know that there is no additional information embedded in the response. An example could be if the IDP encodes an identifier that could be used to load user-targeted advertisements on RP pages, which could be of value where the IDP has much more profiling information about the user. Another example is if the ID token is shared out-of-band, invisible to the browser, in which case it could contain anything.
 ### (COL2.) RP sharing user-identifying information with the IDP
-Since it is likely a requirement that browser requests to the IDP are credentialed, there is a tracking risk in the requests that the RPs are generating. The RP could provide identifying data in the request which the IDP (possibly not a bona fide IDP, but just a tracking site) could correlate to other requests from other RPs.
-Even where the RP does not convey user-identifying information in its request, it is possible that the request sent to a colluding IDP can be correlated after the fact based on timing, and this could be used for tracking purposes. For example, if the RP logs the time at which it invoked the API, and the IDP logs the time at which it received a credentialed WebID request from that RP, this might have a high probability of allowing the user’s separate account with the RP and IDP to be associated together. This is possible without WebID using simple cross-origin top-level navigations, but WebID could make it more effective because the IDP seeing the RP’s CLIENT_ID would allow significantly better disambiguation.
+The potential for IDPs profiling users based on their visits to RPs (described in [IDP1](#idp1-identity-provider-tracking-user-sign-ins-to-relying-party-sites)) can be partially mitigated by hiding the RP from the IDP until after the user has consented to that tracking risk. However, there is residual risk in cases where the RP and IDP are colluding.
+
+If a credentialed request is sent to the IDP that does not explicitly identify the RP, either of the following would still allow tracking by the IDP (again, possibly not a _bona fide_ IDP that has existing knowledge of the user):
+* The RP controlling any field in the request that can be used to convey identifying data in the request that the IDP could correlate to other requests from other RPs;
+* The RP being able to provide fine-resolution timing information about the request to the IDP out of band.
+
+The timing information can enable tracking in the following way: The RP logs the time at which it invoked the API, and the IDP logs the time at which it received a credentialed WebID request from the user, and later they attempt to link the invocation and the request together using that information. Notably, this is possible without WebID using simple cross-origin top-level navigations, but using WebID for this purpose would worsen the problem if it improved timing resolution or was less visible to users.
 # Mitigation
 ## Directed identifiers
 * Mitigates: [RP1](#rp1-Multiple-Relying-Parties-correlate-user-information-for-tracking-purposes)
