@@ -11,7 +11,7 @@ This document is continually evolving. Feedback is welcome.
 
 # Definitions
 ## Authentication
-* _Process used by an [Identity Provider](#identity-provider-idp) to achieve sufficient confidence in the binding between the user and a presented identity._
+* _Process used by an [Identity Provider](#identity-provider-idp) to achieve sufficient confidence in the binding between the and a presented identity._
 
 Note that in some discussions and documentation, the term _authentication_ is used to refer to the federated sign-in process. However, the user does not authenticate to the RP during federated sign-in. The user authenticates to the IdP, which then provides a claim to the RP asserting the user’s identity. The user does not prove their identity to the RP.
 
@@ -23,7 +23,7 @@ External references: [OIDC terminology](https://openid.net/specs/openid-connect-
 References: [OAuth 2.0](https://tools.ietf.org/html/rfc6749), [SAML glossary](https://docs.oasis-open.org/security/saml/v2.0/saml-glossary-2.0-os.pdf)
 
 ## Browser-mediated
-* _The property of data flows between a [Relying Party](#relying-party-rp) and an [Identity Provider](#identity-provider-idp) being forced through channels that are visible to and controllable by the user-agent._
+* _The property of data flows between a [Relying Party](#relying-party-rp) and an [Identity Provider](#identity-provider-idp) being forced through channels that are visible to and controllable by the [user agent](#user-agent)._
 
 ## Ceremony
 * _A protocol that includes both network data flows and user interaction for the purpose of achieving [authentication](#authentication), [authorization](#authorization) or [sign-in](#federated-sign-in)._
@@ -31,7 +31,7 @@ References: [OAuth 2.0](https://tools.ietf.org/html/rfc6749), [SAML glossary](ht
 References: [WebAuthn glossary](https://www.w3.org/TR/webauthn/#ceremony)
 
 ## Consent
-* _A part of a [ceremony](#ceremony) that comprises a user interaction with a clear [user-agent-controlled](#user-agent) UI element that can be taken to mean the user accepts privacy risk that has been explained in accompanying text, and the ceremony may proceed accordingly._
+* _A part of a [ceremony](#ceremony) that comprises a user interaction with a clear [user agent-controlled](#user-agent) UI element that can be taken to mean the user accepts privacy risk that has been explained in accompanying text, and the ceremony may proceed accordingly._
 
 ## Claim
 * _A piece of information asserted by an [Identity Provider](#identity-provider-idp) about a user._
@@ -50,7 +50,7 @@ This term is novel in WebID and its details could be subject to change.
 * _A [claim](#claim) granted to a [Relying Party](#relying-party-rp) by an [Identity Provider](#identity-provider-idp) that constitutes an [identifier](#identifier) for the user but cannot be correlated with other identifiers granted to different Relying Parties._
 
 ## Enterprise (context)
-* _Category of use cases that apply to private restricted-access [Relying Parties](#relying-party-rp) and [Identity Providers](#identity-provider-idp), in particular where organizations can have provisioning capabilities over [user-agents](#user-agent). This typically encompasses use cases of corporations, institutions, or government agencies._
+* _Category of use cases that apply to private restricted-access [Relying Parties](#relying-party-rp) and [Identity Providers](#identity-provider-idp), in particular where organizations can have provisioning capabilities over [user agents](#user-agent). This typically encompasses use cases of corporations, institutions, or government agencies._
 
 ## Federated sign-in
 * _Process used by a [Relying Party](#relying-party-rp) to obtain a user [identifier](#identifier) from an [Identity Provider](#identity-provider-idp) to which the user has [authenticated](#authentication)._
@@ -102,7 +102,7 @@ This term is defined as a part of the OpenID Connect specification. The use of t
 References: [OIDC](https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims)
 
 ## Verifiably directed identifier
-* _A [directed identifier](#directed-identifier) that has the property that the [user-agent](#user-agent) is able to validate that it is directed._
+* _A [directed identifier](#directed-identifier) that has the property that the [user agent](#user-agent) is able to validate that it is directed._
 
-## User-agent
+## User agent
 * _Client software such as a web browser that renders web content and can implement WebID._
