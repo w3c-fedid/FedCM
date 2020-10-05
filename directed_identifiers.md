@@ -10,7 +10,7 @@ description: An exploration of Directed Identifiers and Verifiably Directed Iden
   * [Other fields](#other-fields)
   * [Directed basic profile](#directed-basic-profile)
 * [User agent behavior](#user-agent-behavior)
-  * [Policy-base approach](#policy-based-approach)
+  * [Policy-based approach](#policy-based-approach)
   * [Verifiably directed identifiers](#verifiably-directed-identifiers)
     * [Caveats of verifiably directed identifiers](#caveats-of-verifiably-directed-identifiers)
 * [Challenges](#challenges)
