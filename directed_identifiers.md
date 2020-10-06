@@ -26,29 +26,31 @@ description: An exploration of Directed Identifiers and Verifiably Directed Iden
 # Directed identifiers
 This document explores the ideas of [directed identifiers](glossary.md#directed-identifier) and [verifiably directed identifiers](glossary.md#verifiably-directed-identifier) in WebID.
 
-Directed identifiers are included in the WebID proposal as an attempt to mitigate [Relying Party tracking](README.md#the-rp-tracking-problem) of users by means of [identifier correlation](privacy_threat_model.md#rp1-multiple-relying-parties-correlate-user-information-for-tracking-purposes). As traditional tracking mechanisms have become less accessible, a fallback method for following user activity across the web has been for web sites with account systems to correlate personal identifiers associated with each account. For example, all sites that require users to use email addresses as usernames for login can collude to uniquely identify a given user across all of those sites, and profile that user's full activity across them.
+Directed identifiers are included in the WebID proposal as an attempt to mitigate [Relying Party tracking](README.md#the-rp-tracking-problem) of users by means of [identifier correlation](privacy_threat_model.md#rp1-multiple-relying-parties-correlate-user-information-for-tracking-purposes). As traditional tracking mechanisms have become less accessible, a fallback method for following user activity across the web has been for web sites with account systems to correlate personal identifiers associated with each account. For example, all sites that require users to use email addresses as login identifiers can collude to uniquely identify a given user across all of those sites, and profile that user's full activity across them.
 
 Conceptually, a directed identifer is a limited-scope identifier that has a one-way mapping from a user identifier that is known to an Identity Provider. The original identifier cannot practically be derived from the directed identifier by anyone other than the IdP or possibly the user.
 
 Directed identifiers are equivalent to _persistent identifiers_ in the SAML 2.0 Core specification.
+
+OpenID Connect has the notion of _pairwise subject identifiers_ which also correspond to directed identifiers.
 
 # General implementation approaches
 There are two straightforward ways of implementing directed identifiers for an IdP:
 1. Generate a random string, and store it in a table keyed by the real identifier, or
 2. Use a cryptographic hash function to make it one-way derivable from the original identifier.
 
-The latter is used by [Shibboleth in its peristent identifier implementation](https://wiki.shibboleth.net/confluence/display/IDP30/PersistentNameIDGenerationConfiguration).
+The latter is used by [Shibboleth in its peristent identifier implementation](https://wiki.shibboleth.net/confluence/display/IDP30/PersistentNameIDGenerationConfiguration), and also described in [OpenID Connect for generating pairwise Subject Identifiers](https://openid.net/specs/openid-connect-core-1_0.html#PairwiseAlg).
 
 # Directed identifiers in WebID
-While there exist examples of directed identifiers being used in closed identity systems, there are challenges to adapting them to a broadly used framework such as OpenID Connect. For instance, the set of [OIDC standard Claims](https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims) mostly contains fields that cannot exist in a directed identifier, or else would have to contain random or obfuscated data.
+While there exist examples of directed identifiers being used in closed identity systems, there are challenges to adapting them in a broad way to federated sign-in. The privacy goals of this project require that the entire ID token be directed, not just a single identifier field. For instance, the set of [OIDC standard Claims](https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims) mostly contains fields that cannot exist in a token containing only directed identifiers, or else would have to contain random or obfuscated data.
 
 ## Essential fields
-A minimal directed identifier that could be suitable for most federated sign-in cases would contain a stable identifier (_sub_) and an email address (_email_). The _verified_email_ boolean would likely also be a part. The _sub_ can be trivially directed using either of the methods mentioned above. Providing a non-correlatable email address, however, requires an email aliasing or proxying system, and has constraints on its form due to the limitations of a valid email address.
+A minimal directed identifier token that could be suitable for most federated sign-in cases would contain a stable identifier (_sub_) and an email address (_email_). The _verified_email_ boolean would likely also be a part. The _sub_ can be trivially directed using either of the methods mentioned above. Providing a non-correlatable email address, however, requires an email aliasing or proxying system, and has constraints on its form due to the limitations of a valid email address.
 
 Unfortunately the phone number field can be used in much of the world as a primary communication channel for RPs to users (via SMS), and does not lend itself to any kind of directedness due to the difficulty in imagining a proxying system. This is an open problem.
 
 ## Other fields
-The remaining OIDC standard Claims have varying levels of value and usefulness in a directed scenario. Some, such as _website_ or _picture_ would have to be omitted or provide a generic non-identifying value. Others, such as _birthdate_, could conceivably be included even though it provides a degree of correlation. It is possible to imagine an entropy budget that WebID could allow an identifier, outside of which the identifier is no longer considered directed.
+The remaining OIDC standard Claims have varying levels of value and usefulness in a directed scenario. Some, such as _website_ or _picture_ would have to be omitted or provide a generic non-identifying value. Others, such as _birthdate_, could conceivably be included even though it provides a degree of correlation. It is possible to imagine an entropy budget that WebID could allow within a single token, outside of which the identifier is no longer considered directed.
 
 There are also non-standard Claims sometimes included in some federated sign-in scenarios, which do not necessarily violate the directedness requirements. An example is an IdP with multiple subscriber levels, in a case where it is useful for an RP to know which subscriber level is associated with that user. Adding a few bits of information should be possible, though it is an open question how the user agent can know that this does not pose a tracking risk requiring additional user consent, especially if there are other non-essential fields present that might cumulatively create undirected entropy.
 
@@ -56,15 +58,15 @@ There are also non-standard Claims sometimes included in some federated sign-in 
 This proposal defines the concept of a [directed basic profile](https://github.com/WICG/WebID/blob/master/design.md#directed-basic-profile) which attempts to provide a set of directed fields that, when populated in a conforming way, can allow federated sign-in without risk of user tracking by identifier correlation. The precise definition of a directed basic profile is still a topic for dicussion.
 
 # User agent behavior
-The value of a directed identifier is that a user agent can cooperate with it being passed from an IdP to an RP without having to attempt to acquire user consent for the tracking risk that is associated with correlatable identifiers. The precise shape of the user consent flow (or consent-less flow) is discussed elsewhere in the WebID proposal.
+The value of a directed identifier is that a user agent can cooperate with it being passed from an IdP to an RP without having to attempt to acquire user consent for the tracking risk that is associated with correlatable identifiers. The precise shape of the user consent flow is discussed elsewhere in the WebID proposal.
 
 An important question, however, is how the user agent can be **confident** that the identifier that is being passed in not correlatable. It is an open question as to whether this should require technical enforcement on the part of the user agent.
 
 ## Policy-based approach
-The simplest way for the user agent to obtain a degree of confidence in the directedness of the identifier is for the IdP to assert that the identifier is directed, via a mechanism defined by WebID. Since the user has entrusted some amount of identifying data to the IdP, it might be reasonable to expect that the IdP acts in good faith with respect to that data and not falsely assert the identifier is directed. IdPs discovered to be acting in bad faith could be exposed to penalties, possibly including being added to a denylist by user agents which would prohibit them from using these APIs in future.
+The simplest way for the user agent to obtain a degree of confidence in the directedness of the identifier is for the IdP to assert that all identifiers within the token are directed, via a mechanism defined by WebID. Since the user has entrusted some amount of identifying data to the IdP, it might be reasonable to expect that the IdP acts in good faith with respect to that data and not falsely assert the identifier is directed. IdPs discovered to be acting in bad faith could be exposed to penalties, possibly including being added to a denylist by user agents which would prohibit them from using these APIs in future.
 
 ## Verifiably directed identifiers
-A stricter approach is for WebID to be prescriptive about the format of directed identifiers and require that they be verifiable by user agents in order to avoid tracking consent requirements. This could be done with a hashing scheme similar to what is used in Shibboleth, where the IdP gives the user agent the inputs to a hash function and the output of the hash is included in the signed token. The user agent can then verify that the claim values in the token match the hashes, and therefore are not global identifiers.
+A stricter approach is for WebID to be prescriptive about the format of directed identifiers and require that they be verifiable by user agents in order to avoid tracking consent requirements. This could be done with a hashing scheme similar to what is used in Shibboleth or OpenID pairwise subject identifiers, where the IdP gives the user agent the inputs to a hash function and the output of the hash is included in the signed token. The user agent can then verify that the claim values in the token match the hashes, and therefore are not global identifiers.
 
 The following is an example structure of such a scheme:
 ```
@@ -89,9 +91,9 @@ USER_DIRECTED_IDENTIFIER + '@idp.example.com'
 Notably, colons are not legal characters in email addresses, so an encoding would need to be specified to make the address compliant with [RFC 5322](https://tools.ietf.org/html/rfc5322).
 
 ### Caveats of verifiably directed identifiers
-One issue with this approach is that the inputs to the hash function have to be sufficiently **secret** and **high entropy**. One problematic approach would be using the user's email address as an input to the hash, eg. `DirectedID = SHA256('abc@example.com' + 'idp.example.com' + 'rp.com')`. In that case, the RP could possibly acquire a large set of known email addresses (spam lists, for instance) and hash them forward to find any matches, effectively defeating the scheme. It is hard to for user agents to be confident that the underlying inputs to these hashes are satisfactory.
+One issue with this approach is that the inputs to the hash function have to be sufficiently **secret** and **high-entropy**. One problematic approach would be using the user's email address as an input to the hash, eg. `DirectedID = SHA256('abc@example.com' + 'idp.example.com' + 'rp.com')`. In that case, the RP could possibly acquire a large set of known email addresses (spam lists, for instance) and hash them forward to find any matches, effectively defeating the scheme. It is hard to for user agents to be confident that the underlying inputs to these hashes are satisfactory. This potential issue could be mitigated by adding a high-entropy salt as a hash input, although it then adds a requirement for the IdP to have to manage those.
 
-A second problem is that verifiably directed identifiers are not compatible with the OIDC [authorization code flow](https://openid.net/specs/openid-connect-core-1_0.html#CodeFlowAuth) and [hybrid flow](https://openid.net/specs/openid-connect-core-1_0.html#HybridFlowAuth).
+A second problem is that verifiably directed identifiers are not compatible with the OIDC [authorization code flow](https://openid.net/specs/openid-connect-core-1_0.html#CodeFlowAuth) and [hybrid flow](https://openid.net/specs/openid-connect-core-1_0.html#HybridFlowAuth) because in those cases there is server-to-server communication between the RP and the IdP, invisible to the user agent.
 
 # Challenges
 ## IdP concerns
@@ -133,5 +135,6 @@ This document is focused on consumer IdPs, and it is unclear whether an API that
 
 # Prior art considered
 * [Shibboleth](https://wiki.shibboleth.net/confluence/display/IDP30/PersistentNameIDGenerationConfiguration)
+* [OpenID Connect Pairwise Subject Identifiers](https://openid.net/specs/openid-connect-core-1_0.html#SubjectIDTypes)
 * Apple's [Hide My Email](https://support.apple.com/en-us/HT210425)
 * Province of British Columbia [BCeID](https://www2.gov.bc.ca/gov/content/governments/services-for-government/information-management-technology/identity-and-authentication-services/bc-services-card-authentication-service/design-develop-test/solution-design/identity-attributes)
