@@ -63,6 +63,8 @@ Even if identity providers were to provide site-specific/directed identifiers, I
 
 ![](static/mock10.svg)
 
+# Next Steps
+
 The [Classification Problem](#the-classification-problem), the [RP Tracking Problem](#the-rp-tracking-problem) and the [IDP Tracking Problem](#the-idp-tracking-problem) are the problems that we are set to solve.
 
 The following should give you a deeper understanding of the problems, related problems and how they were tackled in the past:

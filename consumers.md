@@ -3,32 +3,25 @@ This is an **early exploration** of the design alternatives to address [this pro
 > NOTE: this is an analysis only applicable to the very specific [deployment structure](#topology) of federation for **consumers**.
 > If you are looking for an analysis to other use cases, go [here](design.md) or [here](enterprises.md).
 
-We'll start from the assumption that we have a deep understanding of the [why](README.md).
+# Consumers
 
-We'll then go through an analysis of the [deployment structure](#topology) of federation for **consumers**.
+The **why**: we'll start from the assumption that we have a deep understanding of the [why](README.md) and the [parties involved](privacy_thread_model.md) and their motivations.
 
-We'll describe briefly some alternatives considered and why they fall short.
+The **who**: we'll then go through an analysis of the [deployment structure](#topology) of federation for **consumers**.
 
-We'll then go over the [high level view](#high-level-design) and a breakdown into two smaller problems: [The Consumer API](#the-consumer-api) (i.e. the interface between the RP and the Browser) and [The Producer API](#the-producer-api) (i.e. the interaction between the Browser and the IDP).
+The **why not**: we'll describe some immediate [alternatives considered](#alternatives-consiedered) and why they fall short (e.g. [The Status Quo](#the-status-quo) and [The RequestStorageAccess API](#the-request-storage-access-api)).
 
-Our last section will go over the (slightly less controversial) [Consumer API](#the-consumer-api) and then enumerate a series of alternatives for the (much more contentious) [Provider API](#the-provider-api).
+The **what**: we'll then go over the [high level view](#high-level-design) and a breakdown into two smaller problems: [The Consumer API](#the-consumer-api) (i.e. the interface between the RP and the Browser) and [The Producer API](#the-producer-api) (i.e. the interaction between the Browser and the IDP).
 
-- The **why**: [The Problem](README.md)
-- The **who**: [Topology](#topology)
-- The **why not**: [Alternatives Considered](#alternatives-consiedered)
-  - [The Status Quo](#the-status-quo)
-  - [The RequestStorageAccess API](#the-request-storage-access-api)
-- The **what**: [High Level Design](#high-level-design)
-- The **how** part I: [The Consumer API](#the-consumer-api)
-  - [Sign-in API](#the-sign-in-api)
-  - [Authorization API](#the-authorization-api)
-- The **how** part II: [The Provider API](#the-provider-api)
-  - [Alternative Designs](#alternative-designs)
-    - [The Permission-oriented APIs](#the-permission-oriented-apis)
-    - [The Mediation-oriented API](#the-mediation-oriented-apis)
-    - [The Delegation-oriented API](#the-delegation-oriented-api)
+The **how**: in the first part of the last section will go over the (slightly less controversial) [Consumer API](#the-consumer-api) and the useful separation of the [Sign-in API](#the-sign-in-api) and the [Authorization API](#the-authorization-api).
 
-## Topology
+Finally, we'll then enumerate a series of [alternatives](#alternative-designs) for the (much more contentious) [Provider API](#the-provider-api):
+
+- The [Permission-oriented Variation](#the-permission-oriented-apis)
+- The [Mediation-oriented Variation](#the-mediation-oriented-apis)
+- The [Delegation-oriented Variation](#the-delegation-oriented-api)
+
+# Topology
 
 Currently, for **consumers**, sign-in flows on websites begin with a login screen that provides the user options to use federated identity, as illustrated in the mock below. Today, clicking the button for an IDP relies on general purpose primitives (typically [redirects or popups](#low-level)) to an IDP sign-in flow. 
 
@@ -48,11 +41,11 @@ Likewise, changing user behavior and norms is hard because of the number of peop
 
 So, with this deployment constraint in mind, let's look at some alternatives under exploration.
 
-## Alternatives Considered
+# Alternatives Considered
 
 Now that we have looked at [why](README.md) and [who](#topology), lets look at some **why not**s.
 
-#### The Status Quo
+## The Status Quo
 
 A trivial alternative that is worth noting as a baseline is to "do nothing" and keep federation using low level primitives like redirects and popups.
 
@@ -63,7 +56,7 @@ That seemed clear to reject based on:
 
 From here, the next incremental step we could look at is the [requestStorageAccess](https://developer.mozilla.org/en-US/docs/Web/API/Document/requestStorageAccess) API.
 
-#### The RequestStorageAccess API
+## The RequestStorageAccess API
 
 The [Document.requestStorageAccess()](https://developer.mozilla.org/en-US/docs/Web/API/Document/requestStorageAccess) API grants first-party storage to subframes. In conjunction with iframes, an IDP could expose its service via cross-site postMessage communication once first-party storage has been granted.
 
@@ -74,7 +67,7 @@ That seemed clear to reject based on:
 
 From here, lets try to break down the problem into smaller parts.
 
-## High Level Design
+# High Level Design
 
 From a high level perspective, the browser acts as an mediator between two parties: the relying party and the identity provider.
 
@@ -88,7 +81,7 @@ The browser exposes two distinct interfaces for the intermediation:
 
 We'll go over each of these separately next.
 
-## The Consumer API
+# The Consumer API
 
 The consumer API is the Web Platform privacy-oriented API that relying parties call to request information from a specific identity provider, to be used in replacement of the current redirect/popup affordances that are currently used.
 
@@ -101,7 +94,7 @@ While both are implemented on top of OAuth as different scopes, the former (typi
 
 Lets first turn to the former use, and then go over authorization following that.
   
-### The Sign-In API
+## The Sign-In API
 
 Simply put, the Sign-In API takes an identity provider as input and returns an idtoken as output.
 
@@ -164,7 +157,7 @@ For backwards compatibility, we use a restrictive subset of OpenId's [standard c
 
 By consequence-free, we mean that the data that is exchanged at this stage isn't able to be joined across RPs. By minimally viable and backwards-compatible we mean that it is sufficient for authentication and could be used without RPs changing their servers.
 
-### The Authorization API
+## The Authorization API
 
 Relying Parties often rely on more services from IDPs which are gathered via subsequent flows to get the user's authorization to release access to broader scopes. Notably, there is a long tail of these scopes, with little to no commonalities between them (say, access to calendar, photos, social graphs, etc).
 
@@ -179,7 +172,7 @@ navigator.credentials.requestAuthorization({
 
 Now that we looked at the surface area introduced for relying parties, lets turn into [The Provider API](#the-provider-api) and see what are the options under consideration for the intermediation between the user agent and the identity provider.
 
-## The Provider API
+# The Provider API
 
 The purpose of the Provider API is to fulfill the invocation of [The Consumer API](#the-Consumer-api) by coordinating with the identity provider.
 
@@ -201,7 +194,7 @@ We believe we all still have a lot to learn from each other (browser vendors, id
 
 Having said that, in the following section we'll enumerate some of the most prominent variations under consideration and their trade-offs.
 
-### Alternative Designs
+## Alternative Designs
 
 We'll try to go over the thought process and the biggest considerations to be made starting from the most basic thing that we could do to some of the most involved.
 
@@ -213,7 +206,7 @@ In each step, we'll try to go over some of the pros and cons. They can be introd
 
 Lets go over each of these in that order.
   
-#### The Permission-oriented APIs
+## The Permission-oriented APIs
 
 The Permission-oriented APIs are a series of formulations where the browser tries to "get out of the way" as much as possible, letting IDPs drive as much as possible of the user experience.
 
@@ -238,7 +231,7 @@ The drawbacks of this approach is that:
   
 Naturally, the next set of formulations try to address these two shortcomings at the cost of the autonomy of the IDP and the ossification of parts of the flow.
 
-#### The Mediation-oriented APIs
+## The Mediation-oriented APIs
 
 In this formulation, the browser pulls the responsibility for itself to drive the data exchange, enabling it to (a) bundle the consent moments described in the formulation above and (b) steers users to safer defaults.
   
@@ -253,7 +246,7 @@ The drawbacks of this variation is that it:
 - Ossifies the Sign-In flow and
 - [The IDP Tracking Problem](README.md#the-idp-tracking-problem) is still only addressed via consent rather than mechanically.
   
-#### The Delegation-oriented API
+## The Delegation-oriented API
 
 The last alternative under consideration continues to pull responsibility for the browser, enabling it to finally address the [The IDP Tracking Problem](README.md#the-idp-tracking-problem) mechanically.
 
