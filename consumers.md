@@ -5,19 +5,18 @@ This is an **early exploration** of the design alternatives to address [the prob
 
 This section is broken into:
 
-- [Topology](#topology)
-- [High Level Design](#high-level-design)
-- [The Frontend API](#the-frontend-api)
+- [Topology](#topology): the deployment structure
+- [High Level Design](#high-level-design): the interfaces
+- [The Frontend API](#the-frontend-api): the RP API
   - [Sign-in API](#the-sign-in-api)
   - [Authorization API](#the-authorization-api)
-- [The Backend API](#the-backend-api)
-  - [Alternatives Under Consideration](#alternatives-under-consideration)
-    - [Keeping The Status Quo](#keeping-the-status-quo)
-    - [Mixed Browser UI](#mixed-browser-ui)
-    - [High Level Design](#high-level-design)
-      - [Browser API](#browser-api)
-    - [Browser Issued JWT](#browser-issued-jwt)
-
+- [The Backend API](#the-backend-api): the IDP API
+  - [Alternative Designs](#alternative-designs)
+    - [The Status Quo API](#the-status-quo-api)
+    - [The Permission-oriented APIs](#the-permission-oriented-apis)
+    - [The Mediation-oriented API](#the-mediation-oriented-apis)
+    - [The Delegation-oriented API](#the-delegation-oriented-api)
+    
 # Consumers
 
 We'll start by going through an analysis of the [deployment structure](#topology) of federation for **consumers**.
@@ -64,18 +63,20 @@ The frontend API is the Web Platform privacy-oriented API that relying parties c
 
 From the perspective of [The Privacy Threat Model](privacy_threat_model.md), there are two notably distinct uses of federation:
 
-* signing-in
+* signing-in and
 * authorization
 
-While both are implemented on top of OAuth as different scopes, the former (typically deployed with the `openid` oauth scope) captures a meaningful volume of usage at a much more controlled surface area (including transactions done more transparently at the front channel), whereas the latter is much more powerful and used less frequently (as well as done primarily on the back channel).
+While both are implemented on top of OAuth as different scopes, the former (typically deployed with the `openid` oauth scope) captures a meaningful volume of usage (we estimate it be around 80% of the use) at a much more controlled surface area (including transactions done at the front channel with idtokens as opposed to access tokens), whereas the latter is much more powerful and used less frequently (as well as done primarily on the back channel).
 
-### The Sign-in API
+Lets first turn to the former use, and then go over authorization following that.
+  
+### The Sign-In API
 
 Simply put, the Sign-In API takes an identity provider as input and returns an idtoken as output.
 
 The current redirect/popup flow gets replaced by the invocation of a newly introduced identity-specific API that enables RPs to request IdTokens.
 
-We don't know exactly what that should look like, but here is an example that can serve as a starting point:
+We don't know exactly what it should look like, but here is an example that can serve as a starting point:
 
 ```javascript
 // This is just a possible starting point, largely TBD.
@@ -95,9 +96,7 @@ Upon invocation, the browser makes an assessment of the user's intention, for ex
 
 From there, the browser proceeds to mediate the data exchange with the chose identity provider via [The Backend API](#the-backend-api).
 
-Upon success, the frontend API results into an idtoken.
-
-For example:
+Upon success, the frontend API results into an idtoken. For example:
 
 ```json
 {
@@ -141,108 +140,97 @@ Relying Parties often rely on more services from IDPs which are gathered via sub
 To allow users to continue accessing broader scopes, we expose a new API to mediate that flow. For example:
 
 ```javascript
-navigator.credentials.requestPermission({
+navigator.credentials.requestAuthorization({
   scope: "https://idp.com/auth/calendar.readonly",
   provider: "https://idp.com",
 });
 ```
 
-Now, lets turn into [The Backend API](#the-backend-api) and see how the options under consideration for the intermediation between the user agent and the identity.
+Now that we looked at the surface area introduced for relying parties, lets turn into [The Backend API](#the-backend-api) and see what are the options under consideration for the intermediation between the user agent and the identity provider.
 
 ## The Backend API
 
-Upon invocation of [The Frontend API](#the-frontend-api), the browser proceeds to talk to the IDP.
+The purpose of the backend API is to fulfill the invocation of [The Frontend API](#the-frontend-api) by coordinating with the identity provider.
 
-### Alternatives Under Consideration
+From the perspective of [The Privacy Threat Model](privacy_threat_model.md), the backend API has a much wider set of choices and trade-offs:
 
-As we go along, a lot of variations have been and will be analysed. We'll collect them here and revisit them as we gather more evidence.
+1. Because of the [classification problem](README.md#the-classification-problem), we want to prevent a tracker from abusing this API by impersonating an IDP to track users.
+1. Because of the [RP tracking problem](README.md#the-rp-tracking-problem), we want to promote directed identifiers as much as we can.
+1. Because of the [IDP tracking problem](README.md#the-idp-tracking-problem), we want to keep IDPs involved only to the extent that they justifiably need to.
 
-#### Browser Mediated Alternative
+We also want to make sure that:
 
-| field          | description                                                                   |
-|----------------|-------------------------------------------------------------------------------|
-| name           | the user's fulll name                                                         |
-| email          | the user's email addresses                                                    |
-| email_verified | whether the email is verified or not                                          |
+- There is a credible path towards eventual browser interoperability (e.g. firefox, safari, edge)
+- The scheme reaches an economically viable equilibrium for all parties involved, from a design of incentives perspective
+- The scheme handles gracefully federation on non-web platforms (e.g. Android, iOS, PlayStation, etc)
+- We minimize the deployment and activation windows (e.g. server-side / client-side and user-behavior backwards compatibility) for relying parties and identity providers
+- The scheme has a deliberate and well informed extensibility and ossification model, i.e. make extensible where innovation is constructive and ossify where there is less rapid iteration going on and there a direct value in terms of privacy/security. 
+  
+We believe we all still have a lot to learn from each other (browser vendors, identity providers, relying parties, etc) in choosing the mean between the extremes of excess and deficiency with regards to the trade-offs of privacy, usability and economic viability.
 
-For example:
+Having said that, in the following section we'll enumerate some of the most prominent variations under consideration and their trade-offs.
 
-```json
-{
- "name": "Sam Goto",
- "email": "samuelgoto@gmail.com",
- "email_verified": "true",
-}
-```
+### Alternative Designs
 
-The IDP also gets the opportunity to inform the browser if it needs to walk the user through a custom IDP-specific flow to pick accounts, create accounts and / or reauthenticate.
+We'll try to go over the thought process and the biggest considerations to be made starting from the most basic thing that we could do to some of the most involved.
 
-![](static/mock16.svg)
+In each step, we'll try to go over some of the pros and cons. They can be introduced in the following order:
 
-The browser also makes an assessment of the privacy policies the IDP follows.
+1. The [Status Quo](#the-status-quo-api) API
+1. The [Permission-oriented](#the-permission-oriented-apis) APIs
+1. The [Mediation-oriented](#the-mediation-oriented-apis) APIs
+1. The [Delegation-oriented](#the-delegation-oriented-api) API 
 
-We believe a combination of strategies are going to be involved, but it seems hard to escape some form of agreement on policy, specifically because of server-side / out-of-band collusion where browsers aren't involved. So, as a starting point, this strawman proposal starts with a mechanism and convention that allows IDPs to explicitly acknowledge certain service agreements.
+Lets go over each of these in that order.
+  
+#### The Status Quo API
 
-```js
-// Available on a .well-known/webid file:
-{
-  "@context": "https://www.w3.org/ns/webid",
-  "@type": "IdentityProvider",
-  "policies": [
-    "https://tbd.org/policies/privacy/1.0"
-  ]
-  ... TBD ...
-  // possibly signed by a neutral authority that verifies the claims?
-}
-```
+A trivial alternative that is worth noting as a baseline is to "do nothing" and keep federation using low level primitives like redirects and popups.
 
-At this point, the browser hasn't yet revealed  who the RP is quite yet, without the user's permission. So, a idtoken with well established field is created but not quite yet signed by the IDP:
+That seems clear to reject based on:
 
-### The Mediation Stage
+- the increasing constraints that are being put in place for cross-site communication through third party cookies, postMessage and URL parameters as link decorations as a result of the [IDP tracking problem](#the-idp-tracking-problem)
+- the inability to prevent the [RP tracking problem](#the-rp-tracking-problem)
 
-With the user's identity information at hand, the browser then proceeds to gathering consent from the user and raising awareness of any peril that may be involved according to the assessment it made in the last stage.
+From here, the next incremental step we could look at are permission-oriented APIs.
 
-![](static/mock15.svg)
+#### The Permission-oriented APIs
 
-### The Creation Stage
+The Permission-oriented APIs are a series of formulations where the browser tries to "get out of the way" as much as possible, letting IDPs drive as much as possible of the user experience.
 
-After the user consents, the browser can now be confident about the user's intention and finally unveils to the IDP the RP, which the IDP can then use to mint a new token addressed/directed to the specific RP.
-
-The browser makes a `POST` request to an agreed-upon endpoint to generated a [directed basic profile](#directed-basic-profile).
-
-```
-POST /.well-known/webid/create HTTP/1.1
-Host: accounts.idp.com
-Content-Type: application/x-www-form-urlencoded
-Content-Length: 27
-
-client_id=1234
-```
-
-#### Keeping The Status Quo
-
-A trivial alternative that is worth noting is to "do nothing". That seemed clear to reject based on:
-
-- the growing sentiment that the [RP tracking problem](#the-rp-tracking-problem) had to be addressed broadly
-- the growing sentiment that the [classification problem](#the-classification-problem) would lead to general purpose policies which increase the friction to existing flows
-- the second order consequences of relying parties moving to less safe options (compared to federation) like usernames/passwords or out of the web
-
-#### Mixed Browser UI
-
-The most notable alternative considered is one that gives a greater amount of autonomy and extensibility browsers give to identity providers. In this alternative, at the [mediation stage](#the-mediation-stage), the browser would load content that is controlled by the IDP giving it the flexibility to own the user journey, while still making sure there is clear attribution (e.g. having the IDP origin clearly stated).
+In this formulation, the browser gathers the user's permission and builds comprehension, but otherwise "gets out of the way" of IDPs.
 
 ![](static/mock2.svg)
 
+The two most meaningful permission moments a user would go through are:
+  
+- Acknowledgement that the IDP will [be made aware](#the-idp-tracking-problem)  as you sign-up and sign-into the relying parties.
+- Acknowledgement that the RP will [be made able to join](#the-rp-tracking-problem) the user's identities with other relying parties.
+
+These prompts would be inserted by the browser before or after the IDP pass.
+  
 The benefits of this approach are fairly clear: it gives IDPs the autonomy to cover their various use cases, differentiate between each other, innovate and compete, without the browser pulling them back.
 
-The drawbacks are clear too:
+The drawbacks of this approach is that:
 
-1. it constitutes cross-site communication that can be used/abused outside of authentication, putting us back at the [classification problem](#the-classification-problem).
-1. the browser can't be confident about the user's consent, so it is forced to apply general purpose policies.
+- there would be three independent blocking permission moments: (a) one by the browser to capture the permission to allow the RP and the IDP to communicate, (b) one by the IDP to capture permission to sign-in with the RP and (c) one by the browser to capture the acknowledgement that RPs can track you when undirected identifiers are used.
+- because the IDP is controlling the user journey, the browser doesn't have the ability to promote directed identifiers as defaults (outside of policy).
 
-For those reasons, we think that the browser mediated formulation best fit our goals.
+Naturally, the next set of formulations try to address these two shortcomings at the cost of the autonomy of the IDP.
 
-#### Browser Issued JWT
+#### The Mediation-oriented APIs
+
+In this formulation, the browser pulls the responsibility for itself to drive the data exchange, enabling it to (a) bundle the consent moments described in the formulation above and (b) steers users to safer defaults.
+  
+![](static/mock15.svg)
+
+After the user acknowledgement, the browser can be confident about the user's intention and finally unveils to the IDP the RP, which the IDP can then use to mint a new token addressed/directed to the specific RP.
+
+There are clearly some flows that the browsers wouldn't be able to mediate, so  the browser exposes affordances that the IDP can use to walk the user through a custom IDP-specific flow to pick accounts, create accounts and / or reauthenticate.
+
+![](static/mock16.svg)
+
+#### The Delegation-oriented API
 
 A really interesting property of the [Personas protocol](https://github.com/mozilla/id-specs/blob/prod/browserid/index.md#issuing-assertions) is that it made IDPs sign a certificate delegating the issuing/minting of JWTs to the Browser. It accomplished that by making the browser generate a public/private key pair () and have the IDP sign a certificate attesting that the browser's private key could issue certificates for a certain JWT.
 
