@@ -3,6 +3,7 @@ title: "WebID"
 maintainer: "samuelgoto"
 created: 01/01/2020
 updated: 07/10/2020
+redirect_from: "index.html"
 ---
 
 **TL;DR**; This is an **early exploration** of ways that Browsers can help users of the Web make safer decisions [[1](#the-rp-tracking-problem), [2](#the-idp-tracking-problem)] while logging-in on websites with identity providers with identity-specific APIs.
