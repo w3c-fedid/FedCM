@@ -7,10 +7,10 @@ This section is broken into:
 
 - [Topology](#topology): the deployment structure
 - [High Level Design](#high-level-design): the interfaces
-- [The Frontend API](#the-frontend-api): the RP API
+- [The Consumer API](#the-consumer-api): the RP API
   - [Sign-in API](#the-sign-in-api)
   - [Authorization API](#the-authorization-api)
-- [The Backend API](#the-backend-api): the IDP API
+- [The Provider API](#the-provider-api): the IDP API
   - [Alternative Designs](#alternative-designs)
     - [The Status Quo API](#the-status-quo-api)
     - [The Permission-oriented APIs](#the-permission-oriented-apis)
@@ -21,7 +21,7 @@ This section is broken into:
 
 We'll start by going through an analysis of the [deployment structure](#topology) of federation for **consumers**.
 
-We'll then go over how we think [The Frontend API](#the-frontend-api) (the interface between the RP and the Browser) could look like, and then we'll follow with a series of alternatives for [The Backend API](#the-backend-api) (the interaction between the Browser and the IDP) that are being taken under consideration.
+We'll then go over how we think [The Consumer API](#the-consumer-api) (the interface between the RP and the Browser) could look like, and then we'll follow with a series of alternatives for [The Provider API](#the-provider-api) (the interaction between the Browser and the IDP) that are being taken under consideration.
 
 ## Topology
 
@@ -52,14 +52,14 @@ From a high level perspective, the browser acts as an mediator between two parti
 
 The browser exposes two distinct interfaces for the intermediation:
 
-- [The Frontend API](#the-frontend-api) to allow a relying party to request and receive an identity token and
-- [The Backend API](#the-backend-api) to allow an identity provider to provide an identity token
+- [The Consumer API](#the-consumer-api) to allow a relying party to request and receive an identity token and
+- [The Provider API](#the-provider-api) to allow an identity provider to provide an identity token
 
 We'll go over each of these separately next.
 
-## The Frontend API
+## The Consumer API
 
-The frontend API is the Web Platform privacy-oriented API that relying parties call to request information from a specific identity provider, to be used in replacement of the current redirect/popup affordances that are currently used.
+The consumer API is the Web Platform privacy-oriented API that relying parties call to request information from a specific identity provider, to be used in replacement of the current redirect/popup affordances that are currently used.
 
 From the perspective of [The Privacy Threat Model](privacy_threat_model.md), there are two notably distinct uses of federation:
 
@@ -94,9 +94,9 @@ Another notable alternative worth considering is a declarative API that would al
 
 Upon invocation, the browser makes an assessment of the user's intention, for example making sure that the API was used as a result of a user gesture.
 
-From there, the browser proceeds to mediate the data exchange with the chose identity provider via [The Backend API](#the-backend-api).
+From there, the browser proceeds to mediate the data exchange with the chose identity provider via [The Provider API](#the-provider-api).
 
-Upon success, the frontend API results into an idtoken. For example:
+Upon success, the consumer API results into an idtoken. For example:
 
 ```json
 {
@@ -146,13 +146,13 @@ navigator.credentials.requestAuthorization({
 });
 ```
 
-Now that we looked at the surface area introduced for relying parties, lets turn into [The Backend API](#the-backend-api) and see what are the options under consideration for the intermediation between the user agent and the identity provider.
+Now that we looked at the surface area introduced for relying parties, lets turn into [The Provider API](#the-provider-api) and see what are the options under consideration for the intermediation between the user agent and the identity provider.
 
-## The Backend API
+## The Provider API
 
-The purpose of the backend API is to fulfill the invocation of [The Frontend API](#the-frontend-api) by coordinating with the identity provider.
+The purpose of the Provider API is to fulfill the invocation of [The Consumer API](#the-Consumer-api) by coordinating with the identity provider.
 
-From the perspective of [The Privacy Threat Model](privacy_threat_model.md), the backend API has a much wider set of choices and trade-offs:
+From the perspective of [The Privacy Threat Model](privacy_threat_model.md), the Provider API has a much wider set of choices and trade-offs:
 
 1. Because of the [classification problem](README.md#the-classification-problem), we want to prevent a tracker from abusing this API by impersonating an IDP to track users.
 1. Because of the [RP tracking problem](README.md#the-rp-tracking-problem), we want to promote directed identifiers as much as we can.
