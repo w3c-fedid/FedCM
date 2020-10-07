@@ -1,6 +1,9 @@
 ---
 title: Enterprise Single Sign-on
 description: Observations around the applicability of this project to enterprise identity use cases.
+maintainer: "kenrb"
+created: 01/01/2020
+updated: 07/10/2020
 ---
 
 # Enterprise Single Sign-on

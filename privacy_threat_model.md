@@ -1,8 +1,10 @@
 ---
 title: WebID Privacy Threat Model
 description: A privacy threat model intended to frame privacy risks associated with federated identity on the web.
+maintainer: "kenrb"
+created: 01/01/2020
+updated: 07/10/2020
 ---
-Author: @kenrb
 
 # Overview
 ## WebID proposal

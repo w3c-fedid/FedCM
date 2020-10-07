@@ -1,9 +1,14 @@
+---
+title: "Consumers"
+maintainer: "samuelgoto"
+created: 01/01/2020
+updated: 07/10/2020
+---
+
 This is an **early exploration** of the design alternatives to address [this problem](README.md) under [this thread model](privacy_thread_model.md) for **consumers**.
 
 > NOTE: this is an analysis only applicable to the very specific [deployment structure](#topology) of federation for **consumers**.
 > If you are looking for an analysis to other use cases, go [here](design.md) or [here](enterprises.md).
-
-# Consumers
 
 The **why**: we'll start from the assumption that we have a deep understanding of the [why](README.md) and the [parties involved](privacy_thread_model.md) and their motivations.
 
