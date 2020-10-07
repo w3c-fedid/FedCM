@@ -7,10 +7,10 @@ This section is broken into:
 
 - The **why**: [The Problem](README.md)
 - The **who**: [Topology](#topology)
-- The **what**: [High Level Design](#high-level-design)
 - The **why not**: [Alternatives Considered](#alternatives-consiedered)
   - [The Status Quo](#the-status-quo)
   - [The RequestStorageAccess API](#the-request-storage-access-api)
+- The **what**: [High Level Design](#high-level-design)
 - The **how** part I: [The Consumer API](#the-consumer-api)
   - [Sign-in API](#the-sign-in-api)
   - [Authorization API](#the-authorization-api)
@@ -44,6 +44,32 @@ Likewise, changing user behavior and norms is hard because of the number of peop
 
 So, with this deployment constraint in mind, let's look at some alternatives under exploration.
 
+## Alternatives Considered
+
+Now that we have looked at [why](README.md) and [who](#topology), lets look at some **why not**s.
+
+#### The Status Quo
+
+A trivial alternative that is worth noting as a baseline is to "do nothing" and keep federation using low level primitives like redirects and popups.
+
+That seemed clear to reject based on:
+
+- the inability to prevent the [RP tracking problem](#the-rp-tracking-problem)
+- the increasing constraints that are being put in place for cross-site communication through third party cookies, postMessage and URL parameters as link decorations as a result of the [IDP tracking problem](#the-idp-tracking-problem)
+
+From here, the next incremental step we could look at is the [requestStorageAccess](https://developer.mozilla.org/en-US/docs/Web/API/Document/requestStorageAccess) API.
+
+#### The RequestStorageAccess API
+
+The [Document.requestStorageAccess()](https://developer.mozilla.org/en-US/docs/Web/API/Document/requestStorageAccess) API grants first-party storage to subframes. In conjunction with iframes, an IDP could expose its service via cross-site postMessage communication once first-party storage has been granted.
+
+That seemed clear to reject based on:
+
+- the inability to prevent the [RP tracking problem](#the-rp-tracking-problem)
+- the general-purpose nature of the API leading to the lowest common denominator policy
+
+From here, lets try to break down the problem into smaller parts.
+
 ## High Level Design
 
 From a high level perspective, the browser acts as an mediator between two parties: the relying party and the identity provider.
@@ -57,21 +83,6 @@ The browser exposes two distinct interfaces for the intermediation:
 - [The Provider API](#the-provider-api) to allow an identity provider to provide an identity token
 
 We'll go over each of these separately next.
-
-## Alternatives Considered
-
-#### The Status Quo
-
-A trivial alternative that is worth noting as a baseline is to "do nothing" and keep federation using low level primitives like redirects and popups.
-
-That seems clear to reject based on:
-
-- the increasing constraints that are being put in place for cross-site communication through third party cookies, postMessage and URL parameters as link decorations as a result of the [IDP tracking problem](#the-idp-tracking-problem)
-- the inability to prevent the [RP tracking problem](#the-rp-tracking-problem)
-
-From here, the next incremental step we could look at are permission-oriented APIs.
-
-#### The RequestStorageAccess API
 
 ## The Consumer API
 
