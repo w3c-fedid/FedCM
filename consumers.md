@@ -1,24 +1,25 @@
+This is an **early exploration** of the design alternatives to address [this problem](README.md) under [this thread model](privacy_thread_model.md) for **consumers**.
+
 > NOTE: this is an analysis only applicable to the very specific [deployment structure](#topology) of federation for **consumers**.
 > If you are looking for an analysis to other use cases, go [here](design.md) or [here](enterprises.md).
 
-This is an **early exploration** of the design alternatives to address [the problem](README.md) under [the thread model](privacy_thread_model.md).
-
 This section is broken into:
 
-- [Topology](#topology): the deployment structure
-- [High Level Design](#high-level-design): the interfaces
-- [The Consumer API](#the-consumer-api): the RP API
+- The **why**: [The Problem](README.md)
+- The **who**: [Topology](#topology)
+- The **what**: [High Level Design](#high-level-design)
+- The **why not**: [Alternatives Considered](#alternatives-consiedered)
+  - [The Status Quo](#the-status-quo)
+  - [The RequestStorageAccess API](#the-request-storage-access-api)
+- The **how** part I: [The Consumer API](#the-consumer-api)
   - [Sign-in API](#the-sign-in-api)
   - [Authorization API](#the-authorization-api)
-- [The Provider API](#the-provider-api): the IDP API
+- The **how** part II: [The Provider API](#the-provider-api)
   - [Alternative Designs](#alternative-designs)
-    - [The Status Quo API](#the-status-quo-api)
     - [The Permission-oriented APIs](#the-permission-oriented-apis)
     - [The Mediation-oriented API](#the-mediation-oriented-apis)
     - [The Delegation-oriented API](#the-delegation-oriented-api)
     
-# Consumers
-
 We'll start by going through an analysis of the [deployment structure](#topology) of federation for **consumers**.
 
 We'll then go over how we think [The Consumer API](#the-consumer-api) (the interface between the RP and the Browser) could look like, and then we'll follow with a series of alternatives for [The Provider API](#the-provider-api) (the interaction between the Browser and the IDP) that are being taken under consideration.
@@ -56,6 +57,21 @@ The browser exposes two distinct interfaces for the intermediation:
 - [The Provider API](#the-provider-api) to allow an identity provider to provide an identity token
 
 We'll go over each of these separately next.
+
+## Alternatives Considered
+
+#### The Status Quo
+
+A trivial alternative that is worth noting as a baseline is to "do nothing" and keep federation using low level primitives like redirects and popups.
+
+That seems clear to reject based on:
+
+- the increasing constraints that are being put in place for cross-site communication through third party cookies, postMessage and URL parameters as link decorations as a result of the [IDP tracking problem](#the-idp-tracking-problem)
+- the inability to prevent the [RP tracking problem](#the-rp-tracking-problem)
+
+From here, the next incremental step we could look at are permission-oriented APIs.
+
+#### The RequestStorageAccess API
 
 ## The Consumer API
 
@@ -176,24 +192,12 @@ We'll try to go over the thought process and the biggest considerations to be ma
 
 In each step, we'll try to go over some of the pros and cons. They can be introduced in the following order:
 
-1. The [Status Quo](#the-status-quo-api) API
 1. The [Permission-oriented](#the-permission-oriented-apis) APIs
 1. The [Mediation-oriented](#the-mediation-oriented-apis) APIs
 1. The [Delegation-oriented](#the-delegation-oriented-api) API 
 
 Lets go over each of these in that order.
   
-#### The Status Quo API
-
-A trivial alternative that is worth noting as a baseline is to "do nothing" and keep federation using low level primitives like redirects and popups.
-
-That seems clear to reject based on:
-
-- the increasing constraints that are being put in place for cross-site communication through third party cookies, postMessage and URL parameters as link decorations as a result of the [IDP tracking problem](#the-idp-tracking-problem)
-- the inability to prevent the [RP tracking problem](#the-rp-tracking-problem)
-
-From here, the next incremental step we could look at are permission-oriented APIs.
-
 #### The Permission-oriented APIs
 
 The Permission-oriented APIs are a series of formulations where the browser tries to "get out of the way" as much as possible, letting IDPs drive as much as possible of the user experience.
