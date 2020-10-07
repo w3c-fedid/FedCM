@@ -3,7 +3,15 @@ This is an **early exploration** of the design alternatives to address [this pro
 > NOTE: this is an analysis only applicable to the very specific [deployment structure](#topology) of federation for **consumers**.
 > If you are looking for an analysis to other use cases, go [here](design.md) or [here](enterprises.md).
 
-This section is broken into:
+We'll start from the assumption that we have a deep understanding of the [why](README.md).
+
+We'll then go through an analysis of the [deployment structure](#topology) of federation for **consumers**.
+
+We'll describe briefly some alternatives considered and why they fall short.
+
+We'll then go over the [high level view](#high-level-design) and a breakdown into two smaller problems: [The Consumer API](#the-consumer-api) (i.e. the interface between the RP and the Browser) and [The Producer API](#the-producer-api) (i.e. the interaction between the Browser and the IDP).
+
+Our last section will go over the (slightly less controversial) [Consumer API](#the-consumer-api) and then enumerate a series of alternatives for the (much more contentious) [Provider API](#the-provider-api).
 
 - The **why**: [The Problem](README.md)
 - The **who**: [Topology](#topology)
@@ -19,10 +27,6 @@ This section is broken into:
     - [The Permission-oriented APIs](#the-permission-oriented-apis)
     - [The Mediation-oriented API](#the-mediation-oriented-apis)
     - [The Delegation-oriented API](#the-delegation-oriented-api)
-    
-We'll start by going through an analysis of the [deployment structure](#topology) of federation for **consumers**.
-
-We'll then go over how we think [The Consumer API](#the-consumer-api) (the interface between the RP and the Browser) could look like, and then we'll follow with a series of alternatives for [The Provider API](#the-provider-api) (the interaction between the Browser and the IDP) that are being taken under consideration.
 
 ## Topology
 
