@@ -16,10 +16,10 @@ Unfortunately, step (4) depends on primitives that are being restricted as a res
 
 The problem is essentially the same as the [general federated identity problem](README.md#the-problem) that WebID is aiming to address, but for several reasons an API designed for consumer use cases on the open web might be a poor fit for enterprises. These include:
 * Enterprises can use a wider variety of protocols and implementations.
-* User tracking is often not a concern, reducing or eliminating consent requirements.
+* User tracking is often not a concern, reducing or eliminating requirements around informing the user and acquiring permission.
 * System administrators can have control over clients, services, or both.
 
-This document explores some of the open questions and possible solutions in this area.
+This document explores some of the possible solutions in this area.
 
 # First Party Sets
 
