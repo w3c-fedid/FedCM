@@ -1,12 +1,12 @@
-**TL;DR**; This is an **early exploration** of ways that Browsers can help users of the Web make [safer](#the-rp-tracking-problem) decisions while logging in on websites with identity providers with [high-level purpose-specific APIs](design.md).
+**TL;DR**; This is an **early exploration** of ways that Browsers can help users of the Web make safer decisions [[1](#the-rp-tracking-problem), [2](#the-idp-tracking-problem)] while logging-in on websites with identity providers with identity-specific APIs.
 
 # WebID
 
 This explainer is broken down into:
 
-- [The Problem](#the-problem)
-- [Prior Art](prior.md#prior-art)
-- [An early exploration](design.md) of the solution space
+- [The Problem Space](#the-problem)
+- [The Prior Art](prior.md)
+- An early exploration of [The Solution Space](design.md)
 
 # The Problem
 
@@ -14,11 +14,11 @@ Over the last decade, identity federation has unquestionably played a central ro
 
 The standards that define how identity federation works today were built independently of the web platform, and their designers had to work **around** its limitations rather than extending them. Because of that, existing user authentication flows rely on general web capabilities such as top-level navigation, link decoration, window popups and cookies.
 
-Because these general purpose primitives can be used for an open ended number of use cases (some of them increasingly allowing users to be tracked), browsers have to apply policies that capture the **lowest common denominator**, at best applying cumbersome permissions (e.g. popup blockers).
+Because these general purpose primitives can (by design) be used for an open ended number of use cases (some of them increasingly allowing users to be tracked), browsers have to apply policies that capture the **lowest common denominator**, at best applying cumbersome permissions (e.g. popup blockers) and at worst entirely blocking them.
 
 If browsers are applying stricter policies around them, how do we keep identity federation around?
 
-This section is broken into:
+Before we dig into the solution space, lets take a deeper dive into the problem:
 
 - [The classification problem](#the-classification-problem)
 - [The RP tracking problem](#the-rp-tracking-problem)
@@ -53,7 +53,7 @@ In order to prevent cross-site tracking in federation, one has to solve what we'
 
 ## The RP Tracking problem
 
-Cross relying party joins is enabled through federation when services that the user signs in to **collude** with each other and other entities to deterministically (or probabilistically) **link** their user's accounts to build and get access to a richer user profile (e.g. one site selling data on browsing history for ads targeting to another service). While this could be enabled without federation per se (user could manually provide a joinable email address or phone number), federated identity providers have an opportunity to address this problem at scale by providing their users with site-specific/directed identifiers. 
+Cross-site joins are enabled through federation when the relying parties that the user signs in to **collude** with each other (and other entities) to deterministically (or probabilistically) **link** their user's accounts to build and get access to a richer user profile (e.g. one site selling data on browsing history for ads targeting to another service). While this could be enabled without federation per se (user could manually provide a joinable email address or phone number), federated identity providers have an opportunity to address this problem at scale by providing their users with site-specific/directed identifiers. 
 
 ![](static/mock3.svg)
 
@@ -63,15 +63,15 @@ Even if identity providers were to provide site-specific/directed identifiers, I
 
 ![](static/mock10.svg)
 
-# Next
+The [Classification Problem](#the-classification-problem), the [RP Tracking Problem](#the-rp-tracking-problem) and the [IDP Tracking Problem](#the-idp-tracking-problem) are the problems that we are set to solve.
 
-This is a high level introduction to the problem. Here is a deep dive into parts of the problem:
-
-- [Prior Art](prior.md#prior-art)
-- [The Threat Model](privacy_threat_model.md)
+The following should give you a deeper understanding of the problems, related problems and how they were tackled in the past:
+  
+- [Prior Art](prior.md)
+- [The Threat Model](privacy_threat_model.md): a formalization of the problem
 - [Related Problems](problems.md)
 
-Or jump straight into the:
+With a solid understanding of the problem space, you can read below some of the thoughts on how to address them:
 
-- [Early exploration](design.md) of the solution space
+- An early exploration of [The Solution Space](design.md)
 
