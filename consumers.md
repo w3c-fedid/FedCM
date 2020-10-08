@@ -10,67 +10,26 @@ This is an **early exploration** of the design alternatives to address [this pro
 > NOTE: this is an analysis only applicable to the very specific [deployment structure](#topology) of federation for **consumers**.
 > If you are looking for an analysis to other use cases, go [here](design.md) or [here](enterprises.md).
 
-The **why**: we'll start from the assumption that we have a deep understanding of the [why](README.md) and the [parties involved](privacy_threat_model.md) and their motivations.
+This section goes over the **what** and the **how**. It presuposes that you have read and started from:
 
-The **who**: we'll then go through an analysis of the [deployment structure](#topology) of federation for **consumers**.
+- The **why**: the [problem](README.md) statement and the [motivations](privacy_threat_model.md) and the [topology](activation.md) of the parties involved.
+- The **why not**: the [alternatives](alternatives_considered.md) considered (e.g. the [prior art](prior.md), the [status quo](alternatives_considered.md#the-status-quo) and the [requestStorageAccess API](alternatives_considered.md#the-request-storage-access-api)).
 
-The **why not**: we'll describe some immediate [alternatives considered](#alternatives-consiedered) and why they fall short (e.g. [The Status Quo](#the-status-quo) and [The RequestStorageAccess API](#the-request-storage-access-api)).
+We'll then go over the [high-level overview](#high-level-design) and a breakdown into two smaller problems:
 
-The **what**: we'll then go over the [high-level view](#high-level-design) and a breakdown into two smaller problems: [The Consumer API](#the-consumer-api) (i.e. the interface between the RP and the Browser) and [The Producer API](#the-producer-api) (i.e. the interaction between the Browser and the IDP).
+- [The Consumer API](#the-consumer-api) (i.e. the interface between the RP and the Browser) and
+- [The Producer API](#the-producer-api) (i.e. the interaction between the Browser and the IDP).
 
-The **how**: in the first part of the last section will go over the (slightly less controversial) [Consumer API](#the-consumer-api) and the useful separation of the [Sign-in API](#the-sign-in-api) and the [Authorization API](#the-authorization-api).
+In the first part of the last section will go over the (slightly less controversial) [Consumer API](#the-consumer-api) and the useful separation between:
 
-Finally, we'll then enumerate a series of [alternatives](#alternative-designs) for the (much more contentious) [Provider API](#the-provider-api):
+- The [Sign-in API](#the-sign-in-api) and
+- The [Authorization API](#the-authorization-api).
+
+Finally, we'll then enumerate a series of alternatives for the (much more contentious) [Provider API](#the-provider-api):
 
 - The [Permission-oriented Variation](#the-permission-oriented-apis)
 - The [Mediation-oriented Variation](#the-mediation-oriented-apis)
 - The [Delegation-oriented Variation](#the-delegation-oriented-api)
-
-# Topology
-
-Currently, for **consumers**, sign-in flows on websites begin with a login screen that provides the user options to use federated identity, as illustrated in the mock below. Today, clicking the button for an IDP relies on general purpose primitives (typically [redirects or popups](#low-level)) to an IDP sign-in flow. 
-
-![](static/mock1.svg)
-
-There is a wide set of privacy and usability goals for identity sharing on the web, but early on we ran into better understanding the structural deployment of federation on the web, specifically the properties that make different activation/adoption strategies more or less plausible.
-
-For example, it is clear that there are relatively few public [IDPs](#idp) in use (say, tens), particularly in comparison to the number of [RPs](#rp) (say, millions) and their users (say, billions). A structural change that only requires adoption by IDPs and no changes or engagement on the part of RPs and users is significantly easier compared to redeploying millions of RPs or retraining billions of users.
-
-Fortunately, in more cases than not (by our estimates, about half of the deployment), RPs implement federated identity importing a script provided by - and under the control of - IDPs, giving us a major deployment vehicle: IDP SDKs loaded into RPs. 
-
-![](static/mock7.svg)
-
-Nonetheless, while much of the client-side code is under the (few) IDPs to control (e.g. we can replace redirects by other means), all of the server-side code is under the (many) RPs to control, meaning that that is significantly harder to change (say, years). The cases where RPs implement federated identity without a dynamically loaded SDK will have a longer deployment window and will be discussed separately. 
-
-Likewise, changing user behavior and norms is hard because of the number of people involved (say, billions). Unfamiliar login flows could result in users declining to use federated options, and instead opting for username/password credentials during RP account creation. To address that, this proposal aims to provide an experience that minimizes the divergence from existing federated identity user experience as much it possibly can (e.g. introducing new user decisions to be made).
-
-So, with this deployment constraint in mind, let's look at some alternatives under exploration.
-
-# Alternatives Considered
-
-Now that we have looked at [why](README.md) and [who](#topology), lets look at some **why not**s.
-
-## The Status Quo
-
-A trivial alternative that is worth noting as a baseline is to "do nothing" and keep federation using low-level primitives like redirects and popups.
-
-That seemed clear to reject based on:
-
-- the inability to prevent the [RP tracking problem](#the-rp-tracking-problem)
-- the increasing constraints that are being put in place for cross-site communication through third-party cookies, postMessage and URL parameters as link decorations as a result of the [IDP tracking problem](#the-idp-tracking-problem)
-
-From here, the next incremental step we could look at is the [requestStorageAccess](https://developer.mozilla.org/en-US/docs/Web/API/Document/requestStorageAccess) API.
-
-## The RequestStorageAccess API
-
-The [Document.requestStorageAccess()](https://developer.mozilla.org/en-US/docs/Web/API/Document/requestStorageAccess) API grants first-party storage to cross-origin subframes. In conjunction with iframes, an IDP could expose its service via cross-site postMessage communication once first-party storage has been granted.
-
-That seemed clear to reject based on:
-
-- the inability to prevent the [RP tracking problem](#the-rp-tracking-problem)
-- the general-purpose nature of the API leading to the lowest common denominator policy
-
-From here, let's try to break down the problem into smaller parts.
 
 # High Level Design
 
@@ -198,8 +157,6 @@ We also want to make sure that:
 We believe we all still have a lot to learn from each other (browser vendors, identity providers, relying parties, etc) in choosing the mean between the extremes of excess and deficiency with regards to the trade-offs of privacy, usability and economic viability.
 
 Having said that, in the following section we'll enumerate some of the most prominent variations under consideration and their trade-offs.
-
-## Alternative Designs
 
 We'll try to go over the thought process and the biggest considerations to be made starting from the most basic thing that we could do to some of the most involved.
 
