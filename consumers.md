@@ -152,7 +152,7 @@ The Permission-oriented APIs are a series of formulations where the browser trie
 
 In this formulation, the browser gathers the user's permission and builds comprehension, but otherwise "gets out of the way" of IDPs.
 
-![](static/mock2.svg)
+![](static/mock19.svg)
 
 The two most meaningful permission moments a user would go through are:
   
