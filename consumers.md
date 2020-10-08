@@ -7,7 +7,7 @@ updated: 07/10/2020
 
 This is an **early exploration** of the design alternatives to address [this problem](README.md) under [this threat model](privacy_threat_model.md) for **consumers**.
 
-> NOTE: this is an analysis only applicable to the very specific [deployment structure](#topology) of federation for **consumers**.
+> NOTE: this is an analysis only applicable to the very specific deployment [structure](activation.md) of federation for **consumers**.
 > If you are looking for an analysis to other use cases, go [here](design.md) or [here](enterprises.md).
 
 This section goes over the **what** and the **how**. It presuposes that you have read and started from:
