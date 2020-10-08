@@ -20,18 +20,26 @@ and the user-behavior backwards compatibility. This approach maximizes the
 technical enforcement of both RP and IDP tracking, at the cost of IDP and RP
 server-side backwards compatibility.
 
-## Sign Up Flow
+## Basic Flow
 
+<figure class="image">
+  <img src="./static/delegation-api-flow.svg" alt="High-level flow" />
+  <figcaption>Figure. <em>High-level flow</em></figcaption>
+</figure>
 
-Here is a sign up flow in this proposal where a user can sign up to RP and share
-a directed basic profile. The importance of recovery code and salt are discussed
-in the next section.
+Notice that in this approach we are assuming that an email proxy and email
+provider exist independent from the IDP. This is necessary to maintain IDP
+blindness even after RP uses the directed email address to email the user.
+
+Below is the sign up flow in this proposal where a user signs up to an RP and
+share their [directed basic profile](glossary.md#directed-basic-profile). The
+importance of recovery code and salt are discussed in the next section.
 
 **TODO**(majidvp): Explain in more details.
 
-<figure>
+<figure class="image">
   <img src="./static/delegation-api-signup-flow.svg" alt="Sign-Up Flow for a WebID enabled browser" />
-  <figcaption>Sign-Up Flow for a WebID enabled browser</figcaption>
+  <figcaption>Figure. <em>Sign-Up Flow for a WebID enabled browser</em></figcaption>
 </figure>
 
 
@@ -171,14 +179,14 @@ account on RP using a new browser or platform that either:
     **IDP gets unblinded** as it learns about the user sign-in to the RP.  
 
 
-<figure>
+<figure class="image">
   <img src="./static/delegation-api-recovery-signin-flow.svg" alt="Sign-In (Recovery) Flow for a fresh WebID enabled browser" />
-  <figcaption>Sign-In (Recovery) Flow for a fresh WebID enabled browser</figcaption>
+  <figcaption>Figure. <em>Sign-In (Recovery) Flow for a fresh WebID enabled browser</em></figcaption>
 </figure>
 
 
 
-<figure>
+<figure class="image">
   <img src="./static/delegation-api-recovery-legacy-flow.svg" alt="Sign-In (Recovery) Flow for legacy non-WebID enabled browser/apps" />
-  <figcaption>Sign-In (Recovery) Flow for legacy non-WebID enabled browser/apps</figcaption>
+  <figcaption>Figure. <em>Sign-In (Recovery) Flow for legacy non-WebID enabled browser/apps</em></figcaption>
 </figure>
