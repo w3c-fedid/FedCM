@@ -9,7 +9,7 @@ This flow contains an implicit assumption that 'global' information (including t
 
 In this flow the user agent attempts to mitigate RP tracking by displaying a warning if the IDP is going to provide correlatable user identifiers to the RP. The warning is not shown if the identifier is [verifiably directed](directed_identifiers.md#verifiably-directed-identifiers).
 
-[Insert image here]
+![](static/permission_based_flow.svg)
 
 ## Benefits
 * This should work well across a variety of protocols and use cases without user agents having to accommodate them specifically. 
