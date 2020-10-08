@@ -17,6 +17,12 @@ In this formulation, we solve the cross-browser consistency by leveraging the ID
 
 ![](static/mock18.svg)
 
+# Benefits
+
+- Fewer prompts compared to the [Permission-oriented](consumers.md#the-permission-oriented-variation) variation
+- Prompts are "functional" (part of a decision the user has to make) rather than "informational" (speed bumps)
+- The browser has the ability to control the defaults
+
 # Challenges
 
 - Browsers need to become opinionated about sign-in and the subset of flows that enables it.
