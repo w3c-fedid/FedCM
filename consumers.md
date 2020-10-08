@@ -154,18 +154,11 @@ Naturally, the next set of formulations try to address these two shortcomings at
 
 ## The Mediation-oriented Variation
 
-In this formulation, the browser pulls the responsibility for itself to drive the data exchange, enabling it to (a) bundle the consent moments described in the formulation above and (b) steers users to safer defaults.
+In this formulation, the browser pulls the responsibility for itself to drive the profile exchange, enabling it to (a) bundle the consent moments described in the formulation above and (b) steer users to safer defaults.
   
 ![](static/mock15.svg)
 
-After the user acknowledgement, the browser can be confident about the user's intention and finally unveils to the IDP the RP, which the IDP can then use to mint a new token addressed/directed to the specific RP.
-
-The benefits of this variation is that it (a) bundles the consent moments into a single prompt and (b) enables the browser to address [The RP Tracking Problem](README.md#the-rp-tracking-problem) by picking defaults that promote [directed basic profiles](#directed-basic-profile).
-
-The drawbacks of this variation is that it:
-
-- Ossifies the Sign-In flow and
-- [The IDP Tracking Problem](README.md#the-idp-tracking-problem) is still only addressed via consent rather than mechanically.
+An expanded exploration of this approach with its benefits and drawbacks can be seen [here](mediation_oriented_api.md).
   
 ## The Delegation-oriented Variation
 
