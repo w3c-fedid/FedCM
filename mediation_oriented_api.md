@@ -4,8 +4,8 @@ title: "Mediation-oriented API"
 
 In this variation of the Provider API, we modify the Permission-oriented variation to:
 
-minimizes the number of consent moments in the “happy path” case where the IDP is only sharing a directed profileinformation. 
-Bundle the prompts to unify the case where the users opt into using an undirected profile. 
+- minimizes the number of consent moments in the “happy path” case where the IDP is only sharing a directed profileinformation. 
+- Bundle the prompts to unify the case where the users opt into using an undirected profile. 
 Allow the user agent to pick defaults (e.g opt-out vs opt-in) regarding the promotion of directed identifiers.
 
 The fundamental modification to achieve these goals is moving from a UI that is controlled by the IDP into UI flows that are mediated natively by the browser.  
