@@ -23,7 +23,7 @@ In this flow the user agent attempts to mitigate RP tracking by displaying a war
 
 ## Other design options
 
-### Rely on policy-based enforcement of directed identifiers
+### Rely on policy-based enforcement instead of directed identifiers
 This flow would change minimally if the user agent could accept an IDP's assertion on whether identifiers are directed without them conforming to a verifiable format (i.e. [policy-based enforcement](directed_identifiers.md#policy-based-approach)). This has the benefit of avoiding the [compatibility problems with verifiably directed identifiers](directed_identifiers.md#caveats-of-verifiably-directed-identifiers) but at the drawback of increasing tracking risk from a bad faith IDP.
 
 There is always going to be some level of policy-based requirements, since a bad faith IDP could collude with an RP outside of the defined flows to unmask directed identifiers, but verifiably directed identifiers might make it harder to do that at scale.
