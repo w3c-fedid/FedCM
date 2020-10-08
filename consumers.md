@@ -35,9 +35,7 @@ Finally, we'll then enumerate a series of alternatives for the (much more conten
 
 From a high level perspective, the browser acts as an mediator between two parties: the relying party and the identity provider.
 
-> TODO(goto): fix this diagram to be more high level.
-> ![](static/mock14.svg)
-
+![](static/mock14.svg)
 The browser exposes two distinct interfaces for the intermediation:
 
 - [The Consumer API](#the-consumer-api) to allow a relying party to request and receive an identity token and
