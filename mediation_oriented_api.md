@@ -1,14 +1,15 @@
 ---
 title: "Mediation-oriented API"
+created: 08/10/2020
+updated: 08/10/2020
 ---
 
-In this variation of the Provider API, we modify the Permission-oriented variation to:
+In this variation of the [Provider API](consumers.md#the-provider-api), we modify the [Permission-oriented](consumers.md#the-permission-oriented-variation) variation to:
 
-- minimizes the number of consent moments in the “happy path” case where the IDP is only sharing a directed profileinformation. 
-- Bundle the prompts to unify the case where the users opt into using an undirected profile. 
-Allow the user agent to pick defaults (e.g opt-out vs opt-in) regarding the promotion of directed identifiers.
+- Bundle the prompts to unify the case where the users opt-into using an undirected profile.
+- Allow the user agent to pick defaults (e.g opt-out vs opt-in) and control the use of [directed profiles](directed_basic_profile.md).
 
-The fundamental modification to achieve these goals is moving from a UI that is controlled by the IDP into UI flows that are mediated natively by the browser.  
+The fundamental modification to achieve these goals is allow the browser to mediate the sign-in flow:  
 
 ![](static/mock13.svg)
 
