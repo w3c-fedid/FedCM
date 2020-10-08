@@ -115,31 +115,34 @@ verifies the token using this public key.
 
 Strawman proposal for Certified JWT token:
 
-``` json
-{header: {
-  "alg": "ES512",
-  "typ": "JWT",
-  /* new entry in header */
-  "certified-public-key": {
-    "value": "MIIBIjANBgkqhkiG",
-    "signature":  ECDSASHA512(
-         <value>,
-         <idp-private-key>
-     ),
-  }
-},
-payload: {
-  "sub": "1234567890",
-  "name": "John Doe",
-  "admin": true,
-  "iat": 1516239022,
-  /* new entry in payload */
-  "recovery": ECDSASHA512(<user_id>, RP,<salt>)
-},
+```js
 
-signature: ECDSASHA512(
-  base64(header) + "." + base64(payload),
-  <browser-private-key>)
+{
+  header: {
+    "alg": "ES512",
+    "typ": "JWT",
+    /* new entry in header */
+    "certified-public-key": {
+      "value": "MIIBIjANBgkqhkiG",
+      "signature":  ECDSASHA512(
+          "<value>",
+          "<idp-private-key>"
+      ),
+    }
+  },
+  payload: {
+    "sub": "1234567890",
+    "name": "John Doe",
+    "admin": true,
+    "iat": 1516239022,
+    /* new entry in payload */
+    "recovery": ECDSASHA512("<user_id>", RP, "<salt>")
+  },
+
+  signature: ECDSASHA512(
+    base64(header) + "." + base64(payload),
+    "<browser-private-key>")
+  }
 }
 ```
 
@@ -157,7 +160,8 @@ enumerating all possible values.
 Here we articulate the flow where a user is trying to sign in to their existing
 account on RP using a new browser or platform that either: 
 
- 1. Implement WebID does not have access to the database. This maintains IDP blindness. 
+ 1. Implement WebID does not have access to the database. This maintains IDP
+    blindness. 
  2. Does not implement WebID protocol (e.g., A mobile app) and needs to use
     OAuth flows. Here the recovery code may be passed to IDP which can
     authenticate the user and generate a regular JWT token. Notice that here IDP
@@ -165,5 +169,7 @@ account on RP using a new browser or platform that either:
 
 
 ![](static/delegation-api-recovery-signin-flow.svg)
+
+Figure. 
 
 ![](static/delegation-api-recovery-legacy-flow.svg)
