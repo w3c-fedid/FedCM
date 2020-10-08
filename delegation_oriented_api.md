@@ -5,7 +5,7 @@ blindness](glossary.md#identity-provider-blindness) by having the IDP delegate
 the generation of identity assertion to the browser.
 
 Below is one variation the combines the IDP blindness mechanisms designed in
-[Mozilla’s Personas proposal][https://en.wikipedia.org/wiki/Mozilla_Persona]
+[Mozilla’s Personas proposal](https://en.wikipedia.org/wiki/Mozilla_Persona)
 with the [RP blindness](glossary.md#relying-party-blindness), recovery processes
 and the user-behavior backwards compatibility. This approach maximizes the
 technical enforcement of both RP and IDP tracking, at the cost of IDP and RP
@@ -19,6 +19,8 @@ a directed basic profile. The importance of recovery code and salt are discussed
 in the next section.
 
 TODO: Explain in more details.
+
+![](static/delegation-api-signup-flow.svg)
 
 
 ## Benefits
@@ -132,7 +134,7 @@ signature: ECDSASHA512(
 }
 ```
 
-Recovery Flow
+### Recovery Flow
 
 Recovery code is an opaque value that can be computed given user id, directed
 email, and salt e.g., `recovery code = SHA512(user_id, RP, salt)`.
@@ -153,5 +155,6 @@ account on RP using a new browser or platform that either:
     gets unblinded as it learns about user sign-in to the RP.  
 
 
+![](static/delegation-api-recovery-signin-flow.svg)
 
-
+![](static/delegation-api-recovery-legacy-flow.svg)
