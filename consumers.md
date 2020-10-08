@@ -138,38 +138,17 @@ Having said that, in the following section we'll enumerate some of the most prom
 
 We'll try to go over the thought process and the biggest considerations to be made starting from the most basic thing that we could do to some of the most involved.
 
-In each step, we'll try to go over some of the pros and cons. They can be introduced in the following order:
+The approaches are categorized into three general approaches:
 
 1. The [Permission-oriented](#the-permission-oriented-variation) Variation
 1. The [Mediation-oriented](#the-mediation-oriented-variation) Variation
 1. The [Delegation-oriented](#the-delegation-oriented-variation) Variation
-
-Lets go over each of these in that order.
   
 ## The Permission-oriented Variation
 
-The Permission-oriented APIs are a series of formulations where the browser tries to "get out of the way" as much as possible, letting IDPs drive as much as possible of the user experience.
+The simplest approach is to have WebID offer APIs that allow cross-origin data sharing for sign-in and authorization use cases that works much as they do today, but with the user agents providing warnings and consent moments to the user when new tracking risks appear.
 
-In this formulation, the browser gathers the user's permission and builds comprehension, but otherwise "gets out of the way" of IDPs.
-
-![](static/mock19.svg)
-
-The two most meaningful permission moments a user would go through are:
-  
-- Acknowledgement that the IDP will [be made aware](README.md#the-idp-tracking-problem) as you sign up and sign in to the relying parties.
-- Acknowledgement that the RP will [be made able to join](README.md#the-rp-tracking-problem) the user's identities with other relying parties.
-
-These prompts would be inserted by the browser before or after the IDP pass.
-  
-The benefits of this approach are fairly clear: it gives IDPs the autonomy to cover their various use cases, differentiate between each other, innovate and compete, without the browser pulling them back.
-
-The drawbacks of this approach is that:
-
-- There would be three independent blocking permission moments: (a) one by the browser to capture the permission to allow the RP and the IDP to communicate, (b) one by the IDP to capture permission to sign-in with the RP and (c) one by the browser to capture the acknowledgement that RPs can track you when undirected identifiers are used.
-- The [The IDP Tracking Problem](README.md#the-idp-tracking-problem) and the [The RP Tracking Problem](README.md#the-rp-tracking-problem) are addressed via consent rather than mechanically. Because of the difficulty users have in comprehending the risks involved, there is a chance the permission moments will be as effective as "speed bumps" that users dismiss just to get them out of the way.
-- Because the IDP is controlling the user journey, the browser doesn't have the ability to promote directed identifiers as defaults (outside of policy).
-
-You can read more details about this variation [here](permission_oriented_api.md).
+An expanded exploration of this approach with its benefits and drawbacks can be seen [here](permission_oriented_api.md).
 
 Naturally, the next set of formulations try to address these two shortcomings at the cost of the autonomy of the IDP and the ossification of parts of the flow.
 
