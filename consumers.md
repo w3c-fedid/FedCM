@@ -5,18 +5,18 @@ created: 01/01/2020
 updated: 07/10/2020
 ---
 
-This is an **early exploration** of the design alternatives to address [this problem](README.md) under [this thread model](privacy_thread_model.md) for **consumers**.
+This is an **early exploration** of the design alternatives to address [this problem](README.md) under [this threat model](privacy_threat_model.md) for **consumers**.
 
 > NOTE: this is an analysis only applicable to the very specific [deployment structure](#topology) of federation for **consumers**.
 > If you are looking for an analysis to other use cases, go [here](design.md) or [here](enterprises.md).
 
-The **why**: we'll start from the assumption that we have a deep understanding of the [why](README.md) and the [parties involved](privacy_thread_model.md) and their motivations.
+The **why**: we'll start from the assumption that we have a deep understanding of the [why](README.md) and the [parties involved](privacy_threat_model.md) and their motivations.
 
 The **who**: we'll then go through an analysis of the [deployment structure](#topology) of federation for **consumers**.
 
 The **why not**: we'll describe some immediate [alternatives considered](#alternatives-consiedered) and why they fall short (e.g. [The Status Quo](#the-status-quo) and [The RequestStorageAccess API](#the-request-storage-access-api)).
 
-The **what**: we'll then go over the [high level view](#high-level-design) and a breakdown into two smaller problems: [The Consumer API](#the-consumer-api) (i.e. the interface between the RP and the Browser) and [The Producer API](#the-producer-api) (i.e. the interaction between the Browser and the IDP).
+The **what**: we'll then go over the [high-level view](#high-level-design) and a breakdown into two smaller problems: [The Consumer API](#the-consumer-api) (i.e. the interface between the RP and the Browser) and [The Producer API](#the-producer-api) (i.e. the interaction between the Browser and the IDP).
 
 The **how**: in the first part of the last section will go over the (slightly less controversial) [Consumer API](#the-consumer-api) and the useful separation of the [Sign-in API](#the-sign-in-api) and the [Authorization API](#the-authorization-api).
 
@@ -40,7 +40,7 @@ Fortunately, in more cases than not (by our estimates, about half of the deploym
 
 ![](static/mock7.svg)
 
-Nonetheless, while much of the client side code is under the (few) IDPs to control (e.g. we can replace redirects by other means), all of the server side code is under the (many) RPs to control, meaning that that is significantly harder to change (say, years). The cases where RPs implement federated identity without a dynamically loaded SDK will have a longer deployment window and will be discussed separately. 
+Nonetheless, while much of the client-side code is under the (few) IDPs to control (e.g. we can replace redirects by other means), all of the server-side code is under the (many) RPs to control, meaning that that is significantly harder to change (say, years). The cases where RPs implement federated identity without a dynamically loaded SDK will have a longer deployment window and will be discussed separately. 
 
 Likewise, changing user behavior and norms is hard because of the number of people involved (say, billions). Unfamiliar login flows could result in users declining to use federated options, and instead opting for username/password credentials during RP account creation. To address that, this proposal aims to provide an experience that minimizes the divergence from existing federated identity user experience as much it possibly can (e.g. introducing new user decisions to be made).
 
@@ -52,25 +52,25 @@ Now that we have looked at [why](README.md) and [who](#topology), lets look at s
 
 ## The Status Quo
 
-A trivial alternative that is worth noting as a baseline is to "do nothing" and keep federation using low level primitives like redirects and popups.
+A trivial alternative that is worth noting as a baseline is to "do nothing" and keep federation using low-level primitives like redirects and popups.
 
 That seemed clear to reject based on:
 
 - the inability to prevent the [RP tracking problem](#the-rp-tracking-problem)
-- the increasing constraints that are being put in place for cross-site communication through third party cookies, postMessage and URL parameters as link decorations as a result of the [IDP tracking problem](#the-idp-tracking-problem)
+- the increasing constraints that are being put in place for cross-site communication through third-party cookies, postMessage and URL parameters as link decorations as a result of the [IDP tracking problem](#the-idp-tracking-problem)
 
 From here, the next incremental step we could look at is the [requestStorageAccess](https://developer.mozilla.org/en-US/docs/Web/API/Document/requestStorageAccess) API.
 
 ## The RequestStorageAccess API
 
-The [Document.requestStorageAccess()](https://developer.mozilla.org/en-US/docs/Web/API/Document/requestStorageAccess) API grants first-party storage to subframes. In conjunction with iframes, an IDP could expose its service via cross-site postMessage communication once first-party storage has been granted.
+The [Document.requestStorageAccess()](https://developer.mozilla.org/en-US/docs/Web/API/Document/requestStorageAccess) API grants first-party storage to cross-origin subframes. In conjunction with iframes, an IDP could expose its service via cross-site postMessage communication once first-party storage has been granted.
 
 That seemed clear to reject based on:
 
 - the inability to prevent the [RP tracking problem](#the-rp-tracking-problem)
 - the general-purpose nature of the API leading to the lowest common denominator policy
 
-From here, lets try to break down the problem into smaller parts.
+From here, let's try to break down the problem into smaller parts.
 
 # High Level Design
 
@@ -92,8 +92,8 @@ The consumer API is the Web Platform privacy-oriented API that relying parties c
 
 From the perspective of [The Privacy Threat Model](privacy_threat_model.md), there are two notably distinct uses of federation:
 
-* signing-in and
-* authorization
+* [signing-in](glossary.md#federated-sign-in) and
+* [authorization](glossary.md#authorization)
 
 While both are implemented on top of OAuth as different scopes, the former (typically deployed with the `openid` oauth scope) captures a meaningful volume of usage (we estimate it be around 80% of the use) at a much more controlled surface area (including transactions done at the front channel with idtokens as opposed to access tokens), whereas the latter is much more powerful and used less frequently (as well as done primarily on the back channel).
 
@@ -221,7 +221,7 @@ In this formulation, the browser gathers the user's permission and builds compre
 
 The two most meaningful permission moments a user would go through are:
   
-- Acknowledgement that the IDP will [be made aware](README.md#the-idp-tracking-problem) as you sign-up and sign-into the relying parties.
+- Acknowledgement that the IDP will [be made aware](README.md#the-idp-tracking-problem) as you sign up and sign in to the relying parties.
 - Acknowledgement that the RP will [be made able to join](README.md#the-rp-tracking-problem) the user's identities with other relying parties.
 
 These prompts would be inserted by the browser before or after the IDP pass.
