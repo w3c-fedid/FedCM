@@ -1,6 +1,5 @@
 ---
 title: "WebID"
-maintainer: "samuelgoto"
 created: 01/01/2020
 updated: 07/10/2020
 redirect_from: "index.html"
