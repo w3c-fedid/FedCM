@@ -1,3 +1,11 @@
+---
+title: "Permission-oriented API"
+maintainer: "kenrb"
+created: 08/10/2020
+updated: 08/10/2020
+
+---
+
 # Permission-oriented API
 
 The philosophy underlying this approach is that browsers should be responsible for ensuring user awareness and permission for cross-site interactions that create tracking risk, and outside of that Relying Parties and Identity Providers should have maximal control of the user experience.
