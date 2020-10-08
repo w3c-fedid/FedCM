@@ -27,9 +27,9 @@ In the first part of the last section will go over the (slightly less controvers
 
 Finally, we'll then enumerate a series of alternatives for the (much more contentious) [Provider API](#the-provider-api):
 
-- The [Permission-oriented Variation](#the-permission-oriented-apis)
-- The [Mediation-oriented Variation](#the-mediation-oriented-apis)
-- The [Delegation-oriented Variation](#the-delegation-oriented-api)
+- The [Permission-oriented](#the-permission-oriented-variation) Variation
+- The [Mediation-oriented](#the-mediation-oriented-variation) Variation
+- The [Delegation-oriented](#the-delegation-oriented-variation) Variation
 
 # High Level Design
 
@@ -60,11 +60,9 @@ Lets first turn to the former use, and then go over authorization following that
   
 ## The Sign-In API
 
-Simply put, the Sign-In API takes an identity provider as input and returns an idtoken as output.
+Simply put, the Sign-In API is a Web Platform affordance that takes an identity provider as input and returns a [directed basic profile](directed_basic_profile.md) as output. It substitutes the navigational/popup affordances currently used.
 
-The current redirect/popup flow gets replaced by the invocation of a newly introduced identity-specific API that enables RPs to request IdTokens.
-
-We don't know exactly what it should look like, but here is an example that can serve as a starting point:
+We don't know yet exactly what it should look like, but here is an example that can serve as a starting point:
 
 ```javascript
 // This is just a possible starting point, largely TBD.
@@ -84,7 +82,7 @@ Upon invocation, the browser makes an assessment of the user's intention, for ex
 
 From there, the browser proceeds to mediate the data exchange with the chose identity provider via [The Provider API](#the-provider-api).
 
-Upon success, the consumer API results into an idtoken. For example:
+Upon success, the consumer API results into a [directed basic profile](directed_basic_profile.md). For example:
 
 ```json
 {
@@ -99,27 +97,7 @@ Upon success, the consumer API results into an idtoken. For example:
 }
 ```
 
-The IdToken is signed into a JWT and then returned back to the relying party which can effectively get the user logged in. Here is [an example](https://jwt.io/#debugger-io?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmlkcC5jb20iLCJzdWIiOiIxMTAxNjk0ODQ0NzQzODYyNzYzMzQiLCJhdWQiOiJodHRwczovL2V4YW1wbGUuY29tIiwiaWF0IjoiMjM0MjM0MiIsIm5hbWUiOiJTYW0gRyIsImVtYWlsIjoic2prbGQyMDkzQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjoidHJ1ZSIsInByb2ZpbGUiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20vZGVmYXVsdC1hdmF0YXIucG5nIn0.3fGpHH5IeL2fDxbToBLE2DWDf6hfHU5YfiSdfqRGlIA) of what a signed JWT looks like for the payload above.
-
-### Directed Basic Profile
-
-The data that is exchanged is designed to be consequence-free: minimize as much as possible the disclosure of information between IDPs and RPs while keeping it (a) viable for signing-in/signing-up and (b) backwards compatible.
-
-For backwards compatibility, we use a restrictive subset of OpenId's [standard claims](https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims), namely:
-
-| field          | description                                                                   |
-|----------------|-------------------------------------------------------------------------------|
-| iss            | The issuer, per the OpenID specification                                      |
-| aud            | The intended audience, per the OpenId specification                           |
-| iat            | The creation time, per the OpenId specification                               |
-| exp            | The expiration time, per the OpenId specification                             |
-| sub            | The user's directed user ids (rather than global user ids)                    |
-| email          | The user's email directed addresses (rather than global)                      |
-| email_verified | Whether the email is verified or not                                          |
-| profile        | static/guest/global/default profile pictures / avatars                        |
-| name           | directed names (e.g. initials, just first names, etc)                         |
-
-By consequence-free, we mean that the data that is exchanged at this stage isn't able to be joined across RPs. By minimally viable and backwards-compatible we mean that it is sufficient for authentication and could be used without RPs changing their servers.
+The [directed basic profile](directed_basic_profile.md) is signed into a JWT and then returned back to the relying party which can effectively get the user logged in. Here is [an example](https://jwt.io/#debugger-io?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmlkcC5jb20iLCJzdWIiOiIxMTAxNjk0ODQ0NzQzODYyNzYzMzQiLCJhdWQiOiJodHRwczovL2V4YW1wbGUuY29tIiwiaWF0IjoiMjM0MjM0MiIsIm5hbWUiOiJTYW0gRyIsImVtYWlsIjoic2prbGQyMDkzQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjoidHJ1ZSIsInByb2ZpbGUiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20vZGVmYXVsdC1hdmF0YXIucG5nIn0.3fGpHH5IeL2fDxbToBLE2DWDf6hfHU5YfiSdfqRGlIA) of what a signed JWT looks like for the payload above.
 
 ## The Authorization API
 
@@ -162,13 +140,13 @@ We'll try to go over the thought process and the biggest considerations to be ma
 
 In each step, we'll try to go over some of the pros and cons. They can be introduced in the following order:
 
-1. The [Permission-oriented](#the-permission-oriented-apis) APIs
-1. The [Mediation-oriented](#the-mediation-oriented-apis) APIs
-1. The [Delegation-oriented](#the-delegation-oriented-api) API 
+1. The [Permission-oriented](#the-permission-oriented-variation) Variation
+1. The [Mediation-oriented](#the-mediation-oriented-variation) Variation
+1. The [Delegation-oriented](#the-delegation-oriented-variation) Variation
 
 Lets go over each of these in that order.
   
-## The Permission-oriented APIs
+## The Permission-oriented Variation
 
 The Permission-oriented APIs are a series of formulations where the browser tries to "get out of the way" as much as possible, letting IDPs drive as much as possible of the user experience.
 
@@ -193,7 +171,7 @@ The drawbacks of this approach is that:
   
 Naturally, the next set of formulations try to address these two shortcomings at the cost of the autonomy of the IDP and the ossification of parts of the flow.
 
-## The Mediation-oriented APIs
+## The Mediation-oriented Variation
 
 In this formulation, the browser pulls the responsibility for itself to drive the data exchange, enabling it to (a) bundle the consent moments described in the formulation above and (b) steers users to safer defaults.
   
@@ -208,7 +186,7 @@ The drawbacks of this variation is that it:
 - Ossifies the Sign-In flow and
 - [The IDP Tracking Problem](README.md#the-idp-tracking-problem) is still only addressed via consent rather than mechanically.
   
-## The Delegation-oriented API
+## The Delegation-oriented Variation
 
 The last alternative under consideration continues to pull responsibility for the browser, enabling it to finally address the [The IDP Tracking Problem](README.md#the-idp-tracking-problem) mechanically.
 
