@@ -11,16 +11,21 @@ updated: 08/10/2020
 The philosophy underlying this approach is that browsers should be responsible for ensuring user awareness and permission for cross-site interactions that create tracking risk, and outside of that Relying Parties and Identity Providers should have maximal control of the user experience.
 
 ## Permission flow properties
+
+## Preventing IDP tracking
 The intention is to prevent [IDP tracking](glossary.md#idp-tracking) by requiring a user gesture on the RP's page before the API can be invoked, and by displaying an appropriate dialog to the user before any identifying user information can be passed from the RP to the IDP. Both of these restrictions can be relaxed if the user agent knows that the user has successfully completed a sign-in with this RP and IDP before.
 
 This flow contains an implicit assumption that 'global' information (including the RP’s origin) can be shared with the IDP based on a user gesture on the RP page. Here 'global' means information that cannot be used to identify a specific user.
 
-In this flow the user agent attempts to mitigate RP tracking by displaying a warning if the IDP is going to provide correlatable user identifiers to the RP. The warning is not shown if the identifier is [verifiably directed](directed_identifiers.md#verifiably-directed-identifiers).
+## Preventing RP tracking
+In this flow the user agent attempts to mitigate [RP tracking](glossary.md#rp-tracking) by displaying a warning if the IDP is going to provide correlatable user identifiers to the RP. The warning is not shown if the identifier is [verifiably directed](directed_identifiers.md#verifiably-directed-identifiers).
 
+## User flow illustration
 ![](static/permission_based_flow.svg)
 
 ## Benefits
-* This should work well across a variety of protocols and use cases without user agents having to accommodate them specifically. 
+* This should work well across a variety of protocols and use cases without user agents having to accommodate them specifically.
+* For those reasons, IDPs and RPs can have control over sign-in experiences to improve user experiences as they see fit.
 * In cases where browser state is missing, the only experience downgrade is to have to agree to a cross-origin data sharing permission prompt again.
 
 ## Challenges
@@ -28,6 +33,11 @@ In this flow the user agent attempts to mitigate RP tracking by displaying a war
   * From a UX perspective and ecosystem incentives perspective, we may want to differentiate the experience for each case.
   * This downside is not shared by pure policy based approaches or approaches with browser mediation, i.e., [3].
 * Revealing the RP to the IDP becomes a problem if, in the future, privacy restrictions are added on things like referrer on full page navigation.
+* If permission prompts are too frequent, users may become trained to click through them without thinking (i.e. 'warning fatigue').
+
+## Mock
+
+![](static/mock19.svg)
 
 ## Other design options
 
