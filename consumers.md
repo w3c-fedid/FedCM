@@ -148,6 +148,8 @@ The approaches are categorized into three general approaches:
 
 The simplest approach is to have WebID offer APIs that allow cross-origin data sharing for sign-in and authorization use cases that works much as they do today, but with the user agents providing warnings and consent moments to the user when new tracking risks appear.
 
+![](static/mock19.svg)
+
 An expanded exploration of this approach with its benefits and drawbacks can be seen [here](permission_oriented_api.md).
 
 Naturally, the next set of formulations try to address these two shortcomings at the cost of the autonomy of the IDP and the ossification of parts of the flow.
