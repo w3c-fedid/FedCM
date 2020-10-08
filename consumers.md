@@ -173,3 +173,5 @@ The biggest benefits of this variation are:
   
 The biggest drawback of this variation is that it leads to a JWT that is not backwards compatible with the existing server-side deployment of relying parties (which are expecting the IDP to sign JTWs, not the Browser), which is O(K) hard to change.
 
+An expanded exploration of this approach with its benefits and drawbacks can be seen [here](delegation_oriented_api.md).
+
