@@ -13,7 +13,7 @@ This approach attempts to provide technical enforcements of [Identity Provider
 blindness](glossary.md#identity-provider-blindness) by having the IDP delegate
 the generation of identity assertion to the browser.
 
-Below is one variation the combines the IDP blindness mechanisms designed in
+Below is one variation that combines the IDP blindness mechanisms designed in
 [Mozilla’s Personas proposal](https://en.wikipedia.org/wiki/Mozilla_Persona)
 with the [RP blindness](glossary.md#relying-party-blindness), recovery processes
 and the user-behavior backwards compatibility. This approach maximizes the
@@ -27,9 +27,12 @@ Here is a sign up flow in this proposal where a user can sign up to RP and share
 a directed basic profile. The importance of recovery code and salt are discussed
 in the next section.
 
-TODO: Explain in more details.
+**TODO**(majidvp): Explain in more details.
 
-![](static/delegation-api-signup-flow.svg)
+<figure>
+  <img src="./static/delegation-api-signup-flow.svg" alt="Sign-Up Flow for a WebID enabled browser" />
+  <figcaption>Sign-Up Flow for a WebID enabled browser</figcaption>
+</figure>
 
 
 ## Benefits
@@ -106,11 +109,11 @@ Here is the database for each of the participating entities.
 
 ### RP Backend Verification
 
-Normally RP verifies the JWT on its backed by checking its signature against IDP
-public key. However the new proposed Certified JWT contains in its header a
-bowser generated public key which is certified by IDP. So the verification
-process first validates the included public key with the IDP public key and then
-verifies the token using this public key.
+Normally RP verifies the JWT on its backend by checking its signature against
+the IDP public key. However the new proposed Certified JWT contains, in its
+header, a bowser generated public key which is certified by IDP. So the
+verification process first verifies the included public key with the IDP public
+key and then verifies the token using this public key.
 
 
 Strawman proposal for Certified JWT token:
@@ -148,13 +151,13 @@ Strawman proposal for Certified JWT token:
 
 ### Recovery Flow
 
-Recovery code is an opaque value that can be computed given user id, directed
-email, and salt e.g., `recovery code = SHA512(user_id, RP, salt)`.
+Recovery code is an opaque value that can be computed given user id, RP site,
+and salt e.g., `recovery code = SHA512(user_id, RP, salt)`.
 
 This allows RP to IDP to be able to uniquely identify the user if they
 collaborate. This enables the recovery mechanism for a user to sign in to their
-account in a new browser or platform that does not support WebID.  A random salt
-ensures that neither RP nor IDP is able to unblind themselves simply by
+account in a new browser or a platform that does not support WebID. A random
+salt ensures that neither RP nor IDP is able to unblind themselves simply by
 enumerating all possible values.
 
 Here we articulate the flow where a user is trying to sign in to their existing
@@ -162,14 +165,20 @@ account on RP using a new browser or platform that either:
 
  1. Implement WebID does not have access to the database. This maintains IDP
     blindness. 
- 2. Does not implement WebID protocol (e.g., A mobile app) and needs to use
+ 2. Does not implement WebID protocol (e.g., a mobile app) and needs to use
     OAuth flows. Here the recovery code may be passed to IDP which can
-    authenticate the user and generate a regular JWT token. Notice that here IDP
-    gets unblinded as it learns about user sign-in to the RP.  
+    authenticate the user and generate a regular JWT token. Notice that here 
+    **IDP gets unblinded** as it learns about the user sign-in to the RP.  
 
 
-![](static/delegation-api-recovery-signin-flow.svg)
+<figure>
+  <img src="./static/delegation-api-recovery-signin-flow.svg" alt="Sign-In (Recovery) Flow for a fresh WebID enabled browser" />
+  <figcaption>Sign-In (Recovery) Flow for a fresh WebID enabled browser</figcaption>
+</figure>
 
-Figure. 
 
-![](static/delegation-api-recovery-legacy-flow.svg)
+
+<figure>
+  <img src="./static/delegation-api-recovery-legacy-flow.svg" alt="Sign-In (Recovery) Flow for legacy non-WebID enabled browser/apps" />
+  <figcaption>Sign-In (Recovery) Flow for legacy non-WebID enabled browser/apps</figcaption>
+</figure>
