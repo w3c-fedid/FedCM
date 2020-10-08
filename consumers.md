@@ -168,7 +168,9 @@ The drawbacks of this approach is that:
 - There would be three independent blocking permission moments: (a) one by the browser to capture the permission to allow the RP and the IDP to communicate, (b) one by the IDP to capture permission to sign-in with the RP and (c) one by the browser to capture the acknowledgement that RPs can track you when undirected identifiers are used.
 - The [The IDP Tracking Problem](README.md#the-idp-tracking-problem) and the [The RP Tracking Problem](README.md#the-rp-tracking-problem) are addressed via consent rather than mechanically. Because of the difficulty users have in comprehending the risks involved, there is a chance the permission moments will be as effective as "speed bumps" that users dismiss just to get them out of the way.
 - Because the IDP is controlling the user journey, the browser doesn't have the ability to promote directed identifiers as defaults (outside of policy).
-  
+
+You can read more details about this variation [here](permission_oriented_api.md).
+
 Naturally, the next set of formulations try to address these two shortcomings at the cost of the autonomy of the IDP and the ossification of parts of the flow.
 
 ## The Mediation-oriented Variation
