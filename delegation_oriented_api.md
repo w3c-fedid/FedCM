@@ -24,9 +24,8 @@ server-side backwards compatibility.
 
 <figure>
   <img src="./static/delegation-api-flow.svg" alt="High-level flow diagram for delegation-oriented approach" />
-  <figcaption><em>High-level flow diagram for delegation-oriented approach</em></figcaption>
+  <figcaption>High-level flow diagram for delegation-oriented approach</figcaption>
 </figure>
-
 
 
 Notice that in this approach we are assuming that an email proxy and email
@@ -41,7 +40,7 @@ importance of recovery code and salt are discussed in the next section.
 
 <figure>
   <img src="./static/delegation-api-signup-flow.svg" alt="Sign-Up Flow for a WebID enabled browser" />
-  <figcaption><em>Sign-Up Flow for a WebID enabled browser</em></figcaption>
+  <figcaption>Sign-Up Flow for a WebID enabled browser</figcaption>
 </figure>
 
 
@@ -58,54 +57,57 @@ mechanically.
 
 ### Server-side Backward compatibility
 
-This proposal requires changes in the RP backends:
+This approach requires changes in the RP backends:
 
 - This approach requires a new token format which is no longer backward
   compatible with the OpenID JWT. This means that the token verification
-  libraries on RP backends need to be updated. While we can do our best to make
-  the change small, all RPs are  still required to redeploy. In contrast,
+  libraries on the RP backends need to be updated. While we can do our best to
+  make the change small, all RPs are  still required to redeploy. In contrast,
   earlier explored flows only require IDP sdk and backend updates.
-- RP needs to maintain a recovery token for each account. This is necessary to
-  enable the ability for user’s to sign-in to their account on platforms that
-  don’t have WebID or after they switch browsers.
+- The RP needs to maintain a recovery token for each account. This is necessary
+  to enable the ability for users to sign-in to their account on platforms that
+  don't have WebID or after they switch browsers.
 
 ### UX Complication
-This approach changes user experience in some respect:
 
-- RP sign in experience would remain the same in particular a) users can sign in
-  to RP by selecting an IDP and b) users can sign in to their existing account
-  with RP even on platforms that do not support WebID by falling back to OpenID
-  and removing IDP blindness restriction.
-- Users are no longer able to see and manage all the RPs they have signed up
-  with through their IDP control panel. Browsers may be able to provide a
-  similar UX. Most likely scenario is that both browser and IDP would end up
-  managing some account which can be a source of confusion.
+With this proposal the sign-in user experience on RP would remain the same in
+particular a) users can sign in to RP by selecting an IDP and b) users can sign
+in to their existing account with RP even on platforms that do not support WebID
+by falling back to OpenID and removing IDP blindness restriction.
+
+However the user experience on IDP side changes. In particular users are no
+longer able to see and manage all the RPs they have signed up with through their
+IDP control panel. Browsers may be able to provide a similar UX. Most likely
+scenario is that both browser and IDP would end up managing some account which
+can be a source of confusion.
 
 ### Decoupling the Email Proxy and the Email Provider
 
 Most RPs send welcome email to their users on account creation. This can defeat
 the IDP blindness if IDP is also the email proxy and provider. To mitigate this
 we envision other parties to be responsible for proxying email (e.g., the
-browser) and keeping the user inbox (email provider). 
+browser) and keeping the user inbox (e.g., an email provider). 
+
 
 ### RP account management complexity
 
 Directed emails notably increase account management complexity for RPs since
-most users will not be able to remember their email address. This proposal adds
-even more complexity to this by introducing email proxy to the mix.
+many users are not be able to readily recall their directed email address. This
+proposal adds even more complexity to this by introducing email proxy to the
+mix.
 
 ## Technical Details
 
 
 ### IDP/RP Blindness Enforcement
 
-- IDP is not aware of the RP that the user is signing in. This is achieved by
-  having IDP certify a browser controller public key whose private key can be
-  used to mint new tokens on IDP’s behalf.
-- This enforced IDP blindness may be reverted when it becomes necessary (e.g.,
-  to allow users to sign in to their account on platforms that do not support
-  WebID).
-- RP is always blind as it receives directed id and directed email.
+- the IDP is not aware of the RP that the user is signing in. This is achieved
+  by having the IDP certify a browser controlled public key whose private key
+  can be used to mint new tokens on IDP's behalf.
+- This enforced IDP blindness may be reverted when it becomes necessary. We
+  belive one such necessary use case is to allow a user to sign in to their
+  account on platforms that do not support WebID.
+- the RP is always blind as it receives directed id and directed email.
 
 ### Databases
 
@@ -119,14 +121,14 @@ Here is the database for each of the participating entities.
 
 ### RP Backend Verification
 
-Normally RP verifies the JWT on its backend by checking its signature against
-the IDP public key. However the new proposed Certified JWT contains, in its
-header, a bowser generated public key which is certified by IDP. So the
+Normally the RP verifies the JWT on its backend by checking its signature
+against the IDP public key. However the new proposed Certified JWT contains, in
+its header, a browser generated public key which is certified by the IDP. So the
 verification process first verifies the included public key with the IDP public
 key and then verifies the token using this public key.
 
 
-Strawman proposal for Certified JWT token:
+Here is a strawman proposal for a Certified JWT token:
 
 ```js
 
@@ -162,33 +164,35 @@ Strawman proposal for Certified JWT token:
 ### Recovery Flow
 
 Recovery code is an opaque value that can be computed given user id, RP site,
-and salt e.g., `recovery code = SHA512(user_id, RP, salt)`.
+and a salt value e.g., `recovery code = SHA512(user_id, RP, salt)`.
 
-This allows RP to IDP to be able to uniquely identify the user if they
-collaborate. This enables the recovery mechanism for a user to sign in to their
-account in a new browser or a platform that does not support WebID. A random
-salt ensures that neither RP nor IDP is able to unblind themselves simply by
-enumerating all possible values.
+The recovery code is kept at the RP. But it may be passed to the IDP to uniquely
+identify the user. This means that an RP and IDP may be able to identify the
+user if they directly or indirectly (e.g., browser mediation) collaborate. This
+enables the recovery mechanism for a user to sign in to their existing account
+on RP in a few important situations:
 
-Here we articulate the flow where a user is trying to sign in to their existing
-account on RP using a new browser or platform that either: 
+ 1. A browser that implements WebID but does not have access to the original
+    certificate database (e.g., a fresh install). This mediated recovery
+    maintains IDP blindness. 
+ 2. A browser or agent (e.g., a mobile app) that does not implement WebID
+    protocol and OAuth flows are needed. Here the recovery code may be passed by
+    the RP to the IDP which can authenticate the user and generate a regular JWT
+    token. Notice that here **IDP gets unblinded** as it learns about the user
+    sign-in to the RP.
 
- 1. Implement WebID does not have access to the database. This maintains IDP
-    blindness. 
- 2. Does not implement WebID protocol (e.g., a mobile app) and needs to use
-    OAuth flows. Here the recovery code may be passed to IDP which can
-    authenticate the user and generate a regular JWT token. Notice that here 
-    **IDP gets unblinded** as it learns about the user sign-in to the RP.  
+A random salt ensures that neither RP nor IDP is able to unblind themselves
+simply by enumerating all possible values.
 
 
 <figure>
   <img src="./static/delegation-api-recovery-signin-flow.svg" alt="Sign-In (Recovery) Flow for a fresh WebID enabled browser" />
-  <figcaption><em>Sign-In (Recovery) Flow for a fresh WebID enabled browser</em></figcaption>
+  <figcaption>Sign-In (Recovery) Flow for a fresh WebID enabled browser</figcaption>
 </figure>
 
 
 
 <figure>
   <img src="./static/delegation-api-recovery-legacy-flow.svg" alt="Sign-In (Recovery) Flow for legacy non-WebID enabled browser/apps" />
-  <figcaption><em>Sign-In (Recovery) Flow for legacy non-WebID enabled browser/apps</em></figcaption>
+  <figcaption>Sign-In (Recovery) Flow for legacy non-WebID enabled browser/apps</figcaption>
 </figure>
