@@ -18,7 +18,7 @@ This section goes over the **what** and the **how**. It presuposes that you have
 We'll then go over the [high-level overview](#high-level-design) and a breakdown into two smaller problems:
 
 - [The Consumer API](#the-consumer-api) (i.e. the interface between the RP and the Browser) and
-- [The Producer API](#the-producer-api) (i.e. the interaction between the Browser and the IDP).
+- [The Provider API](#the-provider-api) (i.e. the interaction between the Browser and the IDP).
 
 In the first part of the last section will go over the (slightly less controversial) [Consumer API](#the-consumer-api) and the useful separation between:
 
