@@ -175,3 +175,14 @@ The biggest drawback of this variation is that it leads to a JWT that is not bac
 
 An expanded exploration of this approach with its benefits and drawbacks can be seen [here](delegation_oriented_api.md).
 
+## The Provider Authorization API
+
+The Provider Authorization API fulfills the request from the [Consumer Authorization API](#the-authorization-api).
+
+It is clearly not possible to enumerate all the various scopes that are in use, so it is clearer that:
+
+- the IDP needs to be involved in the authorization flow
+- the browser needs to apply the lowest common denominator policy (e.g. assume that the flow implies both the [IDP Tracking Problem](README.md#the-idp-tracking-problem) as well as the [RP Tracking Problem](README.md#the-rp-tracking-problem))
+
+![](static/mock20.svg)
+
