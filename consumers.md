@@ -2,7 +2,7 @@
 title: "Consumers"
 maintainer: "samuelgoto"
 created: 01/01/2020
-updated: 07/10/2020
+updated: 09/10/2020
 ---
 
 This is an **early exploration** of the design alternatives to address [this problem](README.md) under [this threat model](privacy_threat_model.md) for **consumers**.
@@ -162,7 +162,7 @@ An expanded exploration of this approach with its benefits and drawbacks can be 
   
 ## The Delegation-oriented Variation
 
-The last alternative under consideration continues to pull responsibility for the browser, enabling it to finally address the [The IDP Tracking Problem](README.md#the-idp-tracking-problem) mechanically.
+The last alternative under consideration continues to pull responsibility into the browser, enabling it to finally address the [The IDP Tracking Problem](README.md#the-idp-tracking-problem) mechanically.
 
 In this formulation, the IDP delegates the presentation of identity assertions to the Browser. It accomplishes that by making the browser generate a public/private key pair and have the IDP sign a certificate attesting that the browser's private key can issue certificates for a certain JWT.
 
