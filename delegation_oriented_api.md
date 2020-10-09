@@ -22,10 +22,11 @@ server-side backwards compatibility.
 
 ## Basic Flow
 
-<figure class="image">
+<figure>
   <img src="./static/delegation-api-flow.svg" alt="High-level flow diagram for delegation-oriented approach" />
-  <figcaption><center><strong>Figure.</strong> <em>High-level flow diagram for delegation-oriented approach</em></center></figcaption>
+  <figcaption><em>High-level flow diagram for delegation-oriented approach</em></figcaption>
 </figure>
+
 
 
 Notice that in this approach we are assuming that an email proxy and email
@@ -38,9 +39,9 @@ importance of recovery code and salt are discussed in the next section.
 
 **TODO**(majidvp): Explain in more details.
 
-<figure class="image">
+<figure>
   <img src="./static/delegation-api-signup-flow.svg" alt="Sign-Up Flow for a WebID enabled browser" />
-  <figcaption><center><strong>Figure.</strong> <em>Sign-Up Flow for a WebID enabled browser</em></center></figcaption>
+  <figcaption><em>Sign-Up Flow for a WebID enabled browser</em></figcaption>
 </figure>
 
 
@@ -180,14 +181,14 @@ account on RP using a new browser or platform that either:
     **IDP gets unblinded** as it learns about the user sign-in to the RP.  
 
 
-<figure class="image">
+<figure>
   <img src="./static/delegation-api-recovery-signin-flow.svg" alt="Sign-In (Recovery) Flow for a fresh WebID enabled browser" />
-  <figcaption><center><strong>Figure.</strong> <em>Sign-In (Recovery) Flow for a fresh WebID enabled browser</em></center></figcaption>
+  <figcaption><em>Sign-In (Recovery) Flow for a fresh WebID enabled browser</em></figcaption>
 </figure>
 
 
 
-<figure class="image">
+<figure>
   <img src="./static/delegation-api-recovery-legacy-flow.svg" alt="Sign-In (Recovery) Flow for legacy non-WebID enabled browser/apps" />
-  <figcaption><center><strong>Figure. </strong> <em>Sign-In (Recovery) Flow for legacy non-WebID enabled browser/apps</em></center></figcaption>
+  <figcaption><em>Sign-In (Recovery) Flow for legacy non-WebID enabled browser/apps</em></figcaption>
 </figure>
