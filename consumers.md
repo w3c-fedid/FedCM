@@ -162,7 +162,7 @@ An expanded exploration of this approach with its benefits and drawbacks can be 
   
 ## The Delegation-oriented Variation
 
-The last alternative under consideration continues to pull responsibility into the browser, enabling it to finally address the [The IDP Tracking Problem](README.md#the-idp-tracking-problem) mechanically.
+The last alternative under consideration enables the user agent to finally address the [The IDP Tracking Problem](README.md#the-idp-tracking-problem) mechanically.
 
 In this formulation, the IDP delegates the presentation of identity assertions to the Browser. It accomplishes that by making the browser generate a public/private key pair and have the IDP sign a certificate attesting that the browser's private key can issue certificates for a certain JWT.
 
@@ -173,7 +173,7 @@ The biggest benefits of this variation are:
   
 The biggest drawback of this variation is that it leads to a JWT that is not backwards compatible with the existing server-side deployment of relying parties (which are expecting the IDP to sign JTWs, not the Browser), which is O(K) hard to change.
 
-An expanded exploration of this approach with its benefits and drawbacks can be seen [here](delegation_oriented_api.md).
+An expanded exploration of this approach with its benefits and drawbacks can be seen [here](https://docs.google.com/presentation/d/1Sym0k84omyL5Ls1lO6w4aGQ-s4EHrDzo8ZlheyzFOlw/edit#slide=id.ga40b1e6d4f_0_77).
 
 ## The Provider Authorization API
 
