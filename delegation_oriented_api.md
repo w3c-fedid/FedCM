@@ -36,13 +36,57 @@ Below is the sign up flow in this proposal where a user signs up to an RP and
 share their [directed basic profile](glossary.md#directed-basic-profile). The
 importance of recovery code and salt are discussed in the next section.
 
-**TODO**(majidvp): Explain in more details.
 
 <figure>
   <img src="./static/delegation-api-signup-flow.svg" alt="Sign-Up Flow for a WebID enabled browser" />
   <figcaption>Sign-Up Flow for a WebID enabled browser</figcaption>
 </figure>
 
+Description of the steps involved in this flow:
+
+1. RP initiates the sign-up through
+   [the consumer API](consumers.md#the-consumer-api)
+1. Browser obtains the designated IDP endpoint as declared in a `.well-known`
+   configuration.
+1. Browser sends the user to the designated IDP end point to obtain the global
+   account and a list of directed accounts for the current user.
+    - Note that the RP is not exposed to the IDP.
+    - As part of this step IDP may show UI and authenticate the user.
+    - In this example the list of directed accounts is empty given that this is
+      a first sign-up moment.
+1. Browser sees no directed account in the IDP response and initiates its
+   account creation process.
+    - It is possible that the directed accounts list is not empty and has a
+      matching entry for the current RP. This occurs for a retuning user sign-in
+      and means that the browser already has account details including a private
+      key for the user and can skip most of the following steps.
+1. Browser coordinates with Email Proxy service to obtain a directed email for
+   the user.
+    - This step only assumes that an Email Proxy separate from the IDP exists.
+      This process may involves additional steps which are not relevant at this
+      stage. See [#decoupling-idp-from-email-services] for more details.
+1. Browser generates a new key pair and a random salt value.
+1. Browser sends the public key, salt, and directed email address to the IDP.
+1. IDP return a certificate signed with its own private key. The certificate
+     includes browser generated public key, and directed email.
+    - IDP remembers [browser public key, directed email, and salt] as a new
+      directed account for the user. This is used for future sign-ins.
+1. Browser receives the certification and adds the new directed account to its
+   database.
+1. Browser creates a recovery code for the new account in its database.
+    - Recover code is `SHA512(alice, salt, RP)`
+1. Browser generates an [Certified JWT](#certified-jwt) as `id_token` and signs
+   it with its own privte key.
+   - The token includes [directed identifier, directed email, and the recovery
+     code].
+1. Browser returns the certified `id_token` to RP.
+1. RP verifies the certified `id_token` and signs up the user.
+    - The verification process involves both the browser public key and the IDP
+      public key. Additional details are available in the
+      [RP backend verification section](#rp-backend-verification).
+    - RP stores the recovery code in addition to the user directed identifier.
+      The recovery code allows RP to sign in the user even in absence of WebID.
+      See [recovery flow](#recovery-flow) for more details.
 
 ## Benefits
 
@@ -81,13 +125,25 @@ IDP control panel. Browsers may be able to provide a similar UX. Most likely
 scenario is that both browser and IDP would end up managing some account which
 can be a source of confusion.
 
-### Decoupling the Email Proxy and the Email Provider
+### Decoupling IDP from Email Services
 
-Most RPs send welcome email to their users on account creation. This can defeat
-the IDP blindness if IDP is also the email proxy and provider. To mitigate this
-we envision other parties to be responsible for proxying email (e.g., the
-browser) and keeping the user inbox (e.g., an email provider). 
+A [directed email address](glossary.html#directed-basic-profile) requires an
+email proxy service in addition to the email provider.
 
+One option is for the email provider to be the email proxy as well. This seems
+like a reasonable option.
+
+Another seemingly natural option would be to have the IDP provide the email
+proxy service. However this can weaken the IDP blindness if IDP is also either
+the email proxy or email provider. This is beucase most RPs send a welcome email
+to their users on account creation.
+
+So to mitigate this risk, we envision an entity (or entities) different from the
+IDP is responsible for proxying email and keeping the user inbox. At this stage
+and for the purpose of the flows discussed here, we simply assume the key
+property that separate IDP and Email Proxy/Provider exists and paper over the
+details of how a directed email address is created and verified across email
+proxy, email provider and IDP.
 
 ### RP account management complexity
 
@@ -121,14 +177,14 @@ Here is the database for each of the participating entities.
 
 ### RP Backend Verification
 
-Normally the RP verifies the JWT on its backend by checking its signature
-against the IDP public key. However the new proposed Certified JWT contains, in
-its header, a browser generated public key which is certified by the IDP. So the
-verification process first verifies the included public key with the IDP public
-key and then verifies the token using this public key.
+Normally the RP verifies the [JWT] (JSON Web Token) on its backend by checking
+its signature against the IDP public key. However the new proposed Certified JWT
+contains, in its header, a browser generated public key which is certified by
+the IDP. So the verification process first verifies the included public key with
+the IDP public key and then verifies the token using this public key.
 
-
-Here is a strawman proposal for a Certified JWT token:
+#### Certified JWT
+Here is a strawman proposal for a Certified JWT:
 
 ```js
 
@@ -174,7 +230,7 @@ on RP in a few important situations:
 
  1. A browser that implements WebID but does not have access to the original
     certificate database (e.g., a fresh install). This mediated recovery
-    maintains IDP blindness. 
+    maintains IDP blindness.
  2. A browser or agent (e.g., a mobile app) that does not implement WebID
     protocol and OAuth flows are needed. Here the recovery code may be passed by
     the RP to the IDP which can authenticate the user and generate a regular JWT
@@ -196,3 +252,5 @@ simply by enumerating all possible values.
   <img src="./static/delegation-api-recovery-legacy-flow.svg" alt="Sign-In (Recovery) Flow for legacy non-WebID enabled browser/apps" />
   <figcaption>Sign-In (Recovery) Flow for legacy non-WebID enabled browser/apps</figcaption>
 </figure>
+
+[JWT]: https://tools.ietf.org/html/rfc7519
