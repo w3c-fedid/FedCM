@@ -62,7 +62,11 @@ All of these must be served over HTTPS.
 After the RP initiates a sign-in flow by calling the API, the browser learns about the IdP's WebID support with a fetch to `https://idp.example/.well-known/webid`, where `https://idp.example` was specified as the provider by the RP.
 
 The browser expects a response with MIME type `application/json`, currently containing only one field:<br>
-`{ 'idp_endpoint': 'https://idp.example/webid/signin' }`
+```json
+{
+  "idp_endpoint": "https://idp.example/webid/signin"
+}
+```
 
 The `idp_endpoint` value represents the address that the browser should use for the next step.
 
@@ -72,9 +76,20 @@ The browser will then issue a credentialed `GET` request to `https://idp.example
 
 The browser expects one of two responses (both with MIME type `application/json`):
 1. If the IdP can reply immediately with a token to fulfill the sign-in token request:<br>
-`{ 'id_token' : 'ID_token_here' }`
+
+```json
+{
+  "id_token" : "ID_token_here"
+}
+````
+
 2. If the IdP requires user interaction such as sign-in or choosing an account, before issuing a token:<br>
-`{ 'signin_url' : 'https://idp.example/webid/user_login' }`
+
+```json
+{ 
+  "signin_url" : "https://idp.example/webid/user_login"
+}
+```
 
 ### IdP sign-in page
 
