@@ -80,6 +80,12 @@ The browser expects one of two responses (both with MIME type `application/json`
 
 If the IdP responded to the token fetch in the previous step with a `signin_url`, the browser will then load and render a page from that URL. The page will contain HTML for the user to provide whatever action is needed, then the IdP will invoke the `navigator.id.provide()` API to give a token back to the RP (or provide an empty string if it chooses not to give a token).<br>
 
-```
+```javascript
 await navigator.id.provide("YOUR_ID_TOKEN_HERE_SERIALIZED_AS_A_STRING");
+```
+
+The string should be a [JWT](https://jwt.io/), for example:
+
+```
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
 ```
