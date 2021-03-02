@@ -5,7 +5,7 @@ updated: 01/03/2021
 redirect_from: "index.html"
 ---
 
-**TL;DR**; This is an exploration to proactively **preserve** and **extend** identity federation on the Web (e.g. Sign-in with X/Y/Z), as a reaction to incoming **privacy-preserving** changes to low level primitives that it depends on ([example](https://www.chromium.org/Home/chromium-privacy/privacy-sandbox)).
+**TL;DR**; This is an **active** exploration to proactively **preserve** and **extend** identity federation on the Web (e.g. Sign-in with X) beyond the incoming **privacy-preserving** changes ([example](https://www.chromium.org/Home/chromium-privacy/privacy-sandbox)) to low level primitives that it depends on.
 
 This explainer is broken down into:
 
@@ -16,11 +16,13 @@ This explainer is broken down into:
 
 Over the last decade, identity federation has unquestionably played a central role in raising the bar for authentication on the web, in terms of ease-of-use (e.g. passwordless single sign-on), security (e.g. improved resistance to phishing and credential stuffing attacks) and trustworthiness compared to its preceding pattern: per-site usernames and passwords.
 
-The standards that define how identity federation works today were built independently of the web platform (namely, [SAML](https://en.wikipedia.org/wiki/Security_Assertion_Markup_Language), [OpenID](https://en.wikipedia.org/wiki/OpenID) and [OAuth](https://en.wikipedia.org/wiki/OAuth)), and their designers had to work **around** its limitations rather than extending them (rightfully so at the time). Because of that, existing user authentication flows rely on general web capabilities such as top-level navigations/redirects with parameters, window popups and cookies.
+The standards that define how identity federation works today were built independently of the web platform (namely, [SAML](https://en.wikipedia.org/wiki/Security_Assertion_Markup_Language), [OpenID](https://en.wikipedia.org/wiki/OpenID) and [OAuth](https://en.wikipedia.org/wiki/OAuth)), and their designers had to work **around** its limitations rather than extending them (notably, rightfully so at the time).
 
-Because these general purpose primitives can be used for an open ended number of use cases (by design), browsers have to apply policies that capture the **lowest common denominator**, at best applying cumbersome permissions (e.g. popup blockers) and at worst entirely blocking them (read more about some of the principles around these policies [here](https://github.com/michaelkleber/privacy-model)).
+Because of that, existing user authentication flows rely on general web capabilities such as top-level navigations/redirects with parameters, window popups and cookies.
 
-Over the years, some of these low level primitives get abused, browsers intervene and federation has to adjust itself. For example, popup blocks became common and federation had to adjust itself to work in a world where popups blockers were given:
+Because these general purpose primitives can be used for an open ended number of use cases (again, notably, by design), browsers have to apply policies that capture the **lowest common denominator** of abuse, at best applying cumbersome permissions (e.g. popup blockers) and at worst entirely blocking them (for example, [here](https://github.com/michaelkleber/privacy-model)).
+
+Over the years, as these low level primitives get abused, browsers intervene and federation adjusts itself. For example, popup blocks became common and federation had to adjust itself to work in a world where popups blockers were widely deployed:
 
 ![](static/mock11.svg)
 
@@ -58,13 +60,9 @@ Because these cross-site communication takes place in a general purpose medium, 
 
 Browsers can't **classify** federation, hence the name.
 
-The classification problem is the problem of taking the existing federation mechanisms built on top of general purpose primitives and classify them such that they can be told apart.
+The classification problem is notably hard because it has to deal with **adversarial impersonation**: agents who have the interest in being classified as federation to get access to browser affordances.
 
-The classification problem is hard because it has to deal with **adversarial impersonation**: agents who have the interest in being classified as federation to get access to browser affordances.
-
-So, in order to solve the classification problem, one has to answer the following question:
-
-How do we **distinguish** federation from tracking, apply the appropriate levels of awareness (and/or elevate the level of desirable privacy), **assuming** adversarial impersonation?
+So, how do we **distinguish** federation from tracking and **elevate** the level of awareness/privacy while **assuming** adversarial impersonation?
 
 # Next Steps
 
