@@ -64,6 +64,83 @@ The classification problem is notably hard because it has to deal with **adversa
 
 So, how do we **distinguish** federation from tracking and **elevate** the level of awareness/privacy while **assuming** adversarial impersonation?
 
+# The Anatomy of Federation
+
+If we look more closely how federation works, we can identify three big parts:
+
+1. There is a convention used by relying parties to request identification/authentication to identity providers
+1. There is a convention used by identity providers to respond with identification/authentication to relying parties
+1. It uses browser affordances for personalization
+
+These passes rely on the following low level primitives:
+
+- **redirects** (i.e. `<a>` or `window.location.location`),
+- **popups** (i.e. `window.open` and `postMessage`) or
+- **widgets** (i.e. `<iframe>`)
+
+For example, a relying party can use the OpenID convention to request to an IDP:
+
+```html
+<a href="https://idp.example/?client_id=1234&scope=openid&nonce=456&redirect_uri=https://rp.example/cgi-bin/callback.php">Sign in with IDP</a>
+```
+
+Which it then expects the IDP to at some point use the second convention to return back a response to the `redirect_uri`:
+
+```http
+POST /cgi-bin/callback.php HTTP/1.1
+Host: www.rp.example.com
+Content-Type: application/x-www-form-urlencoded
+Content-Length: length
+Accept-Language: en-us
+Accept-Encoding: gzip, deflate
+Connection: Keep-Alive
+
+id_token={JWT}
+```
+
+The same can be accomplished with top level navigations:
+
+```javascript
+navigation.location.href = `https://idp.example/?client_id=1234&scope=openid&nonce=456&redirect_uri=rp.example`;
+```
+
+Popups:
+
+```javascript
+let popup = window.open(`https://idp.example/?client_id=1234&scope=openid&nonce=456&redirect_uri=rp.example`);
+window.addEventListener(`message`, (e) => {
+  if (e.origin == "https://idp.example") {
+    // ...
+    e.source.postMessage("done, thanks");
+  }
+});
+```
+
+Or iframes:
+
+```html
+<iframe src="https://idp.example/?client_id=1234&scope=openid&nonce=456&redirect_uri=rp.example"></iframe>
+```
+
+Which listen to postMessages:
+
+```javascript
+window.addEventListener(`message`, (e) => {
+  if (e.origin == "https://idp.example") {
+    // ...
+    e.source.postMessage("done, thanks");
+  }
+});
+```
+
+All of these affordances allow for arbitrary cross-origin communication, so at some point we can expect them to be constrained (more details [here](https://www.chromium.org/Home/chromium-privacy/privacy-sandbox)).
+
+So, from a scoping perspective, we need to find alternatives for all of these low level alternatives that would be future-proof:
+
+- **redirects** (i.e. `<a>` or `window.location.location`),
+- **popups** (i.e. `window.open` and `postMessage`) or
+- **widgets** (i.e. `<iframe>`)
+
 # Next Steps
 
 The following should give you a deeper understanding of the problem, related problems and how they were tackled in the past:
