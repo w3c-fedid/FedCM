@@ -74,9 +74,9 @@ Before we can answer "how to distinguish" federation from tracking, lets first t
 
 These passes rely on the following low level primitives:
 
-- **redirects** (i.e. `<a>` or `window.location.location`),
-- **popups** (i.e. `window.open` and `postMessage`) or
-- **widgets** (i.e. `<iframe>`)
+- **HTTP APIs** (i.e. redirects, top level navigations, `<a>` or `window.location.location`),
+- **JS APIs** (i.e. popups with `window.open` and `postMessage`) or
+- **HTML APIs** (i.e. personalized buttons using `<iframe>`)
 
 For example, a relying party can use the OpenID convention to request to an IDP:
 
@@ -104,7 +104,7 @@ The same can be accomplished with top level navigations:
 navigation.location.href = `https://idp.example/?client_id=1234&scope=openid&nonce=456&redirect_uri=rp.example`;
 ```
 
-Popups:
+Another common affordance that federation uses are popups:
 
 ```javascript
 let popup = window.open(`https://idp.example/?client_id=1234&scope=openid&nonce=456&redirect_uri=rp.example`);
@@ -140,6 +140,79 @@ So, from a scoping perspective, we need to find alternatives for all of these lo
 - **redirects** (i.e. `<a>` or `window.location.location`),
 - **popups** (i.e. `window.open` and `postMessage`) or
 - **widgets** (i.e. `<iframe>`)
+
+# The HTTP API
+
+One of the most basic things that we could do to classify federation is to detect patterns in HTTP requests.
+
+Because a significant part of federation is deployed over well-established protocols (e.g. OpenID, SAML), their HTTP profile is somewhat easy to spot. For example, for OpenID Connect requests/responses we could look at HTTP requests that have:
+
+- a **client_id** parameter
+- a **redirect_uri** parameter
+- a **scope** parameter
+- an accompanying **.well-known/openid-configuration** configuration
+
+Responses can be matched when they match:
+
+- a redirect to the previously used **redirect_uri**
+- an **id_token** parameter
+
+It is an active area of investigation to determine:
+
+1. which and how many of these patterns we would want to use (too few and you over-classify, too many and you under-classify),
+1. whether the same approach would work for other protocols (e.g. SAML).
+1. whether we need an opt-in / explicit API and if so which (e.g. perhaps a special URL marker, like a reserved URL parameter or a scheme)
+
+# The JS API
+
+Popups are harder to classify because each IDP seems to use a custom protocol to open the popup as well as to communicate via postMessage.
+
+It is hard to know what that will exactly look like right now, but as a starting point, here is what it could look like.
+
+Instead of the low level `window.open`, one would write at a high-level:
+
+```javascript
+// This is just a possible starting point, largely TBD.
+let {idToken} = await navigator.credentials.get({
+  provider: "https://accounts.example.com",
+  // other OpenId connect parameters
+});
+```
+
+And instead of the low level `postMessage`, the IDP would write:
+
+```javascript
+// This is just a possible starting point, largely TBD.
+await navigator.credentials.store({
+  idtoken: JWT,
+});
+```
+
+# The HTML API
+
+Relying Parties typically embed iframes served by identity providers typically for the purposes of personalization (e.g. showing the user's profile picture / name on buttons). Browsers do (or are intending to) block third party cookies in iframes, making them uncredentialed and hence unable to personalize.
+
+This is still under active exploration, but our efforts are going into exploring ways in which we can leverage [fencedframes](https://github.com/shivanigithub/fenced-frame) and one of the response APIs above.
+
+For example, we are looking into ways we could replace the `<iframe>` tag with the web-bundle version of `<fencedframe>`s:
+
+```html
+<fencedframe src="https://idp.example/personalized-frame.wbn" client_id="1234" scope="openid email">
+</fencedframe>
+```
+
+In this formulation, the web bundle is a static (yet personalized) bundle that can be displayed on page load but can't have any uncontrolled communication outwards (e.g. over the network or over in-browser features, like postMessage).
+
+Once the user interacts with the fencedframe, a user agent would know, based on identity-specific parameters in the fencedframe, when to release that information to the web bundle as well as use the APIs above (e.g. the HTTP API or the JS API) to return an idtoken back.
+
+```javascript
+window.addEventListener(`message`, (e) => {
+  if (e.origin == "https://idp.example") {
+    // ...
+    e.source.postMessage("done, thanks");
+  }
+});
+```
 
 # Next Steps
 
