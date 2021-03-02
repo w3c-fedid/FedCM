@@ -66,7 +66,7 @@ So, how do we **distinguish** federation from tracking and **elevate** the level
 
 # The Anatomy of Federation
 
-If we look more closely how federation works, we can identify three big parts:
+Before we can answer "how to distinguish" federation from tracking, lets first try to undrestand how federation works. For our interest, we can identify three big passes:
 
 1. There is a convention used by relying parties to request identification/authentication to identity providers
 1. There is a convention used by identity providers to respond with identification/authentication to relying parties
