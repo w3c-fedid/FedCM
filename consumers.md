@@ -10,6 +10,20 @@ This is an **early exploration** of the design alternatives to address [this pro
 > NOTE: this is an analysis only applicable to the very specific deployment [structure](activation.md) of federation for **consumers**.
 > If you are looking for an analysis to other use cases, go [here](design.md) or [here](enterprises.md).
 
+
+# The RP Tracking problem
+
+Cross-site joins are enabled through federation when the relying parties that the user signs in to **collude** with each other (and other entities) to deterministically (or probabilistically) **link** their user's accounts to build and get access to a richer user profile (e.g. one site selling data on browsing history for ads targeting to another service). While this could be enabled without federation per se (user could manually provide a joinable email address or phone number), federated identity providers have an opportunity to address this problem at scale by providing their users with site-specific/directed identifiers. 
+
+![](static/mock3.svg)
+
+# The IDP Tracking problem
+
+Even if identity providers were to provide site-specific/directed identifiers, IDPs and RPs can exchange data without the user explicitly being aware of what information is flowing between the parties, and that the IDP may have insight into the user’s activity across sites. Federation is implemented via parameters on redirects / top level navigation, which allow for arbitrary data exchange, without insight or controls by the user’s browser.
+
+![](static/mock10.svg)
+
+
 This section goes over the **what** and the **how**. It presuposes that you have read and started from:
 
 - The **why**: the [problem](README.md) statement and the [motivations](privacy_threat_model.md) and the [topology](activation.md) of the parties involved.
