@@ -9,10 +9,8 @@ redirect_from: "index.html"
 
 This explainer is broken down into:
 
-- [The Problem Space](#the-problem)
-- [The Prior Art](prior.md)
-- [The Threat Model](privacy_threat_model.md)
-- [The Solution Space](design.md)
+- [Why](#the-problem) is federation under threat?
+- [How](design.md) do we keep it around and/or extend it?
 
 # The Problem
 
@@ -20,7 +18,7 @@ Over the last decade, identity federation has unquestionably played a central ro
 
 The standards that define how identity federation works today were built independently of the web platform (namely, [SAML](https://en.wikipedia.org/wiki/Security_Assertion_Markup_Language), [OpenID](https://en.wikipedia.org/wiki/OpenID) and [OAuth](https://en.wikipedia.org/wiki/OAuth)), and their designers had to work **around** its limitations rather than extending them (rightfully so at the time). Because of that, existing user authentication flows rely on general web capabilities such as top-level navigations/redirects with parameters, window popups and cookies.
 
-Because these general purpose primitives can be used for an open ended number of use cases (by design), browsers have to apply policies that capture the **lowest common denominator**, at best applying cumbersome permissions (e.g. popup blockers) and at worst entirely blocking them.
+Because these general purpose primitives can be used for an open ended number of use cases (by design), browsers have to apply policies that capture the **lowest common denominator**, at best applying cumbersome permissions (e.g. popup blockers) and at worst entirely blocking them (read more about some of the principles around these policies [here](https://github.com/michaelkleber/privacy-model)).
 
 Over the years, some of these low level primitives get abused, browsers intervene and federation has to adjust itself. For example, popup blocks became common and federation had to adjust itself to work in a world where popups blockers were given:
 
@@ -28,13 +26,7 @@ Over the years, some of these low level primitives get abused, browsers interven
 
 The challenge, now more than ever, is that some of these low level primitives are getting increasingly abused to allow users on the web to be tracked. So, as a result, browsers are applying strictier and stricter policies around them.
 
-If browsers are applying stricter policies around them, how do we keep identity federation around?
-
-Before we dig into the solution space, lets take a deeper dive into the problem, specifically looking at:
-
-- How federation works and what it depends on,
-- How tracking works and
-- [The classification problem](#the-classification-problem)
+If browsers are applying stricter policies around them, and assuming that federation is safer than usernames/passwords, how do we keep identity federation around?
 
 # The classification problem
 
@@ -70,7 +62,9 @@ The classification problem is the problem of taking the existing federation mech
 
 The classification problem is hard because it has to deal with **adversarial impersonation**: agents who have the interest in being classified as federation to get access to browser affordances.
 
-So, in order to solve the classification problem, one has to come up with the criteria for classification but also build the game theoretic devices that make the interventions less gameable (e.g. assume that there will be **adversarial impersonation**).
+So, in order to solve the classification problem, one has to answer the following question:
+
+How do we **distinguish** federation from tracking, apply the appropriate levels of awareness (and/or elevate the level of desirable privacy), **assuming** adversarial impersonation?
 
 # Next Steps
 
@@ -82,5 +76,5 @@ The following should give you a deeper understanding of the problem, related pro
 
 With a solid understanding of the problem space, you can read below some of the thoughts on how to address them:
 
-- An early exploration of [The Solution Space](design.md)
+- [The Solution Space](design.md)
 

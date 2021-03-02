@@ -2,7 +2,7 @@
 title: "Consumers"
 maintainer: "samuelgoto"
 created: 01/01/2020
-updated: 09/10/2020
+updated: 03/01/2020
 ---
 
 This is an **early exploration** of the design alternatives to address [this problem](README.md) under [this threat model](privacy_threat_model.md) for **consumers**.
@@ -10,6 +10,10 @@ This is an **early exploration** of the design alternatives to address [this pro
 > NOTE: this is an analysis only applicable to the very specific deployment [structure](activation.md) of federation for **consumers**.
 > If you are looking for an analysis to other use cases, go [here](design.md) or [here](enterprises.md).
 
+For consumers, there are two ways that federation enables (unintentionally) tracking on the Web. We call these problems by:
+
+- [The RP Tracking Problem](#the-rp-tracking-problem)
+- [The IDP Tracking Problem](#the-idp-tracking-problem)
 
 # The RP Tracking problem
 
@@ -23,6 +27,90 @@ Even if identity providers were to provide site-specific/directed identifiers, I
 
 ![](static/mock10.svg)
 
+# The anatomy of federation
+
+If we look more closely how federation works, we can identify three big parts:
+
+1. There is a convention used by relying parties to request identification/authentication to identity providers
+1. There is a convention used by identity providers to respond with identification/authentication to relying parties
+1. It uses browser affordances for personalization
+
+These passes rely on the following low level primitives:
+
+- **redirects** (i.e. `<a>` or `window.location.location`),
+- **popups** (i.e. `window.open` and `postMessage`) or
+- **widgets** (i.e. `<iframe>`)
+
+For example, a relying party can use the OpenID convention to request to an IDP:
+
+```html
+<a href="https://idp.example/?client_id=1234&scope=openid&nonce=456&redirect_uri=https://rp.example/cgi-bin/callback.php">Sign in with IDP</a>
+```
+
+Which it then expects the IDP to at some point use the second convention to return back a response to the `redirect_uri`:
+
+```http
+POST /cgi-bin/callback.php HTTP/1.1
+Host: www.rp.example.com
+Content-Type: application/x-www-form-urlencoded
+Content-Length: length
+Accept-Language: en-us
+Accept-Encoding: gzip, deflate
+Connection: Keep-Alive
+
+id_token={JWT}
+```
+
+The same can be accomplished with top level navigations:
+
+```javascript
+navigation.location.href = `https://idp.example/?client_id=1234&scope=openid&nonce=456&redirect_uri=rp.example`;
+```
+
+Popups:
+
+```javascript
+let popup = window.open(`https://idp.example/?client_id=1234&scope=openid&nonce=456&redirect_uri=rp.example`);
+window.addEventListener(`message`, (e) => {
+  if (e.origin == "https://idp.example") {
+    // ...
+    e.source.postMessage("done, thanks");
+  }
+});
+```
+
+Or iframes:
+
+```html
+<iframe src="https://idp.example/?client_id=1234&scope=openid&nonce=456&redirect_uri=rp.example"></iframe>
+```
+
+Which listen to postMessages:
+
+```javascript
+window.addEventListener(`message`, (e) => {
+  if (e.origin == "https://idp.example") {
+    // ...
+    e.source.postMessage("done, thanks");
+  }
+});
+```
+
+All of these affordances allow for arbitrary cross-origin communication, so at some point we can expect them to be constrained.
+
+So, from a scoping perspective, we need to find alternatives for all of these low level alternatives that would be future-proof:
+
+- **redirects** (i.e. `<a>` or `window.location.location`),
+- **popups** (i.e. `window.open` and `postMessage`) or
+- **widgets** (i.e. `<iframe>`)
+
+Lets go over each of these one by one and see how we could go about them:
+
+# Redirects
+
+# Popups
+
+# Iframes
 
 This section goes over the **what** and the **how**. It presuposes that you have read and started from:
 
@@ -31,8 +119,9 @@ This section goes over the **what** and the **how**. It presuposes that you have
 
 We'll then go over the [high-level overview](#high-level-design) and a breakdown into two smaller problems:
 
-- [The Consumer API](#the-consumer-api) (i.e. the interface between the RP and the Browser) and
-- [The Provider API](#the-provider-api) (i.e. the interaction between the Browser and the IDP).
+- The [Personalization API](#the-personalization-api)
+- The [Consumer API](#the-consumer-api) (i.e. the interface between the RP and the Browser) and
+- The [Provider API](#the-provider-api) (i.e. the interaction between the Browser and the IDP).
 
 In the first part of the last section will go over the (slightly less controversial) [Consumer API](#the-consumer-api) and the useful separation between:
 
