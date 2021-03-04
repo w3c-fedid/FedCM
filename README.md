@@ -277,8 +277,8 @@ It is an active area of investigation the order in which these APIs and controll
 The following should give you a deeper understanding of the problem, related problems and how they were tackled in the past:
   
 - [Prior Art](prior.md)
-- [Alternatives considered](alternatives_considered.md)
-- [Related Problems](problems.md) and **desirable side effects**
+- Alternatives [considered](alternatives_considered.md)
+- [Related Problems](problems.md) and desirable side effects
 - The WebID [devtrial](HOWTO.md)
 - The [deployment](activation.md) topology
 - [Glossary](glossary.md)
