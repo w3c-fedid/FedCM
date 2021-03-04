@@ -81,14 +81,14 @@ These passes rely on the following low level primitives:
 For example, a relying party can use the OpenID convention to request to an IDP:
 
 ```html
-<a href="https://idp.example/?client_id=1234&scope=openid&nonce=456&redirect_uri=https://rp.example/cgi-bin/callback.php">Sign in with IDP</a>
+<a href="https://idp.example/?client_id=1234&scope=openid&redirect_uri=https://rp.example/callback.php">Sign in with IDP</a>
 ```
 
 Which it then expects the IDP to at some point use the second convention to return back a response to the `redirect_uri`:
 
 ```http
-POST /cgi-bin/callback.php HTTP/1.1
-Host: www.rp.example.com
+POST /callback.php HTTP/1.1
+Host: rp.example.com
 Content-Type: application/x-www-form-urlencoded
 Content-Length: length
 Accept-Language: en-us
@@ -98,16 +98,10 @@ Connection: Keep-Alive
 id_token={JWT}
 ```
 
-The same can be accomplished with top level navigations:
-
-```javascript
-navigation.location.href = `https://idp.example/?client_id=1234&scope=openid&nonce=456&redirect_uri=rp.example`;
-```
-
 Another common affordance that federation uses are popups:
 
 ```javascript
-let popup = window.open(`https://idp.example/?client_id=1234&scope=openid&nonce=456&redirect_uri=rp.example`);
+let popup = window.open(`https://idp.example/?client_id=1234&scope=openid&redirect_uri=rp.example`);
 window.addEventListener(`message`, (e) => {
   if (e.origin == "https://idp.example") {
     // ...
@@ -119,7 +113,7 @@ window.addEventListener(`message`, (e) => {
 Or iframes:
 
 ```html
-<iframe src="https://idp.example/?client_id=1234&scope=openid&nonce=456&redirect_uri=rp.example"></iframe>
+<iframe src="https://idp.example/?client_id=1234&scope=openid&redirect_uri=rp.example"></iframe>
 ```
 
 Which listen to postMessages:
@@ -135,13 +129,15 @@ window.addEventListener(`message`, (e) => {
 
 All of these affordances allow for arbitrary cross-origin communication, so at some point we can expect them to be constrained (more details [here](https://www.chromium.org/Home/chromium-privacy/privacy-sandbox)).
 
-So, from a scoping perspective, we need to find alternatives for all of these low level alternatives that would be future-proof:
+# Classification
 
-- **redirects** (i.e. `<a>` or `window.location.location`),
-- **popups** (i.e. `window.open` and `postMessage`) or
-- **widgets** (i.e. `<iframe>`)
+Like we said above, the classification problem is the browser's inability to distinguish identity federation from tracking due to the fact that both use low level primitives (namely, redirects, popups, iframes and cookies) and its consequence is the application of lowest common denominator policies.
 
-# The HTTP API
+The first thought that occurred to us was to look into each of these low-level primitives and offer for each an indentity-specific high-level affordance, trading generality for awareness.
+
+With that in mind, lets look into each specific low-level primitive and what a high-level identity-specific affordance would look like.
+
+## The HTTP API
 
 One of the most basic things that we could do to classify federation is to detect patterns in HTTP requests.
 
@@ -163,13 +159,13 @@ It is an active area of investigation to determine:
 1. whether the same approach would work for other protocols (e.g. SAML).
 1. whether we need an opt-in / explicit API and if so which (e.g. perhaps a special URL marker, like a reserved URL parameter or a scheme)
 
-# The JS API
+## The JS API
 
 Popups are harder to classify because each IDP seems to use a custom protocol to open the popup as well as to communicate via postMessage.
 
 It is hard to know what that will exactly look like right now, but as a starting point, here is what it could look like.
 
-Instead of the low level `window.open`, one would write at a high-level:
+Instead of the low level `window.open` and listening to `window` events, one coule write at a high-level:
 
 ```javascript
 // This is just a possible starting point, largely TBD.
@@ -188,9 +184,9 @@ await navigator.credentials.store({
 });
 ```
 
-# The HTML API
+## The HTML API
 
-Relying Parties typically embed iframes served by identity providers typically for the purposes of personalization (e.g. showing the user's profile picture / name on buttons). Browsers do (or are intending to) block third party cookies in iframes, making them uncredentialed and hence unable to personalize.
+Relying Parties also typpically embed iframes served by identity providers for personalization (e.g. showing the user's profile picture / name on buttons). Browsers do (or are intending to) block third party cookies in iframes, making them uncredentialed and hence unable to personalize.
 
 This is still under active exploration, but our efforts are going into exploring ways in which we can leverage [fencedframes](https://github.com/shivanigithub/fenced-frame) and one of the response APIs above.
 
