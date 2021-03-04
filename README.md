@@ -5,12 +5,14 @@ updated: 01/03/2021
 redirect_from: "index.html"
 ---
 
-**TL;DR**; This is an **active** exploration to proactively **preserve** and **extend** identity federation on the Web (e.g. Sign-in with X) beyond the incoming **privacy-preserving** changes ([example](https://www.chromium.org/Home/chromium-privacy/privacy-sandbox)) to low level primitives that it depends on.
+**TL;DR**; This is an **active** exploration to proactively **preserve** and **elevate** identity federation (e.g. Sign-in with X), **forwards compatible** with a more **private** web.
 
 This explainer is broken down into:
 
 - [Why](#the-problem) is federation under threat?
-- [How](design.md) do we keep it around and/or extend it?
+- [What](#the-anatomy-of-federation) is under threat?
+- [How](#classification) do we preserve and extend it?
+- [When](#roadmap) does this happen?
 
 # The Problem
 
@@ -62,11 +64,11 @@ Browsers can't **classify** federation, hence the name.
 
 The classification problem is notably hard because it has to deal with **adversarial impersonation**: agents who have the interest in being classified as federation to get access to browser affordances.
 
-So, how do we **distinguish** federation from tracking and **elevate** the level of awareness/privacy while **assuming** adversarial impersonation?
+So, how do we **distinguish** federation from tracking and elevate the level of **control** while **assuming** adversarial impersonation?
 
 # The Anatomy of Federation
 
-Before we can answer "how to distinguish" federation from tracking, lets first try to undrestand how federation works. For our interest, we can identify three big passes:
+Before we can answer "how to distinguish" federation from tracking, lets first try to understand what federation depends on. For our interest, we can identify three big passes:
 
 1. There is a convention used by relying parties to request identification/authentication to identity providers
 1. There is a convention used by identity providers to respond with identification/authentication to relying parties
@@ -133,7 +135,7 @@ All of these affordances allow for arbitrary cross-origin communication, so at s
 
 Like we said above, the classification problem is the browser's inability to distinguish identity federation from tracking due to the fact that both use low level primitives (namely, redirects, popups, iframes and cookies) and its consequence is the application of lowest common denominator policies.
 
-The first thought that occurred to us was to look into each of these low-level primitives and offer for each an indentity-specific high-level affordance, trading generality for awareness.
+The first thought that occurred to us was to look into each of these low-level primitives and offer for each an indentity-specific high-level affordance, **trading generality for awareness**.
 
 With that in mind, lets look into each specific low-level primitive and what a high-level identity-specific affordance would look like.
 
@@ -210,13 +212,17 @@ window.addEventListener(`message`, (e) => {
 });
 ```
 
+# Control
+
+# Roadmap
+
 # Next Steps
 
 The following should give you a deeper understanding of the problem, related problems and how they were tackled in the past:
   
 - [Prior Art](prior.md)
 - [The Threat Model](privacy_threat_model.md): a formalization of the problem
-- [Related Problems](problems.md)
+- [Related Problems](problems.md) and **desirable side effects**
 
 With a solid understanding of the problem space, you can read below some of the thoughts on how to address them:
 
