@@ -5,6 +5,8 @@ updated: 01/03/2021
 redirect_from: "index.html"
 ---
 
+(not to be confused with this [WebID](https://www.w3.org/2005/Incubator/webid/spec/) which has [graciously](https://github.com/WICG/WebID/issues/54#issuecomment-783605484) allowed us to use this as a codename until we [find](https://github.com/WICG/WebID/issues/41#issuecomment-712304910) a better one)
+
 **TL;DR**; This is an **active** exploration to proactively **preserve** and **elevate** identity federation (e.g. Sign-in with X), **forwards compatible** with a more **private** web.
 
 This explainer is broken down into:
