@@ -219,7 +219,7 @@ Now, clearly, addressing the classification problem is necessary but not suffici
 1. adversarial impersonation
 1. the lack of privacy controls
 
-The first thing to consider is that an adversarial tracker can and will use any of the affordances that will allow them to break out of the privacy sandbox. So, the high level APIs need to implemented in such a way that prevents that from happening.
+The first thing to consider is that an adversarial tracker can and will use any of the affordances that will allow them to break out of the privacy sandbox. So, the high level APIs need to be implemented in such a way that prevents impersonation from happening.
 
 In many ways, the first problem is related to the second one: if user agents expose clear privacy controls, then uncontrolled tracking cannot happen.
 
@@ -227,13 +227,17 @@ There is a variety of privacy controls that we are exploring, but just as a base
 
 ![](static/mock19.svg)
 
-In this variation, we offer the user the identity-specific controls whenever cross-site identity-specific communication is conducted (e.g. from the relying party to the IDP and vice versa), based on our ability to [classify](#classification).
+In this variation, we offer the user the identity-specific controls whenever cross-site identity-specific communication is conducted (e.g. from the relying party to the IDP and vice versa), based on our ability to [classify](#classification) them.
 
-This variation isn't perfect: while it is backwards compatible with most of the deployment of federation, we believe it leaves something be desired on user experience.
+This variation is a great **baseline** because it is perfectly backwards compatible. Neither relying parties nor identity providers have to redeploy, nor users will have to change their mental models about federation.
 
-For one, the user has to make two determinations (on the consequences of tracking) that are unrelated to the job to be done (sign-in), which leads us to the [mediation-oriented](consumers.md#the-mediation-oriented-variation) variation (which comes with trade-offs too).
+But this variation isn't perfect: while it is backwards compatible with most of the deployment of federation, we believe it leaves something be desired on **user experience**.
 
-For two, the user has to make a determination altogether (one that we believe is unnecessary), which leads us to the [delegation-oriented](consumers.md#the-delegation-oriented-variation) variation (which, again, comes with its set of trade-offs too).
+For one, the user has to make **two** choices (on the consequences of tracking) that are unrelated to the job to be done (sign-in) which we don't expect to be the most effective way to affect change. That leads us to the [mediation-oriented](consumers.md#the-mediation-oriented-variation) variation which bundles these prompts into a browser mediated experience (which also comes with trade-offs).
+
+Secondly, we believe that we are possibly making the user make a determination (to be tracked) that isn't necessary. The [delegation-oriented](consumers.md#the-delegation-oriented-variation) variation (which, again, comes with its set of trade-offs too) tries to solve the tracking risks by pulling more responsibilites for the user agent.
+
+It is an active area of investigation to determine the **relationship** between these approaches. To the best of our knowledge so far, we expect these to be mutually complementary (rather than exclusive) and to co-exist long term. Each comes with trade-offs and it is still early to know what market (if any) each fits.
 
 ## Enterprise
 
@@ -251,10 +255,31 @@ In addition to the separation, and with the user's permission/control/understand
 
 # Roadmap
 
+We expect this to be a multi-years project, rather than something that will happen overnight. There are billions of users that depend on federation on the web, millions/thousands of relying parties and thousands/hundreds of identity providers. There are also tens of browsers and operating systems, all moving independently. None of that changes overnight and we don't expect it to.
+
+Having said that, we believe that we have to be proactive about affecting change and making federation forward compatible with a more private Web.
+
+The approach we have taken so far has been a combination of two strategies:
+
+- a firm and principled understanding of where we want to get
+- a pragmatic and flexible understanding of what steps to take us there
+
+We believe a convincing path needs to have a clearly defined end state but also a plausible sequencing strategy.
+
+At the moment, we are actively working with identity providers to test our APIs ([instructions](HOWTO.md)) and help us determine product requirements, ergonomics and deployment strategies that minimize change and maximize control.
+
+Much of this explainer is evolving as a result of this field experimentation.
+
+It is an active area of investigation the order in which these APIs and controlls rollout and the precise time. 
+
 # Further Reading
 
 The following should give you a deeper understanding of the problem, related problems and how they were tackled in the past:
   
 - [Prior Art](prior.md)
-- [The Threat Model](privacy_threat_model.md): a formalization of the problem
+- [Alternatives considered](alternatives_considered.md)
 - [Related Problems](problems.md) and **desirable side effects**
+- The WebID [devtrial](HOWTO.md)
+- The [deployment](activation.md) topology
+- [Glossary](glossary.md)
+- [The Threat Model](privacy_threat_model.md): a formalization of the problem
