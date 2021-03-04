@@ -214,17 +214,47 @@ window.addEventListener(`message`, (e) => {
 
 # Control
 
+Now, clearly, addressing the classification problem is necessary but not sufficient. There are a couple of problems that needs to be solved too:
+
+1. adversarial impersonation
+1. the lack of privacy controls
+
+The first thing to consider is that an adversarial tracker can and will use any of the affordances that will allow them to break out of the privacy sandbox. So, the high level APIs need to implemented in such a way that prevents that from happening.
+
+In many ways, the first problem is related to the second one: if user agents expose clear privacy controls, then uncontrolled tracking cannot happen.
+
+There is a variety of privacy controls that we are exploring, but just as a baseline, take the [permission-oriented](consumers.md#the-permission-oriented-variation) variation:
+
+![](static/mock19.svg)
+
+In this variation, we offer the user the identity-specific controls whenever cross-site identity-specific communication is conducted (e.g. from the relying party to the IDP and vice versa), based on our ability to [classify](#classification).
+
+This variation isn't perfect: while it is backwards compatible with most of the deployment of federation, we believe it leaves something be desired on user experience.
+
+For one, the user has to make two determinations (on the consequences of tracking) that are unrelated to the job to be done (sign-in), which leads us to the [mediation-oriented](consumers.md#the-mediation-oriented-variation) variation (which comes with trade-offs too).
+
+For two, the user has to make a determination altogether (one that we believe is unnecessary), which leads us to the [delegation-oriented](consumers.md#the-delegation-oriented-variation) variation (which, again, comes with its set of trade-offs too).
+
+## Enterprise
+
+To the best of our knowledge, we believe that business users (employees of a corporation) have a different set of privacy expectations compared to consumers, in that the accounts issued to employees are owned by the businesses (as opposed to the relationship a consumer has with social login providers). It is also clear to us too that the current deployment of businesses makes a non-trivial use of personal machines owned by employees, rather than machines that are issued by the business (which have a much easier ability to control enterprise policies).
+
+We believe that the controls should take that distinction into consideration, and that the biggest challenge is adversarial impersonation.
+
+![](static/mock24.svg)
+
+This is still an active area of exploration, but to give a sense of direction, we are actively exploring making an abrupt separation between personal profiles and work profiles. The intuition here is that browser profiles are the closest delineation that can make a separation between personal use of your browser versus work use of your browser, along with the privacy expectations in each mode.
+
+![](static/mock25.svg)
+
+In addition to the separation, and with the user's permission/control/understanding, it seems like it would be beneficial for business admins to have the ability to set work policies on a per-profile basis.
+
 # Roadmap
 
-# Next Steps
+# Links
 
 The following should give you a deeper understanding of the problem, related problems and how they were tackled in the past:
   
 - [Prior Art](prior.md)
 - [The Threat Model](privacy_threat_model.md): a formalization of the problem
 - [Related Problems](problems.md) and **desirable side effects**
-
-With a solid understanding of the problem space, you can read below some of the thoughts on how to address them:
-
-- [The Solution Space](design.md)
-
