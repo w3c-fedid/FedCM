@@ -7,7 +7,7 @@ redirect_from: "index.html"
 
 > not to be confused with [this](https://www.w3.org/2005/Incubator/webid/spec/) WebID whose authors have [graciously](https://github.com/WICG/WebID/issues/54#issuecomment-783605484) allowed us to use this as a codename until we [find](https://github.com/WICG/WebID/issues/41#issuecomment-712304910) a better one
 
-**TL;DR**; This is an **active** exploration to proactively **preserve** and **elevate** identity federation (e.g. Sign-in with X), **forwards compatible** with a more **private** web.
+**TL;DR**; This is an **active** exploration to proactively **preserve** and **elevate** identity federation (e.g. Sign-in with X), **forward-compatible** with a more **private** web.
 
 This explainer is broken down into:
 
@@ -26,11 +26,11 @@ Because of that, existing user authentication flows rely on general web capabili
 
 Because these general purpose primitives can be used for an open ended number of use cases (again, notably, by design), browsers have to apply policies that capture the **lowest common denominator** of abuse, at best applying cumbersome permissions (e.g. popup blockers) and at worst entirely blocking them (for example, [here](https://github.com/michaelkleber/privacy-model)).
 
-Over the years, as these low level primitives get abused, browsers intervene and federation adjusts itself. For example, popup blocks became common and federation had to adjust itself to work in a world where popups blockers were widely deployed:
+Over the years, as these low level primitives get abused, browsers intervene and federation adjusts itself. For example, popup blockers became common and federation had to adjust itself to work in a world where popups blockers were widely deployed:
 
 ![](static/mock11.svg)
 
-The challenge, now more than ever, is that some of these low level primitives are getting increasingly abused to allow users on the web to be tracked. So, as a result, browsers are applying strictier and stricter policies around them.
+The challenge, now more than ever, is that some of these low level primitives are getting increasingly abused to allow users on the web to be tracked. So, as a result, browsers are applying stricter and stricter policies around them.
 
 If browsers are applying stricter policies around them, and assuming that federation is safer than usernames/passwords, how do we keep identity federation around?
 
@@ -60,7 +60,7 @@ Another example of a low level primitive that federation depends on are **iframe
 
 Because of the tracking risk, browsers are starting to disable third party cookies in iframes.
 
-Because these cross-site communication takes place in a general purpose medium, it is hard for browsers to distinguish between cross-site communication that is used for exchanging identity data or other cases where intervention is needed.
+Because these cross-site communication takes place in a general purpose medium, it is hard for browsers to distinguish between cross-site communication that is used for exchanging identity data deliberately (e.g. federation) or unintentionally (e.g. tracking).
 
 Browsers can't **classify** federation, hence the name.
 
@@ -169,7 +169,7 @@ Popups are harder to classify because each IDP seems to use a custom protocol to
 
 It is hard to know what that will exactly look like right now, but as a starting point, here is what it could look like.
 
-Instead of the low level `window.open` and listening to `window` events, one coule write at a high-level:
+Instead of the low level `window.open` and listening to `window` events, one could write at a high-level:
 
 ```javascript
 // This is just a possible starting point, largely TBD.
@@ -190,7 +190,7 @@ await navigator.credentials.store({
 
 ## The HTML API
 
-Relying Parties also typpically embed iframes served by identity providers for personalization (e.g. showing the user's profile picture / name on buttons). Browsers do (or are intending to) block third party cookies in iframes, making them uncredentialed and hence unable to personalize.
+Relying Parties also typically embed iframes served by identity providers for personalization (e.g. showing the user's profile picture / name on buttons). Browsers do (or are intending to) block third party cookies in iframes, making them uncredentialed and hence unable to personalize.
 
 This is still under active exploration, but our efforts are going into exploring ways in which we can leverage [fencedframes](https://github.com/shivanigithub/fenced-frame) and one of the response APIs above.
 
@@ -272,7 +272,7 @@ At the moment, we are actively working with identity providers to test our APIs 
 
 Much of this explainer is evolving as a result of this field experimentation.
 
-It is an active area of investigation the order in which these APIs and controlls rollout and the precise time. 
+It is an active area of investigation the order in which these APIs and controls rollout and the precise time. 
 
 # Further Reading
 
