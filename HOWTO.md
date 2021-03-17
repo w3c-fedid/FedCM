@@ -99,4 +99,4 @@ If the IdP responded to the token fetch in the previous step with a `signin_url`
 navigator.id.provide('YOUR_JWT_TOKEN_HERE');
 ```
 
-The string should contain a [JTW](https://jwt.io/).
+The string should contain a [JWT](https://jwt.io/).
