@@ -40,7 +40,11 @@ The problem starts with what we have been calling the classification problem.
 
 When federation was first designed, it was rightfully designed **around** the existing capabilities of the web, rather than **changing** them. Specifically, federation worked with callbacks on top of **cookies**, **redirects** or **popup windows**, which didn't require any redesign, redeployment or negotiation with browser vendors.
 
-Federation makes use of redirects to navigate the user to identity providers (with callbacks, e.g. `redirect_uri`), which upon permission redirects users again to the relying parties with a result (e.g. an `id_token`):
+One example of a low level primitive that federation depends on are **iframes** and **third party cookies**. To support some of the user flows (e.g. token renewal, logout, personalization in login buttons, etc), Iframes are embedded into relying parties assuming they'll have access to third party cookies. Unfortunately, that's virtually indistinguishable from trackers that can track your browsing history across relying parties, just by having users visit links (e.g. loading credentialed iframes on page load):
+
+![](static/mock23.svg)
+
+Another example of a low level primitive that federation uses is the use of redirects to navigate the user to identity providers (with callbacks, e.g. `redirect_uri`), which upon permission redirects users again to the relying parties with a result (e.g. an `id_token`):
 
 ![](static/mock21.svg)
 
@@ -54,11 +58,7 @@ In federation, that's less invisible/automatic, but it is still there. Cross-sit
 
 ![](static/mock3.svg)
 
-Another example of a low level primitive that federation depends on are **iframes** and **third party cookies**. Iframes are often embedded into relying parties assuming they'll have access to third party cookies which are then used for personalization (e.g. showing names in login buttons). Unfortunately, that's virtually indistinguishable from trackers that can track your browsing history across relying parties, just by having users visit links (e.g. loading credentialed iframes on page load):
-
-![](static/mock23.svg)
-
-Because of the tracking risk, browsers are starting to disable third party cookies in iframes.
+Because of these tracking risks, browsers are starting to disable third party cookies in iframes and more generally provide tighter control over cross-site communication (e.g. a [privacy model](https://github.com/michaelkleber/privacy-model) for the web).
 
 Because these cross-site communication takes place in a general purpose medium, it is hard for browsers to distinguish between cross-site communication that is used for exchanging identity data deliberately (e.g. federation) or unintentionally (e.g. tracking).
 
