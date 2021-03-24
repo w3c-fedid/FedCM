@@ -38,7 +38,7 @@ If browsers are applying stricter policies around them, and assuming that federa
 
 The problem starts with what we have been calling the classification problem.
 
-When federation was first designed, it was rightfully designed **around** the existing capabilities of the web, rather than **changing** them. Specifically, federation worked with callbacks on top of **cookies**, **redirects** or **popup windows**, which didn't require any redesign, redeployment or negotiation with browser vendors.
+When federation was first designed, it was rightfully designed **around** the existing capabilities of the web, rather than **changing** them. Specifically, federation worked with callbacks on top of **cookies**, **redirects**, **iframes** or **popup windows**, which didn't require any redesign, redeployment or negotiation with browser vendors.
 
 One example of a low level primitive that federation depends on are **iframes** and **third party cookies**. To support some of the user flows (e.g. token renewal, logout, personalization in login buttons, etc), Iframes are embedded into relying parties assuming they'll have access to third party cookies. Unfortunately, that's virtually indistinguishable from trackers that can track your browsing history across relying parties, just by having users visit links (e.g. loading credentialed iframes on page load):
 
@@ -131,7 +131,7 @@ window.addEventListener(`message`, (e) => {
 });
 ```
 
-All of these affordances allow for arbitrary cross-origin communication, so at some point we can expect them to be constrained (more details [here](https://www.chromium.org/Home/chromium-privacy/privacy-sandbox)).
+All of these affordances depend on arbitrary credentialed cross-origin communication, so at some point we can expect them to be constrained (more details [here](https://www.chromium.org/Home/chromium-privacy/privacy-sandbox)).
 
 # Classification
 
@@ -227,9 +227,34 @@ In many ways, the first problem is related to the second one: if user agents exp
 
 There is a variety of privacy controls that we are exploring, but just as a baseline, take the [permission-oriented](consumers.md#the-permission-oriented-variation) variation:
 
+In this variation, we offer the user the identity-specific controls whenever cross-site identity-specific communication is conducted (e.g. from the relying party to the IDP and vice versa), based on our ability to [classify](#classification) them.
+
+Concretely, instead of a `window.location.href` top level redirect or a `window.open` popup, a relying party (most probably indirectly via JS SDK provided by the IDP) would call a high level API instead:
+
+```javascript
+// In replacement of window.location.href or window.open,
+// we use a high-level API instead:
+// NOTE: This is just a possible starting point, exact
+// API largely TBD as we gather implementation experience.
+let {idToken} = await navigator.credentials.get({
+  provider: "https://accounts.example.com",
+  ux_mode: "popup",
+  // other OpenId connect parameters
+});
+```
+
+Upon invocation, an IDP-controlled webpage is loaded:
+
 ![](static/mock19.svg)
 
-In this variation, we offer the user the identity-specific controls whenever cross-site identity-specific communication is conducted (e.g. from the relying party to the IDP and vice versa), based on our ability to [classify](#classification) them.
+The IDP-controlled website can communicates back with the RP with a high-level API (in replacemente of the low-level `postMessage`) too: 
+
+```javascript
+// This is just a possible starting point, largely TBD.
+await navigator.credentials.store({
+  idtoken: JWT,
+});
+```
 
 This variation is a great **baseline** because it is perfectly backwards compatible. Neither relying parties nor identity providers have to redeploy, nor users will have to change their mental models about federation.
 
@@ -237,11 +262,62 @@ But this variation isn't perfect: while it is backwards compatible with most of 
 
 For one, the user has to make **two** choices (on the consequences of tracking) that are unrelated to the job to be done (sign-in) which we don't expect to be the most effective way to affect change. That leads us to the [mediation-oriented](consumers.md#the-mediation-oriented-variation) variation which bundles these prompts into a browser mediated experience (which also comes with trade-offs).
 
+```javascript
+let {idToken} = await navigator.credentials.get({
+  provider: "https://accounts.example.com",
+  ux_mode: "inline",
+  // other OpenId connect parameters
+});
+```
+
+In the **mediated** variation, the user agent takes more responsibility in owning that transaction, and talks to the IDP via an HTTP convention rather than allowing the IDP to control HTML/JS/CSS. For example:
+
+```http
+GET /.well-known/webid/accounts.php HTTP/1.1
+Host: idp.example
+Cookie: 123
+```
+
+The IDP responds with a list of accounts that the user has:
+
+```http
+HTTP/2.0 200 OK
+Content-Type: text/json
+{
+  accounts: [{
+    sub: 1234, 
+    name: "Sam Goto",
+    given_name: "Sam",
+    family_name: "Goto", 
+    email: "samuelgoto@gmail.com",
+    picture: "https://accounts.idp.com/profile/123",
+  }]
+}
+```
+
+With the data, the browser then controls the experience with the user to carry on:
+
 ![](static/mock15.svg)
 
-Secondly, we believe that we are possibly making the user make a determination (to be tracked) that isn't necessary. The [delegation-oriented](consumers.md#the-delegation-oriented-variation) variation (which, again, comes with its set of trade-offs too) tries to solve the tracking risks by pulling more responsibilites for the user agent.
+Upon agreement, the browser uses the HTTP API convention to mint the idtoken. For example:
 
-It is an active area of investigation to determine the **relationship** between these approaches. To the best of our knowledge so far, we expect these to be mutually complementary (rather than exclusive) and to co-exist long term. Each comes with trade-offs and it is still early to know what market (if any) each fits.
+```http
+POST /.well-known/webid/idtoken.php HTTP/1.1
+Host: idp.example
+Cookie: 123
+Content-Type: application/x-www-form-urlencoded
+account=1234,client_id=5678
+```
+
+And with the response, resolves the promise.
+
+The benefits of the permission-oriented approach is that it is the most backwards compatible, at the cost of user friction in the form of permissions. The benefits of the mediated approach is that the user friction is inlined and contextual, at the cost of the ossification of the user experience.
+
+Those two problems take us to a third approach we are exploring, which we are calling the delegation-oriented approach.
+
+We believe that we are possibly making the user make a determination (to be tracked) that isn't necessary. The [delegation-oriented](consumers.md#the-delegation-oriented-variation) variation (which, again, comes with its set of trade-offs too) tries to solve the tracking risks by pulling more responsibilites to the user agent.
+
+It is an active area of investigation to determine the **relationship** between these approaches. To the best of our knowledge so far, we expect these to be mutually complementary (rather than exclusive) and to co-exist long term. Each comes with trade-offs and it is too still early to know what market (if any) each fits. We expect that further implementation experimentation will guide us in better understanding the trade-offs and the relationship between these alternatives.
 
 ## Enterprise
 
@@ -270,7 +346,7 @@ The approach we have taken so far has been a combination of two strategies:
 
 We believe a convincing path needs to have a clearly defined end state but also a plausible sequencing strategy.
 
-At the moment, we are actively working with identity providers to test our APIs ([instructions](HOWTO.md)) and help us determine product requirements, ergonomics and deployment strategies that minimize change and maximize control.
+At the moment, we are actively working with the identity providers ecosystem to help us determine product requirements, ergonomics and deployment strategies that minimize change and maximize control, for example via testing our APIs ([instructions](HOWTO.md)) and giving us feedback.
 
 Much of this explainer is evolving as a result of this field experimentation.
 
