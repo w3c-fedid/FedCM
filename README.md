@@ -70,11 +70,10 @@ So, how do we **distinguish** federation from tracking and elevate the level of 
 
 # The Anatomy of Federation
 
-Before we can answer "how to distinguish" federation from tracking, lets first try to understand what federation depends on. For our interest, we can identify three big passes:
+Before we can answer "how to distinguish" federation from tracking, lets first try to understand what federation depends on. For our interest, we can identify two big passes:
 
 1. There is a convention used by relying parties to request identification/authentication to identity providers
 1. There is a convention used by identity providers to respond with identification/authentication to relying parties
-1. It uses browser affordances for personalization
 
 These passes rely on the following low level primitives:
 
@@ -125,13 +124,15 @@ Which listen to postMessages:
 ```javascript
 window.addEventListener(`message`, (e) => {
   if (e.origin == "https://idp.example") {
-    // ...
-    e.source.postMessage("done, thanks");
+    // neat, thanks!
+    let {idtoken} = e;
   }
 });
 ```
 
 All of these affordances depend on arbitrary credentialed cross-origin communication, so at some point we can expect them to be constrained (more details [here](https://www.chromium.org/Home/chromium-privacy/privacy-sandbox)).
+
+With that in mind, lets take a closer look at what high-level APIs could look like for each of these two passes:
 
 # Classification
 
@@ -225,7 +226,9 @@ The first thing to consider is that an adversarial tracker can and will use any 
 
 In many ways, the first problem is related to the second one: if user agents expose clear privacy controls, then uncontrolled tracking cannot happen.
 
-There is a variety of privacy controls that we are exploring, but just as a baseline, take the [permission-oriented](consumers.md#the-permission-oriented-variation) variation:
+## The Permission-oriented Variation
+
+There is a variety of privacy controls that we are exploring, but just as a baseline, take the permission-oriented variation:
 
 In this variation, we offer the user the identity-specific controls whenever cross-site identity-specific communication is conducted (e.g. from the relying party to the IDP and vice versa), based on our ability to [classify](#classification) them.
 
@@ -256,11 +259,17 @@ await navigator.credentials.store({
 });
 ```
 
-This variation is a great **baseline** because it is perfectly backwards compatible. Neither relying parties nor identity providers have to redeploy, nor users will have to change their mental models about federation.
+This variation is a great **baseline** because it is highly backwards compatible (specially if it is done via the [HTTP API](#the-http-api)). Neither relying parties nor identity providers have to redeploy, nor users will have to change their mental models about federation.
 
 But this variation isn't perfect: while it is backwards compatible with most of the deployment of federation, we believe it leaves something be desired on **user experience**.
 
-For one, the user has to make **two** choices (on the consequences of tracking) that are unrelated to the job to be done (sign-in) which we don't expect to be the most effective way to affect change. That leads us to the [mediation-oriented](consumers.md#the-mediation-oriented-variation) variation which bundles these prompts into a browser mediated experience (which also comes with trade-offs).
+For one, the user has to make **two** choices (on the consequences of tracking) that are unrelated to the job to be done (sign-in) which we don't expect to be the most effective way to affect change.
+
+That leads us to the [mediation-oriented](#the-mediation-oriented-variation) variation which bundles these prompts into a browser mediated experience (which also comes with trade-offs).
+
+## The Mediation-oriented Variation
+
+In the **mediated** variation, the user agent takes more responsibility in owning that transaction, and talks to the IDP via an HTTP convention rather than allowing the IDP to control HTML/JS/CSS:
 
 ```javascript
 let {idToken} = await navigator.credentials.get({
@@ -270,7 +279,7 @@ let {idToken} = await navigator.credentials.get({
 });
 ```
 
-In the **mediated** variation, the user agent takes more responsibility in owning that transaction, and talks to the IDP via an HTTP convention rather than allowing the IDP to control HTML/JS/CSS. For example:
+The `ux_mode` parameter informs the user agent to use the mediation-oriented variation, which, as opposed to the permission-oriented variation, talks to the IDP via HTTP instead:
 
 ```http
 GET /.well-known/webid/accounts.php HTTP/1.1
@@ -285,12 +294,12 @@ HTTP/2.0 200 OK
 Content-Type: text/json
 {
   accounts: [{
-    sub: 1234, 
-    name: "Sam Goto",
-    given_name: "Sam",
-    family_name: "Goto", 
-    email: "samuelgoto@gmail.com",
-    picture: "https://accounts.idp.com/profile/123",
+    "sub": 1234, 
+    "name": "Sam Goto",
+    "given_name": "Sam",
+    "family_name": "Goto", 
+    "email": "samuelgoto@gmail.com",
+    "picture": "https://accounts.idp.com/profile/123",
   }]
 }
 ```
@@ -315,11 +324,13 @@ The benefits of the permission-oriented approach is that it is the most backward
 
 Those two problems take us to a third approach we are exploring, which we are calling the delegation-oriented approach.
 
+## The Delegation-oriented Variation
+
 We believe that we are possibly making the user make a determination (to be tracked) that isn't necessary. The [delegation-oriented](consumers.md#the-delegation-oriented-variation) variation (which, again, comes with its set of trade-offs too) tries to solve the tracking risks by pulling more responsibilites to the user agent.
 
 It is an active area of investigation to determine the **relationship** between these approaches. To the best of our knowledge so far, we expect these to be mutually complementary (rather than exclusive) and to co-exist long term. Each comes with trade-offs and it is too still early to know what market (if any) each fits. We expect that further implementation experimentation will guide us in better understanding the trade-offs and the relationship between these alternatives.
 
-## Enterprise
+## The Enterprise-oriented Variation
 
 To the best of our knowledge, we believe that business users (employees of a corporation) have a different set of privacy expectations compared to consumers, in that the accounts issued to employees are owned by the businesses (as opposed to the relationship a consumer has with social login providers). It is also clear to us too that the current deployment of businesses makes a non-trivial use of personal machines owned by employees, rather than machines that are issued by the business (which have a much easier ability to control enterprise policies).
 
