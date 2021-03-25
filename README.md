@@ -357,11 +357,19 @@ The approach we have taken so far has been a combination of two strategies:
 
 We believe a convincing path needs to have a clearly defined end state but also a plausible sequencing strategy.
 
-At the moment, we are actively working with the identity providers ecosystem to help us determine product requirements, ergonomics and deployment strategies that minimize change and maximize control, for example via testing our APIs ([instructions](HOWTO.md)) and giving us feedback.
+At the moment, we are actively working with the identity providers ecosystem to help us determine product requirements (contribute [here](https://github.com/IDBrowserUseCases/docs) with the list of use cases), ergonomics and deployment strategies that minimize change and maximize control, for example via testing our APIs ([instructions](HOWTO.md)) and giving us feedback.
 
 Much of this explainer is evolving as a result of this field experimentation.
 
 It is an active area of investigation the order in which these APIs and controls rollout and the precise time. 
+
+# How can I help?
+
+The most constructive/objective way you can help is to:
+
+1. get a good understanding of the **why**: understand the ongoing privacy-oriented changes in browsers ([example](https://blog.chromium.org/2020/01/building-more-private-web-path-towards.html)) and their [principles](https://github.com/michaelkleber/privacy-model)
+1. help us understand **what**: contribute [here](https://github.com/IDBrowserUseCases/docs) with a use case that you believe can be impacted
+1. help us understand **how**: [try the APIs](https://github.com/WICG/WebID/blob/main/HOWTO.md) under development and help us understand what works / doesn't work
 
 # Further Reading
 
