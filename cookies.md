@@ -1,8 +1,50 @@
-## The HTML API
+---
+title: "Cookies"
+maintainer: "samuelgoto"
+created: 03/02/2021
+updated: 03/02/2021
+---
 
-Relying Parties also typically embed iframes served by identity providers for personalization (e.g. showing the user's profile picture / name on buttons). Browsers do (or are intending to) block third party cookies in iframes, making them uncredentialed and hence unable to personalize.
+This is an **early exploration** of the design alternatives to address [this](README.md#stage-1-third-party-cookies) under [this threat model](privacy_threat_model.md).
 
-This is still under active exploration, but our efforts are going into exploring ways in which we can leverage [fencedframes](https://github.com/shivanigithub/fenced-frame) and one of the response APIs above.
+This section goes over the **what** and the **how**. It presuposes that you have read and started from:
+
+- The **why**: the [problem](README.md) statement and the [motivations](privacy_threat_model.md) and the [topology](activation.md) of the parties involved.
+- The **why not**: the [alternatives](alternatives_considered.md) considered (e.g. the [prior art](prior.md), the [status quo](alternatives_considered.md#the-status-quo) and the [requestStorageAccess API](alternatives_considered.md#the-request-storage-access-api)).
+
+It is widely known that browsers are either **already** blocking third party cookies or are planning to.
+
+> Publicly announced browser positions on third party cookies:
+>
+> 1. [Safari](https://webkit.org/blog/10218/full-third-party-cookie-blocking-and-more/): third party cookies are **already** blocked by **default**
+> 1. [Firefox](https://blog.mozilla.org/blog/2019/09/03/todays-firefox-blocks-third-party-tracking-cookies-and-cryptomining-by-default/): third party cookies are **already** blocked **by default**, and
+> 1. [Chrome](https://blog.google/products/chrome/privacy-sustainability-and-the-importance-of-and/): intends to offer **alternatives** to make them **obsolete** in the [near term](https://www.blog.google/products/chrome/building-a-more-private-web/).
+
+Unfortunately, that has either broken or are about to break a few use cases in federation, namely [logging out](https://openid.net/specs/openid-connect-rpinitiated-1_0.html), social [buttons](https://developers.facebook.com/docs/facebook-login/userexperience/) and [widget](https://developers.google.com/identity/one-tap/web) personalization (anything else? add your use case [here](#how-can-i-help))).
+
+We will go each each of these cases and look into alternatives to preserve them below:
+
+- [Widgets](#widgets)
+- [Logout](#logout)
+
+![](static/mock27.svg)
+
+# Widgets
+
+Relying Parties typically embed credentialed iframes served by identity providers for personalization (e.g. showing the user's profile picture / name on buttons). Browsers do (or are intending to) block third party cookies in iframes, making them uncredentialed and hence unable to personalize.
+
+There are two variations that we are evaluating to preserve this use case:
+
+- [fencedframes](#fencedframes) and permissions and
+- [mediation](#mediation)
+
+## fenced frames
+
+There is a variety of privacy controls that we are exploring, but the fenced frame variation is a good baseline.
+
+In this variation, we offer the user the identity-specific controls whenever cross-site identity-specific communication is conducted (e.g. from the relying party to the IDP and vice versa), based on exposing new high level identity-specific APIs.
+
+This is still under active exploration, but our efforts are going into exploring ways in which we can leverage [fencedframes](https://github.com/shivanigithub/fenced-frame) and introduce new high-level javascript APIs.
 
 For example, we are looking into ways we could replace the `<iframe>` tag with the web-bundle version of `<fencedframe>`s:
 
@@ -13,7 +55,18 @@ For example, we are looking into ways we could replace the `<iframe>` tag with t
 
 In this formulation, the web bundle is a static (yet personalized) bundle that can be displayed on page load but can't have any uncontrolled communication outwards (e.g. over the network or over in-browser features, like postMessage).
 
-Once the user interacts with the fencedframe, a user agent would know, based on identity-specific parameters in the fencedframe, when to release that information to the web bundle as well as use the APIs above (e.g. the HTTP API or the JS API) to return an idtoken back.
+The IDP-controlled fenced frame can communicates back with the RP with a high-level API (in replacemente of the low-level `postMessage`) too (which isn't allowed in a fenced frame): 
+
+```javascript
+// This is just a possible starting point, largely TBD.
+await navigator.credentials.store({
+  idtoken: JWT,
+});
+```
+
+![](static/mock28.svg)
+
+Upon approval, the user agent would hand it back the result to the relying party using the existing mechanisms:
 
 ```javascript
 window.addEventListener(`message`, (e) => {
@@ -23,61 +76,20 @@ window.addEventListener(`message`, (e) => {
   }
 });
 ```
-# Control
 
-Now, clearly, addressing the classification problem is necessary but not sufficient. There are a couple of problems that needs to be solved too:
+This variation is a great **baseline** because it is highly backwards compatible from a user experience perspective and from a deployment perspective. Relying parties don't have to redeploy, nor users will have to change their mental models about the widgets.
 
-1. adversarial impersonation
-1. the lack of privacy controls
-
-The first thing to consider is that an adversarial tracker can and will use any of the affordances that will allow them to break out of the privacy sandbox. So, the high level APIs need to be implemented in such a way that prevents impersonation from happening.
-
-In many ways, the first problem is related to the second one: if user agents expose clear privacy controls, then uncontrolled tracking cannot happen.
-
-## The Permission-oriented Variation
-
-There is a variety of privacy controls that we are exploring, but just as a baseline, take the permission-oriented variation:
-
-In this variation, we offer the user the identity-specific controls whenever cross-site identity-specific communication is conducted (e.g. from the relying party to the IDP and vice versa), based on our ability to [classify](#classification) them.
-
-Concretely, instead of a `window.location.href` top level redirect or a `window.open` popup, a relying party (most probably indirectly via JS SDK provided by the IDP) would call a high level API instead:
-
-```javascript
-// In replacement of window.location.href or window.open,
-// we use a high-level API instead:
-// NOTE: This is just a possible starting point, exact
-// API largely TBD as we gather implementation experience.
-let {idToken} = await navigator.credentials.get({
-  provider: "https://accounts.example.com",
-  ux_mode: "popup",
-  // other OpenId connect parameters
-});
-```
-
-Upon invocation, an IDP-controlled webpage is loaded:
-
-![](static/mock19.svg)
-
-The IDP-controlled website can communicates back with the RP with a high-level API (in replacemente of the low-level `postMessage`) too: 
-
-```javascript
-// This is just a possible starting point, largely TBD.
-await navigator.credentials.store({
-  idtoken: JWT,
-});
-```
-
-This variation is a great **baseline** because it is highly backwards compatible (specially if it is done via the [HTTP API](#the-http-api)). Neither relying parties nor identity providers have to redeploy, nor users will have to change their mental models about federation.
-
-But this variation isn't perfect: while it is backwards compatible with most of the deployment of federation, we believe it leaves something be desired on **user experience**.
+But this variation isn't perfect: while it is backwards compatible, we believe it leaves something be desired on **user experience**.
 
 For one, the user has to make **two** choices (on the consequences of tracking) that are unrelated to the job to be done (sign-in) which we don't expect to be the most effective way to affect change.
 
 That leads us to the [mediation-oriented](#the-mediation-oriented-variation) variation which bundles these prompts into a browser mediated experience (which also comes with trade-offs).
 
-## The Mediation-oriented Variation
+## mediation
 
-In the **mediated** variation, the user agent takes more responsibility in owning that transaction, and talks to the IDP via an HTTP convention rather than allowing the IDP to control HTML/JS/CSS:
+In the **mediated** variation, the user agent takes more responsibility in owning that transaction, and talks to the IDP directly (e.g. via an HTTP convention or JS APIs) rather than allowing the IDP to control HTML/JS/CSS.
+
+As opposed to a fenced frame, relying parties call a javascript API:
 
 ```javascript
 let {idToken} = await navigator.credentials.get({
@@ -114,7 +126,7 @@ Content-Type: text/json
 
 With the data, the browser then controls the experience with the user to carry on:
 
-![](static/mock15.svg)
+![](static/mock29.svg)
 
 Upon agreement, the browser uses the HTTP API convention to mint the idtoken. For example:
 
@@ -130,10 +142,34 @@ And with the response, resolves the promise.
 
 The benefits of the permission-oriented approach is that it is the most backwards compatible, at the cost of user friction in the form of permissions. The benefits of the mediated approach is that the user friction is inlined and contextual, at the cost of the ossification of the user experience.
 
-Those two problems take us to a third approach we are exploring, which we are calling the delegation-oriented approach.
+# Logout
 
-## The Delegation-oriented Variation
+When users log out of IDPs, there is typically a desire for users to also be logged out of the RPs they signed into. This is typically accomplished with the IDPs loading iframes pointing to a pre-acquired endpoint for each of the relying parties ([details](https://www.identityserver.com/articles/the-challenge-of-building-saml-single-logout)).
 
-We believe that we are possibly making the user make a determination (to be tracked) that isn't necessary. The [delegation-oriented](consumers.md#the-delegation-oriented-variation) variation (which, again, comes with its set of trade-offs too) tries to solve the tracking risks by pulling more responsibilites to the user agent.
+This is still an active area of investigation, but one first approximation is that, without cookies, these iframes are going to be uncredentialed. That leads to a few options to be explored:
 
-It is an active area of investigation to determine the **relationship** between these approaches. To the best of our knowledge so far, we expect these to be mutually complementary (rather than exclusive) and to co-exist long term. Each comes with trade-offs and it is too still early to know what market (if any) each fits. We expect that further implementation experimentation will guide us in better understanding the trade-offs and the relationship between these alternatives.
+- use the back channel and session ids (which comes with its own set of challenges) or
+- expose web platform APIs to preserve this use case
+
+We are still actively investigating the use case and understanding the deployment structure here, but just as a starting point, consider the introduction of an identity-specific browser API that would allow the browser to gather the user permission and release the credentials to the iframes:
+
+```javascript
+await navigator.logout({
+  relying_parties: [
+    "https://rp1.com",
+    "https://rp2.com",
+    "https://rp3.com",
+    // ...
+    "https://rp8.com",
+    "https://rp9.com",
+  ]
+});
+```
+
+The form of the API as well as whether/which permissions that would be involved as still largely being explored, but here is a somewhat conservative starting point too:
+
+![](static/mock30.svg)
+
+
+
+
