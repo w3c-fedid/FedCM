@@ -109,18 +109,22 @@ The approach we have taken so far has been a combination of two strategies:
 
 We believe a convincing path needs to have a clearly defined end state but also a plausible sequencing strategy.
 
+## Sequencing
+
 While much of the environment is changing and evolving as we speak, there are clear things that are broken right now and enough signals about the principles and challenges ahead of us. We are breaking this into three separate stages:
 
-1. [Stage 1](#stage-1-third-party-cookies): preserve federation post third party cookies
-1. [Stage 2](#stage-2-bounce-tracking): preserve federation post bounce tracking preventions
-1. [Stage 3](#future-work): related problems and opportunities
+| Stage  | Timeline  | Description  |
+|--------|-----------|--------------|
+| [Stage 1](#stage-1-third-party-cookies) | preserve federation post third party cookies   |   |   |   |
+| [Stage 2](#stage-2-bounce-tracking)     | preserve federation post bounce tracking preventions |   |   |   |
+| [Stage 3](#future-work)                 | related problems and opportunities |   |   |   |
+
 
 ## Stage 1: Third Party Cookies
 
-The more urgent problem that clearly has already affected federation is the blocking of third party cookies. We plan to tackle this first.
+The more urgent problem that clearly has **already** affected federation (or is about to) is the blocking of third party cookies. We plan to tackle this first:
 
-- **Why**, **What** and **When**?
-    **Today**, third party cookies are blocked on [Safari](https://webkit.org/blog/10218/full-third-party-cookie-blocking-and-more/) and [Firefox](https://blog.mozilla.org/blog/2019/09/03/todays-firefox-blocks-third-party-tracking-cookies-and-cryptomining-by-default/). They are in the process of becoming **obsolete** in [Chrome](https://blog.google/products/chrome/privacy-sustainability-and-the-importance-of-and/) in the foreseeable future.
+- **Why**, **What** and **When**? **Today**, third party cookies are blocked on [Safari](https://webkit.org/blog/10218/full-third-party-cookie-blocking-and-more/) and [Firefox](https://blog.mozilla.org/blog/2019/09/03/todays-firefox-blocks-third-party-tracking-cookies-and-cryptomining-by-default/). They are in the process of becoming **obsolete** in [Chrome](https://blog.google/products/chrome/privacy-sustainability-and-the-importance-of-and/) in the foreseeable future.
 - So **What**? [logging out](https://openid.net/specs/openid-connect-rpinitiated-1_0.html), social [buttons](https://developers.facebook.com/docs/facebook-login/userexperience/) and [widgets](https://developers.google.com/identity/one-tap/web) personalization breaks. (anything else? add your use case [here](#how-can-i-help))
 - **How**? [Here](cookies.md) are some early proposals on how to preserve these use cases.
 - **Who** and **Where**?: Browser vendors, identity providers, relying parties and standard bodies are involved. The discussions so far have happened at the [WICG](https://github.com/WICG/WebID/issues) and at the [OpenID foundation](https://github.com/IDBrowserUseCases/docs).
@@ -149,7 +153,7 @@ The most constructive/objective way you can help is to:
 
 1. get a good understanding of the **why**: understand the ongoing privacy-oriented changes in browsers ([example](https://blog.chromium.org/2020/01/building-more-private-web-path-towards.html)) and their [principles](https://github.com/michaelkleber/privacy-model)
 1. help us understand **what**: contribute [here](https://github.com/IDBrowserUseCases/docs) with a use case that you believe can be impacted
-1. help us understand **how**: [try the APIs](https://github.com/WICG/WebID/blob/main/HOWTO.md) under development and help us understand what works / doesn't work
+1. help us understand **how**: help us discover options (for [cookies](cookies.md) and [redirects](redirects.md)) and evaluate their trade-offs. [Try](https://github.com/WICG/WebID/blob/main/HOWTO.md) the APIs under development and help us understand what works / doesn't work.
 
 # Further Reading
 
@@ -165,86 +169,5 @@ The following should give you a deeper understanding of the problem, related pro
 - The WebID [devtrial](HOWTO.md)
 
 With that in mind, lets take a closer look at what high-level APIs could look like for each of these two passes:
-
-# Classification
-
-Like we said above, the classification problem is the browser's inability to distinguish identity federation from tracking due to the fact that both use low level primitives (namely, redirects, popups, iframes and cookies) and its consequence is the application of lowest common denominator policies.
-
-The first thought that occurred to us was to look into each of these low-level primitives and offer for each an indentity-specific high-level affordance, **trading generality for awareness**.
-
-With that in mind, lets look into each specific low-level primitive and what a high-level identity-specific affordance would look like.
-
-## The HTTP API
-
-One of the most basic things that we could do to classify federation is to detect patterns in HTTP requests.
-
-Because a significant part of federation is deployed over well-established protocols (e.g. OpenID, SAML), their HTTP profile is somewhat easy to spot. For example, for OpenID Connect requests/responses we could look at HTTP requests that have:
-
-- a **client_id** parameter
-- a **redirect_uri** parameter
-- a **scope** parameter
-- an accompanying **.well-known/openid-configuration** configuration
-
-Responses can be matched when they match:
-
-- a redirect to the previously used **redirect_uri**
-- an **id_token** parameter
-
-It is an active area of investigation to determine:
-
-1. which and how many of these patterns we would want to use (too few and you over-classify, too many and you under-classify),
-1. whether the same approach would work for other protocols (e.g. SAML).
-1. whether we need an opt-in / explicit API and if so which (e.g. perhaps a special URL marker, like a reserved URL parameter or a scheme)
-
-## The JS API
-
-Popups are harder to classify because each IDP seems to use a custom protocol to open the popup as well as to communicate via postMessage.
-
-It is hard to know what that will exactly look like right now, but as a starting point, here is what it could look like.
-
-Instead of the low level `window.open` and listening to `window` events, one could write at a high-level:
-
-```javascript
-// This is just a possible starting point, largely TBD.
-let {idToken} = await navigator.credentials.get({
-  provider: "https://accounts.example.com",
-  // other OpenId connect parameters
-});
-```
-
-And instead of the low level `postMessage`, the IDP would write:
-
-```javascript
-// This is just a possible starting point, largely TBD.
-await navigator.credentials.store({
-  idtoken: JWT,
-});
-```
-
-## The HTML API
-
-Relying Parties also typically embed iframes served by identity providers for personalization (e.g. showing the user's profile picture / name on buttons). Browsers do (or are intending to) block third party cookies in iframes, making them uncredentialed and hence unable to personalize.
-
-This is still under active exploration, but our efforts are going into exploring ways in which we can leverage [fencedframes](https://github.com/shivanigithub/fenced-frame) and one of the response APIs above.
-
-For example, we are looking into ways we could replace the `<iframe>` tag with the web-bundle version of `<fencedframe>`s:
-
-```html
-<fencedframe src="https://idp.example/personalized-frame.wbn" client_id="1234" scope="openid email">
-</fencedframe>
-```
-
-In this formulation, the web bundle is a static (yet personalized) bundle that can be displayed on page load but can't have any uncontrolled communication outwards (e.g. over the network or over in-browser features, like postMessage).
-
-Once the user interacts with the fencedframe, a user agent would know, based on identity-specific parameters in the fencedframe, when to release that information to the web bundle as well as use the APIs above (e.g. the HTTP API or the JS API) to return an idtoken back.
-
-```javascript
-window.addEventListener(`message`, (e) => {
-  if (e.origin == "https://idp.example") {
-    // ...
-    e.source.postMessage("done, thanks");
-  }
-});
-```
 
 

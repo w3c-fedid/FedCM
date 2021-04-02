@@ -1,14 +1,11 @@
 ---
-title: "Consumers"
+title: "Navigations"
 maintainer: "samuelgoto"
 created: 01/01/2020
 updated: 09/10/2020
 ---
 
-This is an **early exploration** of the design alternatives to address [this problem](README.md) under [this threat model](privacy_threat_model.md) for **consumers**.
-
-> NOTE: this is an analysis only applicable to the very specific deployment [structure](activation.md) of federation for **consumers**.
-> If you are looking for an analysis to other use cases, go [here](design.md) or [here](enterprises.md).
+This is an **early exploration** of the design alternatives to address [this](README.md#stage-2-bounce-tracking) under [this threat model](privacy_threat_model.md).
 
 This section goes over the **what** and the **how**. It presuposes that you have read and started from:
 
@@ -96,6 +93,26 @@ Upon success, the consumer API results into a [directed basic profile](directed_
 ```
 
 The [directed basic profile](directed_basic_profile.md) is signed into a JWT and then returned back to the relying party which can effectively get the user logged in. Here is [an example](https://jwt.io/#debugger-io?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmlkcC5jb20iLCJzdWIiOiIxMTAxNjk0ODQ0NzQzODYyNzYzMzQiLCJhdWQiOiJodHRwczovL2V4YW1wbGUuY29tIiwiaWF0IjoiMjM0MjM0MiIsIm5hbWUiOiJTYW0gRyIsImVtYWlsIjoic2prbGQyMDkzQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjoidHJ1ZSIsInByb2ZpbGUiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20vZGVmYXVsdC1hdmF0YXIucG5nIn0.3fGpHH5IeL2fDxbToBLE2DWDf6hfHU5YfiSdfqRGlIA) of what a signed JWT looks like for the payload above.
+
+One of the most basic things that we could do to classify federation is to detect patterns in HTTP requests.
+
+Because a significant part of federation is deployed over well-established protocols (e.g. OpenID, SAML), their HTTP profile is somewhat easy to spot. For example, for OpenID Connect requests/responses we could look at HTTP requests that have:
+
+- a **client_id** parameter
+- a **redirect_uri** parameter
+- a **scope** parameter
+- an accompanying **.well-known/openid-configuration** configuration
+
+Responses can be matched when they match:
+
+- a redirect to the previously used **redirect_uri**
+- an **id_token** parameter
+
+It is an active area of investigation to determine:
+
+1. which and how many of these patterns we would want to use (too few and you over-classify, too many and you under-classify),
+1. whether the same approach would work for other protocols (e.g. SAML).
+1. whether we need an opt-in / explicit API and if so which (e.g. perhaps a special URL marker, like a reserved URL parameter or a scheme)
 
 ## The Authorization API
 
@@ -186,42 +203,24 @@ It is clearly not possible to enumerate all the various scopes that are in use, 
 
 ![](static/mock20.svg)
 
-# Control
 
-Now, clearly, addressing the classification problem is necessary but not sufficient. There are a couple of problems that needs to be solved too:
+## The JS API
 
-1. adversarial impersonation
-1. the lack of privacy controls
+Popups are harder to classify because each IDP seems to use a custom protocol to open the popup as well as to communicate via postMessage.
 
-The first thing to consider is that an adversarial tracker can and will use any of the affordances that will allow them to break out of the privacy sandbox. So, the high level APIs need to be implemented in such a way that prevents impersonation from happening.
+It is hard to know what that will exactly look like right now, but as a starting point, here is what it could look like.
 
-In many ways, the first problem is related to the second one: if user agents expose clear privacy controls, then uncontrolled tracking cannot happen.
-
-## The Permission-oriented Variation
-
-There is a variety of privacy controls that we are exploring, but just as a baseline, take the permission-oriented variation:
-
-In this variation, we offer the user the identity-specific controls whenever cross-site identity-specific communication is conducted (e.g. from the relying party to the IDP and vice versa), based on our ability to [classify](#classification) them.
-
-Concretely, instead of a `window.location.href` top level redirect or a `window.open` popup, a relying party (most probably indirectly via JS SDK provided by the IDP) would call a high level API instead:
+Instead of the low level `window.open` and listening to `window` events, one could write at a high-level:
 
 ```javascript
-// In replacement of window.location.href or window.open,
-// we use a high-level API instead:
-// NOTE: This is just a possible starting point, exact
-// API largely TBD as we gather implementation experience.
+// This is just a possible starting point, largely TBD.
 let {idToken} = await navigator.credentials.get({
   provider: "https://accounts.example.com",
-  ux_mode: "popup",
   // other OpenId connect parameters
 });
 ```
 
-Upon invocation, an IDP-controlled webpage is loaded:
-
-![](static/mock19.svg)
-
-The IDP-controlled website can communicates back with the RP with a high-level API (in replacemente of the low-level `postMessage`) too: 
+And instead of the low level `postMessage`, the IDP would write:
 
 ```javascript
 // This is just a possible starting point, largely TBD.
@@ -229,77 +228,6 @@ await navigator.credentials.store({
   idtoken: JWT,
 });
 ```
-
-This variation is a great **baseline** because it is highly backwards compatible (specially if it is done via the [HTTP API](#the-http-api)). Neither relying parties nor identity providers have to redeploy, nor users will have to change their mental models about federation.
-
-But this variation isn't perfect: while it is backwards compatible with most of the deployment of federation, we believe it leaves something be desired on **user experience**.
-
-For one, the user has to make **two** choices (on the consequences of tracking) that are unrelated to the job to be done (sign-in) which we don't expect to be the most effective way to affect change.
-
-That leads us to the [mediation-oriented](#the-mediation-oriented-variation) variation which bundles these prompts into a browser mediated experience (which also comes with trade-offs).
-
-## The Mediation-oriented Variation
-
-In the **mediated** variation, the user agent takes more responsibility in owning that transaction, and talks to the IDP via an HTTP convention rather than allowing the IDP to control HTML/JS/CSS:
-
-```javascript
-let {idToken} = await navigator.credentials.get({
-  provider: "https://accounts.example.com",
-  ux_mode: "inline",
-  // other OpenId connect parameters
-});
-```
-
-The `ux_mode` parameter informs the user agent to use the mediation-oriented variation, which, as opposed to the permission-oriented variation, talks to the IDP via HTTP instead:
-
-```http
-GET /.well-known/webid/accounts.php HTTP/1.1
-Host: idp.example
-Cookie: 123
-```
-
-The IDP responds with a list of accounts that the user has:
-
-```http
-HTTP/2.0 200 OK
-Content-Type: text/json
-{
-  "accounts": [{
-    "sub": 1234, 
-    "name": "Sam Goto",
-    "given_name": "Sam",
-    "family_name": "Goto", 
-    "email": "samuelgoto@gmail.com",
-    "picture": "https://accounts.idp.com/profile/123",
-  }]
-}
-```
-
-With the data, the browser then controls the experience with the user to carry on:
-
-![](static/mock15.svg)
-
-Upon agreement, the browser uses the HTTP API convention to mint the idtoken. For example:
-
-```http
-POST /.well-known/webid/idtoken.php HTTP/1.1
-Host: idp.example
-Cookie: 123
-Content-Type: application/x-www-form-urlencoded
-account=1234,client_id=5678
-```
-
-And with the response, resolves the promise.
-
-The benefits of the permission-oriented approach is that it is the most backwards compatible, at the cost of user friction in the form of permissions. The benefits of the mediated approach is that the user friction is inlined and contextual, at the cost of the ossification of the user experience.
-
-Those two problems take us to a third approach we are exploring, which we are calling the delegation-oriented approach.
-
-## The Delegation-oriented Variation
-
-We believe that we are possibly making the user make a determination (to be tracked) that isn't necessary. The [delegation-oriented](consumers.md#the-delegation-oriented-variation) variation (which, again, comes with its set of trade-offs too) tries to solve the tracking risks by pulling more responsibilites to the user agent.
-
-It is an active area of investigation to determine the **relationship** between these approaches. To the best of our knowledge so far, we expect these to be mutually complementary (rather than exclusive) and to co-exist long term. Each comes with trade-offs and it is too still early to know what market (if any) each fits. We expect that further implementation experimentation will guide us in better understanding the trade-offs and the relationship between these alternatives.
 
 ## The Enterprise-oriented Variation
 
