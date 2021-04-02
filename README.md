@@ -7,48 +7,65 @@ redirect_from: "index.html"
 
 > not to be confused with [this](https://www.w3.org/2005/Incubator/webid/spec/) WebID whose authors have [graciously](https://github.com/WICG/WebID/issues/54#issuecomment-783605484) allowed us to use this as a codename until we [find](https://github.com/WICG/WebID/issues/41#issuecomment-712304910) a better one
 
-**TL;DR**; This is an **active** exploration to proactively **preserve** and **elevate** identity federation (e.g. Sign-in with X), **forward-compatible** with a more **private** web.
-
-This explainer is broken down into:
-
-- [Why](#the-problem) is federation under threat?
-- [What](#the-anatomy-of-federation) is under threat?
-- [How](#classification) do we preserve and extend it?
-- [When](#roadmap) does this happen?
+**TL;DR**; This is an **active** exploration to proactively **preserve** and **elevate** identity federation (e.g. OpenID, OAuth and SAML), **forward-compatible** with a more **private** web.
 
 # The Problem
 
 Over the last decade, identity federation has unquestionably played a central role in raising the bar for authentication on the web, in terms of ease-of-use (e.g. passwordless single sign-on), security (e.g. improved resistance to phishing and credential stuffing attacks) and trustworthiness compared to its preceding pattern: per-site usernames and passwords.
 
-The standards that define how identity federation works today were built independently of the web platform (namely, [SAML](https://en.wikipedia.org/wiki/Security_Assertion_Markup_Language), [OpenID](https://en.wikipedia.org/wiki/OpenID) and [OAuth](https://en.wikipedia.org/wiki/OAuth)), and their designers had to work **around** its limitations rather than extending them (notably, rightfully so at the time).
+The standards that define how identity federation works today on the Web were built independently of the Web Platform (namely, [SAML](https://en.wikipedia.org/wiki/Security_Assertion_Markup_Language), [OpenID](https://en.wikipedia.org/wiki/OpenID) and [OAuth](https://en.wikipedia.org/wiki/OAuth)), and their designers had to (rightfully so) work **around** its limitations rather than extending them.
 
-Because of that, existing user authentication flows rely on general web capabilities such as top-level navigations/redirects with parameters, window popups and cookies.
+Because of that, existing user authentication flows were built on top of general-purpose web platform capabilities such as top-level navigations/redirects with parameters, window popups, iframes and cookies.
 
-Because these general purpose primitives can be used for an open ended number of use cases (again, notably, by design), browsers have to apply policies that capture the **lowest common denominator** of abuse, at best applying cumbersome permissions (e.g. popup blockers) and at worst entirely blocking them (for example, [here](https://github.com/michaelkleber/privacy-model)).
+However, because these general purpose primitives can be used for an open ended number of use cases (again, notably, by design), browsers have to apply policies that capture the **lowest common denominator** of abuse, at best applying cumbersome permissions (e.g. popup blockers) and at worst entirely blocking them.
 
-Over the years, as these low level primitives get abused, browsers intervene and federation adjusts itself. For example, popup blockers became common and federation had to adjust itself to work in a world where popups blockers were widely deployed:
+Over the years, as these low level primitives get abused, browsers intervene and federation adjusts itself. For example, popup blockers became common and federation had to adjust itself to work in a world where popups blockers were widely deployed.
 
-![](static/mock11.svg)
+More recently, the challenge is that some of these low level primitives are getting increasingly abused to allow users on the web to be tracked. So, as a result, browsers are applying stricter and stricter policies around them.
 
-The challenge, now more than ever, is that some of these low level primitives are getting increasingly abused to allow users on the web to be tracked. So, as a result, browsers are applying stricter and stricter policies around them.
+> Publicly announced browser positions on third party cookies:
+>
+> 1. Third party cookies are **already** blocked in [Safari](https://webkit.org/blog/10218/full-third-party-cookie-blocking-and-more/) and [Firefox](https://blog.mozilla.org/blog/2019/09/03/todays-firefox-blocks-third-party-tracking-cookies-and-cryptomining-by-default/) **by default**, and
+> 1. [Chrome](https://blog.google/products/chrome/privacy-sustainability-and-the-importance-of-and/)'s intent to offer alternatives to make them obsolete in the [near term](https://www.blog.google/products/chrome/building-a-more-private-web/).
 
-If browsers are applying stricter policies around them, and assuming that federation is safer than usernames/passwords, how do we keep identity federation around?
+Blocking third party cookies broke important parts of the protocols in those browsers (e.g. [logouts](https://www.identityserver.com/articles/the-challenge-of-building-saml-single-logout)) and made some user experiences inviable (e.g. social [button](https://developers.facebook.com/docs/facebook-login/userexperience/) and [widget](https://developers.google.com/identity/gsi/web) personalization). 
 
-# The classification problem
+While it is clearer to see the **current** impact of third party cookies, it is equally important to understand the ways in which the low level primitives that identity federation depends on (e.g. redirects) are being abused and the [principles](https://github.com/michaelkleber/privacy-model) browsers are using to control them, so that we don't corner ourselves into another dead end.
+
+If browsers are applying stricter policies around the low level primitives that federation depends on, and under the assumption that federation is significantly better than usernames/passwords, how do we keep identity federation around?
+
+## Third Party Cookies
 
 The problem starts with what we have been calling the classification problem.
 
 When federation was first designed, it was rightfully designed **around** the existing capabilities of the web, rather than **changing** them. Specifically, federation worked with callbacks on top of **cookies**, **redirects**, **iframes** or **popup windows**, which didn't require any redesign, redeployment or negotiation with browser vendors.
 
-One example of a low level primitive that federation depends on are **iframes** and **third party cookies**. To support some of the user flows (e.g. token renewal, logout, personalization in login buttons, etc), Iframes are embedded into relying parties assuming they'll have access to third party cookies. Unfortunately, that's virtually indistinguishable from trackers that can track your browsing history across relying parties, just by having users visit links (e.g. loading credentialed iframes on page load):
+One example of a low level primitive that federation depends on are **iframes** and **third party cookies**. For example, credentialed iframes are used while [logging out](https://openid.net/specs/openid-connect-rpinitiated-1_0.html) and social [button](https://developers.facebook.com/docs/facebook-login/userexperience/) and [widget](https://developers.google.com/identity/one-tap/web) personalization.
 
-![](static/mock23.svg)
+![](static/mock27.svg)
 
-Another example of a low level primitive that federation uses is the use of redirects to navigate the user to identity providers (with callbacks, e.g. `redirect_uri`), which upon permission redirects users again to the relying parties with a result (e.g. an `id_token`):
+Unfortunately, that's virtually indistinguishable from trackers that can track your browsing history across relying parties, just by having users visit links (e.g. loading credentialed iframes on page load):
+
+We call this **the classification problem** because it is hard for a browser to programatically distinguish between these two different cases: identity federation helping a user versus users being tracked.
+
+![](static/mock26.svg)
+
+Third party cookies are **already** blocked in [Safari](https://webkit.org/blog/10218/full-third-party-cookie-blocking-and-more/) and [Firefox](https://blog.mozilla.org/blog/2019/09/03/todays-firefox-blocks-third-party-tracking-cookies-and-cryptomining-by-default/) **by default** (and [Chrome](https://blog.google/products/chrome/privacy-sustainability-and-the-importance-of-and/) intends to block that soon too) which make these use cases inviable.
+
+The problems then are:
+
+1. **First** and foremost, what Web Platform features need to be exposed to (re) enable these features of federation to co-exist with the absence of third party cookies in browsers going forward?
+2. **Secondarily**, in which direction browsers are going that could potentially impact federation?
+
+## Link Decoration
+
+Before we prematuraly jump into solutions for the first (and more **urgent** problem), lets take a step back and a closer look at the **second** problem: in which direction browsers are going that could more fundamentally impact federation?
+
+While third party cookies in iframes are used in federation, a more fundamental low level primitive that federation uses is the use of redirects to navigate the user to identity providers (with callbacks, e.g. `redirect_uri`) and back to relying parties with a result (e.g. an `id_token`):
 
 ![](static/mock21.svg)
 
-These **general purpose** primitives enabled a variety of use cases, which include, among other things, federation. However, unfortunately, they also enable cross-site communication, namely via [decorating links](https://www.chromium.org/Home/chromium-privacy/privacy-sandbox), which can be used to track users without their awareness in what's called **bounce tracking**:
+However, unfortunately, this **low level** primitive also enable cross-site communication, namely via [decorating links](https://www.chromium.org/Home/chromium-privacy/privacy-sandbox), which can be abused to track users without their control in what's called **bounce tracking**:
 
 ![](static/mock22.svg)
 
@@ -65,6 +82,14 @@ Because these cross-site communication takes place in a general purpose medium, 
 Browsers can't **classify** federation, hence the name.
 
 The classification problem is notably hard because it has to deal with **adversarial impersonation**: agents who have the interest in being classified as federation to get access to browser affordances.
+
+While the timeline for link decoration is much farther in time, it much more fundamentally threatens federation:
+
+> Publicly announced positions by browsers on bounce tracking:
+>
+> - Safari's existing deployed [strategies](https://webkit.org/blog/11338/cname-cloaking-and-bounce-tracking-defense/) and [principles](https://github.com/privacycg/proposals/issues/6)
+> - Firefox's protection against [redirect tracking](https://blog.mozilla.org/security/2020/08/04/firefox-79-includes-protections-against-redirect-tracking/)
+> - Chrome's stated [Privacy Model](https://github.com/michaelkleber/privacy-model) for the Web
 
 So, how do we **distinguish** federation from tracking and elevate the level of **control** while **assuming** adversarial impersonation?
 
@@ -293,7 +318,7 @@ The IDP responds with a list of accounts that the user has:
 HTTP/2.0 200 OK
 Content-Type: text/json
 {
-  accounts: [{
+  "accounts": [{
     "sub": 1234, 
     "name": "Sam Goto",
     "given_name": "Sam",
