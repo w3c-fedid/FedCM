@@ -8,7 +8,7 @@ updated: 10/12/2020
 
 # How to experiment with WebID in Chrome
 
-A prototype of the API approaches described in the [solutions page](consumers.md) is present in Chrome 89. **This is intended for experimentation purposes and is subject to change as a specification takes shape and develops.**
+A prototype of the API approaches described in the [solutions page](redirects.md) is present in Chrome 89. **This is intended for experimentation purposes and is subject to change as a specification takes shape and develops.**
 
 We will do our best to keep these instructions up to date as protocol and API changes occur.
 

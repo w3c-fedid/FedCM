@@ -13,20 +13,21 @@ redirect_from: "index.html"
 
 Over the last decade, identity federation has unquestionably played a central role in raising the bar for authentication on the web, in terms of ease-of-use (e.g. passwordless single sign-on), security (e.g. improved resistance to phishing and credential stuffing attacks) and trustworthiness compared to its preceding pattern: per-site usernames and passwords.
 
-The standards that define how identity federation works today on the Web were built independently of the Web Platform (namely, [SAML](https://en.wikipedia.org/wiki/Security_Assertion_Markup_Language), [OpenID](https://en.wikipedia.org/wiki/OpenID) and [OAuth](https://en.wikipedia.org/wiki/OAuth)), and their designers had to (rightfully so) work **around** its limitations rather than extending them.
+The standards that define how identity federation works today on the Web were built independently of the Web Platform (namely, [SAML](https://en.wikipedia.org/wiki/Security_Assertion_Markup_Language), [OpenID](https://en.wikipedia.org/wiki/OpenID) and [OAuth](https://en.wikipedia.org/wiki/OAuth)), and their designers had to (rightfully so) work **around** its limitations rather than extend them.
 
-Because of that, existing user authentication flows were built on top of general-purpose web platform capabilities such as top-level navigations/redirects with parameters, window popups, iframes and cookies.
+Because of that, existing user authentication flows were designed on top of general-purpose web platform capabilities such as top-level navigations/redirects with parameters, window popups, iframes and cookies.
 
-However, because these general purpose primitives can be used for an open ended number of use cases (again, notably, by design), browsers have to apply policies that capture the **lowest common denominator** of abuse, at best applying cumbersome permissions (e.g. popup blockers) and at worst entirely blocking them.
+However, because these general purpose primitives can be used for an open ended number of use cases (again, notably, by design), browsers have to apply policies that capture the **lowest common denominator** of abuse, at best applying cumbersome permissions (e.g. popup blockers) and at worst entirely blocking them (e.g. [blocking](https://webkit.org/blog/10218/full-third-party-cookie-blocking-and-more/) third party cookies).
 
 Over the years, as these low level primitives get abused, browsers intervene and federation adjusts itself. For example, popup blockers became common and federation had to adjust itself to work in a world where popups blockers were widely deployed.
 
-More recently, the challenge is that some of these low level primitives are getting increasingly abused to allow users on the web to be tracked. So, as a result, browsers are applying stricter and stricter policies around them.
+The challenge, now more than ever, is that some of these low level primitives are getting increasingly abused to allow users on the web to be tracked. So, as a result, browsers are applying stricter and stricter policies around them.
 
 > Publicly announced browser positions on third party cookies:
 >
-> 1. Third party cookies are **already** blocked in [Safari](https://webkit.org/blog/10218/full-third-party-cookie-blocking-and-more/) and [Firefox](https://blog.mozilla.org/blog/2019/09/03/todays-firefox-blocks-third-party-tracking-cookies-and-cryptomining-by-default/) **by default**, and
-> 1. [Chrome](https://blog.google/products/chrome/privacy-sustainability-and-the-importance-of-and/)'s intent to offer alternatives to make them obsolete in the [near term](https://www.blog.google/products/chrome/building-a-more-private-web/).
+> 1. [Safari](https://webkit.org/blog/10218/full-third-party-cookie-blocking-and-more/): third party cookies are **already** blocked by **default**
+> 1. [Firefox](https://blog.mozilla.org/blog/2019/09/03/todays-firefox-blocks-third-party-tracking-cookies-and-cryptomining-by-default/): third party cookies are **already** blocked **by default**, and
+> 1. [Chrome](https://blog.google/products/chrome/privacy-sustainability-and-the-importance-of-and/): intends to offer **alternatives** to make them **obsolete** in the [near term](https://www.blog.google/products/chrome/building-a-more-private-web/).
 
 Blocking third party cookies broke important parts of the protocols in those browsers (e.g. [logouts](https://www.identityserver.com/articles/the-challenge-of-building-saml-single-logout)) and made some user experiences inviable (e.g. social [button](https://developers.facebook.com/docs/facebook-login/userexperience/) and [widget](https://developers.google.com/identity/gsi/web) personalization). 
 
@@ -44,9 +45,9 @@ One example of a low level primitive that federation depends on are **iframes** 
 
 ![](static/mock27.svg)
 
-Unfortunately, that's virtually indistinguishable from trackers that can track your browsing history across relying parties, just by having users visit links (e.g. loading credentialed iframes on page load):
+Unfortunately, that's virtually indistinguishable from trackers that can track your browsing history across relying parties, just by having users visit links (e.g. loading credentialed iframes on page load).
 
-We call this **the classification problem** because it is hard for a browser to programatically distinguish between these two different cases: identity federation helping a user versus users being tracked.
+We call this **the classification problem** because it is hard for a browser to programatically distinguish between these two different cases: identity federation helping a user versus users being tracked without any control.
 
 ![](static/mock26.svg)
 
@@ -57,11 +58,11 @@ The problems then are:
 1. **First** and foremost, what Web Platform features need to be exposed to (re) enable these features of federation to co-exist with the absence of third party cookies in browsers going forward?
 2. **Secondarily**, in which direction browsers are going that could potentially impact federation?
 
-## Link Decoration
+## Bounce Tracking
 
-Before we prematuraly jump into solutions for the first (and more **urgent** problem), lets take a step back and a closer look at the **second** problem: in which direction browsers are going that could more fundamentally impact federation?
+Before we prematuraly jump into solutions for the first (and more **urgent**) problem, we think there is something more fundamental changing. Lets take a step back and a closer look at the **second** problem: in which direction browsers are going that could more fundamentally impact federation?
 
-While third party cookies in iframes are used in federation, a more fundamental low level primitive that federation uses is the use of redirects to navigate the user to identity providers (with callbacks, e.g. `redirect_uri`) and back to relying parties with a result (e.g. an `id_token`):
+While third party cookies in iframes are used in federation, a more fundamental low level primitive that federation uses is the use of top level navigations (e.g. redirects or form POSTs) to navigate the user to identity providers (with callbacks, e.g. `redirect_uri`) and back to relying parties with a result (e.g. an `id_token`):
 
 ![](static/mock21.svg)
 
@@ -83,7 +84,7 @@ Browsers can't **classify** federation, hence the name.
 
 The classification problem is notably hard because it has to deal with **adversarial impersonation**: agents who have the interest in being classified as federation to get access to browser affordances.
 
-While the timeline for link decoration is much farther in time, it much more fundamentally threatens federation:
+While the timeline for link decoration is much farther in time, it much more fundamentally threatens federation.
 
 > Publicly announced positions by browsers on bounce tracking:
 >
@@ -93,69 +94,75 @@ While the timeline for link decoration is much farther in time, it much more fun
 
 So, how do we **distinguish** federation from tracking and elevate the level of **control** while **assuming** adversarial impersonation?
 
-# The Anatomy of Federation
+# Proposal
 
-Before we can answer "how to distinguish" federation from tracking, lets first try to understand what federation depends on. For our interest, we can identify two big passes:
+Clearly, this is a massive, multi-agent, multi-year problem across the board.
 
-1. There is a convention used by relying parties to request identification/authentication to identity providers
-1. There is a convention used by identity providers to respond with identification/authentication to relying parties
+There are billions of users that depend on federation on the web, millions/thousands of relying parties and thousands/hundreds of identity providers. There are also tens of browsers and operating systems, all moving independently. None of that changes overnight and we don't expect it to.
 
-These passes rely on the following low level primitives:
+Having said that, failing to be proactive about affecting change and making federation forward compatible with a more private Web can steer users to less secure patterns, like usernames/passwords or native apps.
 
-- **HTTP APIs** (i.e. redirects, top level navigations, `<a>` or `window.location.location`),
-- **JS APIs** (i.e. popups with `window.open` and `postMessage`) or
-- **HTML APIs** (i.e. personalized buttons using `<iframe>`)
+The approach we have taken so far has been a combination of two strategies:
 
-For example, a relying party can use the OpenID convention to request to an IDP:
+- a **firm** and **principled** understanding of where we want to get
+- a well **informed**, **deliberate** and **pragmatic** choice of what steps to take us there
 
-```html
-<a href="https://idp.example/?client_id=1234&scope=openid&redirect_uri=https://rp.example/callback.php">Sign in with IDP</a>
-```
+We believe a convincing path needs to have a clearly defined end state but also a plausible sequencing strategy.
 
-Which it then expects the IDP to at some point use the second convention to return back a response to the `redirect_uri`:
+While much of the environment is changing and evolving as we speak, there are clear things that are broken right now and enough signals about the principles and challenges ahead of us. We are breaking this into three separate stages:
 
-```http
-POST /callback.php HTTP/1.1
-Host: rp.example.com
-Content-Type: application/x-www-form-urlencoded
-Content-Length: length
-Accept-Language: en-us
-Accept-Encoding: gzip, deflate
-Connection: Keep-Alive
+1. [Stage 1](#stage-1-third-party-cookies): preserve federation post third party cookies
+1. [Stage 2](#stage-2-bounce-tracking): preserve federation post bounce tracking preventions
+1. [Stage 3](#future-work): related problems and opportunities
 
-id_token={JWT}
-```
+## Stage 1: Third Party Cookies
 
-Another common affordance that federation uses are popups:
+The more urgent problem that clearly has already affected federation is the blocking of third party cookies. We plan to tackle this first.
 
-```javascript
-let popup = window.open(`https://idp.example/?client_id=1234&scope=openid&redirect_uri=rp.example`);
-window.addEventListener(`message`, (e) => {
-  if (e.origin == "https://idp.example") {
-    // ...
-    e.source.postMessage("done, thanks");
-  }
-});
-```
+- **Why**, **What** and **When**?
+    **Today**, third party cookies are blocked on [Safari](https://webkit.org/blog/10218/full-third-party-cookie-blocking-and-more/) and [Firefox](https://blog.mozilla.org/blog/2019/09/03/todays-firefox-blocks-third-party-tracking-cookies-and-cryptomining-by-default/). They are in the process of becoming **obsolete** in [Chrome](https://blog.google/products/chrome/privacy-sustainability-and-the-importance-of-and/) in the foreseeable future.
+- So **What**? [logging out](https://openid.net/specs/openid-connect-rpinitiated-1_0.html), social [buttons](https://developers.facebook.com/docs/facebook-login/userexperience/) and [widgets](https://developers.google.com/identity/one-tap/web) personalization breaks. (anything else? add your use case [here](#how-can-i-help))
+- **How**? [Here](cookies.md) are some early proposals on how to preserve these use cases.
+- **Who** and **Where**?: Browser vendors, identity providers, relying parties and standard bodies are involved. The discussions so far have happened at the [WICG](https://github.com/WICG/WebID/issues) and at the [OpenID foundation](https://github.com/IDBrowserUseCases/docs).
 
-Or iframes:
+## Stage 2: Bounce Tracking
 
-```html
-<iframe src="https://idp.example/?client_id=1234&scope=openid&redirect_uri=rp.example"></iframe>
-```
+Bounce tracking comes next. It is a more evolving situation, but has much more profound implications to federation:
 
-Which listen to postMessages:
+- **Why**, **What** and **When**? Safari's [periodic storage purging](https://webkit.org/blog/11338/cname-cloaking-and-bounce-tracking-defense/) and [SameSite=Strict jail](https://github.com/privacycg/proposals/issues/6), Firefox's [periodic storage purging](https://blog.mozilla.org/security/2020/08/04/firefox-79-includes-protections-against-redirect-tracking/) and Chrome's stated [privacy model](https://github.com/michaelkleber/privacy-model) for the Web.
+- So **What**? Purging or partitionig storage across redirects / posts forces users to re-authenticate at each transition of federation flows, at best defeating the convenience that federation provides and at worst making it less secure (anything else? add your use case [here](#how-can-i-help).)
+- **How**? [Here](redirects.md) are some early proposals on how to preserve these use cases.
+- **Who** and **Where**?: Browser vendors, identity providers, relying parties and standard bodies are involved. The discussions so far have happened at the [WICG](https://github.com/WICG/WebID/issues) and at the [OpenID foundation](https://github.com/IDBrowserUseCases/docs).
 
-```javascript
-window.addEventListener(`message`, (e) => {
-  if (e.origin == "https://idp.example") {
-    // neat, thanks!
-    let {idtoken} = e;
-  }
-});
-```
+## Stage 3: Future Work
 
-All of these affordances depend on arbitrary credentialed cross-origin communication, so at some point we can expect them to be constrained (more details [here](https://www.chromium.org/Home/chromium-privacy/privacy-sandbox)).
+There are a series of [related problems](problems.md) that affect federation that we believe we have a unique opportunity to tackle as a consequence of the choices that we make in stage 1 and 2.
+
+These are key and important problems, but a lot less urgent, so we are being very deliberate about **when** and **how much** to focus on them.
+
+# How can I help?
+
+At the moment, we are actively working with the identity ecosystem to help us determine product requirements (contribute [here](https://github.com/IDBrowserUseCases/docs) with the list of use cases), ergonomics and deployment strategies that minimize change and maximize control, for example via testing our APIs ([instructions](HOWTO.md)) and giving us feedback.
+
+Much of this explainer is evolving as a result of this field experimentation.
+The most constructive/objective way you can help is to:
+
+1. get a good understanding of the **why**: understand the ongoing privacy-oriented changes in browsers ([example](https://blog.chromium.org/2020/01/building-more-private-web-path-towards.html)) and their [principles](https://github.com/michaelkleber/privacy-model)
+1. help us understand **what**: contribute [here](https://github.com/IDBrowserUseCases/docs) with a use case that you believe can be impacted
+1. help us understand **how**: [try the APIs](https://github.com/WICG/WebID/blob/main/HOWTO.md) under development and help us understand what works / doesn't work
+
+# Further Reading
+
+The following should give you a deeper understanding of the problem, related problems and how they were tackled in the past:
+  
+- [Prior Art](prior.md)
+- The [Anatomy](anatomy.md) of federation
+- [Related Problems](problems.md) and desirable side effects
+- The [deployment](activation.md) topology
+- [Glossary](glossary.md)
+- [The Threat Model](privacy_threat_model.md): a formalization of the problem
+- Alternatives [considered](alternatives_considered.md)
+- The WebID [devtrial](HOWTO.md)
 
 With that in mind, lets take a closer look at what high-level APIs could look like for each of these two passes:
 
@@ -240,170 +247,4 @@ window.addEventListener(`message`, (e) => {
 });
 ```
 
-# Control
 
-Now, clearly, addressing the classification problem is necessary but not sufficient. There are a couple of problems that needs to be solved too:
-
-1. adversarial impersonation
-1. the lack of privacy controls
-
-The first thing to consider is that an adversarial tracker can and will use any of the affordances that will allow them to break out of the privacy sandbox. So, the high level APIs need to be implemented in such a way that prevents impersonation from happening.
-
-In many ways, the first problem is related to the second one: if user agents expose clear privacy controls, then uncontrolled tracking cannot happen.
-
-## The Permission-oriented Variation
-
-There is a variety of privacy controls that we are exploring, but just as a baseline, take the permission-oriented variation:
-
-In this variation, we offer the user the identity-specific controls whenever cross-site identity-specific communication is conducted (e.g. from the relying party to the IDP and vice versa), based on our ability to [classify](#classification) them.
-
-Concretely, instead of a `window.location.href` top level redirect or a `window.open` popup, a relying party (most probably indirectly via JS SDK provided by the IDP) would call a high level API instead:
-
-```javascript
-// In replacement of window.location.href or window.open,
-// we use a high-level API instead:
-// NOTE: This is just a possible starting point, exact
-// API largely TBD as we gather implementation experience.
-let {idToken} = await navigator.credentials.get({
-  provider: "https://accounts.example.com",
-  ux_mode: "popup",
-  // other OpenId connect parameters
-});
-```
-
-Upon invocation, an IDP-controlled webpage is loaded:
-
-![](static/mock19.svg)
-
-The IDP-controlled website can communicates back with the RP with a high-level API (in replacemente of the low-level `postMessage`) too: 
-
-```javascript
-// This is just a possible starting point, largely TBD.
-await navigator.credentials.store({
-  idtoken: JWT,
-});
-```
-
-This variation is a great **baseline** because it is highly backwards compatible (specially if it is done via the [HTTP API](#the-http-api)). Neither relying parties nor identity providers have to redeploy, nor users will have to change their mental models about federation.
-
-But this variation isn't perfect: while it is backwards compatible with most of the deployment of federation, we believe it leaves something be desired on **user experience**.
-
-For one, the user has to make **two** choices (on the consequences of tracking) that are unrelated to the job to be done (sign-in) which we don't expect to be the most effective way to affect change.
-
-That leads us to the [mediation-oriented](#the-mediation-oriented-variation) variation which bundles these prompts into a browser mediated experience (which also comes with trade-offs).
-
-## The Mediation-oriented Variation
-
-In the **mediated** variation, the user agent takes more responsibility in owning that transaction, and talks to the IDP via an HTTP convention rather than allowing the IDP to control HTML/JS/CSS:
-
-```javascript
-let {idToken} = await navigator.credentials.get({
-  provider: "https://accounts.example.com",
-  ux_mode: "inline",
-  // other OpenId connect parameters
-});
-```
-
-The `ux_mode` parameter informs the user agent to use the mediation-oriented variation, which, as opposed to the permission-oriented variation, talks to the IDP via HTTP instead:
-
-```http
-GET /.well-known/webid/accounts.php HTTP/1.1
-Host: idp.example
-Cookie: 123
-```
-
-The IDP responds with a list of accounts that the user has:
-
-```http
-HTTP/2.0 200 OK
-Content-Type: text/json
-{
-  "accounts": [{
-    "sub": 1234, 
-    "name": "Sam Goto",
-    "given_name": "Sam",
-    "family_name": "Goto", 
-    "email": "samuelgoto@gmail.com",
-    "picture": "https://accounts.idp.com/profile/123",
-  }]
-}
-```
-
-With the data, the browser then controls the experience with the user to carry on:
-
-![](static/mock15.svg)
-
-Upon agreement, the browser uses the HTTP API convention to mint the idtoken. For example:
-
-```http
-POST /.well-known/webid/idtoken.php HTTP/1.1
-Host: idp.example
-Cookie: 123
-Content-Type: application/x-www-form-urlencoded
-account=1234,client_id=5678
-```
-
-And with the response, resolves the promise.
-
-The benefits of the permission-oriented approach is that it is the most backwards compatible, at the cost of user friction in the form of permissions. The benefits of the mediated approach is that the user friction is inlined and contextual, at the cost of the ossification of the user experience.
-
-Those two problems take us to a third approach we are exploring, which we are calling the delegation-oriented approach.
-
-## The Delegation-oriented Variation
-
-We believe that we are possibly making the user make a determination (to be tracked) that isn't necessary. The [delegation-oriented](consumers.md#the-delegation-oriented-variation) variation (which, again, comes with its set of trade-offs too) tries to solve the tracking risks by pulling more responsibilites to the user agent.
-
-It is an active area of investigation to determine the **relationship** between these approaches. To the best of our knowledge so far, we expect these to be mutually complementary (rather than exclusive) and to co-exist long term. Each comes with trade-offs and it is too still early to know what market (if any) each fits. We expect that further implementation experimentation will guide us in better understanding the trade-offs and the relationship between these alternatives.
-
-## The Enterprise-oriented Variation
-
-To the best of our knowledge, we believe that business users (employees of a corporation) have a different set of privacy expectations compared to consumers, in that the accounts issued to employees are owned by the businesses (as opposed to the relationship a consumer has with social login providers). It is also clear to us too that the current deployment of businesses makes a non-trivial use of personal machines owned by employees, rather than machines that are issued by the business (which have a much easier ability to control enterprise policies).
-
-We believe that the controls should take that distinction into consideration, and that the biggest challenge is adversarial impersonation.
-
-![](static/mock24.svg)
-
-This is still an active area of exploration, but to give a sense of direction, we are actively exploring making an abrupt separation between personal profiles and work profiles. The intuition here is that browser profiles are the closest delineation that can make a separation between personal use of your browser versus work use of your browser, along with the privacy expectations in each mode.
-
-![](static/mock25.svg)
-
-In addition to the separation, and with the user's permission/control/understanding, it seems like it would be beneficial for business admins to have the ability to set work policies on a per-profile basis.
-
-# Roadmap
-
-We expect this to be a multi-years project, rather than something that will happen overnight. There are billions of users that depend on federation on the web, millions/thousands of relying parties and thousands/hundreds of identity providers. There are also tens of browsers and operating systems, all moving independently. None of that changes overnight and we don't expect it to.
-
-Having said that, we believe that we have to be proactive about affecting change and making federation forward compatible with a more private Web.
-
-The approach we have taken so far has been a combination of two strategies:
-
-- a firm and principled understanding of where we want to get
-- a pragmatic and flexible understanding of what steps to take us there
-
-We believe a convincing path needs to have a clearly defined end state but also a plausible sequencing strategy.
-
-At the moment, we are actively working with the identity providers ecosystem to help us determine product requirements (contribute [here](https://github.com/IDBrowserUseCases/docs) with the list of use cases), ergonomics and deployment strategies that minimize change and maximize control, for example via testing our APIs ([instructions](HOWTO.md)) and giving us feedback.
-
-Much of this explainer is evolving as a result of this field experimentation.
-
-It is an active area of investigation the order in which these APIs and controls rollout and the precise time. 
-
-# How can I help?
-
-The most constructive/objective way you can help is to:
-
-1. get a good understanding of the **why**: understand the ongoing privacy-oriented changes in browsers ([example](https://blog.chromium.org/2020/01/building-more-private-web-path-towards.html)) and their [principles](https://github.com/michaelkleber/privacy-model)
-1. help us understand **what**: contribute [here](https://github.com/IDBrowserUseCases/docs) with a use case that you believe can be impacted
-1. help us understand **how**: [try the APIs](https://github.com/WICG/WebID/blob/main/HOWTO.md) under development and help us understand what works / doesn't work
-
-# Further Reading
-
-The following should give you a deeper understanding of the problem, related problems and how they were tackled in the past:
-  
-- [Prior Art](prior.md)
-- Alternatives [considered](alternatives_considered.md)
-- [Related Problems](problems.md) and desirable side effects
-- The WebID [devtrial](HOWTO.md)
-- The [deployment](activation.md) topology
-- [Glossary](glossary.md)
-- [The Threat Model](privacy_threat_model.md): a formalization of the problem
