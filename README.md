@@ -121,8 +121,8 @@ Much of this is evolving quickly and we are adapting as we learn, but here is ou
 |-----------------------------------------|-----------|---------------------------------------------|
 | [Stage 0](README.md)                    |   2020    | understanding of the [problem](README.md) and [properties](https://github.com/michaelkleber/privacy-model) of the end state |
 | [Stage 1](#stage-1-third-party-cookies) |   2021    | [dev trials](https://docs.google.com/document/d/1_FDhuZA_C6iY5bop-bjlPl3pFiqu8oFvuK1jzAcyWKU/edit#heading=h.t4ac0nsw5yo) in Q1/Q2 ([instructions](HOWTO.md)) and [origin trials](https://sites.google.com/a/chromium.org/dev/blink/origin-trials) in Q3/Q4 of alternatives to [third party cookies](cookies.md)   |
-| [Stage 2](#stage-2-bounce-tracking)     |   2022    | [origin trials](https://sites.google.com/a/chromium.org/dev/blink/origin-trials) of alternatives to [top level navigation](navigations.md)  |
-| [Stage 3](#future-work)                 |   2022+   | other [related problems](problems.md) and opportunities    |
+| [Stage 2](#stage-2-bounce-tracking)     |   2021+    | [origin trials](https://sites.google.com/a/chromium.org/dev/blink/origin-trials) of alternatives to [top level navigation](navigations.md)  |
+| [Stage 3](#future-work)                 |   2021++   | other [related problems](problems.md) and opportunities    |
 
 
 ## Stage 1: Third Party Cookies
