@@ -94,7 +94,7 @@ Upon success, the consumer API results into a [directed basic profile](directed_
 
 The [directed basic profile](directed_basic_profile.md) is signed into a JWT and then returned back to the relying party which can effectively get the user logged in. Here is [an example](https://jwt.io/#debugger-io?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmlkcC5jb20iLCJzdWIiOiIxMTAxNjk0ODQ0NzQzODYyNzYzMzQiLCJhdWQiOiJodHRwczovL2V4YW1wbGUuY29tIiwiaWF0IjoiMjM0MjM0MiIsIm5hbWUiOiJTYW0gRyIsImVtYWlsIjoic2prbGQyMDkzQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjoidHJ1ZSIsInByb2ZpbGUiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20vZGVmYXVsdC1hdmF0YXIucG5nIn0.3fGpHH5IeL2fDxbToBLE2DWDf6hfHU5YfiSdfqRGlIA) of what a signed JWT looks like for the payload above.
 
-One of the most basic things that we could do to classify federation is to detect patterns in HTTP requests.
+Another notable form of deployment of federation is over top level navigations.
 
 Because a significant part of federation is deployed over well-established protocols (e.g. OpenID, SAML), their HTTP profile is somewhat easy to spot. For example, for OpenID Connect requests/responses we could look at HTTP requests that have:
 
@@ -202,32 +202,6 @@ It is clearly not possible to enumerate all the various scopes that are in use, 
 - the browser needs to apply the lowest common denominator policy (e.g. assume that the flow implies both the [IDP Tracking Problem](README.md#the-idp-tracking-problem) as well as the [RP Tracking Problem](README.md#the-rp-tracking-problem))
 
 ![](static/mock20.svg)
-
-
-## The JS API
-
-Popups are harder to classify because each IDP seems to use a custom protocol to open the popup as well as to communicate via postMessage.
-
-It is hard to know what that will exactly look like right now, but as a starting point, here is what it could look like.
-
-Instead of the low level `window.open` and listening to `window` events, one could write at a high-level:
-
-```javascript
-// This is just a possible starting point, largely TBD.
-let {idToken} = await navigator.credentials.get({
-  provider: "https://accounts.example.com",
-  // other OpenId connect parameters
-});
-```
-
-And instead of the low level `postMessage`, the IDP would write:
-
-```javascript
-// This is just a possible starting point, largely TBD.
-await navigator.credentials.store({
-  idtoken: JWT,
-});
-```
 
 ## The Enterprise-oriented Variation
 

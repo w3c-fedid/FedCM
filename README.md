@@ -135,7 +135,7 @@ Bounce tracking comes next. It is a more evolving situation, but has much more p
 
 - **Why**, **What** and **When**? Safari's [periodic storage purging](https://webkit.org/blog/11338/cname-cloaking-and-bounce-tracking-defense/) and [SameSite=Strict jail](https://github.com/privacycg/proposals/issues/6), Firefox's [periodic storage purging](https://blog.mozilla.org/security/2020/08/04/firefox-79-includes-protections-against-redirect-tracking/) and Chrome's stated [privacy model](https://github.com/michaelkleber/privacy-model) for the Web.
 - So **What**? Purging or partitionig storage across redirects / posts forces users to re-authenticate at each transition of federation flows, at best defeating the convenience that federation provides and at worst making it less secure (anything else? add your use case [here](#how-can-i-help).)
-- **How**? [Here](redirects.md) are some early proposals on how to preserve these use cases.
+- **How**? [Here](navigations.md) are some early proposals on how to preserve these use cases.
 - **Who** and **Where**?: Browser vendors, identity providers, relying parties and standard bodies are involved. The discussions so far have happened at the [WICG](https://github.com/WICG/WebID/issues) and at the [OpenID foundation](https://github.com/IDBrowserUseCases/docs).
 
 ## Stage 3: Future Work
@@ -153,7 +153,7 @@ The most constructive/objective way you can help is to:
 
 1. get a good understanding of the **why**: understand the ongoing privacy-oriented changes in browsers ([example](https://blog.chromium.org/2020/01/building-more-private-web-path-towards.html)) and their [principles](https://github.com/michaelkleber/privacy-model)
 1. help us understand **what**: contribute [here](https://github.com/IDBrowserUseCases/docs) with a use case that you believe can be impacted
-1. help us understand **how**: help us discover options (for [cookies](cookies.md) and [redirects](redirects.md)) and evaluate their trade-offs. [Try](https://github.com/WICG/WebID/blob/main/HOWTO.md) the APIs under development and help us understand what works / doesn't work.
+1. help us understand **how**: help us discover options (for [cookies](cookies.md) and [navigations](navigations.md)) and evaluate their trade-offs. [Try](https://github.com/WICG/WebID/blob/main/HOWTO.md) the APIs under development and help us understand what works / doesn't work.
 
 # Further Reading
 
