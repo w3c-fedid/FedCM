@@ -98,6 +98,8 @@ So, how do we **distinguish** federation from tracking and elevate the level of 
 
 Clearly, this is a massive, multi-agent, multi-year problem across the board.
 
+There aren't any easy solutions and most of the answers come in the form of alternatives with trade-offs.
+
 There are billions of users that depend on federation on the web, millions/thousands of relying parties and thousands/hundreds of identity providers. There are also tens of browsers and operating systems, all moving independently. None of that changes overnight and we don't expect it to.
 
 Having said that, failing to be proactive about affecting change and making federation forward compatible with a more private Web can steer users to less secure patterns, like usernames/passwords or native apps.
@@ -111,7 +113,7 @@ We believe a convincing path needs to have a clearly defined end state but also 
 
 ## Sequencing
 
-While much of the environment is changing and evolving as we speak, there are clear things that are broken right now and enough signals about the principles and challenges ahead of us.
+While much of the environment is changing and evolving as we speak, there are concrete flows that are inviable right **now** and enough signals about the principles and challenges **ahead** of us.
 
 Much of this is evolving quickly and we are adapting as we learn, but here is our best representation of how we expect features to be developed:
 
@@ -129,7 +131,7 @@ The more urgent problem that clearly has **already** affected federation (or is 
 
 - **Why**, **What** and **When**? **Today**, third party cookies are blocked on [Safari](https://webkit.org/blog/10218/full-third-party-cookie-blocking-and-more/) and [Firefox](https://blog.mozilla.org/blog/2019/09/03/todays-firefox-blocks-third-party-tracking-cookies-and-cryptomining-by-default/). They are in the process of becoming **obsolete** in [Chrome](https://blog.google/products/chrome/privacy-sustainability-and-the-importance-of-and/) in the foreseeable future.
 - So **What**? [logging out](https://openid.net/specs/openid-connect-rpinitiated-1_0.html), social [buttons](https://developers.facebook.com/docs/facebook-login/userexperience/) and [widgets](https://developers.google.com/identity/one-tap/web) personalization breaks. (anything else? add your use case [here](#how-can-i-help))
-- **How**? [Here](cookies.md) are some early proposals on how to preserve these use cases.
+- Ok ... Now **What**? [Here](cookies.md) are some early proposals on how to preserve these use cases.
 - **Who** and **Where**?: Browser vendors, identity providers, relying parties and standard bodies are involved. The discussions so far have happened at the [WICG](https://github.com/WICG/WebID/issues) and at the [OpenID foundation](https://github.com/IDBrowserUseCases/docs).
 
 ## Stage 2: Bounce Tracking
@@ -138,7 +140,7 @@ Bounce tracking comes next. It is a more evolving situation, but has much more p
 
 - **Why**, **What** and **When**? Safari's [periodic storage purging](https://webkit.org/blog/11338/cname-cloaking-and-bounce-tracking-defense/) and [SameSite=Strict jail](https://github.com/privacycg/proposals/issues/6), Firefox's [periodic storage purging](https://blog.mozilla.org/security/2020/08/04/firefox-79-includes-protections-against-redirect-tracking/) and Chrome's stated [privacy model](https://github.com/michaelkleber/privacy-model) for the Web.
 - So **What**? Purging or partitionig storage across redirects / posts forces users to re-authenticate at each transition of federation flows, at best defeating the convenience that federation provides and at worst making it less secure (anything else? add your use case [here](#how-can-i-help).)
-- **How**? [Here](navigations.md) are some early proposals on how to preserve these use cases.
+- Ok ... Now **What**? [Here](navigations.md) are some early proposals on how to preserve these use cases.
 - **Who** and **Where**?: Browser vendors, identity providers, relying parties and standard bodies are involved. The discussions so far have happened at the [WICG](https://github.com/WICG/WebID/issues) and at the [OpenID foundation](https://github.com/IDBrowserUseCases/docs).
 
 ## Stage 3: Future Work
