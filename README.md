@@ -111,13 +111,16 @@ We believe a convincing path needs to have a clearly defined end state but also 
 
 ## Sequencing
 
-While much of the environment is changing and evolving as we speak, there are clear things that are broken right now and enough signals about the principles and challenges ahead of us. We are breaking this into three separate stages:
+While much of the environment is changing and evolving as we speak, there are clear things that are broken right now and enough signals about the principles and challenges ahead of us.
 
-| Stage  | Timeline  | Description  |
-|--------|-----------|--------------|
-| [Stage 1](#stage-1-third-party-cookies) | preserve federation post third party cookies   |   |   |   |
-| [Stage 2](#stage-2-bounce-tracking)     | preserve federation post bounce tracking preventions |   |   |   |
-| [Stage 3](#future-work)                 | related problems and opportunities |   |   |   |
+Much of this is evolving quickly and we are adapting as we learn, but here is our best representation of how we expect things to roll out:
+
+| Stage                                   | Timeline  | Description                                 |
+|-----------------------------------------|-----------|---------------------------------------------|
+| [Stage 0](README.md)                    |   2020    | understanding of the [problem](README.md) and [properties](https://github.com/michaelkleber/privacy-model) of the end state |
+| [Stage 1](#stage-1-third-party-cookies) |   2021    | [dev trials](https://docs.google.com/document/d/1_FDhuZA_C6iY5bop-bjlPl3pFiqu8oFvuK1jzAcyWKU/edit#heading=h.t4ac0nsw5yo) in Q1/Q2 and [origin trials](https://sites.google.com/a/chromium.org/dev/blink/origin-trials) in Q3/Q4 of alternatives to third party cookies   |
+| [Stage 2](#stage-2-bounce-tracking)     |   2022    | [origin trials](https://sites.google.com/a/chromium.org/dev/blink/origin-trials) of alternatives to top level navigation  |
+| [Stage 3](#future-work)                 |   2022+   | other related problems and opportunities    |
 
 
 ## Stage 1: Third Party Cookies
@@ -155,7 +158,7 @@ The most constructive/objective way you can help is to:
 1. help us understand **what**: contribute [here](https://github.com/IDBrowserUseCases/docs) with a use case that you believe can be impacted
 1. help us understand **how**: help us discover options (for [cookies](cookies.md) and [navigations](navigations.md)) and evaluate their trade-offs. [Try](https://github.com/WICG/WebID/blob/main/HOWTO.md) the APIs under development and help us understand what works / doesn't work.
 
-# Further Reading
+# Deep Dives
 
 The following should give you a deeper understanding of the problem, related problems and how they were tackled in the past:
   
