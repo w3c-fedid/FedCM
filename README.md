@@ -163,7 +163,6 @@ The most constructive/objective way you can help is to:
 The following should give you a deeper understanding of the problem, related problems and how they were tackled in the past:
   
 - [Prior Art](prior.md)
-- The [Anatomy](anatomy.md) of federation
 - [Related Problems](problems.md) and desirable side effects
 - The [deployment](activation.md) topology
 - [Glossary](glossary.md)
