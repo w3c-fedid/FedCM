@@ -58,7 +58,7 @@ The problems then are:
 1. **First** and foremost, what Web Platform features need to be exposed to (re) enable these features of federation to co-exist with the absence of third party cookies in browsers going forward?
 2. **Secondarily**, in which direction browsers are going that could potentially impact federation?
 
-## Bounce Tracking
+## Navigational Tracking
 
 Before we prematuraly jump into solutions for the first (and more **urgent**) problem, we think there is something more fundamental changing. Lets take a step back and a closer look at the **second** problem: in which direction browsers are going that could more fundamentally impact federation?
 
@@ -102,6 +102,8 @@ There aren't any easy solutions and most of the answers come in the form of alte
 
 There are billions of users that depend on federation on the web, millions/thousands of relying parties and thousands/hundreds of identity providers. There are also tens of browsers and operating systems, all moving independently. None of that changes overnight and we don't expect it to.
 
+The specs that define how federation works (e.g. OpenID, SAML, etc) are intrincate and long (e.g. session management, authorization, etc).
+
 Having said that, failing to be proactive about affecting change and making federation forward compatible with a more private Web can steer users to less secure patterns, like usernames/passwords or native apps.
 
 The approach we have taken so far has been a combination of two strategies:
@@ -118,11 +120,11 @@ While much of the environment is changing and evolving as we speak, there are co
 Much of this is evolving quickly and we are adapting as we learn, but here is our best representation of how we expect features to be developed:
 
 | Stage                                   | Timeline  | Description                                 |
-|-----------------------------------------|-----------|---------------------------------------------|
-| [Stage 0](README.md)                    |   2020    | understanding of the [problem](README.md) and [properties](https://github.com/michaelkleber/privacy-model) of the end state |
-| [Stage 1](#stage-1-third-party-cookies) |   2021    | [dev trials](https://docs.google.com/document/d/1_FDhuZA_C6iY5bop-bjlPl3pFiqu8oFvuK1jzAcyWKU/edit#heading=h.t4ac0nsw5yo) in Q1/Q2 ([instructions](HOWTO.md)) and [origin trials](https://sites.google.com/a/chromium.org/dev/blink/origin-trials) in Q3/Q4 of alternatives to [third party cookies](cookies.md)   |
-| [Stage 2](#stage-2-bounce-tracking)     |   2021+    | [origin trials](https://sites.google.com/a/chromium.org/dev/blink/origin-trials) of alternatives to [top level navigation](navigations.md)  |
-| [Stage 3](#future-work)                 |   2021++   | other [related problems](problems.md) and opportunities    |
+|-----------------------------------------|-----------|----------------------------------------------|
+| [Stage 0](README.md)                    |   2020    | Understanding of the [problem](README.md) and [properties](https://github.com/michaelkleber/privacy-model) of the end state |
+| [Stage 1](#stage-1-third-party-cookies) |   2021    | [dev trials](https://docs.google.com/document/d/1_FDhuZA_C6iY5bop-bjlPl3pFiqu8oFvuK1jzAcyWKU/edit#heading=h.t4ac0nsw5yo) in Q1/Q2 ([instructions](HOWTO.md)) and [origin trials](https://sites.google.com/a/chromium.org/dev/blink/origin-trials) in Q3/Q4 of alternatives to [third party cookies](#stage-1-third-party-cookies)   |
+| [Stage 2](#stage-2-bounce-tracking)     |   2021+   | [origin trials](https://sites.google.com/a/chromium.org/dev/blink/origin-trials) of alternatives to [top level navigation](#stage-2-bounce-tracking)  |
+| [Stage 3](#stage-3-future-work)         |   2021++  |  other [related problems](problems.md) and opportunities    |
 
 
 ## Stage 1: Third Party Cookies

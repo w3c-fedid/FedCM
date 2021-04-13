@@ -22,12 +22,58 @@ It is widely known that browsers are either **already** blocking third party coo
 
 Unfortunately, that has either broken or are about to break a few use cases in federation, namely [logging out](https://openid.net/specs/openid-connect-rpinitiated-1_0.html), social [buttons](https://developers.facebook.com/docs/facebook-login/userexperience/) and [widget](https://developers.google.com/identity/one-tap/web) personalization (anything else? add your use case [here](#how-can-i-help))).
 
+![](static/mock27.svg)
+
 We will go each each of these cases and look into alternatives to preserve them below:
 
-- [Widgets](#widgets)
 - [Logout](#logout)
+- [Widgets](#widgets)
 
-![](static/mock27.svg)
+# Session Management
+
+OpenID has a series of specifications that cover the lifecycle of sessions. 
+
+* [Session Management](https://openid.net/specs/openid-connect-session-1_0.html)
+* [RP initiated logout](https://openid.net/specs/openid-connect-rpinitiated-1_0.html)
+* [Front Channel Logout](https://openid.net/specs/openid-connect-frontchannel-1_0.html)
+
+Most of these specs relies on cross-site communication between OPs and RPs, but some are more imminently going to be blocked with the deprecation of third party cookies.
+
+For each of these we need to find alternatives:
+
+* [logout](#logout)
+* [status change notification](https://openid.net/specs/openid-connect-session-1_0.html#ChangeNotification)
+* invisible refresh tokens
+
+We'll go over each of these in the sections below:
+
+## Logout
+
+When users log out of IDPs, there is typically a desire for users to also be logged out of the RPs they signed into. This is typically accomplished with the IDPs loading iframes pointing to a pre-acquired endpoint for each of the relying parties ([details](https://www.identityserver.com/articles/the-challenge-of-building-saml-single-logout)).
+
+This is still an active area of investigation, but one first approximation is that, without cookies, these iframes are going to be uncredentialed. That leads to a few options to be explored:
+
+- use the back channel and session ids (which comes with its own set of challenges) or
+- expose web platform APIs to preserve this use case
+
+We are still actively investigating the use case and understanding the deployment structure here, but just as a starting point, consider the introduction of an identity-specific browser API that would allow the browser to gather the user permission and release the credentials to the iframes:
+
+```javascript
+await navigator.logout({
+  relying_parties: [
+    "https://rp1.com",
+    "https://rp2.com",
+    "https://rp3.com",
+    // ...
+    "https://rp8.com",
+    "https://rp9.com",
+  ]
+});
+```
+
+The form of the API as well as whether/which permissions that would be involved as still largely being explored, but here is a somewhat conservative starting point too:
+
+![](static/mock30.svg)
 
 # Widgets
 
@@ -141,34 +187,6 @@ account=1234,client_id=5678
 And with the response, resolves the promise.
 
 The benefits of the permission-oriented approach is that it is the most backwards compatible, at the cost of user friction in the form of permissions. The benefits of the mediated approach is that the user friction is inlined and contextual, at the cost of the ossification of the user experience.
-
-# Logout
-
-When users log out of IDPs, there is typically a desire for users to also be logged out of the RPs they signed into. This is typically accomplished with the IDPs loading iframes pointing to a pre-acquired endpoint for each of the relying parties ([details](https://www.identityserver.com/articles/the-challenge-of-building-saml-single-logout)).
-
-This is still an active area of investigation, but one first approximation is that, without cookies, these iframes are going to be uncredentialed. That leads to a few options to be explored:
-
-- use the back channel and session ids (which comes with its own set of challenges) or
-- expose web platform APIs to preserve this use case
-
-We are still actively investigating the use case and understanding the deployment structure here, but just as a starting point, consider the introduction of an identity-specific browser API that would allow the browser to gather the user permission and release the credentials to the iframes:
-
-```javascript
-await navigator.logout({
-  relying_parties: [
-    "https://rp1.com",
-    "https://rp2.com",
-    "https://rp3.com",
-    // ...
-    "https://rp8.com",
-    "https://rp9.com",
-  ]
-});
-```
-
-The form of the API as well as whether/which permissions that would be involved as still largely being explored, but here is a somewhat conservative starting point too:
-
-![](static/mock30.svg)
 
 
 
