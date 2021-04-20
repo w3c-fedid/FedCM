@@ -76,7 +76,7 @@ For example, we are looking into ways we could replace the `<iframe>` tag with t
 
 In this formulation, the web bundle is a static (yet personalized) bundle that can be displayed on page load but can't have any uncontrolled communication outwards (e.g. over the network or over in-browser features, like postMessage).
 
-The IDP-controlled fenced frame can communicates back with the RP with a high-level API (in replacemente of the low-level `postMessage`) too (which isn't allowed in a fenced frame): 
+The IDP-controlled fenced frame can communicates back with the RP with a high-level API (in replacement of the low-level `postMessage`) too (which isn't allowed in a fenced frame): 
 
 ```javascript
 // This is just a possible starting point, largely TBD.
@@ -115,12 +115,17 @@ As opposed to a fenced frame, relying parties call a javascript API:
 ```javascript
 let {idToken} = await navigator.credentials.get({
   provider: "https://accounts.example.com",
-  ux_mode: "inline",
-  // other OpenId connect parameters
+  mode: "mediated",
+  request: {
+    client_id: 'my_client_id',
+    scope: 'openid email',
+    nonce: 'abcxyz'
+    // other OpenId connect parameters
+  }
 });
 ```
 
-The `ux_mode` parameter informs the user agent to use the mediation-oriented variation, which, as opposed to the permission-oriented variation, talks to the IDP via HTTP instead:
+The `mode` parameter informs the user agent to use the mediation-oriented variation, which, as opposed to the permission-oriented variation, talks to the IDP via HTTP instead:
 
 ```http
 GET /.well-known/webid/accounts.php HTTP/1.1
@@ -138,7 +143,6 @@ Content-Type: text/json
     "sub": 1234, 
     "name": "Sam Goto",
     "given_name": "Sam",
-    "family_name": "Goto", 
     "email": "samuelgoto@gmail.com",
     "picture": "https://accounts.idp.com/profile/123",
   }]
@@ -155,8 +159,23 @@ Upon agreement, the browser uses the HTTP API convention to mint the idtoken. Fo
 POST /.well-known/webid/idtoken.php HTTP/1.1
 Host: idp.example
 Cookie: 123
-Content-Type: application/x-www-form-urlencoded
-account=1234,client_id=5678
+Content-Type: application/json
+
+{
+  'sub': '1234',
+  'request': {
+    'client_id' : 'my_cliend_id',
+    'scope': 'openid email',
+    'nonce': 'abcxyz'
+  }
+}
+```
+
+Which may respond with the following JWT:
+```json
+{
+  "id_token" : "asdlkjop2awlasd"
+}
 ```
 
 And with the response, resolves the promise.
