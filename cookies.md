@@ -24,13 +24,6 @@ Unfortunately, that has either broken or are about to break a few use cases in f
 
 ![](static/mock27.svg)
 
-We will go over each of the stages here in the lifecycle of federation:
-
-- login
-- refreshes
-- notifications
-- logout
-
 # Session Management
 
 OpenID has a series of specifications that cover the lifecycle of sessions. 
