@@ -155,11 +155,11 @@ Cookie: 123
 Content-Type: application/json
 
 {
-  'sub': '1234',
-  'request': {
-    'client_id' : 'my_cliend_id',
-    'scope': 'openid email',
-    'nonce': 'abcxyz'
+  "sub": "1234",
+  "request": {
+    "client_id" : "my_cliend_id",
+    "scope": "openid email",
+    "nonce": "abcxyz"
   }
 }
 ```
