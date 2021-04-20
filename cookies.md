@@ -24,10 +24,12 @@ Unfortunately, that has either broken or are about to break a few use cases in f
 
 ![](static/mock27.svg)
 
-We will go each each of these cases and look into alternatives to preserve them below:
+We will go over each of the stages here in the lifecycle of federation:
 
-- [Logout](#logout)
-- [Widgets](#widgets)
+- login
+- refreshes
+- notifications
+- logout
 
 # Session Management
 
@@ -41,41 +43,14 @@ Most of these specs relies on cross-site communication between OPs and RPs, but 
 
 For each of these we need to find alternatives:
 
+* [login](#login)
 * [logout](#logout)
 * [status change notification](https://openid.net/specs/openid-connect-session-1_0.html#ChangeNotification)
 * invisible refresh tokens
 
 We'll go over each of these in the sections below:
 
-## Logout
-
-When users log out of IDPs, there is typically a desire for users to also be logged out of the RPs they signed into. This is typically accomplished with the IDPs loading iframes pointing to a pre-acquired endpoint for each of the relying parties ([details](https://www.identityserver.com/articles/the-challenge-of-building-saml-single-logout)).
-
-This is still an active area of investigation, but one first approximation is that, without cookies, these iframes are going to be uncredentialed. That leads to a few options to be explored:
-
-- use the back channel and session ids (which comes with its own set of challenges) or
-- expose web platform APIs to preserve this use case
-
-We are still actively investigating the use case and understanding the deployment structure here, but just as a starting point, consider the introduction of an identity-specific browser API that would allow the browser to gather the user permission and release the credentials to the iframes:
-
-```javascript
-await navigator.logout({
-  relying_parties: [
-    "https://rp1.com",
-    "https://rp2.com",
-    "https://rp3.com",
-    // ...
-    "https://rp8.com",
-    "https://rp9.com",
-  ]
-});
-```
-
-The form of the API as well as whether/which permissions that would be involved as still largely being explored, but here is a somewhat conservative starting point too:
-
-![](static/mock30.svg)
-
-# Widgets
+## Login
 
 Relying Parties typically embed credentialed iframes served by identity providers for personalization (e.g. showing the user's profile picture / name on buttons). Browsers do (or are intending to) block third party cookies in iframes, making them uncredentialed and hence unable to personalize.
 
@@ -84,7 +59,7 @@ There are two variations that we are evaluating to preserve this use case:
 - [fencedframes](#fencedframes) and permissions and
 - [mediation](#mediation)
 
-## fenced frames
+### fenced frames
 
 There is a variety of privacy controls that we are exploring, but the fenced frame variation is a good baseline.
 
@@ -131,7 +106,7 @@ For one, the user has to make **two** choices (on the consequences of tracking) 
 
 That leads us to the [mediation-oriented](#the-mediation-oriented-variation) variation which bundles these prompts into a browser mediated experience (which also comes with trade-offs).
 
-## mediation
+### mediation
 
 In the **mediated** variation, the user agent takes more responsibility in owning that transaction, and talks to the IDP directly (e.g. via an HTTP convention or JS APIs) rather than allowing the IDP to control HTML/JS/CSS.
 
@@ -187,6 +162,37 @@ account=1234,client_id=5678
 And with the response, resolves the promise.
 
 The benefits of the permission-oriented approach is that it is the most backwards compatible, at the cost of user friction in the form of permissions. The benefits of the mediated approach is that the user friction is inlined and contextual, at the cost of the ossification of the user experience.
+
+## Logout
+
+When users log out of IDPs, there is typically a desire for users to also be logged out of the RPs they signed into. This is typically accomplished with the IDPs loading iframes pointing to a pre-acquired endpoint for each of the relying parties ([details](https://www.identityserver.com/articles/the-challenge-of-building-saml-single-logout)).
+
+This is still an active area of investigation, but one first approximation is that, without cookies, these iframes are going to be uncredentialed. That leads to a few options to be explored:
+
+- use the back channel and session ids (which comes with its own set of challenges) or
+- expose web platform APIs to preserve this use case
+
+We are still actively investigating the use case and understanding the deployment structure here, but just as a starting point, consider the introduction of an identity-specific browser API that would allow the browser to gather the user permission and release the credentials to the iframes:
+
+```javascript
+await navigator.credentials.logout({
+  relying_parties: [
+    "https://rp1.com",
+    "https://rp2.com",
+    "https://rp3.com",
+    // ...
+    "https://rp8.com",
+    "https://rp9.com",
+  ]
+});
+```
+
+The form of the API as well as whether/which permissions that would be involved as still largely being explored. Our current best approximation is to use the [login](#login) API to observe which relying parties the user has signed-in to and has already established an IDP/RP relationship. For those RPs, the browser can probably safely load these iframes in a credentialed form.
+
+It is unclear to us if the browser can observe all of the sign-ins (e.g. multi-browser cases as well as how WebID may roll out), so an array of relying party logout endpoints can also be passed and a permission can be used for those cases:
+
+![](static/mock30.svg)
+
 
 
 
