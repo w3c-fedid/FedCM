@@ -188,7 +188,7 @@ We are still actively investigating the use case and understanding the deploymen
 
 ```javascript
 await navigator.credentials.logout({
-  relying_parties: [
+  endpoints: [
     "https://rp1.com",
     "https://rp2.com",
     "https://rp3.com",
@@ -201,9 +201,13 @@ await navigator.credentials.logout({
 
 The form of the API as well as whether/which permissions that would be involved as still largely being explored. Our current best approximation is to use the [login](#login) API to observe which relying parties the user has signed-in to and has already established an IDP/RP relationship. For those RPs, the browser can probably safely load these iframes in a credentialed form.
 
-It is unclear to us if the browser can observe all of the sign-ins (e.g. multi-browser cases as well as how WebID may roll out), so an array of relying party logout endpoints can also be passed and a permission can be used for those cases:
+The logout endpoints are configured out-of-band in the process relying parties register with identity providers: the identity provider is the only entity aware of the endpoints that need to be loaded. So, an array of relying party logout endpoints is passed, and whenever the logouts have a coinciding observed login, a credentialed request is made:
 
-![](static/mock30.svg)
+> NOTE(goto): the exact criteria to make the matching between the login and logout is TBD. two thoughts occurred to us: (a) matching origins and (b) making the IDP declare the endpoint upon login.
+
+![](static/mock31.svg)
+
+> NOTE(goto): a clear extension here is to make these request asynchronous. That is, to make them continue even if the IDP top level frame gets paged out. It is unclear to me at the moment how feasible that is to implement (e.g. is there any precedence of APIs that go on beyond the page lifecycle?).
 
 
 
