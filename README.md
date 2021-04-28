@@ -7,7 +7,13 @@ redirect_from: "index.html"
 
 > not to be confused with [this](https://www.w3.org/2005/Incubator/webid/spec/) WebID whose authors have [graciously](https://github.com/WICG/WebID/issues/54#issuecomment-783605484) allowed us to use this as a codename until we [find](https://github.com/WICG/WebID/issues/41#issuecomment-712304910) a better one
 
-**TL;DR**; This is an **active** exploration to react to the **ongoing** privacy-oriented changes in browsers (e.g. [1](https://webkit.org/blog/10218/full-third-party-cookie-blocking-and-more/), [2](https://blog.mozilla.org/blog/2019/09/03/todays-firefox-blocks-third-party-tracking-cookies-and-cryptomining-by-default/) and [3](https://blog.google/products/chrome/privacy-sustainability-and-the-importance-of-and/)) and **preserve** identity federation (e.g. OpenID, OAuth and SAML) on the web.
+**TL;DR**; This is an **active** exploration to react to the **ongoing** privacy-oriented changes in browsers (e.g. [1](https://webkit.org/blog/10218/full-third-party-cookie-blocking-and-more/), [2](https://blog.mozilla.org/blog/2019/09/03/todays-firefox-blocks-third-party-tracking-cookies-and-cryptomining-by-default/) and [3](https://blog.google/products/chrome/privacy-sustainability-and-the-importance-of-and/)) and **preserve** and **elevate** identity federation (e.g. OpenID, OAuth and SAML) for a more private Web.
+
+This explainer is divided in three sections:
+
+1. [Where we are](#the-problem)
+1. [Where we ought to be](#the-end-state)
+1. [How do we get there](#sequencing)
 
 # The Problem
 
@@ -113,7 +119,60 @@ The approach we have taken so far has been a combination of two strategies:
 
 We believe a convincing path needs to have a clearly defined end state but also a plausible sequencing strategy.
 
+1. Let's start with [where we want to be](#the-end-state), and then later
+1. Go over [how we get there](#sequencing).
+
+## The End State
+
+In the future, we believe that identity federation on the Web needs to be **free of unintended tracking consequences**.
+
+By that we mean that, in the future:
+
+* **The RP Tracking Problem**: Websites shouldn't be able to join your identities by default and without your control
+* **The IDP Tracking Problem**: Identity Providers shouldn't be able to be involved without justification by default and without your control
+
+In the future, we'll have two fundamentally different things: consequence-free defaults and control. Identity federation on the a Web that is narrowly private by default and broadly identifying by choice.
+
+> We don't believe these to be much different from the properties that Kim Cameron identified in the [7 laws of identity](https://www.identityblog.com/stories/2005/05/13/TheLawsOfIdentity.pdf), namely the "User Control and Consent", "Minimal Discosure for a Constrained Use", "Justifiable Parties" and the "Directed Identity" laws.
+
+The principle that we'll use as a foundation to affect change on the defaults and controls is that cross-origin communication is a priviledged operation and needs to be intermediated by your user agent.
+
+> When there is a conflict in interests of the parties involved, we think the following is the right order of constituencies: [users first](https://www.w3.org/TR/html-design-principles/#priority-of-constituencies), developers second (relying parties and identity providers, in that order), browser engines third and technical purity fourth.
+
+In the future, your user agent will intermediate and assist in the cross-origin exchange of identification by picking better defaults in two ways:
+
+1. **The RP Tracking Mitigation**: Unbundling your **global** identity into multiple **directed** identities per-site.
+1. **The IDP Tracking Mitigation**: Unbundling the **issuing** of credentials with their **presentation**.
+
+The first principle can be solved by the user agent insisting on a progressive disclosure of identification, starting with the minimal disclosure for the most constrained use (e.g. a directed identifier that is recoverable between devices) towards progressively and contextually exposing yourself (e.g. giving access to your calendar):
+
+![](static/mock33.svg)
+
+The second principle (unbundling the issuer from the holder of credentials) is more technically involved, but has a real world analog: driver's licenses.
+
+When you present your driver's license as a form of identification to, say, a store that needs to check your age, the government issuer of the driver's license isn't involved (and its involvement doesn't seem to be justified): the **presentation** of your driver's license is decoupled from the **issuing** of your driver's license.
+
+We believe that if we unbundle these operations, users can use their credentials without **necessarily** phone-homing to their issuers:
+
+![](static/mock34.svg)
+
+So far, none of these are original ideas. Proxying email addresses and directing identifiers is a norm for some identity providers and self-issuing credentials has been proposed by [BrowserID](prior.md) for example.
+
+However, while these ideas exist in isolation, we are finding that a system that combines them is hard.
+
+We call the active investigation for a protocol that can solve both of these problems (as well as recovery) the **Delegation-oriented Model**. Without much explanation, here is a glimpse of what that may look like:
+
+![](static/mock35.svg)
+
+The **delegation-oriented model** is very compelling as an end-state for WebID because it solves both tracking problems. Its weakest point is that it is (a) not backwards compatible with the current deployment of federation on the Web and (b) not perfectly clear to us if the incentives are well aligned to establish an economic equilibrium.
+
+While not all of the pieces are quite put together, we think the delegation-oriented model represents well the northstar that we are aspiring to.
+
+The problems we mentioned, as well as others, are being explored more in-depth [here](https://docs.google.com/presentation/d/1Sym0k84omyL5Ls1lO6w4aGQ-s4EHrDzo8ZlheyzFOlw/edit#slide=id.ga40b1e6d4f_0_77).
+
 ## Sequencing
+
+While [The End State](#the-end-state) gives us guidance of where to aim at, we consider an equally hard problem to find a plausible path that leads us there.
 
 While much of the environment is changing and evolving as we speak, there are concrete flows that are inviable right **now** and enough signals about the principles and challenges **ahead** of us.
 
@@ -127,7 +186,7 @@ Much of this is evolving quickly and we are adapting as we learn, but here is ou
 | [Stage 3](#stage-3-future-work)         |   2021++  |  other [related problems](problems.md) and opportunities    |
 
 
-## Stage 1: Third Party Cookies
+### Stage 1: Third Party Cookies
 
 The more urgent problem that clearly has **already** affected federation (or is about to) is the blocking of third party cookies. We plan to tackle this first:
 
@@ -136,7 +195,7 @@ The more urgent problem that clearly has **already** affected federation (or is 
 - Ok ... Now **What**? [Here](cookies.md) are some early proposals on how to preserve these use cases.
 - **Who** and **Where**?: Browser vendors, identity providers, relying parties and standard bodies are involved. The discussions so far have happened at the [WICG](https://github.com/WICG/WebID/issues) and at the [OpenID foundation](https://github.com/IDBrowserUseCases/docs).
 
-## Stage 2: Bounce Tracking
+### Stage 2: Bounce Tracking
 
 Bounce tracking comes next. It is a more evolving situation, but has much more profound implications to federation:
 
@@ -145,7 +204,7 @@ Bounce tracking comes next. It is a more evolving situation, but has much more p
 - Ok ... Now **What**? [Here](navigations.md) are some early proposals on how to preserve these use cases.
 - **Who** and **Where**?: Browser vendors, identity providers, relying parties and standard bodies are involved. The discussions so far have happened at the [WICG](https://github.com/WICG/WebID/issues) and at the [OpenID foundation](https://github.com/IDBrowserUseCases/docs).
 
-## Stage 3: Future Work
+### Stage 3: Future Work
 
 There are a series of [related problems](problems.md) that affect federation that we believe we have a unique opportunity to tackle as a consequence of the choices that we make in stage 1 and 2.
 
