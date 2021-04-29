@@ -121,7 +121,7 @@ let {idToken} = await navigator.credentials.get({
 The `mode` parameter informs the user agent to use the mediation-oriented variation, which, as opposed to the permission-oriented variation, talks to the IDP via HTTP instead:
 
 ```http
-GET /.well-known/webid/accounts.php HTTP/1.1
+GET /webid/accounts.php HTTP/1.1
 Host: idp.example
 Cookie: 123
 ```
@@ -149,7 +149,7 @@ With the data, the browser then controls the experience with the user to carry o
 Upon agreement, the browser uses the HTTP API convention to mint the idtoken. For example:
 
 ```http
-POST /.well-known/webid/idtoken.php HTTP/1.1
+POST /webid/idtoken.php HTTP/1.1
 Host: idp.example
 Cookie: 123
 Content-Type: application/json
