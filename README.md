@@ -160,6 +160,8 @@ We believe that if we unbundle these operations, users can use their credentials
 
 ![](static/mock34.svg)
 
+### The Delegation-oriented API
+
 So far, none of these are original ideas. Proxying email addresses and directing identifiers is a norm for some identity providers and self-issuing credentials has been proposed by [BrowserID](prior.md) for example.
 
 However, while these ideas exist in isolation, we are finding that a system that combines them is hard.
@@ -177,6 +179,85 @@ The **delegation-oriented model** isn't free of challenges though. Its weakest p
 While not all of the pieces are quite put together, we think the delegation-oriented model represents well the northstar that we are aspiring to.
 
 The problems we mentioned, as well as others, are being explored more in-depth [here](https://docs.google.com/document/d/1ZymcC2ABSzwJloXje5R_KFLi0-Vaz03iLR9DjwQl9u0/edit).
+
+## The Intermediate States
+
+There are a large number of mid-game states between the opening and the endgame for WebID.
+
+It is unclear to us how many of these are sustainable / desirable long term and how they will evolve, but their existance for a non-trivial amount of time is non-neglectable.
+
+For the most part, they are a trade-off between backwards compatibility (for users, relying parties and identity providers, in that order) and effective controls (ignorable permission prompts, mediation and removing the tracking risks altogether, in that order).
+
+Our best guess at the moment is that each of these three variations (delegation, mediation and permission) have different trade-offs that don't put them at mutually exclusive positions, meaning that we could imagine an state where all of these three variations co-exist.
+
+So, having said that, lets start from that order: from most backwards compatible to least.
+
+* [The Permission-oriented API](#the-permission-oriented-api)
+* [The Mediation-oriented API](#the-mediation-oriented-api)
+
+### The Permission-oriented API
+
+It is clearly highly desirable to minimize the deployment costs: the less we ask developers to change (while keeping/raising the privacy bar), the better.
+
+That's what the HTTP API is all about: backwards compatibility.
+
+We are still exploring this space, but we are trying to understand if it would be possible to classify federation with zero changes in the ecosystem.
+
+Because a significant part of federation is deployed over well-established protocols (e.g. OpenID, SAML), their HTTP profile is somewhat easy to spot. For example, for OpenID Connect requests/responses we could look at HTTP requests that have:
+
+- a **client_id** parameter
+- a **redirect_uri** parameter
+- a **scope** parameter
+- an accompanying **.well-known/openid-configuration** configuration
+
+In this formulation, a user engine would intercept HTTP requests made in this fashion and provide permission prompts to gather the user's intent to sign-in and hence, for example, allow the request to be made credentialed with cookies:
+
+![](static/mock39.gif)
+
+The way back from the IDP to the RP is also highly structured, so responses can be classified (and made credentialed) when they match:
+
+- a redirect to the previously used **redirect_uri**
+- an **id_token** parameter
+
+Notably, for cases where the IDP controls the deployment of the JavaScript running on the RP page (typically opening a popup window), we are also exploring offering a more explicit API, such as:
+
+```javascript
+// This is just a possible starting point, largely TBD.
+let {idToken} = await navigator.credentials.get({
+  provider: "https://accounts.example.com",
+  "ux_mode": "permission",
+  // other OpenId connect parameters
+});
+```
+
+So, to sum up:
+
+* **pros**: most backward compatible approach
+* **cons**: we don't expect permissions to be the most effective way to offer privacy controls
+
+### The Mediated-oriented API
+
+Another intermediate formulation that is somewhere in between in the spectrum of backwards compatibility and privacy control effectiveness, is what we've been calling the mediated-oriented API.
+
+In this formulation, the triggering of the API works similarly as before, but the execution is done in an intermediated fashion:
+
+```javascript
+// This is just a possible starting point, largely TBD.
+let {idToken} = await navigator.credentials.get({
+  provider: "https://accounts.example.com",
+  "ux_mode": "mediation",
+  // other OpenId connect parameters
+});
+```
+
+This is accomplished via an HTTP protocol between the IDP and the User-Agent (under exploration [here](HOWTO.md#identity-provider-implementation)):
+
+![](static/mock40.gif)
+
+The mediated-oriented API offers a balance between the trade-offs:
+
+* **pros**: backwards compatible with relying parties (which are many), requires work from the IDP (which are few). largely backwards compatible from a user experience / behavior / norm perspective. privacy controls are offered contextually.
+* **cons**: pulls some of the responsibility for the user agent (e.g. account chooser), which affects the autonomy of IDPs and RPs.
 
 ## Sequencing
 
