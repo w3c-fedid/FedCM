@@ -25,7 +25,7 @@ https://github.com/WICG/WebID/blob/main/cookies.md#logout
 * `navigator.id.get()` API call under [the mediation-oriented flow](navigations.md#the-mediation-oriented-variation)
 * A potential [Logout API](cookies.md#logout)
 
-These are described in more detail below.
+These are described in more detail in the sections below.
 
 ### Permission persistence
 In the flows where permission prompts are shown and the user accepts them, their acceptance is stored in the Chrome user profile as a website setting. The permission prompt will not subsequently be shown for the same RP and IDP pair. There are two distinct permissions, corresponding to the two prompts shown during the above flows.
@@ -94,7 +94,7 @@ After the RP initiates a sign-in flow by calling the API, the browser learns abo
 The browser expects a response with MIME type `application/json`, currently containing only one field:<br>
 ```json
 {
-  idp_endpoint: "https://idp.example/webid/idp_endpoint"
+  "idp_endpoint": "https://idp.example/webid/idp_endpoint"
 }
 ```
 
@@ -108,7 +108,7 @@ The browser expects one of two responses (both with MIME type `application/json`
 
 ```json
 {
-  id_token: "ID_token_here"
+  "id_token": "ID_token_here"
 }
 ````
 
@@ -116,7 +116,7 @@ The browser expects one of two responses (both with MIME type `application/json`
 
 ```json
 { 
-  signin_url: "https://idp.example/webid/user_login"
+  "signin_url": "https://idp.example/webid/user_login"
 }
 ```
 
@@ -137,8 +137,8 @@ After the RP initiates a sign-in flow by calling the API, the browser learns abo
 The browser expects a response with MIME type `application/json`, currently containing two fields:<br>
 ```json
 {
-  token_endpoint: "https://idp.example/webid/webid_token_endpoint",
-  accounts_endpoint: "https://idp.example/webid/webid_accounts_endpoint",
+  "token_endpoint": "https://idp.example/webid/webid_token_endpoint",
+  "accounts_endpoint": "https://idp.example/webid/webid_accounts_endpoint",
 }
 ```
 
@@ -148,20 +148,20 @@ The `accounts_endpoint` value provides the URL for the next step, fetching a lis
 The browser sends a credentialed request to the specified `accounts_endpoint`. The cookie on the request can be used to identify valid signed-in accounts the user might have on the IDP which are then returned in the response. A valid response body would look like:<br>
 ```json
 {
- accounts: [
-  { sub: 1234, 
-   name: "John Doe", given_name: "John", family_name: "Doe", 
-   email: john_doe@idp,  picture:"https://idp.example/profile/123",
-   enrolled_relying_parties:["bakery.example", "login.shop.example"] 
+ "accounts": [
+  { "sub": 1234, 
+   "name": "John Doe", "given_name": "John", "family_name": "Doe", 
+   "email": "john_doe@idp", "picture": "https://idp.example/profile/123",
+   "enrolled_relying_parties": ["bakery.example", "login.shop.example"] 
   },
-  {sub: 5678, 
-   name: "Johnny", given_name: "Johnny", family_name: "",
-   email: johny@idp, picture:"https://idp.example/profile/456"
+  {"sub": 5678, 
+   "name": "Johnny", "given_name": "Johnny", "family_name": "",
+   "email": "johnny@idp", "picture": "https://idp.example/profile/456"
   }
  ],
- request_id: "xyz123123zyx",
- tos: "https://idp.example/tos.html",
- privacy_policy: "https://idp.example/privacy.html"
+ "request_id": "xyz123123zyx",
+ "tos": "https://idp.example/tos.html",
+ "privacy_policy": "https://idp.example/privacy.html"
 }
 ```
 
@@ -175,11 +175,11 @@ Several of the fields have obvious function.
 If the user selects an account from one that is offered, the browser sends a `POST` request to the `token_endpoint` with a body such as:<br>
 ```json
 {
-  account: "1234",
-  request_id: "xyz123123zyx",    
-  request: {
-    client_id: "myclientid",
-    nonce: "abc987987cba"
+  "account": 1234,
+  "request_id": "xyz123123zyx",    
+  "request": {
+    "client_id": "myclientid",
+    "nonce": "abc987987cba"
   }
 }
 ```
