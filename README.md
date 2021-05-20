@@ -160,7 +160,7 @@ So far, none of these are original ideas. Proxying email addresses and directing
 
 However, while these ideas exist in isolation, we are finding that a system that combines them is hard.
 
-We call the active investigation for a protocol that can solve both of these problems (as well as recovery) the **Delegation-oriented Model**. Without much explanation (full details [here](https://docs.google.com/presentation/d/1Sym0k84omyL5Ls1lO6w4aGQ-s4EHrDzo8ZlheyzFOlw/edit#slide=id.ga40b1e6d4f_0_77)), here is a glimpse of what that may look like:
+We call the active investigation for a protocol that can solve both of these problems (as well as recovery) the **Delegation-oriented Model**. Without much explanation (full details [here](https://docs.google.com/document/d/1ZymcC2ABSzwJloXje5R_KFLi0-Vaz03iLR9DjwQl9u0/edit)), here is a glimpse of what that may look like:
 
 ![](static/mock35.svg)
 
@@ -172,7 +172,7 @@ The **delegation-oriented model** isn't free of challenges though. Its weakest p
 
 While not all of the pieces are quite put together, we think the delegation-oriented model represents well the northstar that we are aspiring to.
 
-The problems we mentioned, as well as others, are being explored more in-depth [here](https://docs.google.com/presentation/d/1Sym0k84omyL5Ls1lO6w4aGQ-s4EHrDzo8ZlheyzFOlw/edit#slide=id.ga40b1e6d4f_0_77).
+The problems we mentioned, as well as others, are being explored more in-depth [here](https://docs.google.com/document/d/1ZymcC2ABSzwJloXje5R_KFLi0-Vaz03iLR9DjwQl9u0/edit).
 
 ## Sequencing
 
