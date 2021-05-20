@@ -131,6 +131,8 @@ By that we mean that, in the future:
 * **The RP Tracking Problem**: Websites shouldn't be able to join your identities by default and without your control
 * **The IDP Tracking Problem**: Identity Providers shouldn't be able to be involved without justification by default and without your control
 
+![](static/mock36.svg)
+
 In the future, we'll have two fundamentally different things: consequence-free defaults and control. Identity federation on the a Web that is narrowly private by default and broadly identifying by choice.
 
 > We don't believe these to be much different from the properties that Kim Cameron identified in the [7 laws of identity](https://www.identityblog.com/stories/2005/05/13/TheLawsOfIdentity.pdf), namely the "User Control and Consent", "Minimal Discosure for a Constrained Use", "Justifiable Parties" and the "Directed Identity" laws.
@@ -143,6 +145,8 @@ In the future, your user agent will intermediate and assist in the cross-origin 
 
 1. **The RP Tracking Mitigation**: Unbundling your **global** identity into multiple **directed** identities per-site.
 1. **The IDP Tracking Mitigation**: Unbundling the **issuing** of credentials with their **presentation**.
+
+![](static/mock37.svg)
 
 The first principle can be solved by the user agent insisting on a progressive disclosure of identification, starting with the minimal disclosure for the most constrained use (e.g. a directed identifier that is recoverable between devices) towards progressively and contextually exposing yourself (e.g. giving access to your calendar):
 
@@ -162,7 +166,7 @@ However, while these ideas exist in isolation, we are finding that a system that
 
 We call the active investigation for a protocol that can solve both of these problems (as well as recovery) the **Delegation-oriented Model**. Without much explanation (full details [here](https://docs.google.com/document/d/1ZymcC2ABSzwJloXje5R_KFLi0-Vaz03iLR9DjwQl9u0/edit)), here is a glimpse of what that may look like:
 
-![](static/mock35.svg)
+![](static/mock38.svg)
 
 The **delegation-oriented model** is very compelling as an end-state for WebID because it solves both tracking problems. Because it does, it doesn't have any unintended tracking consequence.
 
