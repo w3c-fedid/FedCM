@@ -15,8 +15,8 @@ We will do our best to keep these instructions up to date as protocol and API ch
 It will subsequently roll into downstream channels, but with lag in functionality and bug fixes since this is under development.
 
 ## Enabling WebID in Chrome
-1. Download a version of Chrome with WebID implemented, ideally Canary. ([Link for Canary channel](https://www.google.com/chrome/))
-2. Enable WebID. For Chrome 91+ this can be done directly from chrome://flags. Older versions require manually running with the command line flag --enable-features=WebID. ([Instructions for different platforms.](https://www.chromium.org/developers/how-tos/run-chromium-with-flags))
+1. Download [Chrome Canary](https://www.google.com/chrome/). Since this is a prototype with ongoing development, the implementation in other channels will be out of date with respect to functionality and bug fixes.
+2. Enable WebID. As of Chrome 91 this can be done directly from chrome://flags.
 
 ## Available functionality
 * Automatic permission prompts on [top-level Open ID Connect protocol navigations](navigations.md#the-sign-in-api)
@@ -28,12 +28,12 @@ https://github.com/WICG/WebID/blob/main/cookies.md#logout
 These are described in more detail in the sections below.
 
 ### Permission persistence
-In the flows where permission prompts are shown and the user accepts them, their acceptance is stored in the Chrome user profile as a website setting. The permission prompt will not subsequently be shown for the same RP and IDP pair. There are two distinct permissions, corresponding to the two prompts shown during the above flows.
+In the flows where permission prompts are shown and the user accepts them, their acceptance is stored in the Chrome user profile as a website setting. The permission prompt will **not** subsequently be shown for the same RP and IDP pair. There are two distinct permissions, corresponding to the two prompts shown during the above flows.
 
 At the moment the only way to reset these permissions is to clear browsing data on the profile. Testing can be done in Guest mode or with single-use profiles if permission persistence is not desired.
 
 ## Automatic permission prompts
-When WebID is enabled and a user attempts a federated sign-in using the OpenID Connect protocol over a top-level cross-origin navigation, the navigation request can be blocked by WebID and a permission prompt shown to the user. The same happens with a different prompt when an OIDC response is returned to the relying party. There is a rough heuristic to identify these navigations (at present we test for the presence of `client_id`, `scope` and `redirect_uri` query parameters), so it is possible some requests might be missed.
+When WebID is enabled and a user attempts a federated sign-in using the OpenID Connect protocol over a top-level cross-origin navigation, the navigation request can be blocked by WebID and a permission prompt shown to the user. The same happens with a different prompt when an OIDC response is returned to the relying party. There is [a rough heuristic](README.md#the-permission-oriented-api) to identify these navigations, so it is possible some requests might be missed.
 
 This is intended to illustrate a simple backward-compatible relaxation of web privacy restrictions for identity flows. It has some known limitations, such as behaving poorly in the presence of redirects on the request to the IDP.
 
@@ -186,10 +186,18 @@ If the user selects an account from one that is offered, the browser sends a `PO
 
 `account` and `request_id` are taken from the response of the previous request, and the `request` field contains information from the RP's original identity request.
 
-## Logout API
-The prototype contains a separate API, `navigator.id.logout()` which is being explored as a way to preserve OIDC front-channel logout and SAML Single Signout with loss of access to third-party cookies in embedded contexts. It is intended to replace situations where an IDP logging out a user also must log out the user in RP contexts and would normally do it using iframes with each RP's known logout URL.
+## Session Management
+
+We have also been experimenting with methods for helping session management features continue to work that currently rely on third-party cookies. So far the only implemented proposal is an API for Logout.
+
+### Logout API
+The Logout API, `navigator.id.logout()` which is being explored as a way to preserve OIDC front-channel logout and SAML Single Signout with loss of access to third-party cookies in embedded contexts. It is intended to replace situations where an IDP logging out a user also must log out the user in RP contexts and would normally do it using iframes with each RP's known logout URL.
 
 The API takes an array of URLs as an argument. For each URL, the browser determines if the user is known to have previously logged in to the RP using that IDP, and if it has, it sends a credentialed GET request to that URL. The determination is currently based on the permission set during an identity request from the RP to the IDP, either via `navigator.id.get()` or from an intercepted OIDC navigation with an automatic permission prompt. That logic should be considered very tentative.
+
+```javascript
+navigator.id.logout(['https://rp1.example/logout', 'https://rp2.example/logout']);
+```
 
 For security reasons, the IDP does not learn whether any of the network requests succeeded or failed.
 
