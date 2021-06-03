@@ -30,7 +30,7 @@ These are described in more detail in the sections below.
 ### Permission persistence
 In the flows where permission prompts are shown and the user accepts them, their acceptance is stored in the Chrome user profile as a website setting. The permission prompt will **not** subsequently be shown for the same RP and IDP pair. There are two distinct permissions, corresponding to the two prompts shown during the above flows.
 
-At the moment the only way to reset these permissions is to clear browsing data on the profile. Testing can be done in Guest mode or with single-use profiles if permission persistence is not desired.
+At the moment the only way to reset these permissions is to clear browsing data on the profile. This can be done from Settings, and requires manually selecting the `Site Settings` checkbox from the `Advanced` tab of the Clear Browsing Data dialog. Also be sure the time range of data being cleared includes the time when the permission was set. Testing can be done in Guest mode or with single-use profiles if permission persistence is not desired.
 
 ## Automatic permission prompts
 When WebID is enabled and a user attempts a federated sign-in using the OpenID Connect protocol over a top-level cross-origin navigation, the navigation request can be blocked by WebID and a permission prompt shown to the user. The same happens with a different prompt when an OIDC response is returned to the relying party. There is [a rough heuristic](README.md#the-permission-oriented-api) to identify these navigations, so it is possible some requests might be missed.
