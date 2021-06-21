@@ -124,6 +124,8 @@ We believe a convincing path needs to have a clearly defined end state but also 
 
 ## The End State
 
+In the future, we believe that identity federation on the Web needs to be supported by a foundation that is in equal parts **opinionated** and **extensible**.
+
 In the future, we believe that identity federation on the Web needs to be **free of unintended tracking consequences**.
 
 By that we mean that, in the future:

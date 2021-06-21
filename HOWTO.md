@@ -43,7 +43,7 @@ This is intended to illustrate a simple backward-compatible relaxation of web pr
 
 The RP interacts with the WebID API to obtain an ID token for a user. The API method returns a promise that either resolves successfully and provides the token, or else is rejected with an error. The page must be served over HTTPS.
 
-The `mode` parameter to the API specifies whether the permission or mediation-oriented flow is beings tested. Omitting the argument defaults to permission-oriented flow. Using `mode: "mediation"` triggers the mediation-oriented flow. 
+The `mode` parameter to the API specifies whether the permission or mediation-oriented flow is beings tested. Omitting the argument defaults to permission-oriented flow. Using `mode: "mediated"` triggers the mediation-oriented flow. 
 
 ```javascript
 async function login() {
@@ -137,7 +137,7 @@ After the RP initiates a sign-in flow by calling the API, the browser learns abo
 The browser expects a response with MIME type `application/json`, currently containing two fields:<br>
 ```json
 {
-  "token_endpoint": "https://idp.example/webid/webid_token_endpoint",
+  "idtoken_endpoint": "https://idp.example/webid/webid_token_endpoint",
   "accounts_endpoint": "https://idp.example/webid/webid_accounts_endpoint",
 }
 ```
@@ -148,18 +148,20 @@ The `accounts_endpoint` value provides the URL for the next step, fetching a lis
 The browser sends a credentialed request to the specified `accounts_endpoint`. The cookie on the request can be used to identify valid signed-in accounts the user might have on the IDP which are then returned in the response. A valid response body would look like:<br>
 ```json
 {
- "accounts": [
-  { "sub": 1234, 
-   "name": "John Doe", "given_name": "John", "family_name": "Doe", 
-   "email": "john_doe@idp", "picture": "https://idp.example/profile/123",
-   "enrolled_relying_parties": ["bakery.example", "login.shop.example"] 
-  },
-  {"sub": 5678, 
-   "name": "Johnny", "given_name": "Johnny", "family_name": "",
-   "email": "johnny@idp", "picture": "https://idp.example/profile/456"
+ "accounts": [{
+    "sub": "1234", 
+    "name": "John Doe",
+    "given_name": "John",
+    "email": "john_doe@idp",
+    "picture": "https://idp.example/profile/123",
+  }, {
+    "sub": "5678", 
+    "name": "Johnny",
+    "given_name": "Johnny",
+    "email": "johnny@idp",
+    "picture": "https://idp.example/profile/456"
   }
  ],
- "request_id": "xyz123123zyx",
  "tos": "https://idp.example/tos.html",
  "privacy_policy": "https://idp.example/privacy.html"
 }
@@ -191,6 +193,7 @@ If the user selects an account from one that is offered, the browser sends a `PO
 We have also been experimenting with methods for helping session management features continue to work that currently rely on third-party cookies. So far the only implemented proposal is an API for Logout.
 
 ### Logout API
+
 The Logout API, `navigator.id.logout()` which is being explored as a way to preserve OIDC front-channel logout and SAML Single Signout with loss of access to third-party cookies in embedded contexts. It is intended to replace situations where an IDP logging out a user also must log out the user in RP contexts and would normally do it using iframes with each RP's known logout URL.
 
 The API takes an array of URLs as an argument. For each URL, the browser determines if the user is known to have previously logged in to the RP using that IDP, and if it has, it sends a credentialed GET request to that URL. The determination is currently based on the permission set during an identity request from the RP to the IDP, either via `navigator.id.get()` or from an intercepted OIDC navigation with an automatic permission prompt. That logic should be considered very tentative.
