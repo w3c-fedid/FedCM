@@ -17,9 +17,9 @@ From here, the next incremental step we could look at is the [requestStorageAcce
 
 The [Document.requestStorageAccess()](https://developer.mozilla.org/en-US/docs/Web/API/Document/requestStorageAccess) API grants first-party storage to cross-origin subframes. In conjunction with iframes, an IDP could expose its service via cross-site postMessage communication once first-party storage has been granted.
 
-That seemed clear to reject based on:
+This approach has a couple of downsides:
 
 - the inability to prevent the [RP tracking problem](#the-rp-tracking-problem)
-- the general-purpose nature of the API leading to the lowest common denominator policy
+- the general-purpose nature of the API leading to the lowest common denominator policy (e.g. a permission prompt that captures the worst case scenario)
 
 From here, let's try to break down the problem into smaller parts.
