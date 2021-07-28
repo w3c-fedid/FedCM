@@ -46,10 +46,6 @@ The goal of the account management API is for the user agent to intermediate the
 
 The account management API turns (unregistered) users into (registered) accounts (and vice-versa), which is in and on itself useful (e.g. providing basic authentication), but it also unlocks the more advanced [session management](#session-management-api) capabilities.
 
-## Sign-up
-
-An (unregistered) user turns into a (registered) account via a process we call sign-up. In this process, the user agent has never observed the association between the RP and the IDP, so it intermediates the registration process.
-
 In its most basic formulation, the RP invokes the sign-up process via a JS API (or alternatively via the [implicit invocation](#implicit-invocation) API), namely as an extension of the [CredentialManagement API](https://w3c.github.io/webappsec-credential-management).
 
 We propose to extend the [FederatedCredentialRequestOptions](https://w3c.github.io/webappsec-credential-management/#dictdef-federatedcredentialrequestoptions) and the [FederatedCredential](https://w3c.github.io/webappsec-credential-management/#federatedcredential) interface with the following properties:
@@ -88,6 +84,10 @@ let {idtoken} = await navigator.credentials.get({
   }],
 });
 ```
+
+## Sign-up
+
+An (unregistered) user turns into a (registered) account via a process we call sign-up. In this process, the user agent has never observed the association between the RP and the IDP, so it intermediates the registration process.
 
 The browser intercepts this invocation and runs the following algorithm for each RP/IDP pair:
 
@@ -214,33 +214,49 @@ Which may respond with the following JWT:
 
 And with the response, resolves the promise.
 
-## Show IDP Modal
+### Show IDP Modal
+
+## Unregistering
+
+> TODO(goto): write down how we are planning to address the revocation of accounts.
+> There are three formulations here (not mutually exclusive):
+>
+>   - a user is able to revoke / unregister accounts in browser ui (e.g. settings page)
+>   - the IDP is able to inform the browser when a revocation has happened
+>   - maybe the RP gets to ask for unregistration too?
 
 # Session Management API
 
-- [sign-in](#sign-in)
-- [sign-out](#sign-out)
-- [renewal](#renewal)
-
 ## Sign-in
 
-Relying Parties typically embed credentialed iframes served by identity providers for personalization (e.g. showing the user's profile picture / name on buttons). Browsers do (or are intending to) block third party cookies in iframes, making them uncredentialed and hence unable to personalize.
+Signing-in is invoked precisely the same way as signing-up, with the exception of a single property:
 
-There are two variations that we are evaluating to preserve this use case:
+- `login_hint`, which can be used to indicate to the browser a specific account to be used
 
-- [fencedframes](#fencedframes) and permissions and
-- [mediation](#mediation)
+For example:
+
+```javascript
+let {idtoken} = await navigator.credentials.get({
+  providers: [{
+    endpoint: "https://accounts.example.com",
+    client_id: "my_client_id",
+    scope: "openid email",
+    nonce: "abcxyz",
+    login_hint: "1234",
+  }],
+});
+```
+
+The same algorithm used during [sign-up](#sign-up) is used, which falls back gracefully when the internal state of the browser already contains more than one registered account.
 
 ## Sign-out
 
-When users log out of IDPs, there is typically a desire for users to also be logged out of the RPs they signed into. This is typically accomplished with the IDPs loading iframes pointing to a pre-acquired endpoint for each of the relying parties ([details](https://www.identityserver.com/articles/the-challenge-of-building-saml-single-logout)).
+In enterprises, when users log out of IDPs, there is typically a desire for users to also be logged out of the RPs they signed into. This is typically accomplished with the IDPs loading iframes pointing to a pre-acquired endpoint for each of the relying parties ([details](https://www.identityserver.com/articles/the-challenge-of-building-saml-single-logout)).
 
-This is still an active area of investigation, but one first approximation is that, without cookies, these iframes are going to be uncredentialed. That leads to a few options to be explored:
+In this proposal, the browser exposes a new JS API that takes a list of endpoints as input and:
 
-- use the back channel and session ids (which comes with its own set of challenges) or
-- expose web platform APIs to preserve this use case
-
-We are still actively investigating the use case and understanding the deployment structure here, but just as a starting point, consider the introduction of an identity-specific browser API that would allow the browser to gather the user permission and release the credentials to the iframes:
+1. makes a credentialed fetch to all of the endpoints with a corresponding session.
+1. clears the session associated with the current account.
 
 ```javascript
 await navigator.credentials.logout({
@@ -255,15 +271,11 @@ await navigator.credentials.logout({
 });
 ```
 
-The form of the API as well as whether/which permissions that would be involved as still largely being explored. Our current best approximation is to use the [login](#login) API to observe which relying parties the user has signed-in to and has already established an IDP/RP relationship. For those RPs, the browser can probably safely load these iframes in a credentialed form.
-
 The logout endpoints are configured out-of-band in the process relying parties register with identity providers: the identity provider is the only entity aware of the endpoints that need to be loaded. So, an array of relying party logout endpoints is passed, and whenever the logouts have a coinciding observed login, a credentialed request is made:
 
 > NOTE(goto): the exact criteria to make the matching between the login and logout is TBD. two thoughts occurred to us: (a) matching origins and (b) making the IDP declare the endpoint upon login.
 
 ![](static/mock31.svg)
-
-> NOTE(goto): a clear extension here is to make these request asynchronous. That is, to make them continue even if the IDP top level frame gets paged out. It is unclear to me at the moment how feasible that is to implement (e.g. is there any precedence of APIs that go on beyond the page lifecycle?).
 
 # Alternatives under consideration
 
