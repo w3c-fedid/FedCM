@@ -1,16 +1,11 @@
 ---
-title: "Cookies"
+title: "The Account and Session Management API"
 maintainer: "samuelgoto"
 created: 03/02/2021
-updated: 03/02/2021
+updated: 22/07/2021
 ---
 
-This is an **early exploration** of the design alternatives to address [this](README.md#stage-1-third-party-cookies) under [this threat model](privacy_threat_model.md).
-
-This section goes over the **what** and the **how**. It presuposes that you have read and started from:
-
-- The **why**: the [problem](README.md) statement and the [motivations](privacy_threat_model.md) and the [topology](activation.md) of the parties involved.
-- The **why not**: the [alternatives](alternatives_considered.md) considered (e.g. the [prior art](prior.md), the [status quo](alternatives_considered.md#the-status-quo) and the [requestStorageAccess API](alternatives_considered.md#the-request-storage-access-api)).
+This is a **proposal** for a high level API to support identity federation under this [threat model](privacy_threat_model.md).
 
 It is widely known that browsers are either **already** blocking third party cookies or are planning to.
 
@@ -20,30 +15,214 @@ It is widely known that browsers are either **already** blocking third party coo
 > 1. [Firefox](https://blog.mozilla.org/blog/2019/09/03/todays-firefox-blocks-third-party-tracking-cookies-and-cryptomining-by-default/): third party cookies are **already** blocked **by a blocklist**, and
 > 1. [Chrome](https://blog.google/products/chrome/privacy-sustainability-and-the-importance-of-and/): on iOS **already** blocked **by default** and intends to offer **alternatives** to make them **obsolete** in the [near term](https://www.blog.google/products/chrome/building-a-more-private-web/) in other platforms.
 
-Unfortunately, that has either broken or are about to break a few use cases in federation, namely [logging out](https://openid.net/specs/openid-connect-rpinitiated-1_0.html), social [buttons](https://developers.facebook.com/docs/facebook-login/userexperience/) and [widget](https://developers.google.com/identity/one-tap/web) personalization (anything else? add your use case [here](#how-can-i-help))).
+Unfortunately, that has either broken or are about to break a few use cases in federation, namely [logging out](https://openid.net/specs/openid-connect-rpinitiated-1_0.html), social [buttons](https://developers.facebook.com/docs/facebook-login/userexperience/) and [widget](https://developers.google.com/identity/one-tap/web) personalization (anything else? add your use case [here](README.md#how-can-i-help))).
 
-![](static/mock27.svg)
+This is a proposal to preserve these operations in the absence of third party cookies.
 
-# Session Management
+# The lifecycle
 
-OpenID has a series of specifications that cover the lifecycle of sessions. 
+Cross-site communication is used throughout the entire lifecycle of the user signing in to a RP with an IDP, beginning at signing-up a new user all the way through managing the sessions (e.g. signing in, signing out or renewing refresh tokens).
 
-* [Session Management](https://openid.net/specs/openid-connect-session-1_0.html)
-* [RP initiated logout](https://openid.net/specs/openid-connect-rpinitiated-1_0.html)
-* [Front Channel Logout](https://openid.net/specs/openid-connect-frontchannel-1_0.html)
+From a [privacy threat model](privacy_threat_model.md) perspective, the design of this proposal is anchored on the observation that the most critical moment is the precise moment in which the identities between the RP and the IDP are joined for the very first time, namely when the user creates a new account in the RP using the identifiers from the IDP or when a user signs-in to an RP with an IDP for the first time in the browser: once the identities are joined, any arbitrary/uncontrolled cross-side communication can happen (with or without the browser's permission, e.g. via backchannel or cookie-less requests).
 
-Most of these specs relies on cross-site communication between OPs and RPs, but some are more imminently going to be blocked with the deprecation of third party cookies.
+So, under this observation, in this proposal the browser:
 
-For each of these we need to find alternatives:
+1. Intermediates (e.g. gathers the user consent / intent) to observe the moment in which the identies get joined for the very first time between RPs and IDPs (a sign-up or a sign-in)
+1. Stores locally the relationship between the RP/IDP that was established
+1. Based on the status of that relationship (which can be explicitly revoked, e.g. via API calls or user settings), unlocks third party cookies to be sent under controlled circumstances (namelly, signing-in, signing-out and renewing refresh tokens)
 
-* [login](#login)
-* [logout](#logout)
-* [status change notification](https://openid.net/specs/openid-connect-session-1_0.html#ChangeNotification)
-* invisible refresh tokens
+The browser stores the state in which the user is at in the following state machine:
 
-We'll go over each of these in the sections below:
+![](static/mock42.svg)
 
-## Login
+Because the first moment in which the identies are joined is the most important/critical one, we'll start there. But then, assuming that the browser was able to observe that moment, we'll go over the APIs that it unlocks to support managing sessions:
+
+- [Account Management API](#account-management-api)
+- [Session Management API](#session-management-api)
+
+# Account Management API
+
+The goal of the account management API is for the user agent to intermediate the creation and revocation of user accounts in relying parties provisioned by identity providers.
+
+The account management API turns (unregistered) users into (registered) accounts (and vice-versa), which is in and on itself useful (e.g. providing basic authentication), but it also unlocks the more advanced [session management](#session-management-api) capabilities.
+
+## Sign-up
+
+An (unregistered) user turns into a (registered) account via a process we call sign-up. In this process, the user agent has never observed the association between the RP and the IDP, so it intermediates the registration process.
+
+In its most basic formulation, the RP invokes the sign-up process via a JS API (or alternatively via the [implicit invocation](#implicit-invocation) API), namely as an extension of the [CredentialManagement API](https://w3c.github.io/webappsec-credential-management).
+
+We propose to extend the [FederatedCredentialRequestOptions](https://w3c.github.io/webappsec-credential-management/#dictdef-federatedcredentialrequestoptions) and the [FederatedCredential](https://w3c.github.io/webappsec-credential-management/#federatedcredential) interface with the following properties:
+
+```javascript
+dictionary FederatedCredentialAuthRequestOptions {
+  USVString endpoint;
+  USVString client_id;
+  USVString> nonce;
+};
+
+dictionary FederatedCredentialRequestOptions {
+  // ...
+  // TODO(goto): how do we make "provides" take the options "or"
+  // the string?
+  sequence<FederatedCredentialAuthRequestOptions> providers;
+  // ...
+};
+
+interface FederatedCredential : Credential {
+  // ...
+  // New properties
+  DOMString idtoken;
+};
+```
+
+With these extensions to the credential management API, here is an example of an invocation:
+
+```javascript
+let {idtoken} = await navigator.credentials.get({
+  providers: [{
+    endpoint: "https://accounts.example.com",
+    client_id: "my_client_id",
+    scope: "openid email",
+    nonce: "abcxyz"
+  }],
+});
+```
+
+The browser intercepts this invocation and runs the following algorithm for each RP/IDP pair:
+
+![](static/mock43.svg)
+
+### Fetch Well-Known
+
+As a convention, the browser expects a `application/json` file to be hosted on the `.well-known/webid` path of the `provider` host.
+
+The configuration file is expected to have the following format:
+
+| Property              | Type        | Method  | Description                               |
+| --------------------- | ----------- | ------- | ----------------------------------------- |
+| accounts_endpoint     | URL         | GET     | Returns a list of available user accounts |
+| idtoken_endpoint      | URL         | POST    | Returns a newly minted id token           |
+
+### Fetch Accounts
+
+The `accounts_endpoint` in the configuration that the browser gathered while fetching the [.well-known](#fetch-well-known) file is used to fetch a list of user's accounts. The fetch contains two important headers:
+
+1. A `Sec-WebID-CSRF` which can be used by the server to know that it is an HTTP request originated from the browser 
+1. The `Cookie` header which allows the server to restore the user's session
+
+The browser expects the response to have the following format:
+
+| Property              | Type        | Description                                          |
+| --------------------- | ----------- | ---------------------------------------------------- |
+| accounts              | Account[]   | The list of user accounts available                  |
+| authorization_url     | URL         | A URL to redirect the user to gather extra scopes    |
+
+Each `Account` type is an object with the following properties:
+
+| Property     | Type        | Description                               |
+| ------------ | ----------- | ----------------------------------------- |
+| sub          | String      | The user's id                               |
+| name         | String      | The user's full name                      |
+| email        | String      | The user's email address                  |
+| picture      | URL         | The user's profile picture                |
+
+For example:
+
+```http
+GET /accounts.php HTTPS/1.1
+Host: idp.example
+Content-Type: application/json
+Cookie: 0x23223
+Sec-WebID-CSRF: random_value
+```
+
+And here is an example of a typical response:
+
+```http
+HTTP/2.0 200 OK
+Content-Type: application/json
+{
+  "accounts": [{
+    "sub": 1234, 
+    "name": "Sam Goto",
+    "given_name": "Sam",
+    "email": "samuelgoto@gmail.com",
+    "picture": "https://accounts.idp.com/profile/123",
+  }]
+}
+```
+
+### Show Account Chooser
+
+With the accounts that the browser [fetched](#fetch-accounts), the browser then controls the experience with the user to carry on:
+
+![](static/mock44.svg)
+
+When the user selects an account, the browser does one of two things:
+
+1. If an `authorization_url` was *not* available in the `accounts_endpoint`, an id token is immediately generated described [below](#create-idtoken).
+1. If an `authorization_url` was available in the `accounts_endpoint`, the user is navigated to that URL to continue their account registration.
+
+### Create IdToken
+
+To create an idtoken, the browser issues a `POST` request to the previously gathered `idtoken_endpoint` while [fetching](#fetch-well-known) the `.well-known` file.
+
+| Property     | Type        | Description                               |
+| ------------ | ----------- | ----------------------------------------- |
+| sub          | String      | The user id that was selected             |
+| request      | Request     | The request parameters                    |
+
+The `Request` object contains information about the relying party that is needed to mint an idtoken:
+
+| Property     | Type        | Description                               |
+| ------------ | ----------- | ----------------------------------------- |
+| client_id    | String      | The relying party's client id             |
+| nonce        | String      | The nonce passed from the JS call         |
+
+The response of the `POST` request is expected to have the following layout:
+
+| Property     | Type        | Description                               |
+| ------------ | ----------- | ----------------------------------------- |
+| id_token     | String      | The newly minted JWT                      |
+
+Here is an example of the `POST` request:
+
+```http
+POST /webid/idtoken.php HTTP/1.1
+Host: idp.example
+Cookie: 123
+Content-Type: application/json
+
+{
+  "sub": "1234",
+  "request": {
+    "client_id" : "my_cliend_id",
+    "scope": "openid email",
+    "nonce": "abcxyz"
+  }
+}
+```
+
+Which may respond with the following JWT:
+
+```json
+{
+  "id_token" : "asdlkjop2awlasd"
+}
+```
+
+And with the response, resolves the promise.
+
+## Show IDP Modal
+
+# Session Management API
+
+- [sign-in](#sign-in)
+- [sign-out](#sign-out)
+- [renewal](#renewal)
+
+## Sign-in
 
 Relying Parties typically embed credentialed iframes served by identity providers for personalization (e.g. showing the user's profile picture / name on buttons). Browsers do (or are intending to) block third party cookies in iframes, making them uncredentialed and hence unable to personalize.
 
@@ -51,6 +230,63 @@ There are two variations that we are evaluating to preserve this use case:
 
 - [fencedframes](#fencedframes) and permissions and
 - [mediation](#mediation)
+
+## Sign-out
+
+When users log out of IDPs, there is typically a desire for users to also be logged out of the RPs they signed into. This is typically accomplished with the IDPs loading iframes pointing to a pre-acquired endpoint for each of the relying parties ([details](https://www.identityserver.com/articles/the-challenge-of-building-saml-single-logout)).
+
+This is still an active area of investigation, but one first approximation is that, without cookies, these iframes are going to be uncredentialed. That leads to a few options to be explored:
+
+- use the back channel and session ids (which comes with its own set of challenges) or
+- expose web platform APIs to preserve this use case
+
+We are still actively investigating the use case and understanding the deployment structure here, but just as a starting point, consider the introduction of an identity-specific browser API that would allow the browser to gather the user permission and release the credentials to the iframes:
+
+```javascript
+await navigator.credentials.logout({
+  endpoints: [
+    "https://rp1.com",
+    "https://rp2.com",
+    "https://rp3.com",
+    // ...
+    "https://rp8.com",
+    "https://rp9.com",
+  ]
+});
+```
+
+The form of the API as well as whether/which permissions that would be involved as still largely being explored. Our current best approximation is to use the [login](#login) API to observe which relying parties the user has signed-in to and has already established an IDP/RP relationship. For those RPs, the browser can probably safely load these iframes in a credentialed form.
+
+The logout endpoints are configured out-of-band in the process relying parties register with identity providers: the identity provider is the only entity aware of the endpoints that need to be loaded. So, an array of relying party logout endpoints is passed, and whenever the logouts have a coinciding observed login, a credentialed request is made:
+
+> NOTE(goto): the exact criteria to make the matching between the login and logout is TBD. two thoughts occurred to us: (a) matching origins and (b) making the IDP declare the endpoint upon login.
+
+![](static/mock31.svg)
+
+> NOTE(goto): a clear extension here is to make these request asynchronous. That is, to make them continue even if the IDP top level frame gets paged out. It is unclear to me at the moment how feasible that is to implement (e.g. is there any precedence of APIs that go on beyond the page lifecycle?).
+
+# Alternatives under consideration
+
+## Implicit invocation
+
+The implicit invocation flow is largely designed to support the deployment of WebID without requiring relying parties to change. 
+
+## Sign-up
+
+```javascript
+enum FederatedCredentialRequestOptionsMode {
+  "mediated",
+  "permission"
+};
+
+dictionary FederatedCredentialRequestOptions {
+  FederatedCredentialRequestOptionsMode mode = "permission";
+};
+```
+
+### Permissions
+
+## Sign-in
 
 ### fenced frames
 
@@ -98,118 +334,5 @@ But this variation isn't perfect: while it is backwards compatible, we believe i
 For one, the user has to make **two** choices (on the consequences of tracking) that are unrelated to the job to be done (sign-in) which we don't expect to be the most effective way to affect change.
 
 That leads us to the [mediation-oriented](#the-mediation-oriented-variation) variation which bundles these prompts into a browser mediated experience (which also comes with trade-offs).
-
-### mediation
-
-In the **mediated** variation, the user agent takes more responsibility in owning that transaction, and talks to the IDP directly (e.g. via an HTTP convention or JS APIs) rather than allowing the IDP to control HTML/JS/CSS.
-
-As opposed to a fenced frame, relying parties call a javascript API:
-
-```javascript
-let {idToken} = await navigator.credentials.get({
-  provider: "https://accounts.example.com",
-  mode: "mediated",
-  request: {
-    client_id: 'my_client_id',
-    scope: 'openid email',
-    nonce: 'abcxyz'
-    // other OpenId connect parameters
-  }
-});
-```
-
-The `mode` parameter informs the user agent to use the mediation-oriented variation, which, as opposed to the permission-oriented variation, talks to the IDP via HTTP instead:
-
-```http
-GET /webid/accounts.php HTTP/1.1
-Host: idp.example
-Cookie: 123
-```
-
-The IDP responds with a list of accounts that the user has:
-
-```http
-HTTP/2.0 200 OK
-Content-Type: text/json
-{
-  "accounts": [{
-    "sub": 1234, 
-    "name": "Sam Goto",
-    "given_name": "Sam",
-    "email": "samuelgoto@gmail.com",
-    "picture": "https://accounts.idp.com/profile/123",
-  }]
-}
-```
-
-With the data, the browser then controls the experience with the user to carry on:
-
-![](static/mock29.svg)
-
-Upon agreement, the browser uses the HTTP API convention to mint the idtoken. For example:
-
-```http
-POST /webid/idtoken.php HTTP/1.1
-Host: idp.example
-Cookie: 123
-Content-Type: application/json
-
-{
-  "sub": "1234",
-  "request": {
-    "client_id" : "my_cliend_id",
-    "scope": "openid email",
-    "nonce": "abcxyz"
-  }
-}
-```
-
-Which may respond with the following JWT:
-```json
-{
-  "id_token" : "asdlkjop2awlasd"
-}
-```
-
-And with the response, resolves the promise.
-
-The benefits of the permission-oriented approach is that it is the most backwards compatible, at the cost of user friction in the form of permissions. The benefits of the mediated approach is that the user friction is inlined and contextual, at the cost of the ossification of the user experience.
-
-## Logout
-
-When users log out of IDPs, there is typically a desire for users to also be logged out of the RPs they signed into. This is typically accomplished with the IDPs loading iframes pointing to a pre-acquired endpoint for each of the relying parties ([details](https://www.identityserver.com/articles/the-challenge-of-building-saml-single-logout)).
-
-This is still an active area of investigation, but one first approximation is that, without cookies, these iframes are going to be uncredentialed. That leads to a few options to be explored:
-
-- use the back channel and session ids (which comes with its own set of challenges) or
-- expose web platform APIs to preserve this use case
-
-We are still actively investigating the use case and understanding the deployment structure here, but just as a starting point, consider the introduction of an identity-specific browser API that would allow the browser to gather the user permission and release the credentials to the iframes:
-
-```javascript
-await navigator.credentials.logout({
-  endpoints: [
-    "https://rp1.com",
-    "https://rp2.com",
-    "https://rp3.com",
-    // ...
-    "https://rp8.com",
-    "https://rp9.com",
-  ]
-});
-```
-
-The form of the API as well as whether/which permissions that would be involved as still largely being explored. Our current best approximation is to use the [login](#login) API to observe which relying parties the user has signed-in to and has already established an IDP/RP relationship. For those RPs, the browser can probably safely load these iframes in a credentialed form.
-
-The logout endpoints are configured out-of-band in the process relying parties register with identity providers: the identity provider is the only entity aware of the endpoints that need to be loaded. So, an array of relying party logout endpoints is passed, and whenever the logouts have a coinciding observed login, a credentialed request is made:
-
-> NOTE(goto): the exact criteria to make the matching between the login and logout is TBD. two thoughts occurred to us: (a) matching origins and (b) making the IDP declare the endpoint upon login.
-
-![](static/mock31.svg)
-
-> NOTE(goto): a clear extension here is to make these request asynchronous. That is, to make them continue even if the IDP top level frame gets paged out. It is unclear to me at the moment how feasible that is to implement (e.g. is there any precedence of APIs that go on beyond the page lifecycle?).
-
-
-
 
 
