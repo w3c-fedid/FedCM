@@ -8,7 +8,7 @@ It will subsequently roll into downstream channels, but with lag in functionalit
 
 ## Enabling FedCM in Chrome
 1. Download [Chrome Canary](https://www.google.com/chrome/). Since this is a prototype with ongoing development, the implementation in other channels will be out of date with respect to functionality and bug fixes.
-2. Enable FedCM. As of Chrome 91 this can be done directly from chrome://flags.
+2. Enable FedCM. As of Chrome 91 this can be done directly from chrome://flags#webid.
 
 ## Available functionality
 * Automatic permission prompts on [top-level Open ID Connect protocol navigations](navigations.md#the-sign-in-api)
