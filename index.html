@@ -6,7 +6,7 @@
   <link href="https://www.w3.org/StyleSheets/TR/2016/cg-draft" rel="stylesheet">
   <meta content="Bikeshed version 4f053d00e, updated Tue Aug 10 14:13:32 2021 -0700" name="generator">
   <link href="http://wicg.github.io/WebID" rel="canonical">
-  <meta content="2bd7fba72e94073289511e981ba04a6bbca43ab4" name="document-revision">
+  <meta content="12660cf1039bd840b549e2cc4971fe1ba3e9bfe3" name="document-revision">
 <style>
 dl.domintro dt {
     font-family: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
@@ -641,8 +641,9 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
      <ol class="toc">
       <li><a href="#FederatedCredential"><span class="secno">5.1</span> <span class="content">The FederatedCredential Interface</span></a>
       <li><a href="#FederatedCredentialRequestOptions"><span class="secno">5.2</span> <span class="content"><code>FederatedCredentialRequestOptions</code></span></a>
-      <li><a href="#FederatedCredentialRequestMode"><span class="secno">5.3</span> <span class="content"><code>FederatedCredentialRequestMode</code></span></a>
-      <li><a href="#FederatedCredentialInterceptor"><span class="secno">5.4</span> <span class="content"><code>FederatedCredentialInterceptor</code></span></a>
+      <li><a href="#FederatedIdentityProvider"><span class="secno">5.3</span> <span class="content"><code>FederatedIdentityProvider</code></span></a>
+      <li><a href="#FederatedCredentialRequestMode"><span class="secno">5.4</span> <span class="content"><code>FederatedCredentialRequestMode</code></span></a>
+      <li><a href="#FederatedCredentialInterceptor"><span class="secno">5.5</span> <span class="content"><code>FederatedCredentialInterceptor</code></span></a>
      </ol>
     <li>
      <a href="#SessionManagementAPI"><span class="secno">6</span> <span class="content">Session Management API</span></a>
@@ -686,7 +687,7 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
    <p>Because of that, existing user authentication flows were designed on top of general-purpose web platform capabilities such as top-level navigations/redirects with parameters, window popups, iframes and cookies.</p>
    <p>However, because these general purpose primitives can be used for an open ended number of use cases (again, notably, by design), browsers have to apply policies that capture the lowest common denominator of abuse, at best applying cumbersome permissions (e.g. popup blockers) and at worst entirely blocking them (e.g. blocking third party cookies).</p>
    <p>Over the years, as these low level primitives get abused, browsers intervene and federation adjusts itself. For example, popup blockers became common and federation had to adjust itself to work in a world where popups blockers were widely deployed.</p>
-   <p>The challenge, now more than ever, is that some of these low level primitives are getting increasingly abused to allow users on the web to be tracked. So, as a result, browsers are applying stricter and stricter policies around them.</p>
+   <p>The challenge, now more than ever, is that some of these low level primitives are getting increasingly abused to allow users on the web tobe tracked. So, as a result, browsers are applying stricter and stricter policies around them.</p>
    <p>Blocking third party cookies broke important parts of the protocols in those browsers (e.g. front channel logouts) and made some user experiences inviable (e.g. social buttons personalization).</p>
    <p>While it is clearer to see the current impact of third party cookies, it is equally important to understand the ways in which the low level primitives that identity federation depends on (e.g. redirects) are being abused and the principles browsers are using to control them, so that we don’t corner ourselves into another dead end.</p>
    <p>This specification defines a set of web platform APIs that preserve and extend identity federation compatible with a more private Web.</p>
@@ -840,7 +841,7 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
   <c- b>readonly</c-> <c- b>attribute</c-> <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-USVString" id="ref-for-idl-USVString"><c- b>USVString</c-></a> <dfn class="idl-code" data-dfn-for="FederatedCredential" data-dfn-type="attribute" data-export data-readonly data-type="USVString" id="dom-federatedcredential-provider"><code><c- g>provider</c-></code><a class="self-link" href="#dom-federatedcredential-provider"></a></dfn>;
   <c- b>readonly</c-> <c- b>attribute</c-> <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-USVString" id="ref-for-idl-USVString①"><c- b>USVString</c-></a> <dfn class="idl-code" data-dfn-for="FederatedCredential" data-dfn-type="attribute" data-export data-readonly data-type="USVString" id="dom-federatedcredential-id_token"><code><c- g>id_token</c-></code><a class="self-link" href="#dom-federatedcredential-id_token"></a></dfn>;
   <c- b>static</c-> <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-promise" id="ref-for-idl-promise"><c- b>Promise</c-></a>&lt;<a data-link-type="idl-name"><c- n>void</c-></a>> <dfn class="idl-code" data-dfn-for="FederatedCredential" data-dfn-type="method" data-export data-lt="logout(logout_endpoints)|logout()" id="dom-federatedcredential-logout"><code><c- g>logout</c-></code><a class="self-link" href="#dom-federatedcredential-logout"></a></dfn>(<c- b>optional</c-> <a data-link-type="dfn" href="https://heycam.github.io/webidl/#idl-sequence" id="ref-for-idl-sequence"><c- b>sequence</c-></a>&lt;<a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-USVString" id="ref-for-idl-USVString②"><c- b>USVString</c-></a>> <dfn class="idl-code" data-dfn-for="FederatedCredential/logout(logout_endpoints), FederatedCredential/logout()" data-dfn-type="argument" data-export id="dom-federatedcredential-logout-logout_endpoints-logout_endpoints"><code><c- g>logout_endpoints</c-></code><a class="self-link" href="#dom-federatedcredential-logout-logout_endpoints-logout_endpoints"></a></dfn> = []);
-  <c- b>static</c-> <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-promise" id="ref-for-idl-promise①"><c- b>Promise</c-></a>&lt;<a data-link-type="idl-name"><c- n>void</c-></a>> <dfn class="idl-code" data-dfn-for="FederatedCredential" data-dfn-type="method" data-export data-lt="registerInterceptor(interceptor)" id="dom-federatedcredential-registerinterceptor"><code><c- g>registerInterceptor</c-></code><a class="self-link" href="#dom-federatedcredential-registerinterceptor"></a></dfn>(<a data-link-type="idl-name"><c- n>FederatedCredentialInterceptor</c-></a> <dfn class="idl-code" data-dfn-for="FederatedCredential/registerInterceptor(interceptor)" data-dfn-type="argument" data-export id="dom-federatedcredential-registerinterceptor-interceptor-interceptor"><code><c- g>interceptor</c-></code><a class="self-link" href="#dom-federatedcredential-registerinterceptor-interceptor-interceptor"></a></dfn>);
+  <c- b>static</c-> <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-promise" id="ref-for-idl-promise①"><c- b>Promise</c-></a>&lt;<a data-link-type="idl-name"><c- n>void</c-></a>> <dfn class="idl-code" data-dfn-for="FederatedCredential" data-dfn-type="method" data-export data-lt="registerInterceptor(interceptor)" id="dom-federatedcredential-registerinterceptor"><code><c- g>registerInterceptor</c-></code><a class="self-link" href="#dom-federatedcredential-registerinterceptor"></a></dfn>(<a data-link-type="idl-name" href="#dictdef-federatedcredentialinterceptor" id="ref-for-dictdef-federatedcredentialinterceptor"><c- n>FederatedCredentialInterceptor</c-></a> <dfn class="idl-code" data-dfn-for="FederatedCredential/registerInterceptor(interceptor)" data-dfn-type="argument" data-export id="dom-federatedcredential-registerinterceptor-interceptor-interceptor"><code><c- g>interceptor</c-></code><a class="self-link" href="#dom-federatedcredential-registerinterceptor-interceptor-interceptor"></a></dfn>);
 };
 </pre>
    <dl>
@@ -852,7 +853,7 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
    <p>To support obtaining via <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dom-credentialscontainer-get" id="ref-for-dom-credentialscontainer-get①">navigator.credentials.get()</a></code>,
 this document extends the <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dictdef-credentialrequestoptions" id="ref-for-dictdef-credentialrequestoptions">CredentialRequestOptions</a></code> dictionary as follows:</p>
 <pre class="idl highlight def"><c- b>partial</c-> <c- b>dictionary</c-> <a class="idl-code" data-link-type="dictionary" href="https://w3c.github.io/webappsec-credential-management/#dictdef-federatedcredentialrequestoptions" id="ref-for-dictdef-federatedcredentialrequestoptions"><c- g>FederatedCredentialRequestOptions</c-></a> {
-  <a data-link-type="dfn" href="https://heycam.github.io/webidl/#idl-sequence" id="ref-for-idl-sequence①"><c- b>sequence</c-></a>&lt;(<a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-DOMString" id="ref-for-idl-DOMString"><c- b>DOMString</c-></a> <c- b>or</c-> <a data-link-type="idl-name"><c- n>FederatedIdentityProvider</c-></a>)> <a class="idl-code" data-link-type="dict-member" data-type="sequence<(DOMString or FederatedIdentityProvider)> " href="#dom-federatedcredentialrequestoptions-providers" id="ref-for-dom-federatedcredentialrequestoptions-providers"><c- g>providers</c-></a>;
+  <a data-link-type="dfn" href="https://heycam.github.io/webidl/#idl-sequence" id="ref-for-idl-sequence①"><c- b>sequence</c-></a>&lt;(<a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-DOMString" id="ref-for-idl-DOMString"><c- b>DOMString</c-></a> <c- b>or</c-> <a data-link-type="idl-name" href="#dictdef-federatedidentityprovider" id="ref-for-dictdef-federatedidentityprovider"><c- n>FederatedIdentityProvider</c-></a>)> <a class="idl-code" data-link-type="dict-member" data-type="sequence<(DOMString or FederatedIdentityProvider)> " href="#dom-federatedcredentialrequestoptions-providers" id="ref-for-dom-federatedcredentialrequestoptions-providers"><c- g>providers</c-></a>;
   <a data-link-type="dfn" href="https://heycam.github.io/webidl/#idl-sequence" id="ref-for-idl-sequence②"><c- b>sequence</c-></a>&lt;<a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-DOMString" id="ref-for-idl-DOMString①"><c- b>DOMString</c-></a>> <dfn class="idl-code" data-dfn-for="FederatedCredentialRequestOptions" data-dfn-type="dict-member" data-export data-type="sequence<DOMString> " id="dom-federatedcredentialrequestoptions-protocols"><code><c- g>protocols</c-></code><a class="self-link" href="#dom-federatedcredentialrequestoptions-protocols"></a></dfn>;
   <a data-link-type="idl-name" href="#enumdef-federatedcredentialrequestmode" id="ref-for-enumdef-federatedcredentialrequestmode"><c- n>FederatedCredentialRequestMode</c-></a> <dfn class="idl-code" data-default="&quot;mediated&quot;" data-dfn-for="FederatedCredentialRequestOptions" data-dfn-type="dict-member" data-export data-type="FederatedCredentialRequestMode " id="dom-federatedcredentialrequestoptions-mode"><code><c- g>mode</c-></code><a class="self-link" href="#dom-federatedcredentialrequestoptions-mode"></a></dfn> = "mediated";
 };
@@ -864,7 +865,27 @@ this document extends the <code class="idl"><a data-link-type="idl" href="https:
       <p>This OPTIONAL member is used to make WebOTP requests.</p>
     </dl>
    </div>
-   <h3 class="heading settled" data-level="5.3" id="FederatedCredentialRequestMode"><span class="secno">5.3. </span><span class="content"><code>FederatedCredentialRequestMode</code></span><a class="self-link" href="#FederatedCredentialRequestMode"></a></h3>
+   <h3 class="heading settled" data-level="5.3" id="FederatedIdentityProvider"><span class="secno">5.3. </span><span class="content"><code>FederatedIdentityProvider</code></span><a class="self-link" href="#FederatedIdentityProvider"></a></h3>
+<pre class="idl highlight def"><c- b>dictionary</c-> <dfn class="dfn-paneled idl-code" data-dfn-type="dictionary" data-export id="dictdef-federatedidentityprovider"><code><c- g>FederatedIdentityProvider</c-></code></dfn> {
+  <c- b>required</c-> <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-USVString" id="ref-for-idl-USVString③"><c- b>USVString</c-></a> <a class="idl-code" data-link-type="dict-member" data-type="USVString " href="#dom-federatedidentityprovider-url" id="ref-for-dom-federatedidentityprovider-url"><c- g>url</c-></a>;
+  <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-USVString" id="ref-for-idl-USVString④"><c- b>USVString</c-></a> <a class="idl-code" data-link-type="dict-member" data-type="USVString " href="#dom-federatedidentityprovider-client_id" id="ref-for-dom-federatedidentityprovider-client_id"><c- g>client_id</c-></a>;
+  <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-USVString" id="ref-for-idl-USVString⑤"><c- b>USVString</c-></a> <a class="idl-code" data-link-type="dict-member" data-type="USVString " href="#dom-federatedidentityprovider-nonce" id="ref-for-dom-federatedidentityprovider-nonce"><c- g>nonce</c-></a>;
+};
+</pre>
+   <div>
+    <dl>
+     <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="FederatedIdentityProvider" data-dfn-type="dict-member" data-export id="dom-federatedidentityprovider-url"><code>url</code></dfn>, <span> of type <a data-link-type="idl-name" href="https://heycam.github.io/webidl/#idl-USVString" id="ref-for-idl-USVString⑥">USVString</a></span>
+     <dd data-md>
+      <p>The url endpoint of the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider①③">Identity Provider</a></p>
+     <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="FederatedIdentityProvider" data-dfn-type="dict-member" data-export id="dom-federatedidentityprovider-client_id"><code>client_id</code></dfn>, <span> of type <a data-link-type="idl-name" href="https://heycam.github.io/webidl/#idl-USVString" id="ref-for-idl-USVString⑦">USVString</a></span>
+     <dd data-md>
+      <p>The identifier that represents the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party①⑧">Relying Party</a> in the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider①④">Identity Provider</a></p>
+     <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="FederatedIdentityProvider" data-dfn-type="dict-member" data-export id="dom-federatedidentityprovider-nonce"><code>nonce</code></dfn>, <span> of type <a data-link-type="idl-name" href="https://heycam.github.io/webidl/#idl-USVString" id="ref-for-idl-USVString⑧">USVString</a></span>
+     <dd data-md>
+      <p>A random number.</p>
+    </dl>
+   </div>
+   <h3 class="heading settled" data-level="5.4" id="FederatedCredentialRequestMode"><span class="secno">5.4. </span><span class="content"><code>FederatedCredentialRequestMode</code></span><a class="self-link" href="#FederatedCredentialRequestMode"></a></h3>
    <p>The <code class="idl"><a data-link-type="idl" href="#enumdef-federatedcredentialrequestmode" id="ref-for-enumdef-federatedcredentialrequestmode①">FederatedCredentialRequestMode</a></code> dictionary supplies <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dom-credentialscontainer-get" id="ref-for-dom-credentialscontainer-get②">navigator.credentials.get()</a></code> with the data it needs to retrieve an
 idtoken.</p>
 <pre class="idl highlight def"><c- b>enum</c-> <dfn class="dfn-paneled idl-code" data-dfn-type="enum" data-export id="enumdef-federatedcredentialrequestmode"><code><c- g>FederatedCredentialRequestMode</c-></code></dfn> {
@@ -872,8 +893,8 @@ idtoken.</p>
   <dfn class="idl-code" data-dfn-for="FederatedCredentialRequestMode" data-dfn-type="enum-value" data-export id="dom-federatedcredentialrequestmode-permission"><code><c- s>"permission"</c-></code><a class="self-link" href="#dom-federatedcredentialrequestmode-permission"></a></dfn>
 };
 </pre>
-   <h3 class="heading settled" data-level="5.4" id="FederatedCredentialInterceptor"><span class="secno">5.4. </span><span class="content"><code>FederatedCredentialInterceptor</code></span><a class="self-link" href="#FederatedCredentialInterceptor"></a></h3>
-<pre class="idl highlight def"><c- b>partial</c-> <c- b>dictionary</c-> <a class="idl-code" data-link-type="dictionary"><c- g>FederatedCredentialInterceptor</c-></a> {
+   <h3 class="heading settled" data-level="5.5" id="FederatedCredentialInterceptor"><span class="secno">5.5. </span><span class="content"><code>FederatedCredentialInterceptor</code></span><a class="self-link" href="#FederatedCredentialInterceptor"></a></h3>
+<pre class="idl highlight def"><c- b>dictionary</c-> <dfn class="dfn-paneled idl-code" data-dfn-type="dictionary" data-export id="dictdef-federatedcredentialinterceptor"><code><c- g>FederatedCredentialInterceptor</c-></code></dfn> {
   <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-DOMString" id="ref-for-idl-DOMString②"><c- b>DOMString</c-></a> <a class="idl-code" data-link-type="dict-member" data-type="DOMString " href="#dom-federatedcredentialinterceptor-url" id="ref-for-dom-federatedcredentialinterceptor-url"><c- g>url</c-></a>;
   <a data-link-type="dfn" href="https://heycam.github.io/webidl/#idl-sequence" id="ref-for-idl-sequence③"><c- b>sequence</c-></a>&lt;<a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-DOMString" id="ref-for-idl-DOMString③"><c- b>DOMString</c-></a>> <a class="idl-code" data-link-type="dict-member" data-type="sequence<DOMString> " href="#dom-federatedcredentialinterceptor-params" id="ref-for-dom-federatedcredentialinterceptor-params"><c- g>params</c-></a>;
 };
@@ -882,10 +903,10 @@ idtoken.</p>
     <dl>
      <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="FederatedCredentialInterceptor" data-dfn-type="dict-member" data-export id="dom-federatedcredentialinterceptor-url"><code>url</code></dfn>, <span> of type <a data-link-type="idl-name" href="https://heycam.github.io/webidl/#idl-DOMString" id="ref-for-idl-DOMString④">DOMString</a></span>
      <dd data-md>
-      <p>url</p>
+      <p>The url that points the browser to the .well-known configuration file.</p>
      <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="FederatedCredentialInterceptor" data-dfn-type="dict-member" data-export id="dom-federatedcredentialinterceptor-params"><code>params</code></dfn>, <span> of type sequence&lt;<a data-link-type="idl-name" href="https://heycam.github.io/webidl/#idl-DOMString" id="ref-for-idl-DOMString⑤">DOMString</a>></span>
      <dd data-md>
-      <p>url</p>
+      <p>The URL request parameters to intercept navigations.</p>
     </dl>
    </div>
    <h2 class="heading settled" data-level="6" id="SessionManagementAPI"><span class="secno">6. </span><span class="content">Session Management API</span><a class="self-link" href="#SessionManagementAPI"></a></h2>
@@ -942,8 +963,11 @@ idtoken.</p>
   <h2 class="no-num no-ref heading settled" id="index"><span class="content">Index</span><a class="self-link" href="#index"></a></h2>
   <h3 class="no-num no-ref heading settled" id="index-defined-here"><span class="content">Terms defined by this specification</span><a class="self-link" href="#index-defined-here"></a></h3>
   <ul class="index">
+   <li><a href="#dom-federatedidentityprovider-client_id">client_id</a><span>, in § 5.3</span>
    <li><a href="#federatedcredential">FederatedCredential</a><span>, in § 5.1</span>
-   <li><a href="#enumdef-federatedcredentialrequestmode">FederatedCredentialRequestMode</a><span>, in § 5.3</span>
+   <li><a href="#dictdef-federatedcredentialinterceptor">FederatedCredentialInterceptor</a><span>, in § 5.5</span>
+   <li><a href="#enumdef-federatedcredentialrequestmode">FederatedCredentialRequestMode</a><span>, in § 5.4</span>
+   <li><a href="#dictdef-federatedidentityprovider">FederatedIdentityProvider</a><span>, in § 5.3</span>
    <li><a href="#high-level-api">High-Level API</a><span>, in § 4</span>
    <li><a href="#identity-provider">Identity Provider</a><span>, in § 4</span>
    <li><a href="#idp">IDP</a><span>, in § 4</span>
@@ -951,17 +975,23 @@ idtoken.</p>
    <li><a href="#dom-federatedcredential-logout">logout()</a><span>, in § 5.1</span>
    <li><a href="#dom-federatedcredential-logout">logout(logout_endpoints)</a><span>, in § 5.1</span>
    <li><a href="#low-level-api">Low-Level API</a><span>, in § 4</span>
-   <li><a href="#dom-federatedcredentialrequestmode-mediated">"mediated"</a><span>, in § 5.3</span>
+   <li><a href="#dom-federatedcredentialrequestmode-mediated">"mediated"</a><span>, in § 5.4</span>
    <li><a href="#dom-federatedcredentialrequestoptions-mode">mode</a><span>, in § 5.2</span>
-   <li><a href="#dom-federatedcredentialinterceptor-params">params</a><span>, in § 5.4</span>
-   <li><a href="#dom-federatedcredentialrequestmode-permission">"permission"</a><span>, in § 5.3</span>
+   <li><a href="#dom-federatedidentityprovider-nonce">nonce</a><span>, in § 5.3</span>
+   <li><a href="#dom-federatedcredentialinterceptor-params">params</a><span>, in § 5.5</span>
+   <li><a href="#dom-federatedcredentialrequestmode-permission">"permission"</a><span>, in § 5.4</span>
    <li><a href="#dom-federatedcredentialrequestoptions-protocols">protocols</a><span>, in § 5.2</span>
    <li><a href="#dom-federatedcredential-provider">provider</a><span>, in § 5.1</span>
    <li><a href="#dom-federatedcredentialrequestoptions-providers">providers</a><span>, in § 5.2</span>
    <li><a href="#dom-federatedcredential-registerinterceptor">registerInterceptor(interceptor)</a><span>, in § 5.1</span>
    <li><a href="#relying-party">Relying Party</a><span>, in § 4</span>
    <li><a href="#rp">RP</a><span>, in § 4</span>
-   <li><a href="#dom-federatedcredentialinterceptor-url">url</a><span>, in § 5.4</span>
+   <li>
+    url
+    <ul>
+     <li><a href="#dom-federatedcredentialinterceptor-url">dict-member for FederatedCredentialInterceptor</a><span>, in § 5.5</span>
+     <li><a href="#dom-federatedidentityprovider-url">dict-member for FederatedIdentityProvider</a><span>, in § 5.3</span>
+    </ul>
    <li><a href="#website">Website</a><span>, in § 4</span>
   </ul>
   <aside class="dfn-panel" data-for="term-for-credential">
@@ -987,7 +1017,7 @@ idtoken.</p>
    <ul>
     <li><a href="#ref-for-dom-credentialscontainer-get">5. Account Management API</a>
     <li><a href="#ref-for-dom-credentialscontainer-get①">5.2. FederatedCredentialRequestOptions</a>
-    <li><a href="#ref-for-dom-credentialscontainer-get②">5.3. FederatedCredentialRequestMode</a>
+    <li><a href="#ref-for-dom-credentialscontainer-get②">5.4. FederatedCredentialRequestMode</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-dom-credential-id">
@@ -1000,7 +1030,7 @@ idtoken.</p>
    <a href="https://heycam.github.io/webidl/#idl-DOMString">https://heycam.github.io/webidl/#idl-DOMString</a><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-idl-DOMString">5.2. FederatedCredentialRequestOptions</a> <a href="#ref-for-idl-DOMString①">(2)</a>
-    <li><a href="#ref-for-idl-DOMString②">5.4. FederatedCredentialInterceptor</a> <a href="#ref-for-idl-DOMString③">(2)</a> <a href="#ref-for-idl-DOMString④">(3)</a> <a href="#ref-for-idl-DOMString⑤">(4)</a>
+    <li><a href="#ref-for-idl-DOMString②">5.5. FederatedCredentialInterceptor</a> <a href="#ref-for-idl-DOMString③">(2)</a> <a href="#ref-for-idl-DOMString④">(3)</a> <a href="#ref-for-idl-DOMString⑤">(4)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-Exposed">
@@ -1025,6 +1055,7 @@ idtoken.</p>
    <a href="https://heycam.github.io/webidl/#idl-USVString">https://heycam.github.io/webidl/#idl-USVString</a><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-idl-USVString">5.1. The FederatedCredential Interface</a> <a href="#ref-for-idl-USVString①">(2)</a> <a href="#ref-for-idl-USVString②">(3)</a>
+    <li><a href="#ref-for-idl-USVString③">5.3. FederatedIdentityProvider</a> <a href="#ref-for-idl-USVString④">(2)</a> <a href="#ref-for-idl-USVString⑤">(3)</a> <a href="#ref-for-idl-USVString⑥">(4)</a> <a href="#ref-for-idl-USVString⑦">(5)</a> <a href="#ref-for-idl-USVString⑧">(6)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-idl-sequence">
@@ -1032,7 +1063,7 @@ idtoken.</p>
    <ul>
     <li><a href="#ref-for-idl-sequence">5.1. The FederatedCredential Interface</a>
     <li><a href="#ref-for-idl-sequence①">5.2. FederatedCredentialRequestOptions</a> <a href="#ref-for-idl-sequence②">(2)</a>
-    <li><a href="#ref-for-idl-sequence③">5.4. FederatedCredentialInterceptor</a>
+    <li><a href="#ref-for-idl-sequence③">5.5. FederatedCredentialInterceptor</a>
    </ul>
   </aside>
   <h3 class="no-num no-ref heading settled" id="index-defined-elsewhere"><span class="content">Terms defined by reference</span><a class="self-link" href="#index-defined-elsewhere"></a></h3>
@@ -1084,13 +1115,19 @@ idtoken.</p>
   <c- b>readonly</c-> <c- b>attribute</c-> <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-USVString"><c- b>USVString</c-></a> <a data-readonly data-type="USVString" href="#dom-federatedcredential-provider"><code><c- g>provider</c-></code></a>;
   <c- b>readonly</c-> <c- b>attribute</c-> <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-USVString"><c- b>USVString</c-></a> <a data-readonly data-type="USVString" href="#dom-federatedcredential-id_token"><code><c- g>id_token</c-></code></a>;
   <c- b>static</c-> <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-promise"><c- b>Promise</c-></a>&lt;<a data-link-type="idl-name"><c- n>void</c-></a>> <a href="#dom-federatedcredential-logout"><code><c- g>logout</c-></code></a>(<c- b>optional</c-> <a data-link-type="dfn" href="https://heycam.github.io/webidl/#idl-sequence"><c- b>sequence</c-></a>&lt;<a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-USVString"><c- b>USVString</c-></a>> <a href="#dom-federatedcredential-logout-logout_endpoints-logout_endpoints"><code><c- g>logout_endpoints</c-></code></a> = []);
-  <c- b>static</c-> <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-promise"><c- b>Promise</c-></a>&lt;<a data-link-type="idl-name"><c- n>void</c-></a>> <a href="#dom-federatedcredential-registerinterceptor"><code><c- g>registerInterceptor</c-></code></a>(<a data-link-type="idl-name"><c- n>FederatedCredentialInterceptor</c-></a> <a href="#dom-federatedcredential-registerinterceptor-interceptor-interceptor"><code><c- g>interceptor</c-></code></a>);
+  <c- b>static</c-> <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-promise"><c- b>Promise</c-></a>&lt;<a data-link-type="idl-name"><c- n>void</c-></a>> <a href="#dom-federatedcredential-registerinterceptor"><code><c- g>registerInterceptor</c-></code></a>(<a data-link-type="idl-name" href="#dictdef-federatedcredentialinterceptor"><c- n>FederatedCredentialInterceptor</c-></a> <a href="#dom-federatedcredential-registerinterceptor-interceptor-interceptor"><code><c- g>interceptor</c-></code></a>);
 };
 
 <c- b>partial</c-> <c- b>dictionary</c-> <a class="idl-code" data-link-type="dictionary" href="https://w3c.github.io/webappsec-credential-management/#dictdef-federatedcredentialrequestoptions"><c- g>FederatedCredentialRequestOptions</c-></a> {
-  <a data-link-type="dfn" href="https://heycam.github.io/webidl/#idl-sequence"><c- b>sequence</c-></a>&lt;(<a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-DOMString"><c- b>DOMString</c-></a> <c- b>or</c-> <a data-link-type="idl-name"><c- n>FederatedIdentityProvider</c-></a>)> <a class="idl-code" data-link-type="dict-member" data-type="sequence<(DOMString or FederatedIdentityProvider)> " href="#dom-federatedcredentialrequestoptions-providers"><c- g>providers</c-></a>;
+  <a data-link-type="dfn" href="https://heycam.github.io/webidl/#idl-sequence"><c- b>sequence</c-></a>&lt;(<a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-DOMString"><c- b>DOMString</c-></a> <c- b>or</c-> <a data-link-type="idl-name" href="#dictdef-federatedidentityprovider"><c- n>FederatedIdentityProvider</c-></a>)> <a class="idl-code" data-link-type="dict-member" data-type="sequence<(DOMString or FederatedIdentityProvider)> " href="#dom-federatedcredentialrequestoptions-providers"><c- g>providers</c-></a>;
   <a data-link-type="dfn" href="https://heycam.github.io/webidl/#idl-sequence"><c- b>sequence</c-></a>&lt;<a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-DOMString"><c- b>DOMString</c-></a>> <a data-type="sequence<DOMString> " href="#dom-federatedcredentialrequestoptions-protocols"><code><c- g>protocols</c-></code></a>;
   <a data-link-type="idl-name" href="#enumdef-federatedcredentialrequestmode"><c- n>FederatedCredentialRequestMode</c-></a> <a data-default="&quot;mediated&quot;" data-type="FederatedCredentialRequestMode " href="#dom-federatedcredentialrequestoptions-mode"><code><c- g>mode</c-></code></a> = "mediated";
+};
+
+<c- b>dictionary</c-> <a href="#dictdef-federatedidentityprovider"><code><c- g>FederatedIdentityProvider</c-></code></a> {
+  <c- b>required</c-> <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-USVString"><c- b>USVString</c-></a> <a class="idl-code" data-link-type="dict-member" data-type="USVString " href="#dom-federatedidentityprovider-url"><c- g>url</c-></a>;
+  <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-USVString"><c- b>USVString</c-></a> <a class="idl-code" data-link-type="dict-member" data-type="USVString " href="#dom-federatedidentityprovider-client_id"><c- g>client_id</c-></a>;
+  <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-USVString"><c- b>USVString</c-></a> <a class="idl-code" data-link-type="dict-member" data-type="USVString " href="#dom-federatedidentityprovider-nonce"><c- g>nonce</c-></a>;
 };
 
 <c- b>enum</c-> <a href="#enumdef-federatedcredentialrequestmode"><code><c- g>FederatedCredentialRequestMode</c-></code></a> {
@@ -1098,7 +1135,7 @@ idtoken.</p>
   <a href="#dom-federatedcredentialrequestmode-permission"><code><c- s>"permission"</c-></code></a>
 };
 
-<c- b>partial</c-> <c- b>dictionary</c-> <a class="idl-code" data-link-type="dictionary"><c- g>FederatedCredentialInterceptor</c-></a> {
+<c- b>dictionary</c-> <a href="#dictdef-federatedcredentialinterceptor"><code><c- g>FederatedCredentialInterceptor</c-></code></a> {
   <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-DOMString"><c- b>DOMString</c-></a> <a class="idl-code" data-link-type="dict-member" data-type="DOMString " href="#dom-federatedcredentialinterceptor-url"><c- g>url</c-></a>;
   <a data-link-type="dfn" href="https://heycam.github.io/webidl/#idl-sequence"><c- b>sequence</c-></a>&lt;<a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-DOMString"><c- b>DOMString</c-></a>> <a class="idl-code" data-link-type="dict-member" data-type="sequence<DOMString> " href="#dom-federatedcredentialinterceptor-params"><c- g>params</c-></a>;
 };
@@ -1112,6 +1149,7 @@ idtoken.</p>
     <li><a href="#ref-for-relying-party⑧">2.3. Sign-out</a> <a href="#ref-for-relying-party⑨">(2)</a> <a href="#ref-for-relying-party①⓪">(3)</a> <a href="#ref-for-relying-party①①">(4)</a>
     <li><a href="#ref-for-relying-party①②">2.4. Revocation</a> <a href="#ref-for-relying-party①③">(2)</a>
     <li><a href="#ref-for-relying-party①④">2.5. Authorization</a> <a href="#ref-for-relying-party①⑤">(2)</a> <a href="#ref-for-relying-party①⑥">(3)</a> <a href="#ref-for-relying-party①⑦">(4)</a>
+    <li><a href="#ref-for-relying-party①⑧">5.3. FederatedIdentityProvider</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="identity-provider">
@@ -1122,6 +1160,7 @@ idtoken.</p>
     <li><a href="#ref-for-identity-provider⑥">2.3. Sign-out</a> <a href="#ref-for-identity-provider⑦">(2)</a>
     <li><a href="#ref-for-identity-provider⑧">2.4. Revocation</a>
     <li><a href="#ref-for-identity-provider⑨">2.5. Authorization</a> <a href="#ref-for-identity-provider①⓪">(2)</a> <a href="#ref-for-identity-provider①①">(3)</a> <a href="#ref-for-identity-provider①②">(4)</a>
+    <li><a href="#ref-for-identity-provider①③">5.3. FederatedIdentityProvider</a> <a href="#ref-for-identity-provider①④">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="high-level-api">
@@ -1148,23 +1187,53 @@ idtoken.</p>
     <li><a href="#ref-for-dom-federatedcredentialrequestoptions-providers">5.2. FederatedCredentialRequestOptions</a>
    </ul>
   </aside>
+  <aside class="dfn-panel" data-for="dictdef-federatedidentityprovider">
+   <b><a href="#dictdef-federatedidentityprovider">#dictdef-federatedidentityprovider</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-dictdef-federatedidentityprovider">5.2. FederatedCredentialRequestOptions</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="dom-federatedidentityprovider-url">
+   <b><a href="#dom-federatedidentityprovider-url">#dom-federatedidentityprovider-url</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-dom-federatedidentityprovider-url">5.3. FederatedIdentityProvider</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="dom-federatedidentityprovider-client_id">
+   <b><a href="#dom-federatedidentityprovider-client_id">#dom-federatedidentityprovider-client_id</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-dom-federatedidentityprovider-client_id">5.3. FederatedIdentityProvider</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="dom-federatedidentityprovider-nonce">
+   <b><a href="#dom-federatedidentityprovider-nonce">#dom-federatedidentityprovider-nonce</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-dom-federatedidentityprovider-nonce">5.3. FederatedIdentityProvider</a>
+   </ul>
+  </aside>
   <aside class="dfn-panel" data-for="enumdef-federatedcredentialrequestmode">
    <b><a href="#enumdef-federatedcredentialrequestmode">#enumdef-federatedcredentialrequestmode</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-enumdef-federatedcredentialrequestmode">5.2. FederatedCredentialRequestOptions</a>
-    <li><a href="#ref-for-enumdef-federatedcredentialrequestmode①">5.3. FederatedCredentialRequestMode</a>
+    <li><a href="#ref-for-enumdef-federatedcredentialrequestmode①">5.4. FederatedCredentialRequestMode</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="dictdef-federatedcredentialinterceptor">
+   <b><a href="#dictdef-federatedcredentialinterceptor">#dictdef-federatedcredentialinterceptor</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-dictdef-federatedcredentialinterceptor">5.1. The FederatedCredential Interface</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="dom-federatedcredentialinterceptor-url">
    <b><a href="#dom-federatedcredentialinterceptor-url">#dom-federatedcredentialinterceptor-url</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dom-federatedcredentialinterceptor-url">5.4. FederatedCredentialInterceptor</a>
+    <li><a href="#ref-for-dom-federatedcredentialinterceptor-url">5.5. FederatedCredentialInterceptor</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="dom-federatedcredentialinterceptor-params">
    <b><a href="#dom-federatedcredentialinterceptor-params">#dom-federatedcredentialinterceptor-params</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dom-federatedcredentialinterceptor-params">5.4. FederatedCredentialInterceptor</a>
+    <li><a href="#ref-for-dom-federatedcredentialinterceptor-params">5.5. FederatedCredentialInterceptor</a>
    </ul>
   </aside>
 <script>/* script-dfn-panel */
