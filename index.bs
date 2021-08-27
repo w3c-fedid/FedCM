@@ -237,10 +237,11 @@ interface FederatedCredential : Credential {
   readonly attribute USVString provider;
   readonly attribute USVString id_token;
   static Promise<void> logout(optional sequence<USVString> logout_endpoints = []);
+  static Promise<void> registerInterceptor(FederatedCredentialInterceptor interceptor);
 };
 </xmp>
 
-<dl dfn-type="attribute" dfn-for="OTPCredential">
+<dl dfn-type="attribute" dfn-for="FederatedCredential">
     :   {{Credential/id}}
     ::  This attribute is inherited from {{Credential}}
 </dl>
@@ -249,7 +250,7 @@ interface FederatedCredential : Credential {
 ## `FederatedCredentialRequestOptions` ## {#FederatedCredentialRequestOptions}
 <!-- ============================================================ -->
 
-To support obtaining OTPs via {{CredentialsContainer/get()|navigator.credentials.get()}},
+To support obtaining via {{CredentialsContainer/get()|navigator.credentials.get()}},
 this document extends the {{CredentialRequestOptions}} dictionary as follows:
 
 <xmp class="idl">
@@ -260,8 +261,8 @@ partial dictionary FederatedCredentialRequestOptions {
 };
 </xmp>
 
-<div dfn-type="dict-member" dfn-for="CredentialRequestOptions">
-    :   <dfn>otp</dfn>
+<div dfn-type="dict-member" dfn-for="FederatedCredentialRequestOptions">
+    :   <dfn>providers</dfn>
     ::  This OPTIONAL member is used to make WebOTP requests.
 </div>
 
@@ -279,6 +280,24 @@ enum FederatedCredentialRequestMode {
   "permission"
 };
 </xmp>
+
+<!-- ============================================================ -->
+## `FederatedCredentialInterceptor` ## {#FederatedCredentialInterceptor}
+<!-- ============================================================ -->
+
+<xmp class="idl">
+partial dictionary FederatedCredentialInterceptor {
+  DOMString url;
+  sequence<DOMString> params;
+};
+</xmp>
+
+<div dfn-type="dict-member" dfn-for="FederatedCredentialInterceptor">
+    :   <dfn>url</dfn>
+    ::  url
+    :   <dfn>params</dfn>
+    ::  url
+</div>
 
 <!-- ============================================================ -->
 # Session Management API # {#SessionManagementAPI}
