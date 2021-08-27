@@ -6,7 +6,7 @@
   <link href="https://www.w3.org/StyleSheets/TR/2016/cg-draft" rel="stylesheet">
   <meta content="Bikeshed version 4f053d00e, updated Tue Aug 10 14:13:32 2021 -0700" name="generator">
   <link href="http://wicg.github.io/WebID" rel="canonical">
-  <meta content="a3d7c3b1c6ccf1661baad62da7244a0428273d3e" name="document-revision">
+  <meta content="f5ca2813566047a02830205bde4dbec9c230c99f" name="document-revision">
 <style>
 dl.domintro dt {
     font-family: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
@@ -623,21 +623,31 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
      <a href="#use-cases"><span class="secno">2</span> <span class="content">Use Cases</span></a>
      <ol class="toc">
       <li><a href="#sign-up"><span class="secno">2.1</span> <span class="content">Sign-up</span></a>
-      <li><a href="#sign-in"><span class="secno">2.2</span> <span class="content">Sign-in</span></a>
-      <li><a href="#sign-out"><span class="secno">2.3</span> <span class="content">Sign-out</span></a>
+      <li>
+       <a href="#sign-in"><span class="secno">2.2</span> <span class="content">Sign-in</span></a>
+       <ol class="toc">
+        <li><a href="#auto-sign-in"><span class="secno">2.2.1</span> <span class="content">Auto Sign-in</span></a>
+        <li><a href="#explicit-sign-in"><span class="secno">2.2.2</span> <span class="content">Explicit Sign-in</span></a>
+       </ol>
+      <li>
+       <a href="#sign-out"><span class="secno">2.3</span> <span class="content">Sign-out</span></a>
+       <ol class="toc">
+        <li><a href="#rp-sign-out"><span class="secno">2.3.1</span> <span class="content">RP Sign-out</span></a>
+        <li><a href="#idp-sign-out"><span class="secno">2.3.2</span> <span class="content">IDP Sign-out</span></a>
+       </ol>
       <li>
        <a href="#revocation"><span class="secno">2.4</span> <span class="content">Revocation</span></a>
        <ol class="toc">
-        <li><a href="#idp-initiated-revocation"><span class="secno">2.4.1</span> <span class="content">IDP Initiated Revocation</span></a>
-        <li><a href="#rp-initiated-revocation"><span class="secno">2.4.2</span> <span class="content">RP Initiated Revocation</span></a>
+        <li><a href="#idp-revocation"><span class="secno">2.4.1</span> <span class="content">IDP Revocation</span></a>
+        <li><a href="#rp-revocation"><span class="secno">2.4.2</span> <span class="content">RP Revocation</span></a>
        </ol>
       <li><a href="#authorization"><span class="secno">2.5</span> <span class="content">Authorization</span></a>
      </ol>
     <li>
      <a href="#examples"><span class="secno">3</span> <span class="content">Examples</span></a>
      <ol class="toc">
-      <li><a href="#intro-account-management-api"><span class="secno">3.1</span> <span class="content">The Account Management API</span></a>
-      <li><a href="#intro-session-management-api"><span class="secno">3.2</span> <span class="content">The Session Management API</span></a>
+      <li><a href="#examples-signing-up-and-signing-in"><span class="secno">3.1</span> <span class="content">Signing-up and Signing-in</span></a>
+      <li><a href="#examples-signing-out"><span class="secno">3.2</span> <span class="content">Signing-out</span></a>
       <li><a href="#intro-feature-detection"><span class="secno">3.3</span> <span class="content">Feature Detection</span></a>
      </ol>
     <li><a href="#terminology"><span class="secno">4</span> <span class="content">Terminology</span></a>
@@ -714,13 +724,9 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
      <p>The <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party③">Relying Party</a> shows the message "Registration complete." and authenticates the user.</p>
    </ul>
    <h3 class="heading settled" data-level="2.2" id="sign-in"><span class="secno">2.2. </span><span class="content">Sign-in</span><a class="self-link" href="#sign-in"></a></h3>
+   <p>After a user navigates to a <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④">Relying Party</a> in a browser and decides to create an account by going through their <a href="#sign-up">§ 2.1 Sign-up</a> flow, there are two ways a user logs in:</p>
+   <h4 class="heading settled" data-level="2.2.1" id="auto-sign-in"><span class="secno">2.2.1. </span><span class="content">Auto Sign-in</span><a class="self-link" href="#auto-sign-in"></a></h4>
    <ul>
-    <li data-md>
-     <p>Using one device (e.g. their phone):</p>
-     <ul>
-      <li data-md>
-       <p>A user navigates to a <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④">Relying Party</a> in a browser and decides to create an account by going through their <a href="#sign-up">§ 2.1 Sign-up</a> flow.</p>
-     </ul>
     <li data-md>
      <p>Using another device (e.g. their laptop):</p>
      <ul>
@@ -734,62 +740,98 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
        <p>The <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party⑦">Relying Party</a> authenticates the user.</p>
      </ul>
    </ul>
+   <h4 class="heading settled" data-level="2.2.2" id="explicit-sign-in"><span class="secno">2.2.2. </span><span class="content">Explicit Sign-in</span><a class="self-link" href="#explicit-sign-in"></a></h4>
+   <ul>
+    <li data-md>
+     <p>The goes through the <a href="#sign-out">§ 2.3 Sign-out</a> process in the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party⑧">Relying Party</a>.</p>
+    <li data-md>
+     <p>The user selects their favorite <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider⑥">Identity Provider</a> to sign-in again.</p>
+    <li data-md>
+     <p>The <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider⑦">Identity Provider</a> knows that:</p>
+     <ul>
+      <li data-md>
+       <p>the user already has an account with the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party⑨">Relying Party</a>.</p>
+      <li data-md>
+       <p>the user has logged out of the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party①⓪">Relying Party</a>.</p>
+     </ul>
+    <li data-md>
+     <p>The <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider⑧">Identity Provider</a> prompts, "Do you want to sign-in with the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party①①">Relying Party</a>?"</p>
+    <li data-md>
+     <p>The user agrees.</p>
+    <li data-md>
+     <p>The <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party①②">Relying Party</a> authenticates the user.</p>
+   </ul>
    <h3 class="heading settled" data-level="2.3" id="sign-out"><span class="secno">2.3. </span><span class="content">Sign-out</span><a class="self-link" href="#sign-out"></a></h3>
+   <p>After a user navigates to a <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party①③">Relying Party</a> in a browser and decides to create an account by going through their <a href="#sign-up">§ 2.1 Sign-up</a> flow, there are two ways a user can log out of their sessions:</p>
+   <h4 class="heading settled" data-level="2.3.1" id="rp-sign-out"><span class="secno">2.3.1. </span><span class="content">RP Sign-out</span><a class="self-link" href="#rp-sign-out"></a></h4>
    <ul>
     <li data-md>
      <p>On a shared computer:</p>
      <ul>
       <li data-md>
-       <p>A user navigates to a <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party⑧">Relying Party</a> in a browser and decides to create an account by going through their <a href="#sign-up">§ 2.1 Sign-up</a> flow.</p>
+       <p>The user decides to close their session and logs out of the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party①④">Relying Party</a>.</p>
       <li data-md>
-       <p>The user decides to log out of the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party⑨">Relying Party</a>.</p>
+       <p>The user is now logged out of the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party①⑤">Relying Party</a>.</p>
       <li data-md>
-       <p>The <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party①⓪">Relying Party</a> lets the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider⑥">Identity Provider</a> know that the user wants to logout.</p>
+       <p>Upon return to the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party①⑥">Relying Party</a>, the user expects to go through an <a href="#explicit-sign-in">§ 2.2.2 Explicit Sign-in</a>.</p>
+     </ul>
+   </ul>
+   <h4 class="heading settled" data-level="2.3.2" id="idp-sign-out"><span class="secno">2.3.2. </span><span class="content">IDP Sign-out</span><a class="self-link" href="#idp-sign-out"></a></h4>
+   <ul>
+    <li data-md>
+     <p>On a shared computer:</p>
+     <ul>
       <li data-md>
-       <p>The <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider⑦">Identity Provider</a> logs the user out of all of the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party①①">Relying Party</a>s and itself.</p>
+       <p>The user decides to close their session and logs out of the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party①⑦">Relying Party</a>.</p>
+      <li data-md>
+       <p>The <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party①⑧">Relying Party</a> lets the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider⑨">Identity Provider</a> know that the user wants to logout.</p>
+      <li data-md>
+       <p>The <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider①⓪">Identity Provider</a> logs the user out of all of the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party①⑨">Relying Party</a>s and itself.</p>
+      <li data-md>
+       <p>Upon return to the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party②⓪">Relying Party</a>, the user expects to go through an <a href="#explicit-sign-in">§ 2.2.2 Explicit Sign-in</a>.</p>
      </ul>
    </ul>
    <h3 class="heading settled" data-level="2.4" id="revocation"><span class="secno">2.4. </span><span class="content">Revocation</span><a class="self-link" href="#revocation"></a></h3>
-   <p>After a user navigates to a <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party①②">Relying Party</a> in a browser and decides to create an account by going through their <a href="#sign-up">§ 2.1 Sign-up</a> flow, there are two ways a user can cancel their account:</p>
-   <h4 class="heading settled" data-level="2.4.1" id="idp-initiated-revocation"><span class="secno">2.4.1. </span><span class="content">IDP Initiated Revocation</span><a class="self-link" href="#idp-initiated-revocation"></a></h4>
+   <p>After a user navigates to a <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party②①">Relying Party</a> in a browser and decides to create an account by going through their <a href="#sign-up">§ 2.1 Sign-up</a> flow, there are two ways a user can cancel their account:</p>
+   <h4 class="heading settled" data-level="2.4.1" id="idp-revocation"><span class="secno">2.4.1. </span><span class="content">IDP Revocation</span><a class="self-link" href="#idp-revocation"></a></h4>
    <ul>
     <li data-md>
-     <p>On the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider⑧">Identity Provider</a>:</p>
+     <p>On the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider①①">Identity Provider</a>:</p>
      <ul>
       <li data-md>
        <p>The user decides to cancel their account.</p>
       <li data-md>
-       <p>The user goes to their <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider⑨">Identity Provider</a> and revokes access to the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party①③">Relying Party</a>.</p>
+       <p>The user goes to their <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider①②">Identity Provider</a> and revokes access to the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party②②">Relying Party</a>.</p>
      </ul>
    </ul>
-   <h4 class="heading settled" data-level="2.4.2" id="rp-initiated-revocation"><span class="secno">2.4.2. </span><span class="content">RP Initiated Revocation</span><a class="self-link" href="#rp-initiated-revocation"></a></h4>
+   <h4 class="heading settled" data-level="2.4.2" id="rp-revocation"><span class="secno">2.4.2. </span><span class="content">RP Revocation</span><a class="self-link" href="#rp-revocation"></a></h4>
    <ul>
     <li data-md>
-     <p>On the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party①④">Relying Party</a>:</p>
+     <p>On the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party②③">Relying Party</a>:</p>
      <ul>
       <li data-md>
        <p>The user decides to cancel their account.</p>
       <li data-md>
-       <p>The user navigates to the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party①⑤">Relying Party</a> and cancels their account, also letting the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider①⓪">Identity Provider</a> know.</p>
+       <p>The user navigates to the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party②④">Relying Party</a> and cancels their account, also letting the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider①③">Identity Provider</a> know.</p>
      </ul>
    </ul>
    <h3 class="heading settled" data-level="2.5" id="authorization"><span class="secno">2.5. </span><span class="content">Authorization</span><a class="self-link" href="#authorization"></a></h3>
    <ul>
     <li data-md>
-     <p>A user navigates to a <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party①⑥">Relying Party</a> in a browser and decides to create an account.</p>
+     <p>A user navigates to a <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party②⑤">Relying Party</a> in a browser and decides to create an account.</p>
     <li data-md>
-     <p>The <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party①⑦">Relying Party</a> supports multiple <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider①①">Identity Provider</a> as an authentication mechanism.</p>
+     <p>The <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party②⑥">Relying Party</a> supports multiple <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider①④">Identity Provider</a> as an authentication mechanism.</p>
     <li data-md>
-     <p>A user selects their favorite <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider①②">Identity Provider</a> to sign-up with.</p>
+     <p>A user selects their favorite <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider①⑤">Identity Provider</a> to sign-up with.</p>
     <li data-md>
-     <p>The <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider①③">Identity Provider</a> prompts, "Do you want to give access to your Calendar to the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party①⑧">Relying Party</a>?"</p>
+     <p>The <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider①⑥">Identity Provider</a> prompts, "Do you want to give access to your Calendar to the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party②⑦">Relying Party</a>?"</p>
     <li data-md>
      <p>The user agrees.</p>
     <li data-md>
-     <p>The <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party①⑨">Relying Party</a> shows message, "Registration complete.", authenticates the user and shows the user their calendar entries provided by the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider①④">Identity Provider</a>.</p>
+     <p>The <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party②⑧">Relying Party</a> shows message, "Registration complete.", authenticates the user and shows the user their calendar entries provided by the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider①⑦">Identity Provider</a>.</p>
    </ul>
    <h2 class="heading settled" data-level="3" id="examples"><span class="secno">3. </span><span class="content">Examples</span><a class="self-link" href="#examples"></a></h2>
-   <h3 class="heading settled" data-level="3.1" id="intro-account-management-api"><span class="secno">3.1. </span><span class="content">The Account Management API</span><a class="self-link" href="#intro-account-management-api"></a></h3>
+   <h3 class="heading settled" data-level="3.1" id="examples-signing-up-and-signing-in"><span class="secno">3.1. </span><span class="content">Signing-up and Signing-in</span><a class="self-link" href="#examples-signing-up-and-signing-in"></a></h3>
    <div class="example" id="example-69eb338a">
     <a class="self-link" href="#example-69eb338a"></a> 
 <pre class="language-js highlight"><c- a>let</c-> <c- p>{</c->id_token<c- p>}</c-> <c- o>=</c-> <c- k>await</c-> navigator<c- p>.</c->credentials<c- p>.</c->get<c- p>({</c->
@@ -811,7 +853,7 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
 <c- p>});</c->
 </pre>
    </div>
-   <h3 class="heading settled" data-level="3.2" id="intro-session-management-api"><span class="secno">3.2. </span><span class="content">The Session Management API</span><a class="self-link" href="#intro-session-management-api"></a></h3>
+   <h3 class="heading settled" data-level="3.2" id="examples-signing-out"><span class="secno">3.2. </span><span class="content">Signing-out</span><a class="self-link" href="#examples-signing-out"></a></h3>
    <div class="example" id="example-b64b522c">
     <a class="self-link" href="#example-b64b522c"></a> 
 <pre class="language-js highlight"><c- k>await</c-> FederatedCredential<c- p>.</c->logout<c- p>({</c->
@@ -899,10 +941,10 @@ this document extends the <code class="idl"><a data-link-type="idl" href="https:
     <dl>
      <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="FederatedIdentityProvider" data-dfn-type="dict-member" data-export id="dom-federatedidentityprovider-url"><code>url</code></dfn>, <span> of type <a data-link-type="idl-name" href="https://heycam.github.io/webidl/#idl-USVString" id="ref-for-idl-USVString⑥">USVString</a></span>
      <dd data-md>
-      <p>The url endpoint of the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider①⑤">Identity Provider</a></p>
+      <p>The url endpoint of the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider①⑧">Identity Provider</a></p>
      <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="FederatedIdentityProvider" data-dfn-type="dict-member" data-export id="dom-federatedidentityprovider-client_id"><code>client_id</code></dfn>, <span> of type <a data-link-type="idl-name" href="https://heycam.github.io/webidl/#idl-USVString" id="ref-for-idl-USVString⑦">USVString</a></span>
      <dd data-md>
-      <p>The identifier that represents the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party②⓪">Relying Party</a> in the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider①⑥">Identity Provider</a></p>
+      <p>The identifier that represents the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party②⑨">Relying Party</a> in the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider①⑨">Identity Provider</a></p>
      <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="FederatedIdentityProvider" data-dfn-type="dict-member" data-export id="dom-federatedidentityprovider-nonce"><code>nonce</code></dfn>, <span> of type <a data-link-type="idl-name" href="https://heycam.github.io/webidl/#idl-USVString" id="ref-for-idl-USVString⑧">USVString</a></span>
      <dd data-md>
       <p>A random number.</p>
@@ -1171,25 +1213,30 @@ idtoken.</p>
    <b><a href="#relying-party">#relying-party</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-relying-party">2.1. Sign-up</a> <a href="#ref-for-relying-party①">(2)</a> <a href="#ref-for-relying-party②">(3)</a> <a href="#ref-for-relying-party③">(4)</a>
-    <li><a href="#ref-for-relying-party④">2.2. Sign-in</a> <a href="#ref-for-relying-party⑤">(2)</a> <a href="#ref-for-relying-party⑥">(3)</a> <a href="#ref-for-relying-party⑦">(4)</a>
-    <li><a href="#ref-for-relying-party⑧">2.3. Sign-out</a> <a href="#ref-for-relying-party⑨">(2)</a> <a href="#ref-for-relying-party①⓪">(3)</a> <a href="#ref-for-relying-party①①">(4)</a>
-    <li><a href="#ref-for-relying-party①②">2.4. Revocation</a>
-    <li><a href="#ref-for-relying-party①③">2.4.1. IDP Initiated Revocation</a>
-    <li><a href="#ref-for-relying-party①④">2.4.2. RP Initiated Revocation</a> <a href="#ref-for-relying-party①⑤">(2)</a>
-    <li><a href="#ref-for-relying-party①⑥">2.5. Authorization</a> <a href="#ref-for-relying-party①⑦">(2)</a> <a href="#ref-for-relying-party①⑧">(3)</a> <a href="#ref-for-relying-party①⑨">(4)</a>
-    <li><a href="#ref-for-relying-party②⓪">5.3. FederatedIdentityProvider</a>
+    <li><a href="#ref-for-relying-party④">2.2. Sign-in</a>
+    <li><a href="#ref-for-relying-party⑤">2.2.1. Auto Sign-in</a> <a href="#ref-for-relying-party⑥">(2)</a> <a href="#ref-for-relying-party⑦">(3)</a>
+    <li><a href="#ref-for-relying-party⑧">2.2.2. Explicit Sign-in</a> <a href="#ref-for-relying-party⑨">(2)</a> <a href="#ref-for-relying-party①⓪">(3)</a> <a href="#ref-for-relying-party①①">(4)</a> <a href="#ref-for-relying-party①②">(5)</a>
+    <li><a href="#ref-for-relying-party①③">2.3. Sign-out</a>
+    <li><a href="#ref-for-relying-party①④">2.3.1. RP Sign-out</a> <a href="#ref-for-relying-party①⑤">(2)</a> <a href="#ref-for-relying-party①⑥">(3)</a>
+    <li><a href="#ref-for-relying-party①⑦">2.3.2. IDP Sign-out</a> <a href="#ref-for-relying-party①⑧">(2)</a> <a href="#ref-for-relying-party①⑨">(3)</a> <a href="#ref-for-relying-party②⓪">(4)</a>
+    <li><a href="#ref-for-relying-party②①">2.4. Revocation</a>
+    <li><a href="#ref-for-relying-party②②">2.4.1. IDP Revocation</a>
+    <li><a href="#ref-for-relying-party②③">2.4.2. RP Revocation</a> <a href="#ref-for-relying-party②④">(2)</a>
+    <li><a href="#ref-for-relying-party②⑤">2.5. Authorization</a> <a href="#ref-for-relying-party②⑥">(2)</a> <a href="#ref-for-relying-party②⑦">(3)</a> <a href="#ref-for-relying-party②⑧">(4)</a>
+    <li><a href="#ref-for-relying-party②⑨">5.3. FederatedIdentityProvider</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="identity-provider">
    <b><a href="#identity-provider">#identity-provider</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-identity-provider①">2.1. Sign-up</a> <a href="#ref-for-identity-provider②">(2)</a> <a href="#ref-for-identity-provider③">(3)</a>
-    <li><a href="#ref-for-identity-provider④">2.2. Sign-in</a> <a href="#ref-for-identity-provider⑤">(2)</a>
-    <li><a href="#ref-for-identity-provider⑥">2.3. Sign-out</a> <a href="#ref-for-identity-provider⑦">(2)</a>
-    <li><a href="#ref-for-identity-provider⑧">2.4.1. IDP Initiated Revocation</a> <a href="#ref-for-identity-provider⑨">(2)</a>
-    <li><a href="#ref-for-identity-provider①⓪">2.4.2. RP Initiated Revocation</a>
-    <li><a href="#ref-for-identity-provider①①">2.5. Authorization</a> <a href="#ref-for-identity-provider①②">(2)</a> <a href="#ref-for-identity-provider①③">(3)</a> <a href="#ref-for-identity-provider①④">(4)</a>
-    <li><a href="#ref-for-identity-provider①⑤">5.3. FederatedIdentityProvider</a> <a href="#ref-for-identity-provider①⑥">(2)</a>
+    <li><a href="#ref-for-identity-provider④">2.2.1. Auto Sign-in</a> <a href="#ref-for-identity-provider⑤">(2)</a>
+    <li><a href="#ref-for-identity-provider⑥">2.2.2. Explicit Sign-in</a> <a href="#ref-for-identity-provider⑦">(2)</a> <a href="#ref-for-identity-provider⑧">(3)</a>
+    <li><a href="#ref-for-identity-provider⑨">2.3.2. IDP Sign-out</a> <a href="#ref-for-identity-provider①⓪">(2)</a>
+    <li><a href="#ref-for-identity-provider①①">2.4.1. IDP Revocation</a> <a href="#ref-for-identity-provider①②">(2)</a>
+    <li><a href="#ref-for-identity-provider①③">2.4.2. RP Revocation</a>
+    <li><a href="#ref-for-identity-provider①④">2.5. Authorization</a> <a href="#ref-for-identity-provider①⑤">(2)</a> <a href="#ref-for-identity-provider①⑥">(3)</a> <a href="#ref-for-identity-provider①⑦">(4)</a>
+    <li><a href="#ref-for-identity-provider①⑧">5.3. FederatedIdentityProvider</a> <a href="#ref-for-identity-provider①⑨">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="high-level-api">
