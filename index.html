@@ -7,7 +7,7 @@
   <meta content="Bikeshed version 4f053d00e, updated Tue Aug 10 14:13:32 2021 -0700" name="generator">
   <link href="http://wicg.github.io/WebID" rel="canonical">
   <link href="logo-otp.png" rel="icon">
-  <meta content="997f796ae59ca2fff4be86643b17f5f952d88067" name="document-revision">
+  <meta content="fcd99075b500d37bfd5796342b85897820e5b462" name="document-revision">
 <style>
 dl.domintro dt {
     font-family: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
@@ -620,33 +620,44 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
    <h2 class="no-num no-toc no-ref" id="contents">Table of Contents</h2>
    <ol class="toc" role="directory">
     <li><a href="#intro"><span class="secno">1</span> <span class="content">Introduction</span></a>
+    <li><a href="#problem-statement"><span class="secno">2</span> <span class="content">Problem Statement</span></a>
     <li>
-     <a href="#use-cases"><span class="secno">2</span> <span class="content">Use Cases</span></a>
+     <a href="#use-cases"><span class="secno">3</span> <span class="content">Use Cases</span></a>
      <ol class="toc">
-      <li><a href="#intro-account-management-api"><span class="secno">2.1</span> <span class="content">The Account Management API</span></a>
-      <li><a href="#intro-session-management-api"><span class="secno">2.2</span> <span class="content">The Session Management API</span></a>
-      <li><a href="#intro-feature-detection"><span class="secno">2.3</span> <span class="content">Feature Detection</span></a>
+      <li><a href="#registration"><span class="secno">3.1</span> <span class="content">Registration</span></a>
+      <li><a href="#unregistration"><span class="secno">3.2</span> <span class="content">Unregistration</span></a>
+      <li><a href="#sign-in"><span class="secno">3.3</span> <span class="content">Sign-in</span></a>
+      <li><a href="#sign-out"><span class="secno">3.4</span> <span class="content">Sign-out</span></a>
+      <li><a href="#authorization"><span class="secno">3.5</span> <span class="content">Authorization</span></a>
+     </ol>
+    <li><a href="#examples"><span class="secno">4</span> <span class="content">Examples</span></a>
+    <li>
+     <a href="#terminology"><span class="secno">5</span> <span class="content">Terminology</span></a>
+     <ol class="toc">
+      <li><a href="#intro-account-management-api"><span class="secno">5.1</span> <span class="content">The Account Management API</span></a>
+      <li><a href="#intro-session-management-api"><span class="secno">5.2</span> <span class="content">The Session Management API</span></a>
+      <li><a href="#intro-feature-detection"><span class="secno">5.3</span> <span class="content">Feature Detection</span></a>
      </ol>
     <li>
-     <a href="#AccountManagementAPI"><span class="secno">3</span> <span class="content">Account Management API</span></a>
+     <a href="#AccountManagementAPI"><span class="secno">6</span> <span class="content">Account Management API</span></a>
      <ol class="toc">
-      <li><a href="#FederatedCredential"><span class="secno">3.1</span> <span class="content">The FederatedCredential Interface</span></a>
-      <li><a href="#FederatedCredentialRequestOptions"><span class="secno">3.2</span> <span class="content"><code>FederatedCredentialRequestOptions</code></span></a>
-      <li><a href="#FederatedCredentialRequestMode"><span class="secno">3.3</span> <span class="content"><code>FederatedCredentialRequestMode</code></span></a>
+      <li><a href="#FederatedCredential"><span class="secno">6.1</span> <span class="content">The FederatedCredential Interface</span></a>
+      <li><a href="#FederatedCredentialRequestOptions"><span class="secno">6.2</span> <span class="content"><code>FederatedCredentialRequestOptions</code></span></a>
+      <li><a href="#FederatedCredentialRequestMode"><span class="secno">6.3</span> <span class="content"><code>FederatedCredentialRequestMode</code></span></a>
      </ol>
     <li>
-     <a href="#SessionManagementAPI"><span class="secno">4</span> <span class="content">Session Management API</span></a>
+     <a href="#SessionManagementAPI"><span class="secno">7</span> <span class="content">Session Management API</span></a>
      <ol class="toc">
-      <li><a href="#rp-logout"><span class="secno">4.1</span> <span class="content">RP Initiated Logout</span></a>
-      <li><a href="#idp-logout"><span class="secno">4.2</span> <span class="content">IDP Initiated Logout</span></a>
+      <li><a href="#rp-logout"><span class="secno">7.1</span> <span class="content">RP Initiated Logout</span></a>
+      <li><a href="#idp-logout"><span class="secno">7.2</span> <span class="content">IDP Initiated Logout</span></a>
      </ol>
-    <li><a href="#security"><span class="secno">5</span> <span class="content">Security</span></a>
+    <li><a href="#security"><span class="secno">8</span> <span class="content">Security</span></a>
     <li>
-     <a href="#privacy"><span class="secno">6</span> <span class="content">Privacy</span></a>
+     <a href="#privacy"><span class="secno">9</span> <span class="content">Privacy</span></a>
      <ol class="toc">
-      <li><a href="#privacy-threat-model"><span class="secno">6.1</span> <span class="content">Privacy Threat Model</span></a>
+      <li><a href="#privacy-threat-model"><span class="secno">9.1</span> <span class="content">Privacy Threat Model</span></a>
      </ol>
-    <li><a href="#acknowledgements"><span class="secno">7</span> <span class="content">Acknowledgements</span></a>
+    <li><a href="#acknowledgements"><span class="secno">10</span> <span class="content">Acknowledgements</span></a>
     <li>
      <a href="#w3c-conformance"><span class="secno"></span> <span class="content">Conformance</span></a>
      <ol class="toc">
@@ -671,9 +682,27 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
    <p><img alt="logo" src="logo-otp.svg" style="height: 100px; width: 100px; position: absolute; right: 20px; top: 30px;"></p>
    <h2 class="heading settled" data-level="1" id="intro"><span class="secno">1. </span><span class="content">Introduction</span><a class="self-link" href="#intro"></a></h2>
    <p><em>This section is non-normative.</em></p>
-   <h2 class="heading settled" data-level="2" id="use-cases"><span class="secno">2. </span><span class="content">Use Cases</span><a class="self-link" href="#use-cases"></a></h2>
+   <h2 class="heading settled" data-level="2" id="problem-statement"><span class="secno">2. </span><span class="content">Problem Statement</span><a class="self-link" href="#problem-statement"></a></h2>
+   <h2 class="heading settled" data-level="3" id="use-cases"><span class="secno">3. </span><span class="content">Use Cases</span><a class="self-link" href="#use-cases"></a></h2>
    <p><em>This section is non-normative.</em></p>
-   <h3 class="heading settled" data-level="2.1" id="intro-account-management-api"><span class="secno">2.1. </span><span class="content">The Account Management API</span><a class="self-link" href="#intro-account-management-api"></a></h3>
+   <h3 class="heading settled" data-level="3.1" id="registration"><span class="secno">3.1. </span><span class="content">Registration</span><a class="self-link" href="#registration"></a></h3>
+   <h3 class="heading settled" data-level="3.2" id="unregistration"><span class="secno">3.2. </span><span class="content">Unregistration</span><a class="self-link" href="#unregistration"></a></h3>
+   <h3 class="heading settled" data-level="3.3" id="sign-in"><span class="secno">3.3. </span><span class="content">Sign-in</span><a class="self-link" href="#sign-in"></a></h3>
+   <h3 class="heading settled" data-level="3.4" id="sign-out"><span class="secno">3.4. </span><span class="content">Sign-out</span><a class="self-link" href="#sign-out"></a></h3>
+   <h3 class="heading settled" data-level="3.5" id="authorization"><span class="secno">3.5. </span><span class="content">Authorization</span><a class="self-link" href="#authorization"></a></h3>
+   <h2 class="heading settled" data-level="4" id="examples"><span class="secno">4. </span><span class="content">Examples</span><a class="self-link" href="#examples"></a></h2>
+   <h2 class="heading settled" data-level="5" id="terminology"><span class="secno">5. </span><span class="content">Terminology</span><a class="self-link" href="#terminology"></a></h2>
+   <dl>
+    <dt data-md><dfn data-dfn-type="dfn" data-noexport id="relying-party">Relying Party<a class="self-link" href="#relying-party"></a></dfn>
+    <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="rp">RP</dfn>
+    <dd data-md>
+     <p><em>Relying Party</em></p>
+    <dt data-md><dfn data-dfn-type="dfn" data-noexport id="identity-provider">Identity Provider<a class="self-link" href="#identity-provider"></a></dfn>
+    <dt data-md><dfn data-dfn-type="dfn" data-noexport id="idp">IDP<a class="self-link" href="#idp"></a></dfn>
+    <dd data-md>
+     <p><em>IDP</em> <a data-link-type="dfn" href="#rp" id="ref-for-rp">RP</a></p>
+   </dl>
+   <h3 class="heading settled" data-level="5.1" id="intro-account-management-api"><span class="secno">5.1. </span><span class="content">The Account Management API</span><a class="self-link" href="#intro-account-management-api"></a></h3>
    <div class="example" id="example-da147555">
     <a class="self-link" href="#example-da147555"></a> 
 <pre class="language-js highlight"><c- a>let</c-> <c- p>{</c->id_token<c- p>}</c-> <c- o>=</c-> <c- k>await</c-> navigator<c- p>.</c->credentials<c- p>.</c->get<c- p>({</c->
@@ -694,7 +723,7 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
 <c- p>});</c->
 </pre>
    </div>
-   <h3 class="heading settled" data-level="2.2" id="intro-session-management-api"><span class="secno">2.2. </span><span class="content">The Session Management API</span><a class="self-link" href="#intro-session-management-api"></a></h3>
+   <h3 class="heading settled" data-level="5.2" id="intro-session-management-api"><span class="secno">5.2. </span><span class="content">The Session Management API</span><a class="self-link" href="#intro-session-management-api"></a></h3>
    <div class="example" id="example-b64b522c">
     <a class="self-link" href="#example-b64b522c"></a> 
 <pre class="language-js highlight"><c- k>await</c-> FederatedCredential<c- p>.</c->logout<c- p>({</c->
@@ -708,7 +737,7 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
 <c- p>});</c->
 </pre>
    </div>
-   <h3 class="heading settled" data-level="2.3" id="intro-feature-detection"><span class="secno">2.3. </span><span class="content">Feature Detection</span><a class="self-link" href="#intro-feature-detection"></a></h3>
+   <h3 class="heading settled" data-level="5.3" id="intro-feature-detection"><span class="secno">5.3. </span><span class="content">Feature Detection</span><a class="self-link" href="#intro-feature-detection"></a></h3>
    <div class="example" id="example-d96c7eb9">
     <a class="self-link" href="#example-d96c7eb9"></a> 
 <pre class="language-js highlight"><c- k>if</c-> <c- p>(</c-><c- o>!</c->window<c- p>.</c->FederatedCredential<c- p>)</c-> <c- p>{</c->
@@ -718,9 +747,9 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
 <c- p>}</c->
 </pre>
    </div>
-   <h2 class="heading settled" data-level="3" id="AccountManagementAPI"><span class="secno">3. </span><span class="content">Account Management API</span><a class="self-link" href="#AccountManagementAPI"></a></h2>
+   <h2 class="heading settled" data-level="6" id="AccountManagementAPI"><span class="secno">6. </span><span class="content">Account Management API</span><a class="self-link" href="#AccountManagementAPI"></a></h2>
    <p>Websites call <code><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dom-credentialscontainer-get" id="ref-for-dom-credentialscontainer-get">navigator.credentials.get({providers:..., ...})</a></code> to retrieve a <code class="idl"><a data-link-type="idl" href="#federatedcredential" id="ref-for-federatedcredential">FederatedCredential</a></code>.</p>
-   <h3 class="heading settled" data-level="3.1" id="FederatedCredential"><span class="secno">3.1. </span><span class="content">The FederatedCredential Interface</span><a class="self-link" href="#FederatedCredential"></a></h3>
+   <h3 class="heading settled" data-level="6.1" id="FederatedCredential"><span class="secno">6.1. </span><span class="content">The FederatedCredential Interface</span><a class="self-link" href="#FederatedCredential"></a></h3>
 <pre class="idl highlight def">[<a class="idl-code" data-link-type="extended-attribute" href="https://heycam.github.io/webidl/#Exposed" id="ref-for-Exposed"><c- g>Exposed</c-></a>=<c- n>Window</c->, <a class="idl-code" data-link-type="extended-attribute" href="https://heycam.github.io/webidl/#SecureContext" id="ref-for-SecureContext"><c- g>SecureContext</c-></a>]
 <c- b>interface</c-> <dfn class="dfn-paneled idl-code" data-dfn-type="interface" data-export id="federatedcredential"><code><c- g>FederatedCredential</c-></code></dfn> : <a data-link-type="idl-name" href="https://w3c.github.io/webappsec-credential-management/#credential" id="ref-for-credential"><c- n>Credential</c-></a> {
   <c- b>readonly</c-> <c- b>attribute</c-> <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-USVString" id="ref-for-idl-USVString"><c- b>USVString</c-></a> <dfn class="idl-code" data-dfn-for="FederatedCredential" data-dfn-type="attribute" data-export data-readonly data-type="USVString" id="dom-federatedcredential-provider"><code><c- g>provider</c-></code><a class="self-link" href="#dom-federatedcredential-provider"></a></dfn>;
@@ -733,7 +762,7 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
     <dd data-md>
      <p>This attribute is inherited from <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#credential" id="ref-for-credential①">Credential</a></code></p>
    </dl>
-   <h3 class="heading settled" data-level="3.2" id="FederatedCredentialRequestOptions"><span class="secno">3.2. </span><span class="content"><code>FederatedCredentialRequestOptions</code></span><a class="self-link" href="#FederatedCredentialRequestOptions"></a></h3>
+   <h3 class="heading settled" data-level="6.2" id="FederatedCredentialRequestOptions"><span class="secno">6.2. </span><span class="content"><code>FederatedCredentialRequestOptions</code></span><a class="self-link" href="#FederatedCredentialRequestOptions"></a></h3>
    <p>To support obtaining OTPs via <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dom-credentialscontainer-get" id="ref-for-dom-credentialscontainer-get①">navigator.credentials.get()</a></code>,
 this document extends the <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dictdef-credentialrequestoptions" id="ref-for-dictdef-credentialrequestoptions">CredentialRequestOptions</a></code> dictionary as follows:</p>
 <pre class="idl highlight def"><c- b>partial</c-> <c- b>dictionary</c-> <a class="idl-code" data-link-type="dictionary" href="https://w3c.github.io/webappsec-credential-management/#dictdef-federatedcredentialrequestoptions" id="ref-for-dictdef-federatedcredentialrequestoptions"><c- g>FederatedCredentialRequestOptions</c-></a> {
@@ -749,7 +778,7 @@ this document extends the <code class="idl"><a data-link-type="idl" href="https:
       <p>This OPTIONAL member is used to make WebOTP requests.</p>
     </dl>
    </div>
-   <h3 class="heading settled" data-level="3.3" id="FederatedCredentialRequestMode"><span class="secno">3.3. </span><span class="content"><code>FederatedCredentialRequestMode</code></span><a class="self-link" href="#FederatedCredentialRequestMode"></a></h3>
+   <h3 class="heading settled" data-level="6.3" id="FederatedCredentialRequestMode"><span class="secno">6.3. </span><span class="content"><code>FederatedCredentialRequestMode</code></span><a class="self-link" href="#FederatedCredentialRequestMode"></a></h3>
    <p>The <code class="idl"><a data-link-type="idl" href="#enumdef-federatedcredentialrequestmode" id="ref-for-enumdef-federatedcredentialrequestmode①">FederatedCredentialRequestMode</a></code> dictionary supplies <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dom-credentialscontainer-get" id="ref-for-dom-credentialscontainer-get②">navigator.credentials.get()</a></code> with the data it needs to retrieve an
 idtoken.</p>
 <pre class="idl highlight def"><c- b>enum</c-> <dfn class="dfn-paneled idl-code" data-dfn-type="enum" data-export id="enumdef-federatedcredentialrequestmode"><code><c- g>FederatedCredentialRequestMode</c-></code></dfn> {
@@ -757,14 +786,14 @@ idtoken.</p>
   <dfn class="idl-code" data-dfn-for="FederatedCredentialRequestMode" data-dfn-type="enum-value" data-export id="dom-federatedcredentialrequestmode-permission"><code><c- s>"permission"</c-></code><a class="self-link" href="#dom-federatedcredentialrequestmode-permission"></a></dfn>
 };
 </pre>
-   <h2 class="heading settled" data-level="4" id="SessionManagementAPI"><span class="secno">4. </span><span class="content">Session Management API</span><a class="self-link" href="#SessionManagementAPI"></a></h2>
+   <h2 class="heading settled" data-level="7" id="SessionManagementAPI"><span class="secno">7. </span><span class="content">Session Management API</span><a class="self-link" href="#SessionManagementAPI"></a></h2>
    <p>Websites call <code><a data-link-type="idl">FederatedCredential.logout(...)</a></code> to log the user out of a series of relying parties.</p>
-   <h3 class="heading settled" data-level="4.1" id="rp-logout"><span class="secno">4.1. </span><span class="content">RP Initiated Logout</span><a class="self-link" href="#rp-logout"></a></h3>
-   <h3 class="heading settled" data-level="4.2" id="idp-logout"><span class="secno">4.2. </span><span class="content">IDP Initiated Logout</span><a class="self-link" href="#idp-logout"></a></h3>
-   <h2 class="heading settled" data-level="5" id="security"><span class="secno">5. </span><span class="content">Security</span><a class="self-link" href="#security"></a></h2>
-   <h2 class="heading settled" data-level="6" id="privacy"><span class="secno">6. </span><span class="content">Privacy</span><a class="self-link" href="#privacy"></a></h2>
-   <h3 class="heading settled" data-level="6.1" id="privacy-threat-model"><span class="secno">6.1. </span><span class="content">Privacy Threat Model</span><a class="self-link" href="#privacy-threat-model"></a></h3>
-   <h2 class="heading settled" data-level="7" id="acknowledgements"><span class="secno">7. </span><span class="content">Acknowledgements</span><a class="self-link" href="#acknowledgements"></a></h2>
+   <h3 class="heading settled" data-level="7.1" id="rp-logout"><span class="secno">7.1. </span><span class="content">RP Initiated Logout</span><a class="self-link" href="#rp-logout"></a></h3>
+   <h3 class="heading settled" data-level="7.2" id="idp-logout"><span class="secno">7.2. </span><span class="content">IDP Initiated Logout</span><a class="self-link" href="#idp-logout"></a></h3>
+   <h2 class="heading settled" data-level="8" id="security"><span class="secno">8. </span><span class="content">Security</span><a class="self-link" href="#security"></a></h2>
+   <h2 class="heading settled" data-level="9" id="privacy"><span class="secno">9. </span><span class="content">Privacy</span><a class="self-link" href="#privacy"></a></h2>
+   <h3 class="heading settled" data-level="9.1" id="privacy-threat-model"><span class="secno">9.1. </span><span class="content">Privacy Threat Model</span><a class="self-link" href="#privacy-threat-model"></a></h3>
+   <h2 class="heading settled" data-level="10" id="acknowledgements"><span class="secno">10. </span><span class="content">Acknowledgements</span><a class="self-link" href="#acknowledgements"></a></h2>
   </main>
   <div data-fill-with="conformance">
    <h2 class="no-ref no-num heading settled" id="w3c-conformance"><span class="content">Conformance</span><a class="self-link" href="#w3c-conformance"></a></h2>
@@ -811,86 +840,90 @@ idtoken.</p>
   <h2 class="no-num no-ref heading settled" id="index"><span class="content">Index</span><a class="self-link" href="#index"></a></h2>
   <h3 class="no-num no-ref heading settled" id="index-defined-here"><span class="content">Terms defined by this specification</span><a class="self-link" href="#index-defined-here"></a></h3>
   <ul class="index">
-   <li><a href="#federatedcredential">FederatedCredential</a><span>, in § 3.1</span>
-   <li><a href="#enumdef-federatedcredentialrequestmode">FederatedCredentialRequestMode</a><span>, in § 3.3</span>
-   <li><a href="#dom-federatedcredential-id_token">id_token</a><span>, in § 3.1</span>
-   <li><a href="#dom-federatedcredential-logout">logout()</a><span>, in § 3.1</span>
-   <li><a href="#dom-federatedcredential-logout">logout(logout_endpoints)</a><span>, in § 3.1</span>
-   <li><a href="#dom-federatedcredentialrequestmode-mediated">"mediated"</a><span>, in § 3.3</span>
-   <li><a href="#dom-federatedcredentialrequestoptions-mode">mode</a><span>, in § 3.2</span>
-   <li><a href="#dom-credentialrequestoptions-otp">otp</a><span>, in § 3.2</span>
-   <li><a href="#dom-federatedcredentialrequestmode-permission">"permission"</a><span>, in § 3.3</span>
-   <li><a href="#dom-federatedcredentialrequestoptions-protocols">protocols</a><span>, in § 3.2</span>
-   <li><a href="#dom-federatedcredential-provider">provider</a><span>, in § 3.1</span>
-   <li><a href="#dom-federatedcredentialrequestoptions-providers">providers</a><span>, in § 3.2</span>
+   <li><a href="#federatedcredential">FederatedCredential</a><span>, in § 6.1</span>
+   <li><a href="#enumdef-federatedcredentialrequestmode">FederatedCredentialRequestMode</a><span>, in § 6.3</span>
+   <li><a href="#identity-provider">Identity Provider</a><span>, in § 5</span>
+   <li><a href="#idp">IDP</a><span>, in § 5</span>
+   <li><a href="#dom-federatedcredential-id_token">id_token</a><span>, in § 6.1</span>
+   <li><a href="#dom-federatedcredential-logout">logout()</a><span>, in § 6.1</span>
+   <li><a href="#dom-federatedcredential-logout">logout(logout_endpoints)</a><span>, in § 6.1</span>
+   <li><a href="#dom-federatedcredentialrequestmode-mediated">"mediated"</a><span>, in § 6.3</span>
+   <li><a href="#dom-federatedcredentialrequestoptions-mode">mode</a><span>, in § 6.2</span>
+   <li><a href="#dom-credentialrequestoptions-otp">otp</a><span>, in § 6.2</span>
+   <li><a href="#dom-federatedcredentialrequestmode-permission">"permission"</a><span>, in § 6.3</span>
+   <li><a href="#dom-federatedcredentialrequestoptions-protocols">protocols</a><span>, in § 6.2</span>
+   <li><a href="#dom-federatedcredential-provider">provider</a><span>, in § 6.1</span>
+   <li><a href="#dom-federatedcredentialrequestoptions-providers">providers</a><span>, in § 6.2</span>
+   <li><a href="#relying-party">Relying Party</a><span>, in § 5</span>
+   <li><a href="#rp">RP</a><span>, in § 5</span>
   </ul>
   <aside class="dfn-panel" data-for="term-for-credential">
    <a href="https://w3c.github.io/webappsec-credential-management/#credential">https://w3c.github.io/webappsec-credential-management/#credential</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-credential">3.1. The FederatedCredential Interface</a> <a href="#ref-for-credential①">(2)</a>
+    <li><a href="#ref-for-credential">6.1. The FederatedCredential Interface</a> <a href="#ref-for-credential①">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-dictdef-credentialrequestoptions">
    <a href="https://w3c.github.io/webappsec-credential-management/#dictdef-credentialrequestoptions">https://w3c.github.io/webappsec-credential-management/#dictdef-credentialrequestoptions</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dictdef-credentialrequestoptions">3.2. FederatedCredentialRequestOptions</a>
+    <li><a href="#ref-for-dictdef-credentialrequestoptions">6.2. FederatedCredentialRequestOptions</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-dictdef-federatedcredentialrequestoptions">
    <a href="https://w3c.github.io/webappsec-credential-management/#dictdef-federatedcredentialrequestoptions">https://w3c.github.io/webappsec-credential-management/#dictdef-federatedcredentialrequestoptions</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dictdef-federatedcredentialrequestoptions">3.2. FederatedCredentialRequestOptions</a>
+    <li><a href="#ref-for-dictdef-federatedcredentialrequestoptions">6.2. FederatedCredentialRequestOptions</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-dom-credentialscontainer-get">
    <a href="https://w3c.github.io/webappsec-credential-management/#dom-credentialscontainer-get">https://w3c.github.io/webappsec-credential-management/#dom-credentialscontainer-get</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dom-credentialscontainer-get">3. Account Management API</a>
-    <li><a href="#ref-for-dom-credentialscontainer-get①">3.2. FederatedCredentialRequestOptions</a>
-    <li><a href="#ref-for-dom-credentialscontainer-get②">3.3. FederatedCredentialRequestMode</a>
+    <li><a href="#ref-for-dom-credentialscontainer-get">6. Account Management API</a>
+    <li><a href="#ref-for-dom-credentialscontainer-get①">6.2. FederatedCredentialRequestOptions</a>
+    <li><a href="#ref-for-dom-credentialscontainer-get②">6.3. FederatedCredentialRequestMode</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-dom-credential-id">
    <a href="https://w3c.github.io/webappsec-credential-management/#dom-credential-id">https://w3c.github.io/webappsec-credential-management/#dom-credential-id</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dom-credential-id">3.1. The FederatedCredential Interface</a>
+    <li><a href="#ref-for-dom-credential-id">6.1. The FederatedCredential Interface</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-idl-DOMString">
    <a href="https://heycam.github.io/webidl/#idl-DOMString">https://heycam.github.io/webidl/#idl-DOMString</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-idl-DOMString">3.2. FederatedCredentialRequestOptions</a> <a href="#ref-for-idl-DOMString①">(2)</a>
+    <li><a href="#ref-for-idl-DOMString">6.2. FederatedCredentialRequestOptions</a> <a href="#ref-for-idl-DOMString①">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-Exposed">
    <a href="https://heycam.github.io/webidl/#Exposed">https://heycam.github.io/webidl/#Exposed</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-Exposed">3.1. The FederatedCredential Interface</a>
+    <li><a href="#ref-for-Exposed">6.1. The FederatedCredential Interface</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-idl-promise">
    <a href="https://heycam.github.io/webidl/#idl-promise">https://heycam.github.io/webidl/#idl-promise</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-idl-promise">3.1. The FederatedCredential Interface</a>
+    <li><a href="#ref-for-idl-promise">6.1. The FederatedCredential Interface</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-SecureContext">
    <a href="https://heycam.github.io/webidl/#SecureContext">https://heycam.github.io/webidl/#SecureContext</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-SecureContext">3.1. The FederatedCredential Interface</a>
+    <li><a href="#ref-for-SecureContext">6.1. The FederatedCredential Interface</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-idl-USVString">
    <a href="https://heycam.github.io/webidl/#idl-USVString">https://heycam.github.io/webidl/#idl-USVString</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-idl-USVString">3.1. The FederatedCredential Interface</a> <a href="#ref-for-idl-USVString①">(2)</a> <a href="#ref-for-idl-USVString②">(3)</a>
+    <li><a href="#ref-for-idl-USVString">6.1. The FederatedCredential Interface</a> <a href="#ref-for-idl-USVString①">(2)</a> <a href="#ref-for-idl-USVString②">(3)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-idl-sequence">
    <a href="https://heycam.github.io/webidl/#idl-sequence">https://heycam.github.io/webidl/#idl-sequence</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-idl-sequence">3.1. The FederatedCredential Interface</a>
-    <li><a href="#ref-for-idl-sequence①">3.2. FederatedCredentialRequestOptions</a> <a href="#ref-for-idl-sequence②">(2)</a>
+    <li><a href="#ref-for-idl-sequence">6.1. The FederatedCredential Interface</a>
+    <li><a href="#ref-for-idl-sequence①">6.2. FederatedCredentialRequestOptions</a> <a href="#ref-for-idl-sequence②">(2)</a>
    </ul>
   </aside>
   <h3 class="no-num no-ref heading settled" id="index-defined-elsewhere"><span class="content">Terms defined by reference</span><a class="self-link" href="#index-defined-elsewhere"></a></h3>
@@ -945,17 +978,23 @@ idtoken.</p>
 };
 
 </pre>
+  <aside class="dfn-panel" data-for="rp">
+   <b><a href="#rp">#rp</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-rp">5. Terminology</a>
+   </ul>
+  </aside>
   <aside class="dfn-panel" data-for="federatedcredential">
    <b><a href="#federatedcredential">#federatedcredential</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-federatedcredential">3. Account Management API</a>
+    <li><a href="#ref-for-federatedcredential">6. Account Management API</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="enumdef-federatedcredentialrequestmode">
    <b><a href="#enumdef-federatedcredentialrequestmode">#enumdef-federatedcredentialrequestmode</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-enumdef-federatedcredentialrequestmode">3.2. FederatedCredentialRequestOptions</a>
-    <li><a href="#ref-for-enumdef-federatedcredentialrequestmode①">3.3. FederatedCredentialRequestMode</a>
+    <li><a href="#ref-for-enumdef-federatedcredentialrequestmode">6.2. FederatedCredentialRequestOptions</a>
+    <li><a href="#ref-for-enumdef-federatedcredentialrequestmode①">6.3. FederatedCredentialRequestMode</a>
    </ul>
   </aside>
 <script>/* script-dfn-panel */
