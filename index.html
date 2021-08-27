@@ -7,7 +7,7 @@
   <meta content="Bikeshed version 4f053d00e, updated Tue Aug 10 14:13:32 2021 -0700" name="generator">
   <link href="http://wicg.github.io/WebID" rel="canonical">
   <link href="logo-otp.png" rel="icon">
-  <meta content="b8172ba0f27cded673868b684df030d3aa4498f4" name="document-revision">
+  <meta content="4ece20832c632cf5f2c2a0bde6b27910f4dbb24c" name="document-revision">
 <style>
 dl.domintro dt {
     font-family: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
@@ -602,7 +602,7 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
   </div>
   <div class="p-summary" data-fill-with="abstract">
    <h2 class="no-num no-toc no-ref heading settled" id="abstract"><span class="content">Abstract</span></h2>
-   <p>A privacy preserving federated identity Web API.</p>
+   <p>This specification defines a set of web platform APIs that support identity federation compatible with a more private Web.</p>
   </div>
   <div data-fill-with="at-risk"></div>
   <h2 class="no-num no-toc no-ref heading settled" id="status"><span class="content">Status of this document</span></h2>
@@ -682,6 +682,15 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
    <p><img alt="logo" src="logo-otp.svg" style="height: 100px; width: 100px; position: absolute; right: 20px; top: 30px;"></p>
    <h2 class="heading settled" data-level="1" id="intro"><span class="secno">1. </span><span class="content">Introduction</span><a class="self-link" href="#intro"></a></h2>
    <p><em>This section is non-normative.</em></p>
+   <p>Over the last decade, identity federation has unquestionably played a central role in raising the bar for authentication on the web, in terms of ease-of-use (e.g. passwordless single sign-on), security (e.g. improved resistance to phishing and credential stuffing attacks) and trustworthiness compared to its preceding pattern: per-site usernames and passwords.</p>
+   <p>The standards that define how identity federation works today on the Web were built independently of the Web Platform (namely, <a data-link-type="biblio" href="#biblio-saml">[SAML]</a>, <a data-link-type="biblio" href="#biblio-openid">[OpenID]</a> and <a data-link-type="biblio" href="#biblio-oauth">[OAuth]</a>), and their designers had to (rightfully so) work around its limitations rather than extend them.</p>
+   <p>Because of that, existing user authentication flows were designed on top of general-purpose web platform capabilities such as top-level navigations/redirects with parameters, window popups, iframes and cookies.</p>
+   <p>However, because these general purpose primitives can be used for an open ended number of use cases (again, notably, by design), browsers have to apply policies that capture the lowest common denominator of abuse, at best applying cumbersome permissions (e.g. popup blockers) and at worst entirely blocking them (e.g. blocking third party cookies).</p>
+   <p>Over the years, as these low level primitives get abused, browsers intervene and federation adjusts itself. For example, popup blockers became common and federation had to adjust itself to work in a world where popups blockers were widely deployed.</p>
+   <p>The challenge, now more than ever, is that some of these low level primitives are getting increasingly abused to allow users on the web to be tracked. So, as a result, browsers are applying stricter and stricter policies around them.</p>
+   <p>Blocking third party cookies broke important parts of the protocols in those browsers (e.g. front channel logouts) and made some user experiences inviable (e.g. social buttons personalization).</p>
+   <p>While it is clearer to see the current impact of third party cookies, it is equally important to understand the ways in which the low level primitives that identity federation depends on (e.g. redirects) are being abused and the principles browsers are using to control them, so that we don’t corner ourselves into another dead end.</p>
+   <p>This specification defines a set of web platform APIs that preserve and extend identity federation compatible with a more private Web.</p>
    <h2 class="heading settled" data-level="2" id="use-cases"><span class="secno">2. </span><span class="content">Use Cases</span><a class="self-link" href="#use-cases"></a></h2>
    <p>The below use case scenarios illustrate. Additional scenarios, including sample code, are given later in <a data-link-type="biblio" href="#biblio-identity-use-cases-in-browser-catalog">[Identity-Use-Cases-in-Browser-Catalog]</a>.</p>
    <h3 class="heading settled" data-level="2.1" id="registration"><span class="secno">2.1. </span><span class="content">Registration</span><a class="self-link" href="#registration"></a></h3>
@@ -979,6 +988,12 @@ idtoken.</p>
   <dl>
    <dt id="biblio-identity-use-cases-in-browser-catalog">[Identity-Use-Cases-in-Browser-Catalog]
    <dd>V. Bertocci; G. Fletcher. <a href="https://datatracker.ietf.org/doc/html/draft-bertocci-identity-in-browser-00"><cite>Identity Use Cases in Browser Catalog</cite></a>. URL: <a href="https://datatracker.ietf.org/doc/html/draft-bertocci-identity-in-browser-00">https://datatracker.ietf.org/doc/html/draft-bertocci-identity-in-browser-00</a>
+   <dt id="biblio-oauth">[OAuth]
+   <dd>D. Hardt. <a href="https://datatracker.ietf.org/doc/html/rfc6749"><cite>OAuth</cite></a>. URL: <a href="https://datatracker.ietf.org/doc/html/rfc6749">https://datatracker.ietf.org/doc/html/rfc6749</a>
+   <dt id="biblio-openid">[OpenID]
+   <dd><a href="https://openid.net/developers/specs/"><cite>OpenID</cite></a>. URL: <a href="https://openid.net/developers/specs/">https://openid.net/developers/specs/</a>
+   <dt id="biblio-saml">[SAML]
+   <dd><a href="http://saml.xml.org/saml-specifications"><cite>SAML</cite></a>. URL: <a href="http://saml.xml.org/saml-specifications">http://saml.xml.org/saml-specifications</a>
   </dl>
   <h2 class="no-num no-ref heading settled" id="idl-index"><span class="content">IDL Index</span><a class="self-link" href="#idl-index"></a></h2>
 <pre class="idl highlight def">[<a class="idl-code" data-link-type="extended-attribute" href="https://heycam.github.io/webidl/#Exposed"><c- g>Exposed</c-></a>=<c- n>Window</c->, <a class="idl-code" data-link-type="extended-attribute" href="https://heycam.github.io/webidl/#SecureContext"><c- g>SecureContext</c-></a>]
