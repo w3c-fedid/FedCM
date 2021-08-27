@@ -1,0 +1,203 @@
+<pre class='metadata'>
+Title: WebID API
+Shortname: webid
+Level: 1
+Status: CG-DRAFT
+Group: WICG
+ED: http://wicg.github.io/WebID
+Repository: WICG/WebID
+Editor: Sam Goto, Google Inc. https://google.com, goto@google.com
+Favicon: logo-otp.png
+Markup Shorthands: markdown yes, css no, biblio yes
+Text Macro: FALSE <code>false</code>
+Text Macro: TRUE <code>true</code>
+Abstract: A privacy preserving federated identity Web API.
+Test Suite: https://github.com/web-platform-tests/wpt/tree/master/sms
+</pre>
+
+<pre class=anchors>
+spec: ecma262; urlPrefix: https://tc39.github.io/ecma262/
+    type: dfn
+        text: time values; url: sec-time-values-and-time-range
+        text: promise; url: sec-promise-objects
+
+spec: credential-management-1; urlPrefix: https://w3c.github.io/webappsec-credential-management/
+    type: dictionary
+        text: CredentialRequestOptions; url: dictdef-credentialrequestoptions
+    for: Credential
+        type: method
+            text: [[CollectFromCredentialStore]](origin, options, sameOriginWithAncestors)
+            text: [[Create]](origin, options, sameOriginWithAncestors)
+            text: [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)
+            text: [[Store]](credential, sameOriginWithAncestors)
+    type: dfn
+        text: signal
+        text: same-origin with its ancestors; url: same-origin-with-its-ancestors
+
+</pre>
+
+<pre class=link-defaults>
+spec:infra; type:dfn; text:list
+spec:html; type:dfn; for:environment settings object; text:global object
+spec:webidl; type:dfn; text:resolve
+</pre>
+
+<style>
+dl.domintro dt {
+    font-family: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
+
+    padding-top: 0.5em;
+    padding-bottom: 1em;
+}
+dl.domintro dt a {
+    color: inherit; border-bottom-style: none;
+}
+dl.domintro dt code {
+    font-size: inherit;
+}
+</style>
+
+<img src="logo-otp.svg" alt="logo"
+    style="height: 100px; width: 100px; position: absolute; right: 20px; top: 30px;">
+
+<!-- ============================================================ -->
+# Introduction # {#intro}
+<!-- ============================================================ -->
+
+*This section is non-normative.*
+
+<!-- ============================================================ -->
+## The Account Management API ## {#intro-account-management-api}
+<!-- ============================================================ -->
+
+
+<div class=example>
+```js
+let {id_token} = await navigator.credentials.get({
+  // controls whether an account chooser is mediated or not
+  mode: "mediated",
+  // controls whether auto sign-in is enabled or not
+  mediation: "optional",
+  // controls whether the account chooser is modal or not
+  modal: true,
+  // controls which identity providers to use
+  providers: [{
+    url: "https://idp.example",
+    client_id: "123",
+    nonce: "456"
+  }],
+  // controls abortions of the account chooser
+  signal: signal
+});
+```
+</div>
+
+<!-- ============================================================ -->
+## The Session Management API ## {#intro-session-management-api}
+<!-- ============================================================ -->
+
+<div class=example>
+```js
+await FederatedCredential.logout({
+  endpoints: [{
+    url: "https://rp1.example",
+    account_id: "123",
+  }, {
+    url: "https://rpN.example",
+    account_id: "456",
+  }]
+});
+```
+</div>
+
+<!-- ============================================================ -->
+## Feature Detection ## {#intro-feature-detection}
+<!-- ============================================================ -->
+
+<div class=example>
+```js
+if (!window.FederatedCredential) {
+  // feature not available
+  // TODO(goto): this is probably insufficient.
+  return;
+}
+```
+</div>
+
+<!-- ============================================================ -->
+# Account Management API # {#AccountManagementAPI}
+<!-- ============================================================ -->
+
+Websites call <code><a idl for="CredentialsContainer" lt="get()">navigator.credentials.get({providers:..., ...})</a></code> to retrieve a {{FederatedCredential}}.
+
+<!-- ============================================================ -->
+## The FederatedCredential Interface ## {#FederatedCredential}
+<!-- ============================================================ -->
+
+<xmp class=idl>
+[Exposed=Window, SecureContext]
+interface FederatedCredential : Credential {
+  readonly attribute USVString provider;
+  readonly attribute USVString id_token;
+  static Promise<void> logout(optional sequence<USVString> logout_endpoints = []);
+};
+</xmp>
+
+<dl dfn-type="attribute" dfn-for="OTPCredential">
+    :   {{Credential/id}}
+    ::  This attribute is inherited from {{Credential}}
+</dl>
+
+<!-- ============================================================ -->
+## `FederatedCredentialRequestOptions` ## {#FederatedCredentialRequestOptions}
+<!-- ============================================================ -->
+
+To support obtaining OTPs via {{CredentialsContainer/get()|navigator.credentials.get()}},
+this document extends the {{CredentialRequestOptions}} dictionary as follows:
+
+<xmp class="idl">
+partial dictionary FederatedCredentialRequestOptions {
+  sequence<(DOMString or FederatedIdentityProvider)> providers;
+  sequence<DOMString> protocols;
+  FederatedCredentialRequestMode mode = "mediated";
+};
+</xmp>
+
+<div dfn-type="dict-member" dfn-for="CredentialRequestOptions">
+    :   <dfn>otp</dfn>
+    ::  This OPTIONAL member is used to make WebOTP requests.
+</div>
+
+<!-- ============================================================ -->
+## `FederatedCredentialRequestMode` ## {#FederatedCredentialRequestMode}
+<!-- ============================================================ -->
+
+The {{FederatedCredentialRequestMode}} dictionary supplies
+{{CredentialsContainer/get()|navigator.credentials.get()}} with the data it needs to retrieve an
+idtoken.
+
+<xmp class="idl">
+enum FederatedCredentialRequestMode {
+  "mediated",
+  "permission"
+};
+</xmp>
+
+<!-- ============================================================ -->
+# Session Management API # {#SessionManagementAPI}
+<!-- ============================================================ -->
+
+Websites call <code><a idl for="FederatedCredential" lt="get()">FederatedCredential.logout(...)</a></code> to log the user out of a series of relying parties.
+
+<!-- ============================================================ -->
+# Security # {#security}
+<!-- ============================================================ -->
+
+<!-- ============================================================ -->
+# Privacy # {#privacy}
+<!-- ============================================================ -->
+
+<!-- ====================================================================== -->
+# Acknowledgements # {#acknowledgements}
+<!-- ====================================================================== -->
+
