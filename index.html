@@ -6,7 +6,7 @@
   <link href="https://www.w3.org/StyleSheets/TR/2016/cg-draft" rel="stylesheet">
   <meta content="Bikeshed version 4f053d00e, updated Tue Aug 10 14:13:32 2021 -0700" name="generator">
   <link href="http://wicg.github.io/WebID" rel="canonical">
-  <meta content="2a028d91010be8fd1db0a9cd6cc9376af27bcabf" name="document-revision">
+  <meta content="2c818c535e2678ad63478f4709e19d9692632dae" name="document-revision">
 <style>
 dl.domintro dt {
     font-family: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
@@ -622,10 +622,10 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
     <li>
      <a href="#use-cases"><span class="secno">2</span> <span class="content">Use Cases</span></a>
      <ol class="toc">
-      <li><a href="#registration"><span class="secno">2.1</span> <span class="content">Registration</span></a>
-      <li><a href="#unregistration"><span class="secno">2.2</span> <span class="content">Unregistration</span></a>
-      <li><a href="#sign-in"><span class="secno">2.3</span> <span class="content">Sign-in</span></a>
-      <li><a href="#sign-out"><span class="secno">2.4</span> <span class="content">Sign-out</span></a>
+      <li><a href="#sign-up"><span class="secno">2.1</span> <span class="content">Sign-up</span></a>
+      <li><a href="#sign-in"><span class="secno">2.2</span> <span class="content">Sign-in</span></a>
+      <li><a href="#sign-out"><span class="secno">2.3</span> <span class="content">Sign-out</span></a>
+      <li><a href="#revocation"><span class="secno">2.4</span> <span class="content">Revocation</span></a>
       <li><a href="#authorization"><span class="secno">2.5</span> <span class="content">Authorization</span></a>
      </ol>
     <li>
@@ -690,30 +690,80 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
    <p>While it is clearer to see the current impact of third party cookies, it is equally important to understand the ways in which the low level primitives that identity federation depends on (e.g. redirects) are being abused and the principles browsers are using to control them, so that we don’t corner ourselves into another dead end.</p>
    <p>This specification defines a set of web platform APIs that preserve and extend identity federation compatible with a more private Web.</p>
    <h2 class="heading settled" data-level="2" id="use-cases"><span class="secno">2. </span><span class="content">Use Cases</span><a class="self-link" href="#use-cases"></a></h2>
-   <p>The below use case scenarios illustrate. Additional scenarios, including sample code, are given later in <a data-link-type="biblio" href="#biblio-identity-use-cases-in-browser-catalog">[Identity-Use-Cases-in-Browser-Catalog]</a>.</p>
-   <h3 class="heading settled" data-level="2.1" id="registration"><span class="secno">2.1. </span><span class="content">Registration</span><a class="self-link" href="#registration"></a></h3>
+   <p>The below use case scenarios illustrate some basic supported flows. Additional scenarios, including sample code, are given later in <a data-link-type="biblio" href="#biblio-identity-use-cases-in-browser-catalog">[Identity-Use-Cases-in-Browser-Catalog]</a>.</p>
+   <h3 class="heading settled" data-level="2.1" id="sign-up"><span class="secno">2.1. </span><span class="content">Sign-up</span><a class="self-link" href="#sign-up"></a></h3>
    <ul>
     <li data-md>
-     <p>On a phone:</p>
+     <p>A user navigates to a rp.example in a browser and decides to create an account.</p>
+    <li data-md>
+     <p>The rp.example supports multiple <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider">Identity Provider</a> as an authentication mechanism.</p>
+    <li data-md>
+     <p>A user selects their favorite <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider①">Identity Provider</a> to sign-up with.</p>
+    <li data-md>
+     <p>The <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②">Identity Provider</a> prompts, "Do you want to create an account with rp.example?"</p>
+    <li data-md>
+     <p>The user agrees.</p>
+    <li data-md>
+     <p>rp.example shows message, "Registration complete." and authenticates the user.</p>
+   </ul>
+   <h3 class="heading settled" data-level="2.2" id="sign-in"><span class="secno">2.2. </span><span class="content">Sign-in</span><a class="self-link" href="#sign-in"></a></h3>
+   <ul>
+    <li data-md>
+     <p>On their phone:</p>
      <ul>
       <li data-md>
-       <p>User navigates to example.com in a browser and signs in to an existing account using whatever method they have been using
-(possibly a legacy method such as a password), or creates a new account.</p>
+       <p>A user goes through <a href="#sign-up">§ 2.1 Sign-up</a> on rp.example.</p>
+     </ul>
+    <li data-md>
+     <p>On their laptop:</p>
+     <ul>
       <li data-md>
-       <p>The phone prompts, "Do you want to register this device with example.com?"</p>
+       <p>The user goes to rp.example.com.</p>
       <li data-md>
-       <p>User agrees.</p>
+       <p>The user selects their favorite <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider③">Identity Provider</a> to sign-in.</p>
       <li data-md>
-       <p>The phone prompts the user for a previously configured <a data-link-type="dfn">authorization gesture</a> (PIN, biometric, etc.); the user
-provides this.</p>
+       <p>The <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider④">Identity Provider</a> remembers that the user already has an account with rp.example.</p>
       <li data-md>
-       <p>Website shows message, "Registration complete."</p>
+       <p>rp.example authenticates the user.</p>
      </ul>
    </ul>
-   <h3 class="heading settled" data-level="2.2" id="unregistration"><span class="secno">2.2. </span><span class="content">Unregistration</span><a class="self-link" href="#unregistration"></a></h3>
-   <h3 class="heading settled" data-level="2.3" id="sign-in"><span class="secno">2.3. </span><span class="content">Sign-in</span><a class="self-link" href="#sign-in"></a></h3>
-   <h3 class="heading settled" data-level="2.4" id="sign-out"><span class="secno">2.4. </span><span class="content">Sign-out</span><a class="self-link" href="#sign-out"></a></h3>
+   <h3 class="heading settled" data-level="2.3" id="sign-out"><span class="secno">2.3. </span><span class="content">Sign-out</span><a class="self-link" href="#sign-out"></a></h3>
+   <ul>
+    <li data-md>
+     <p>On a shared computer:</p>
+    <li data-md>
+     <p>A user goes through <a href="#sign-up">§ 2.1 Sign-up</a> on rp.example.</p>
+    <li data-md>
+     <p>The user decides to log out of rp.example.</p>
+    <li data-md>
+     <p>rp.example lets the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider⑤">Identity Provider</a> know that the user wants to logout.</p>
+    <li data-md>
+     <p>The <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider⑥">Identity Provider</a> logs the user out of rp.example and itself.</p>
+   </ul>
+   <h3 class="heading settled" data-level="2.4" id="revocation"><span class="secno">2.4. </span><span class="content">Revocation</span><a class="self-link" href="#revocation"></a></h3>
+   <ul>
+    <li data-md>
+     <p>A user goes through <a href="#sign-up">§ 2.1 Sign-up</a> on rp.example.com.</p>
+    <li data-md>
+     <p>The user decides to cancel their account.</p>
+    <li data-md>
+     <p>The user goes to their <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider⑦">Identity Provider</a> and revokes access to rp.example.</p>
+   </ul>
    <h3 class="heading settled" data-level="2.5" id="authorization"><span class="secno">2.5. </span><span class="content">Authorization</span><a class="self-link" href="#authorization"></a></h3>
+   <ul>
+    <li data-md>
+     <p>A user navigates to a rp.example in a browser and decides to create an account.</p>
+    <li data-md>
+     <p>The rp.example supports multiple <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider⑧">Identity Provider</a> as an authentication mechanism.</p>
+    <li data-md>
+     <p>A user selects their favorite <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider⑨">Identity Provider</a> to sign-up with.</p>
+    <li data-md>
+     <p>The <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider①⓪">Identity Provider</a> prompts, "Do you want to give access to your Calendar to rp.example?"</p>
+    <li data-md>
+     <p>The user agrees.</p>
+    <li data-md>
+     <p>rp.example shows message, "Registration complete.", authenticates the user and shows the user their calendar entries provided by the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider①①">Identity Provider</a>.</p>
+   </ul>
    <h2 class="heading settled" data-level="3" id="examples"><span class="secno">3. </span><span class="content">Examples</span><a class="self-link" href="#examples"></a></h2>
    <h3 class="heading settled" data-level="3.1" id="intro-account-management-api"><span class="secno">3.1. </span><span class="content">The Account Management API</span><a class="self-link" href="#intro-account-management-api"></a></h3>
    <div class="example" id="example-da147555">
@@ -764,9 +814,10 @@ provides this.</p>
    <dl>
     <dt data-md><dfn data-dfn-type="dfn" data-noexport id="relying-party">Relying Party<a class="self-link" href="#relying-party"></a></dfn>
     <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="rp">RP</dfn>
+    <dt data-md><dfn data-dfn-type="dfn" data-noexport id="website">WebSite<a class="self-link" href="#website"></a></dfn>
     <dd data-md>
      <p><em>Relying Party</em></p>
-    <dt data-md><dfn data-dfn-type="dfn" data-noexport id="identity-provider">Identity Provider<a class="self-link" href="#identity-provider"></a></dfn>
+    <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="identity-provider">Identity Provider</dfn>
     <dt data-md><dfn data-dfn-type="dfn" data-noexport id="idp">IDP<a class="self-link" href="#idp"></a></dfn>
     <dd data-md>
      <p><em>IDP</em> <a data-link-type="dfn" href="#rp" id="ref-for-rp">RP</a></p>
@@ -880,6 +931,7 @@ idtoken.</p>
    <li><a href="#dom-federatedcredentialrequestoptions-providers">providers</a><span>, in § 5.2</span>
    <li><a href="#relying-party">Relying Party</a><span>, in § 4</span>
    <li><a href="#rp">RP</a><span>, in § 4</span>
+   <li><a href="#website">WebSite</a><span>, in § 4</span>
   </ul>
   <aside class="dfn-panel" data-for="term-for-credential">
    <a href="https://w3c.github.io/webappsec-credential-management/#credential">https://w3c.github.io/webappsec-credential-management/#credential</a><b>Referenced in:</b>
@@ -1017,6 +1069,16 @@ idtoken.</p>
    <b><a href="#rp">#rp</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-rp">4. Terminology</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="identity-provider">
+   <b><a href="#identity-provider">#identity-provider</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-identity-provider">2.1. Sign-up</a> <a href="#ref-for-identity-provider①">(2)</a> <a href="#ref-for-identity-provider②">(3)</a>
+    <li><a href="#ref-for-identity-provider③">2.2. Sign-in</a> <a href="#ref-for-identity-provider④">(2)</a>
+    <li><a href="#ref-for-identity-provider⑤">2.3. Sign-out</a> <a href="#ref-for-identity-provider⑥">(2)</a>
+    <li><a href="#ref-for-identity-provider⑦">2.4. Revocation</a>
+    <li><a href="#ref-for-identity-provider⑧">2.5. Authorization</a> <a href="#ref-for-identity-provider⑨">(2)</a> <a href="#ref-for-identity-provider①⓪">(3)</a> <a href="#ref-for-identity-provider①①">(4)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="federatedcredential">
