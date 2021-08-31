@@ -6,7 +6,7 @@
   <link href="https://www.w3.org/StyleSheets/TR/2016/cg-draft" rel="stylesheet">
   <meta content="Bikeshed version 4f053d00e, updated Tue Aug 10 14:13:32 2021 -0700" name="generator">
   <link href="http://wicg.github.io/WebID" rel="canonical">
-  <meta content="8383111e0ab57feb9cb7f91328055ab183a95c9f" name="document-revision">
+  <meta content="412fbfa07080885699eaf6a36f0e35fa9922995f" name="document-revision">
 <style>
 dl.domintro dt {
     font-family: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
@@ -581,7 +581,7 @@ c-[il] { color: #000000 } /* Literal.Number.Integer.Long */
   <div class="head">
    <p data-fill-with="logo"><a class="logo" href="https://www.w3.org/"> <img alt="W3C" height="48" src="https://www.w3.org/StyleSheets/TR/2016/logos/W3C" width="72"> </a> </p>
    <h1 class="p-name no-ref" id="title">WebID API</h1>
-   <h2 class="no-num no-toc no-ref heading settled" id="profile-and-date"><span class="content">Draft Community Group Report, <time class="dt-updated" datetime="2021-08-27">27 August 2021</time></span></h2>
+   <h2 class="no-num no-toc no-ref heading settled" id="profile-and-date"><span class="content">Draft Community Group Report, <time class="dt-updated" datetime="2021-08-31">31 August 2021</time></span></h2>
    <div data-fill-with="spec-metadata">
     <dl>
      <dt>This version:
@@ -601,7 +601,7 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
   </div>
   <div class="p-summary" data-fill-with="abstract">
    <h2 class="no-num no-toc no-ref heading settled" id="abstract"><span class="content">Abstract</span></h2>
-   <p>This specification defines a set of <a data-link-type="dfn" href="#high-level-api" id="ref-for-high-level-api">high-level API</a>s that enables users to continue to use <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider">Identity Provider</a>s to authenticate to <a data-link-type="dfn" href="#website" id="ref-for-website">Website</a>s without incurring into <a data-link-type="dfn" href="#unsactioned-tracking" id="ref-for-unsactioned-tracking">unsactioned tracking</a> on the Web. It accomplishes that by exposing the explicit user controls needed to manage the lifecycle of their federated accounts and sessions.</p>
+   <p>This specification defines a set of <a data-link-type="dfn" href="#high-level-api" id="ref-for-high-level-api">high-level API</a>s that enables users to continue to use <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider">Identity Provider</a>s to authenticate to <a data-link-type="dfn" href="#website" id="ref-for-website">Website</a>s without incurring into <a data-link-type="dfn" href="#unsactioned-tracking" id="ref-for-unsactioned-tracking">unsactioned tracking</a> on the Web. It accomplishes that by exposing the explicit user controls needed to manage the lifecycle of their federated accounts.</p>
   </div>
   <div data-fill-with="at-risk"></div>
   <h2 class="no-num no-toc no-ref heading settled" id="status"><span class="content">Status of this document</span></h2>
@@ -836,24 +836,27 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
    </ul>
    <h2 class="heading settled" data-level="3" id="examples"><span class="secno">3. </span><span class="content">Examples</span><a class="self-link" href="#examples"></a></h2>
    <h3 class="heading settled" data-level="3.1" id="examples-signing-up-and-signing-in"><span class="secno">3.1. </span><span class="content">Signing-up and Signing-in</span><a class="self-link" href="#examples-signing-up-and-signing-in"></a></h3>
-   <div class="example" id="example-69eb338a">
-    <a class="self-link" href="#example-69eb338a"></a> 
+   <div class="example" id="example-466465b5">
+    <a class="self-link" href="#example-466465b5"></a> 
 <pre class="language-js highlight"><c- a>let</c-> <c- p>{</c->id_token<c- p>}</c-> <c- o>=</c-> <c- k>await</c-> navigator<c- p>.</c->credentials<c- p>.</c->get<c- p>({</c->
-  <c- c1>// controls which UX mode to use</c->
-  mode<c- o>:</c-> <c- u>"mediated"</c-><c- p>,</c->
   <c- c1>// controls whether auto sign-in is enabled or not</c->
   mediation<c- o>:</c-> <c- u>"optional"</c-><c- p>,</c->
-  <c- c1>// controls whether the account chooser is modal or not</c->
-  modal<c- o>:</c-> <c- kc>true</c-><c- p>,</c->
-  <c- c1>// controls which identity providers to use</c->
-  providers<c- o>:</c-> <c- p>[{</c->
-    url<c- o>:</c-> <c- u>"https://idp.example"</c-><c- p>,</c->
-    <c- c1>// the pre-registered client id</c->
-    client_id<c- o>:</c-> <c- u>"123"</c-><c- p>,</c->
-    nonce<c- o>:</c-> <c- u>"456"</c->
-  <c- p>}],</c->
   <c- c1>// controls abortions of the account chooser</c->
   signal<c- o>:</c-> signal
+
+  <c- c1>// controls which identity providers to use</c->
+  federated<c- o>:</c-> <c- p>{</c->
+    <c- c1>// controls which UX mode to use</c->
+    mode<c- o>:</c-> <c- u>"mediated"</c-><c- p>,</c->
+    <c- c1>// controls whether the account chooser is modal or not</c->
+    modal<c- o>:</c-> <c- kc>true</c-><c- p>,</c->
+    providers<c- o>:</c-> <c- p>[{</c->
+      url<c- o>:</c-> <c- u>"https://idp.example"</c-><c- p>,</c->
+      <c- c1>// the pre-registered client id</c->
+      client_id<c- o>:</c-> <c- u>"123"</c-><c- p>,</c->
+      nonce<c- o>:</c-> <c- u>"456"</c->
+    <c- p>}],</c->
+  <c- p>}</c->
 <c- p>});</c->
 </pre>
    </div>
