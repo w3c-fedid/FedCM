@@ -407,7 +407,7 @@ interface FederatedCredential : Credential {
 ### The {{FederatedCredential}}'s <code><dfn for="FederatedCredential" method>\[[CollectFromCredentialStore]](origin, options, sameOriginWithAncestors)</dfn></code> Method ### {#federated-credential-collect-from-credential-store}
 <!-- ============================================================ -->
 
-This method is called every time <code><a idl for="CredentialsContainer" lt="get()">navigator.credentials.get({federated:..., ...})</a></code> is called and is responsible for mediating the exchange with the [=Identity Provider=] to provide an [=id token=].
+The algorithm returns a set of {{FederatedCredential}} objects from the [=credential store=]. If no matching {{FederatedCredential}} objects are available and an [=Identity Provider=] is specified, a list of account options are fetched and provided.
 
 This [=internal method=] accepts three arguments:
 
@@ -420,7 +420,7 @@ This [=internal method=] accepts three arguments:
     :   <dfn>options</dfn>
     ::  This argument is a {{CredentialRequestOptions}} object whose
         <code>|options|.{{CredentialRequestOptions/federated}}</code> member contains a {{FederatedCredentialRequestOptions}}
-        object specifying the the exchange options.
+        object specifying the exchange options.
 
     :   <dfn>sameOriginWithAncestors</dfn>
     ::  This argument is a Boolean value which is [TRUE] if and only if the caller's [=environment settings object=] is
@@ -432,7 +432,42 @@ Note: <strong>This algorithm is synchronous:</strong> the {{Promise}} resolution
 
 When this method is invoked, the user agent MUST execute the following algorithm:
 
-1. Assert: <code>|options|.{{CredentialRequestOptions/federated}}</code> is [=present=].
+    1.  Assert: |options|["{{CredentialRequestOptions/federated}}"] [=map/exists=].
+
+    2.  If <var ignore>sameOriginWithAncestors</var> is `false`, return a "{{NotAllowedError}}" {{DOMException}}.
+
+        Note: This restriction aims to address the concern raised in [[Security-Origin-Confusion]].
+
+    3.  Return the empty set if |options|["{{CredentialRequestOptions/federated}}"] is not `true`.
+
+    4.  Let |credentials| be the result of <a abstract-op lt="Retrieve a list of credentials">retrieving</a>
+        credentials from the [=credential store=] that match the following filter:
+
+        1.  The credential is a {{FederatedCredential}}
+        2.  The credential's {{Credential/[[origin]]}} is the [=same origin=] as |origin|.
+        3.  If |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"]
+            [=map/exists=], its value [=list/contains=] the credentials's {{FederatedCredential/provider}}.
+        4.  If |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/protocols}}"]
+            [=map/exists=], its value [=list/contains=] the credentials's {{FederatedCredential/protocol}}.
+
+    5.  If |credentials| is not empty, return |credentials|.
+
+    6.  Assert: |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"] [=map/exists=].
+
+    7.  Assert: |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"] [=list/size=] is 1.
+
+        Note: at some point we would like to support choosing accounts from multiple [=Identity Provider=]s.
+
+    8. Let |provider| be |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"][0].
+
+    9. Assert: |provider|["{{FederatedIdentityProvider/url}}"] [=map/exists=].
+
+    10. Assert: |provider|["{{FederatedIdentityProvider/clientId}}"] [=map/exists=].
+
+    11. Assert: |provider|["{{FederatedIdentityProvider/nonce}}"] [=map/exists=].
+
+    12. Return the result of <a abstract-op lt="Retrieve a list of credentials">retrieving</a>
+        credentials from the [=Identity Provider=].
 
 <!-- ============================================================ -->
 ### `FederatedCredentialRequestOptions` ### {#FederatedCredentialRequestOptions}
@@ -694,6 +729,10 @@ partial interface FederatedCredential : Credential {
   "WebID": {
     "href": "https://www.w3.org/2005/Incubator/webid/spec/identity/",
     "title": "WebID"
+  },
+  "Security-Origin-Confusion": {
+    "href": "https://w3c.github.io/webappsec-credential-management/#security-origin-confusion",
+    "title": "Security Origin Confusion"
   },
   "Unsanctioned-Web-Tracking": {
     "authors": [ "Mark Nottingham" ],
