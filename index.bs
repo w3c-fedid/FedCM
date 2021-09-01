@@ -385,29 +385,59 @@ Websites call <code><a idl for="CredentialsContainer" lt="get()">navigator.crede
 ## The {{FederatedCredential}} Interface ## {#FederatedCredential}
 <!-- ============================================================ -->
 
+This specification extends the {{FederatedCredential}} type adding two more fields:
+
 <xmp class=idl>
 [Exposed=Window, SecureContext]
-interface FederatedCredential : Credential {
-  readonly attribute USVString provider;
+partial interface FederatedCredential : Credential {
   readonly attribute USVString idToken;
   readonly attribute FederatedCredentialApprover approvedBy;
 };
 </xmp>
 
 <dl dfn-type="attribute" dfn-for="FederatedCredential">
-    :   {{Credential/id}}
-    ::  This attribute is inherited from {{Credential}}
+    :   {{idToken}}
+    ::  The [=id token=].
+
+    :   {{approvedBy}}
+    ::  When used in conjunction with {{CredentialRequestOptions/mediation}}, it indicates whether the credential was provided via a [[#use-cases-auto-sign-in]] or an [[#use-cases-explicit-sign-in]].
 </dl>
 
 <!-- ============================================================ -->
-## Sign-up ## {#sign-up}
+## The {{FederatedCredentialRequestOptions}} ## {#FederatedCredentialRequestOptions}
 <!-- ============================================================ -->
 
+It also extends the {{FederatedCredentialRequestOptions}} by adding a list of {{FederatedIdentityProvider}}s as well as the UX controls for modality and modes.
+
+<xmp class=idl>
+partial dictionary FederatedCredentialRequestOptions {
+  sequence<(DOMString or FederatedIdentityProvider)> providers;
+  FederatedCredentialRequestMode mode = "mediated";
+  boolean modal = false;
+};
+
+dictionary FederatedIdentityProvider {
+  required USVString url;
+  USVString clientId;
+  USVString nonce;
+};
+
+enum FederatedCredentialRequestMode {
+  "mediated",
+  "permission"
+};
+
+enum FederatedCredentialApprovedBy {
+  "auto",
+  "user"
+};
+</xmp>
+
 <!-- ============================================================ -->
-### The {{FederatedCredential}}'s <code><dfn for="FederatedCredential" method>\[[CollectFromCredentialStore]](origin, options, sameOriginWithAncestors)</dfn></code> Method ### {#federated-credential-collect-from-credential-store}
+## The {{FederatedCredential}}'s <code><dfn for="FederatedCredential" method>\[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</dfn></code> Method ## {#federated-credential-discover-from-external-source}
 <!-- ============================================================ -->
 
-The algorithm returns a set of {{FederatedCredential}} objects from the [=credential store=]. If no matching {{FederatedCredential}} objects are available and an [=Identity Provider=] is specified, a list of account options are fetched and provided.
+This algorithm runs in parallel inside the [[CM#algorithm-request]] to request credentials and returns a set of {{FederatedCredential}} objects from a remote [=Identity Provider=].
 
 This [=internal method=] accepts three arguments:
 
@@ -432,111 +462,32 @@ Note: <strong>This algorithm is synchronous:</strong> the {{Promise}} resolution
 
 When this method is invoked, the user agent MUST execute the following algorithm:
 
-    1.  Assert: |options|["{{CredentialRequestOptions/federated}}"] [=map/exists=].
-
-    2.  If <var ignore>sameOriginWithAncestors</var> is `false`, return a "{{NotAllowedError}}" {{DOMException}}.
+    1.  If <var ignore>sameOriginWithAncestors</var> is `false`, return a "{{NotAllowedError}}" {{DOMException}}.
 
         Note: This restriction aims to address the concern raised in [[Security-Origin-Confusion]].
 
-    3.  Return the empty set if |options|["{{CredentialRequestOptions/federated}}"] is not `true`.
+    2.  Assert: |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"] [=map/exists=].
 
-    4.  Let |credentials| be the result of <a abstract-op lt="Retrieve a list of credentials">retrieving</a>
-        credentials from the [=credential store=] that match the following filter:
+    3.  Assert: |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"] [=list/size=] is 1.
 
-        1.  The credential is a {{FederatedCredential}}
-        2.  The credential's {{Credential/[[origin]]}} is the [=same origin=] as |origin|.
-        3.  If |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"]
-            [=map/exists=], its value [=list/contains=] the credentials's {{FederatedCredential/provider}}.
-        4.  If |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/protocols}}"]
-            [=map/exists=], its value [=list/contains=] the credentials's {{FederatedCredential/protocol}}.
+        Note: At some point we would like to support choosing accounts from multiple [=Identity Provider=]s.
 
-    5.  If |credentials| is not empty, return |credentials|.
+    4. Let |provider| be |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"][0].
 
-    6.  Assert: |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"] [=map/exists=].
+    5. Assert: |provider|["{{FederatedIdentityProvider/url}}"] [=map/exists=].
 
-    7.  Assert: |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"] [=list/size=] is 1.
+    6. Assert: |provider|["{{FederatedIdentityProvider/clientId}}"] [=map/exists=].
 
-        Note: at some point we would like to support choosing accounts from multiple [=Identity Provider=]s.
+    7. Assert: |provider|["{{FederatedIdentityProvider/nonce}}"] [=map/exists=].
 
-    8. Let |provider| be |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"][0].
-
-    9. Assert: |provider|["{{FederatedIdentityProvider/url}}"] [=map/exists=].
-
-    10. Assert: |provider|["{{FederatedIdentityProvider/clientId}}"] [=map/exists=].
-
-    11. Assert: |provider|["{{FederatedIdentityProvider/nonce}}"] [=map/exists=].
-
-    12. Return the result of <a abstract-op lt="Retrieve a list of credentials">retrieving</a>
+    8. Return the result of <a abstract-op lt="Retrieve a list of credentials">retrieving</a>
         credentials from the [=Identity Provider=].
 
-<!-- ============================================================ -->
-### `FederatedCredentialRequestOptions` ### {#FederatedCredentialRequestOptions}
-<!-- ============================================================ -->
-
-To support obtaining via {{CredentialsContainer/get()|navigator.credentials.get()}},
-this document extends the {{CredentialRequestOptions}} dictionary as follows:
-
-<xmp class="idl">
-dictionary FederatedCredentialRequestOptions {
-  sequence<(DOMString or FederatedIdentityProvider)> providers;
-  sequence<DOMString> protocols;
-  FederatedCredentialRequestMode mode = "mediated";
-  boolean modal = false;
-};
-</xmp>
-
-<div dfn-type="dict-member" dfn-for="FederatedCredentialRequestOptions">
-    :   <dfn>providers</dfn>
-    ::  This OPTIONAL member is used to make WebOTP requests.
-</div>
+    9.  If |credentials| is not empty, return |credentials|.
 
 <!-- ============================================================ -->
-### `FederatedIdentityProvider` ### {#FederatedIdentityProvider}
+## Sign-up ## {#sign-up}
 <!-- ============================================================ -->
-
-<xmp class="idl">
-dictionary FederatedIdentityProvider {
-  required USVString url;
-  USVString clientId;
-  USVString nonce;
-};
-</xmp>
-
-<div dfn-type="dict-member" dfn-for="FederatedIdentityProvider">
-    :   <dfn>url</dfn>
-    ::  The url endpoint of the [=Identity Provider=]
-    :   <dfn>clientId</dfn>
-    ::  The identifier that represents the [=Relying Party=] in the [=Identity Provider=]
-    :   <dfn>nonce</dfn>
-    ::  A random number.
-    
-</div>
-
-<!-- ============================================================ -->
-### `FederatedCredentialRequestMode` ### {#FederatedCredentialRequestMode}
-<!-- ============================================================ -->
-
-The {{FederatedCredentialRequestMode}} dictionary supplies
-{{CredentialsContainer/get()|navigator.credentials.get()}} with the data it needs to retrieve an
-idtoken.
-
-<xmp class="idl">
-enum FederatedCredentialRequestMode {
-  "mediated",
-  "permission"
-};
-</xmp>
-
-<!-- ============================================================ -->
-### `FederatedCredentialApprovedBy` ### {#FederatedCredentialApprovedBy}
-<!-- ============================================================ -->
-
-<xmp class="idl">
-enum FederatedCredentialApprovedBy {
-  "auto",
-  "user"
-};
-</xmp>
 
 <!-- ============================================================ -->
 ### Interceptors ### {#Interceptors}
@@ -729,6 +680,10 @@ partial interface FederatedCredential : Credential {
   "WebID": {
     "href": "https://www.w3.org/2005/Incubator/webid/spec/identity/",
     "title": "WebID"
+  },
+  "CM": {
+    "href": "https://w3c.github.io/webappsec-credential-management/",
+    "title": "Credential Management"
   },
   "Security-Origin-Confusion": {
     "href": "https://w3c.github.io/webappsec-credential-management/#security-origin-confusion",
