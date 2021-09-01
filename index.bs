@@ -462,7 +462,7 @@ This algorithm runs in parallel inside the [[CM#algorithm-request]] to request c
 
 This [=internal method=] accepts three arguments:
 
-<dl dfn-type="argument" dfn-for="PublicKeyCredential/[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)">
+<dl dfn-type="argument" dfn-for="FederatedCredential/[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)">
 
     :   <dfn>origin</dfn>
     ::  This argument is the [=relevant settings object=]'s [=environment settings object/origin=], as determined by the
@@ -500,6 +500,10 @@ When this method is invoked, the user agent MUST execute the following algorithm
     6. Assert: |provider|["{{FederatedIdentityProvider/clientId}}"] [=map/exists=].
 
     7. Assert: |provider|["{{FederatedIdentityProvider/nonce}}"] [=map/exists=].
+
+    8. Let the |wellknown| url be the relative url ".well-known/webid" of |provider|["{{FederatedIdentityProvider/url}}"]
+
+    9. Fetch the |wellknown| url with the [[#Sec-WebID-CSR]] header.
 
     8. Return the result of <a abstract-op lt="Retrieve a list of credentials">retrieving</a>
         credentials from the [=Identity Provider=].
@@ -554,15 +558,22 @@ partial interface FederatedCredential : Credential {
 ## The .well-known/webid configuration ## {#Well-Known}
 <!-- ============================================================ -->
 
-* [[#accounts_endpoint]]
-* [[#idtoken_endpoint]]
-* [[#client_id_metadata_endpoint]]
+<dl dfn-type="argument" dfn-for="WellKnown">
+    :   <dfn>accounts_endpoint</dfn>
+    ::  A relative URL that points to an HTTP API that complies with the [[#accounts_endpoint]].
+    :   <dfn>idtoken_endpoint</dfn>
+    ::  A relative URL that points to an HTTP API that complies with the [[#idtoken_endpoint]].
+    :   <dfn>client_id_metadata_endpoint</dfn>
+    ::  A relative URL that points to an HTTP API that complies with the [[#client_id_metadata_endpoint]].
+</dl>
+
+<!-- ============================================================ -->
+### <code><dfn data-export="">`Sec-WebID-CSR`</dfn></code> ### {#Sec-WebID-CSR}
+<!-- ============================================================ -->
 
 <!-- ============================================================ -->
 ### accounts_endpoint ### {#accounts_endpoint}
 <!-- ============================================================ -->
-
-The [=.well-known=]'s <code><dfn data-export="" data-dfn-for=".well-known">`accounts_endpoint`</dfn></code> 
 
 <!-- ============================================================ -->
 #### The accounts list request  #### {#accounts_endpoint_request}
@@ -572,39 +583,54 @@ The [=.well-known=]'s <code><dfn data-export="" data-dfn-for=".well-known">`acco
 #### The accounts list response  #### {#accounts_endpoint_response}
 <!-- ============================================================ -->
 
-* <dfn data-export="" data-dfn-for="accounts_response">`accounts`</dfn></code> a list of [[#accounts]].
+<dl dfn-type="argument" dfn-for="accounts_response">
+    :   <dfn>accounts</dfn>
+    ::  A list of [[#accounts]].
+</dl>
 
 <!-- ============================================================ -->
 ##### Account  ##### {#accounts}
 <!-- ============================================================ -->
 
-* <dfn data-export="" data-dfn-for="accounts">`account_id`</dfn></code> 
-* <dfn data-export="" data-dfn-for="accounts">`name`</dfn></code> 
-* <dfn data-export="" data-dfn-for="accounts">`email`</dfn></code> 
-* <dfn data-export="" data-dfn-for="accounts">`picture`</dfn></code> 
+<dl dfn-type="argument" dfn-for="accounts">
+    :   <dfn>account_id</dfn>
+    ::  An account identifier.
+    :   <dfn>name</dfn>
+    ::  The user's name.
+    :   <dfn>email</dfn>
+    ::  The user's email address.
+    :   <dfn>picture</dfn>
+    :: The user's profile picture.
+</dl>
 
 <!-- ============================================================ -->
 ### idtoken_endpoint ### {#idtoken_endpoint}
 <!-- ============================================================ -->
 
-The [=.well-known=]'s <code><dfn data-export="" data-dfn-for=".well-known">`idtoken_endpoint`</dfn></code> 
-
-* <dfn data-export="" data-dfn-for="idtoken_response">`accounts`</dfn></code> a list of [[#accounts]].
-
 <!-- ============================================================ -->
 #### The idtoken request  #### {#idtoken_endpoint_request}
 <!-- ============================================================ -->
 
-* <dfn data-export="" data-dfn-for="idtoken_endpoint_request">`account_id`</dfn></code>
-* <dfn data-export="" data-dfn-for="idtoken_endpoint_request">`request`</dfn></code>
-    * <dfn data-export="" data-dfn-for="idtoken_endpoint_request_client_id">`client_id`</dfn></code>
-    * <dfn data-export="" data-dfn-for="idtoken_endpoint_request_nonce">`nonce`</dfn></code>
+<dl dfn-type="dictionary" dfn-for="idtoken_endpoint_request">
+    :   <dfn>account_id</dfn>
+    :: An account identifier.
+    :   <dfn>request</dfn>
+    :: An {{idtoken_endpoint_request_request}}.
+</dl>
+
+<dl dfn-type="dictionary" dfn-for="idtoken_endpoint_request_request">
+    :   <dfn>client_id</dfn>
+    :   <dfn>nonce</dfn>
+</dl>
 
 <!-- ============================================================ -->
 #### The idtoken response  #### {#idtoken_endpoint_response}
 <!-- ============================================================ -->
 
-* <dfn data-export="" data-dfn-for="idtoken_endpoint_response">`id_token`</dfn></code>
+<dl dfn-type="dictionary" dfn-for="idtoken_endpoint_response">
+    :   <dfn>id_token</dfn>
+    ::  An [=id token=].
+</dl>
 
 <!-- ============================================================ -->
 ### client_id_metadata_endpoint ### {#client_id_metadata_endpoint}
@@ -620,8 +646,12 @@ The [=.well-known=]'s <code><dfn data-export="" data-dfn-for=".well-known">`clie
 #### The client_id metadata response  #### {#client_id_metadata_endpoint_response}
 <!-- ============================================================ -->
 
-* <dfn data-export="" data-dfn-for="client_id_metadata">`privacy_policy_url`</dfn></code> 
-* <dfn data-export="" data-dfn-for="client_id_metadata">`terms_of_service_url`</dfn></code> 
+<dl dfn-type="dictionary" dfn-for="client_id_metadata_endpont_response">
+    :   <dfn>privacy_policy_url</dfn>
+    ::  A link to the [=Relying Party=]'s privacy policy.
+    :   <dfn>terms_of_service_url</dfn>
+    ::  A link to the [=Relying Party=]'s terms of service.
+</dl>
 
 <!-- ============================================================ -->
 # Session Management API # {#SessionManagementAPI}
