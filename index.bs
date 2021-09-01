@@ -404,6 +404,37 @@ interface FederatedCredential : Credential {
 <!-- ============================================================ -->
 
 <!-- ============================================================ -->
+### The {{FederatedCredential}}'s <code><dfn for="FederatedCredential" method>\[[CollectFromCredentialStore]](origin, options, sameOriginWithAncestors)</dfn></code> Method ### {#federated-credential-collect-from-credential-store}
+<!-- ============================================================ -->
+
+This method is called every time <code><a idl for="CredentialsContainer" lt="get()">navigator.credentials.get({federated:..., ...})</a></code> is called and is responsible for mediating the exchange with the [=Identity Provider=] to provide an [=id token=].
+
+This [=internal method=] accepts three arguments:
+
+<dl dfn-type="argument" dfn-for="PublicKeyCredential/[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)">
+
+    :   <dfn>origin</dfn>
+    ::  This argument is the [=relevant settings object=]'s [=environment settings object/origin=], as determined by the
+        calling {{CredentialsContainer/get()}} implementation, i.e., {{CredentialsContainer}}'s <a abstract-op>Request a `Credential`</a> abstract operation.
+
+    :   <dfn>options</dfn>
+    ::  This argument is a {{CredentialRequestOptions}} object whose
+        <code>|options|.{{CredentialRequestOptions/federated}}</code> member contains a {{FederatedCredentialRequestOptions}}
+        object specifying the the exchange options.
+
+    :   <dfn>sameOriginWithAncestors</dfn>
+    ::  This argument is a Boolean value which is [TRUE] if and only if the caller's [=environment settings object=] is
+        [=same-origin with its ancestors=]. It is [FALSE] if caller is cross-origin.
+</dl>
+
+Note: <strong>This algorithm is synchronous:</strong> the {{Promise}} resolution/rejection is handled by
+{{CredentialsContainer/get()|navigator.credentials.get()}}.
+
+When this method is invoked, the user agent MUST execute the following algorithm:
+
+1. Assert: <code>|options|.{{CredentialRequestOptions/federated}}</code> is [=present=].
+
+<!-- ============================================================ -->
 ### `FederatedCredentialRequestOptions` ### {#FederatedCredentialRequestOptions}
 <!-- ============================================================ -->
 
