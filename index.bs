@@ -382,7 +382,11 @@ if (!window.FederatedCredential) {
 Websites call <code><a idl for="CredentialsContainer" lt="get()">navigator.credentials.get({providers:..., ...})</a></code> to retrieve a {{FederatedCredential}}.
 
 <!-- ============================================================ -->
-## The FederatedCredential Interface ## {#FederatedCredential}
+## Account Creation ## {#account-creation}
+<!-- ============================================================ -->
+
+<!-- ============================================================ -->
+### The FederatedCredential Interface ### {#FederatedCredential}
 <!-- ============================================================ -->
 
 <xmp class=idl>
@@ -391,9 +395,6 @@ interface FederatedCredential : Credential {
   readonly attribute USVString provider;
   readonly attribute USVString idToken;
   readonly attribute FederatedCredentialApprover approvedBy;
-  static Promise<void> logout(optional sequence<USVString> logout_endpoints = []);
-  static Promise<void> revoke(USVString accountId);
-  static Promise<void> registerInterceptor(FederatedCredentialInterceptor interceptor);
 };
 </xmp>
 
@@ -403,7 +404,7 @@ interface FederatedCredential : Credential {
 </dl>
 
 <!-- ============================================================ -->
-## `FederatedCredentialRequestOptions` ## {#FederatedCredentialRequestOptions}
+### `FederatedCredentialRequestOptions` ### {#FederatedCredentialRequestOptions}
 <!-- ============================================================ -->
 
 To support obtaining via {{CredentialsContainer/get()|navigator.credentials.get()}},
@@ -424,7 +425,7 @@ partial dictionary FederatedCredentialRequestOptions {
 </div>
 
 <!-- ============================================================ -->
-## `FederatedIdentityProvider` ## {#FederatedIdentityProvider}
+### `FederatedIdentityProvider` ### {#FederatedIdentityProvider}
 <!-- ============================================================ -->
 
 <xmp class="idl">
@@ -446,7 +447,7 @@ dictionary FederatedIdentityProvider {
 </div>
 
 <!-- ============================================================ -->
-## `FederatedCredentialRequestMode` ## {#FederatedCredentialRequestMode}
+### `FederatedCredentialRequestMode` ### {#FederatedCredentialRequestMode}
 <!-- ============================================================ -->
 
 The {{FederatedCredentialRequestMode}} dictionary supplies
@@ -461,7 +462,7 @@ enum FederatedCredentialRequestMode {
 </xmp>
 
 <!-- ============================================================ -->
-## `FederatedCredentialApprovedBy` ## {#FederatedCredentialApprovedBy}
+### `FederatedCredentialApprovedBy` ### {#FederatedCredentialApprovedBy}
 <!-- ============================================================ -->
 
 <xmp class="idl">
@@ -472,7 +473,29 @@ enum FederatedCredentialApprovedBy {
 </xmp>
 
 <!-- ============================================================ -->
-## `FederatedCredentialInterceptor` ## {#FederatedCredentialInterceptor}
+## Account Revocation ## {#account-revocation}
+<!-- ============================================================ -->
+
+<xmp class=idl>
+[Exposed=Window, SecureContext]
+partial interface FederatedCredential : Credential {
+  static Promise<void> revoke(USVString accountId);
+};
+</xmp>
+
+<!-- ============================================================ -->
+## Interceptors ## {#Interceptors}
+<!-- ============================================================ -->
+
+<xmp class=idl>
+[Exposed=Window, SecureContext]
+partial interface FederatedCredential : Credential {
+  static Promise<void> registerInterceptor(FederatedCredentialInterceptor interceptor);
+};
+</xmp>
+
+<!-- ============================================================ -->
+### `FederatedCredentialInterceptor` ### {#FederatedCredentialInterceptor}
 <!-- ============================================================ -->
 
 <xmp class="idl">
@@ -528,7 +551,7 @@ The [=.well-known=]'s <code><dfn data-export="" data-dfn-for=".well-known">`acco
 
 The [=.well-known=]'s <code><dfn data-export="" data-dfn-for=".well-known">`id_token`</dfn></code> 
 
-* <dfn data-export="" data-dfn-for="accounts_response">`accounts`</dfn></code> a list of [[#accounts]].
+* <dfn data-export="" data-dfn-for="idtoken_response">`accounts`</dfn></code> a list of [[#accounts]].
 
 <!-- ============================================================ -->
 #### The idtoken request  #### {#idtoken_endpoint_request}
@@ -572,10 +595,17 @@ Websites call <code><a idl for="FederatedCredential" lt="get()">FederatedCredent
 ## RP Initiated Logout ## {#rp-logout}
 <!-- ============================================================ -->
 
+
 <!-- ============================================================ -->
 ## IDP Initiated Logout ## {#idp-logout}
 <!-- ============================================================ -->
 
+<xmp class=idl>
+[Exposed=Window, SecureContext]
+partial interface FederatedCredential : Credential {
+  static Promise<void> logout(optional sequence<USVString> logout_endpoints = []);
+};
+</xmp>
 
 <!-- ============================================================ -->
 # Security # {#security}
