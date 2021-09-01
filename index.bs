@@ -395,9 +395,9 @@ User agents MUST internally provide a <dfn export id="concept-state-machine">sta
 
 <dl dfn-type="argument" dfn-for="StateMachine">
     :   <dfn>Account State</dfn>
-    ::  can be at [=registered=] or (by default) [=unregistered=].
+    ::  Keeps track of whether the user has an account or not. Can be [=registered=] or (by default) [=unregistered=].
     :   <dfn>Session State</dfn>
-    ::  can be at [=logged in=] or (by default) [=logged out=].
+    ::  Keeps track of whether the user has an open or closed session. Can be [=logged in=] or (by default) [=logged out=].
 </dl>
 
 <!-- ============================================================ -->
@@ -491,45 +491,47 @@ When this method is invoked, the user agent MUST execute the following algorithm
 
         Note: This restriction aims to address the concern raised in [[Security-Origin-Confusion]].
 
-    2.  Assert: |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"] [=map/exists=].
+    1.  Assert: |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"] [=map/exists=].
 
-    3.  Assert: |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"] [=list/size=] is 1.
+    1.  Assert: |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"] [=list/size=] is 1.
 
         Note: At some point we would like to support choosing accounts from multiple [=Identity Provider=]s.
 
-    4. Let |provider| be |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"][0].
+    1. Let |provider| be |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"][0].
 
-    5. Assert: |provider|["{{FederatedIdentityProvider/url}}"] [=map/exists=].
+    1. Assert: |provider|["{{FederatedIdentityProvider/url}}"] [=map/exists=].
 
-    6. Assert: |provider|["{{FederatedIdentityProvider/clientId}}"] [=map/exists=].
+    1. Assert: |provider|["{{FederatedIdentityProvider/clientId}}"] [=map/exists=].
 
-    7. Assert: |provider|["{{FederatedIdentityProvider/nonce}}"] [=map/exists=].
+    1. Assert: |provider|["{{FederatedIdentityProvider/nonce}}"] [=map/exists=].
 
-    8. Let the |wellknown| url be the relative url ".well-known/webid" of |provider|["{{FederatedIdentityProvider/url}}"]
+    1. Let the |wellknown| url be the relative url ".well-known/webid" of |provider|["{{FederatedIdentityProvider/url}}"]
 
-    9. Fetch the |wellknown| url with the [[#Sec-WebID-CSR|Sec-WebID-CSR]] header but without the [=Identity Provider=]'s cookies.
+    1. Fetch the |wellknown| url with the [[#Sec-WebID-CSR|Sec-WebID-CSR]] header but without the [=Identity Provider=]'s cookies.
 
-    10. Let the |acccounts_endpoint| url be the relative url |wellknown|["{{WellKnown/accounts_endpoint}}"] of |provider|["{{FederatedIdentityProvider/url}}"]
+    1. Let the |acccounts_endpoint| url be the relative url |wellknown|["{{WellKnown/accounts_endpoint}}"] of |provider|["{{FederatedIdentityProvider/url}}"]
 
-    11. Let the |accounts list| be the result of fetching the |accounts_endpoint| with the [=Identity Provider=]'s cookies.
+    1. Let the |accounts list| be the result of fetching the |accounts_endpoint| with the [=Identity Provider=]'s cookies.
 
-    12. Let the |client_id_metadata_endpoint| url be the relative url |wellknown|["{{WellKnown/client_id_metadata_endpoint}}"] of |provider|["{{FederatedIdentityProvider/url}}"]
+    1. Let the |client_id_metadata_endpoint| url be the relative url |wellknown|["{{WellKnown/client_id_metadata_endpoint}}"] of |provider|["{{FederatedIdentityProvider/url}}"]
 
-    13. Let the |policies| be the result of fetching the |client_id_metadata_endpoint| with the [[#Sec-WebID-CSR|Sec-WebID-CSR]] header but without the [=Identity Provider=]'s cookies.
+    1. Let the |policies| be the result of fetching the |client_id_metadata_endpoint| with the [[#Sec-WebID-CSR|Sec-WebID-CSR]] header but without the [=Identity Provider=]'s cookies.
 
-    14. Let |account| be the result of asking the user to select an account from the |account list| from their [=Identity Provider=] to sign-up with the [=Relying Party=] under the [=Relying Party=]'s Privacy Policy at |policies|["{{client_id_metadata_endpont_response/privacy_policy_url}}"] and Terms of Service at |policies|["{{client_id_metadata_endpont_response/terms_of_service_url}}"]. 
+    1. Let |account| be the result of asking the user to select an account from the |account list| from their [=Identity Provider=] to sign-up with the [=Relying Party=] under the [=Relying Party=]'s Privacy Policy at |policies|["{{client_id_metadata_endpont_response/privacy_policy_url}}"] and Terms of Service at |policies|["{{client_id_metadata_endpont_response/terms_of_service_url}}"]. 
 
-    15. If the user chooses not to sign-up, return `null`.
+    1. If the user chooses not to sign-up, return `null`.
 
-    16. Let |token| be the result of making a POST request to the |wellknown|["{{WellKnown/idtoken_endpoint}}"] with:
+    1. For the for the [=Identity Provider=] |provider|["{{FederatedIdentityProvider/url}}"] and the [=Relying Party=] |origin| pair:
+        * Set the user's {{StateMachine/Account State}} from [=unregistered=] to [=registered=].
+        * Set the user's {{StateMachine/Session State}} from [=logged out=] to [=logged in=].
+
+    1. Let |token| be the result of making a POST request to the |wellknown|["{{WellKnown/idtoken_endpoint}}"] with:
         * Let the {{idtoken_endpoint_request/account_id}} be |account|["{{accounts_endpoint_response_accounts/account_id}}"].
-	* Let the {{idtoken_endpoint_request/request}} be a new object with:
-            * Let {{idtoken_endpoint_request_request/client_id}} be |provider|["{{FederatedIdentityProvider/clientId}}"].
-            * Let the {{idtoken_endpoint_request_request/nonce}} be |provider|["{{FederatedIdentityProvider/nonce}}"].
+        * Let the {{idtoken_endpoint_request/request}} be a new object with
+              * Let {{idtoken_endpoint_request_request/client_id}} be |provider|["{{FederatedIdentityProvider/clientId}}"].
+              * Let the {{idtoken_endpoint_request_request/nonce}} be |provider|["{{FederatedIdentityProvider/nonce}}"].
 
-    17. Set the user's {{StateMachine/Account State}} from [=unregistered=] to [=registered=] for the [=Identity Provider=] |provider|["{{FederatedIdentityProvider/url}}"] and the [=Relying Party=] |origin|.
-
-    18. Return a new {{FederatedCredential}} as:
+    1. Return a new {{FederatedCredential}} as:
         * {{FederatedCredential/id}} with |account|["{{accounts_endpoint_response_accounts/account_id}}"]
         * {{FederatedCredential/idToken}} with |token|
         * {{FederatedCredential/provider}} with |provider|["{{FederatedIdentityProvider/url}}"]
@@ -610,7 +612,7 @@ partial interface FederatedCredential : Credential {
 
 <dl dfn-type="argument" dfn-for="accounts_endpoint_response">
     :   <dfn>accounts</dfn>
-    ::  A list of [[#accounts]].
+    ::  A list of [[#accounts_endpoint_response_accounts]].
 </dl>
 
 <!-- ============================================================ -->
@@ -651,7 +653,7 @@ partial interface FederatedCredential : Credential {
 #### The idtoken response  #### {#idtoken_endpoint_response}
 <!-- ============================================================ -->
 
-<dl dfn-type="dictionary" dfn-for="idtoken_endpoint_response">
+<dl dfn-type="argument" dfn-for="idtoken_endpoint_response">
     :   <dfn>id_token</dfn>
     ::  An [=id token=].
 </dl>
@@ -670,7 +672,7 @@ The [=.well-known=]'s <code><dfn data-export="" data-dfn-for=".well-known">`clie
 #### The client_id metadata response  #### {#client_id_metadata_endpoint_response}
 <!-- ============================================================ -->
 
-<dl dfn-type="dictionary" dfn-for="client_id_metadata_endpont_response">
+<dl dfn-type="argument" dfn-for="client_id_metadata_endpont_response">
     :   <dfn>privacy_policy_url</dfn>
     ::  A link to the [=Relying Party=]'s privacy policy.
     :   <dfn>terms_of_service_url</dfn>

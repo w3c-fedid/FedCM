@@ -6,7 +6,7 @@
   <link href="https://www.w3.org/StyleSheets/TR/2016/cg-draft" rel="stylesheet">
   <meta content="Bikeshed version 4f053d00e, updated Tue Aug 10 14:13:32 2021 -0700" name="generator">
   <link href="http://wicg.github.io/WebID" rel="canonical">
-  <meta content="a70dc8b8e39a4497e6346481b2781c46361f0e4d" name="document-revision">
+  <meta content="182b67ab34c438810d6af6108cd758e0f5b2f3a7" name="document-revision">
 <style>
 dl.domintro dt {
     font-family: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
@@ -1040,10 +1040,10 @@ instead of a <a href="#use-cases-sign-in">§ 2.2 Sign-in</a> flow.</p>
    <dl>
     <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="StateMachine" data-dfn-type="argument" data-export id="dom-statemachine-account-state"><code>Account State</code></dfn>
     <dd data-md>
-     <p>can be at <a data-link-type="dfn" href="#registered" id="ref-for-registered">registered</a> or (by default) <a data-link-type="dfn" href="#unregistered" id="ref-for-unregistered">unregistered</a>.</p>
-    <dt data-md><dfn class="idl-code" data-dfn-for="StateMachine" data-dfn-type="argument" data-export id="dom-statemachine-session-state"><code>Session State</code><a class="self-link" href="#dom-statemachine-session-state"></a></dfn>
+     <p>Keeps track of whether the user has an account or not. Can be <a data-link-type="dfn" href="#registered" id="ref-for-registered">registered</a> or (by default) <a data-link-type="dfn" href="#unregistered" id="ref-for-unregistered">unregistered</a>.</p>
+    <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="StateMachine" data-dfn-type="argument" data-export id="dom-statemachine-session-state"><code>Session State</code></dfn>
     <dd data-md>
-     <p>can be at <a data-link-type="dfn" href="#logged-in" id="ref-for-logged-in">logged in</a> or (by default) <a data-link-type="dfn" href="#logged-out" id="ref-for-logged-out">logged out</a>.</p>
+     <p>Keeps track of whether the user has an open or closed session. Can be <a data-link-type="dfn" href="#logged-in" id="ref-for-logged-in">logged in</a> or (by default) <a data-link-type="dfn" href="#logged-out" id="ref-for-logged-out">logged out</a>.</p>
    </dl>
    <h2 class="heading settled" data-level="6" id="AccountManagementAPI"><span class="secno">6. </span><span class="content">Account Management API</span><a class="self-link" href="#AccountManagementAPI"></a></h2>
    <p>Websites call <code><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dom-credentialscontainer-get" id="ref-for-dom-credentialscontainer-get">navigator.credentials.get({providers:..., ...})</a></code> to retrieve a <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential">FederatedCredential</a></code>.</p>
@@ -1134,16 +1134,24 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
     <li data-md>
      <p>Let the <var>policies</var> be the result of fetching the <var>client_id_metadata_endpoint</var> with the <a href="#Sec-WebID-CSR">Sec-WebID-CSR</a> header but without the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider③①">Identity Provider</a>'s cookies.</p>
     <li data-md>
-     <p>Let <var>account</var> be the result of asking the user to select an account from the <var>account list</var> from their <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider③②">Identity Provider</a> to sign-up with the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party⑤⓪">Relying Party</a> under the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party⑤①">Relying Party</a>'s Privacy Policy at <var>policies</var>["<code class="idl"><a data-link-type="idl" href="#dictdef-client_id_metadata_endpont_response-privacy_policy_url" id="ref-for-dictdef-client_id_metadata_endpont_response-privacy_policy_url">privacy_policy_url</a></code>"] and Terms of Service at <var>policies</var>["<code class="idl"><a data-link-type="idl" href="#dictdef-client_id_metadata_endpont_response-terms_of_service_url" id="ref-for-dictdef-client_id_metadata_endpont_response-terms_of_service_url">terms_of_service_url</a></code>"].</p>
+     <p>Let <var>account</var> be the result of asking the user to select an account from the <var>account list</var> from their <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider③②">Identity Provider</a> to sign-up with the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party⑤⓪">Relying Party</a> under the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party⑤①">Relying Party</a>'s Privacy Policy at <var>policies</var>["<code class="idl"><a data-link-type="idl" href="#dom-client_id_metadata_endpont_response-privacy_policy_url" id="ref-for-dom-client_id_metadata_endpont_response-privacy_policy_url">privacy_policy_url</a></code>"] and Terms of Service at <var>policies</var>["<code class="idl"><a data-link-type="idl" href="#dom-client_id_metadata_endpont_response-terms_of_service_url" id="ref-for-dom-client_id_metadata_endpont_response-terms_of_service_url">terms_of_service_url</a></code>"].</p>
     <li data-md>
      <p>If the user chooses not to sign-up, return <code>null</code>.</p>
+    <li data-md>
+     <p>For the for the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider③③">Identity Provider</a> <var>provider</var>["<code class="idl"><a data-link-type="idl" href="#dom-federatedidentityprovider-url" id="ref-for-dom-federatedidentityprovider-url④">url</a></code>"] and the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party⑤②">Relying Party</a> <var>origin</var> pair:</p>
+     <ul>
+      <li data-md>
+       <p>Set the user’s <code class="idl"><a data-link-type="idl" href="#dom-statemachine-account-state" id="ref-for-dom-statemachine-account-state">Account State</a></code> from <a data-link-type="dfn" href="#unregistered" id="ref-for-unregistered①">unregistered</a> to <a data-link-type="dfn" href="#registered" id="ref-for-registered①">registered</a>.</p>
+      <li data-md>
+       <p>Set the user’s <code class="idl"><a data-link-type="idl" href="#dom-statemachine-session-state" id="ref-for-dom-statemachine-session-state">Session State</a></code> from <a data-link-type="dfn" href="#logged-out" id="ref-for-logged-out①">logged out</a> to <a data-link-type="dfn" href="#logged-in" id="ref-for-logged-in①">logged in</a>.</p>
+     </ul>
     <li data-md>
      <p>Let <var>token</var> be the result of making a POST request to the <var>wellknown</var>["<code class="idl"><a data-link-type="idl" href="#dom-wellknown-idtoken_endpoint" id="ref-for-dom-wellknown-idtoken_endpoint">idtoken_endpoint</a></code>"] with:</p>
      <ul>
       <li data-md>
        <p>Let the <code class="idl"><a data-link-type="idl" href="#dom-idtoken_endpoint_request-account_id" id="ref-for-dom-idtoken_endpoint_request-account_id">account_id</a></code> be <var>account</var>["<code class="idl"><a data-link-type="idl" href="#dom-accounts_endpoint_response_accounts-account_id" id="ref-for-dom-accounts_endpoint_response_accounts-account_id">account_id</a></code>"].</p>
       <li data-md>
-       <p>Let the <code class="idl"><a data-link-type="idl" href="#dom-idtoken_endpoint_request-request" id="ref-for-dom-idtoken_endpoint_request-request">request</a></code> be a new object with:</p>
+       <p>Let the <code class="idl"><a data-link-type="idl" href="#dom-idtoken_endpoint_request-request" id="ref-for-dom-idtoken_endpoint_request-request">request</a></code> be a new object with</p>
        <ul>
         <li data-md>
          <p>Let <code class="idl"><a data-link-type="idl" href="#dom-idtoken_endpoint_request_request-client_id" id="ref-for-dom-idtoken_endpoint_request_request-client_id">client_id</a></code> be <var>provider</var>["<code class="idl"><a data-link-type="idl" href="#dom-federatedidentityprovider-clientid" id="ref-for-dom-federatedidentityprovider-clientid①">clientId</a></code>"].</p>
@@ -1151,8 +1159,6 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
          <p>Let the <code class="idl"><a data-link-type="idl" href="#dom-idtoken_endpoint_request_request-nonce" id="ref-for-dom-idtoken_endpoint_request_request-nonce">nonce</a></code> be <var>provider</var>["<code class="idl"><a data-link-type="idl" href="#dom-federatedidentityprovider-nonce" id="ref-for-dom-federatedidentityprovider-nonce①">nonce</a></code>"].</p>
        </ul>
      </ul>
-    <li data-md>
-     <p>Set the user’s <code class="idl"><a data-link-type="idl" href="#dom-statemachine-account-state" id="ref-for-dom-statemachine-account-state">Account State</a></code> from <a data-link-type="dfn" href="#unregistered" id="ref-for-unregistered①">unregistered</a> to <a data-link-type="dfn" href="#registered" id="ref-for-registered①">registered</a> for the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider③③">Identity Provider</a> <var>provider</var>["<code class="idl"><a data-link-type="idl" href="#dom-federatedidentityprovider-url" id="ref-for-dom-federatedidentityprovider-url④">url</a></code>"] and the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party⑤②">Relying Party</a> <var>origin</var>.</p>
     <li data-md>
      <p>Return a new <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential⑥">FederatedCredential</a></code> as:</p>
      <ul>
@@ -1212,7 +1218,7 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
    <dl>
     <dt data-md><dfn class="idl-code" data-dfn-for="accounts_endpoint_response" data-dfn-type="argument" data-export id="dom-accounts_endpoint_response-accounts"><code>accounts</code><a class="self-link" href="#dom-accounts_endpoint_response-accounts"></a></dfn>
     <dd data-md>
-     <p>A list of <a href="#accounts"></a>.</p>
+     <p>A list of <a href="#accounts_endpoint_response_accounts">§ 6.6.2.2.1 Account</a>.</p>
    </dl>
    <h6 class="heading settled" data-level="6.6.2.2.1" id="accounts_endpoint_response_accounts"><span class="secno">6.6.2.2.1. </span><span class="content">Account</span><a class="self-link" href="#accounts_endpoint_response_accounts"></a></h6>
    <dl>
@@ -1243,7 +1249,7 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
    </dl>
    <h5 class="heading settled" data-level="6.6.3.2" id="idtoken_endpoint_response"><span class="secno">6.6.3.2. </span><span class="content">The idtoken response</span><a class="self-link" href="#idtoken_endpoint_response"></a></h5>
    <dl>
-    <dt data-md><dfn class="idl-code" data-dfn-for="idtoken_endpoint_response" data-dfn-type="dictionary" data-export id="dictdef-idtoken_endpoint_response-id_token"><code>id_token</code><a class="self-link" href="#dictdef-idtoken_endpoint_response-id_token"></a></dfn>
+    <dt data-md><dfn class="idl-code" data-dfn-for="idtoken_endpoint_response" data-dfn-type="argument" data-export id="dom-idtoken_endpoint_response-id_token"><code>id_token</code><a class="self-link" href="#dom-idtoken_endpoint_response-id_token"></a></dfn>
     <dd data-md>
      <p>An <a data-link-type="dfn" href="#id-token" id="ref-for-id-token③">id token</a>.</p>
    </dl>
@@ -1252,10 +1258,10 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
    <h5 class="heading settled" data-level="6.6.4.1" id="client_id_metadata_endpoint_request"><span class="secno">6.6.4.1. </span><span class="content">The client_id metadata request</span><a class="self-link" href="#client_id_metadata_endpoint_request"></a></h5>
    <h5 class="heading settled" data-level="6.6.4.2" id="client_id_metadata_endpoint_response"><span class="secno">6.6.4.2. </span><span class="content">The client_id metadata response</span><a class="self-link" href="#client_id_metadata_endpoint_response"></a></h5>
    <dl>
-    <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="client_id_metadata_endpont_response" data-dfn-type="dictionary" data-export id="dictdef-client_id_metadata_endpont_response-privacy_policy_url"><code>privacy_policy_url</code></dfn>
+    <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="client_id_metadata_endpont_response" data-dfn-type="argument" data-export id="dom-client_id_metadata_endpont_response-privacy_policy_url"><code>privacy_policy_url</code></dfn>
     <dd data-md>
      <p>A link to the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party⑤③">Relying Party</a>'s privacy policy.</p>
-    <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="client_id_metadata_endpont_response" data-dfn-type="dictionary" data-export id="dictdef-client_id_metadata_endpont_response-terms_of_service_url"><code>terms_of_service_url</code></dfn>
+    <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="client_id_metadata_endpont_response" data-dfn-type="argument" data-export id="dom-client_id_metadata_endpont_response-terms_of_service_url"><code>terms_of_service_url</code></dfn>
     <dd data-md>
      <p>A link to the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party⑤④">Relying Party</a>'s terms of service.</p>
    </dl>
@@ -1334,7 +1340,6 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
    <li><a href="#identity-provider">Identity Provider</a><span>, in § 4</span>
    <li><a href="#idp">IDP</a><span>, in § 4</span>
    <li><a href="#id-token">id token</a><span>, in § 4</span>
-   <li><a href="#dictdef-idtoken_endpoint_response-id_token">id_token</a><span>, in § 6.6.3.2</span>
    <li><a href="#dom-federatedcredential-idtoken">idToken</a><span>, in § 6.1</span>
    <li><a href="#logged-in">logged in</a><span>, in § 4</span>
    <li><a href="#logged-out">logged out</a><span>, in § 4</span>
@@ -1347,7 +1352,6 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
    <li><a href="#dom-federatedidentityprovider-nonce">nonce</a><span>, in § 6.2</span>
    <li><a href="#dom-federatedcredentialinterceptor-params">params</a><span>, in § 6.4.1.1</span>
    <li><a href="#dom-federatedcredentialrequestmode-permission">"permission"</a><span>, in § 6.2</span>
-   <li><a href="#dictdef-client_id_metadata_endpont_response-privacy_policy_url">privacy_policy_url</a><span>, in § 6.6.4.2</span>
    <li><a href="#dom-federatedcredentialrequestoptions-providers">providers</a><span>, in § 6.2</span>
    <li><a href="#registered">registered</a><span>, in § 4</span>
    <li><a href="#dom-federatedcredential-registerinterceptor">registerInterceptor(interceptor)</a><span>, in § 6.4.1</span>
@@ -1357,7 +1361,6 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
    <li><a href="#sec-webid-csr">Sec-WebID-CSR</a><span>, in § 6.6.1</span>
    <li><a href="#session">session</a><span>, in § 4</span>
    <li><a href="#concept-state-machine">state machine</a><span>, in § 5</span>
-   <li><a href="#dictdef-client_id_metadata_endpont_response-terms_of_service_url">terms_of_service_url</a><span>, in § 6.6.4.2</span>
    <li><a href="#unregistered">unregistered</a><span>, in § 4</span>
    <li>
     url
@@ -1771,18 +1774,26 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
    <b><a href="#logged-in">#logged-in</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-logged-in">5. Infrastructure</a>
+    <li><a href="#ref-for-logged-in①">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="logged-out">
    <b><a href="#logged-out">#logged-out</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-logged-out">5. Infrastructure</a>
+    <li><a href="#ref-for-logged-out①">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="dom-statemachine-account-state">
    <b><a href="#dom-statemachine-account-state">#dom-statemachine-account-state</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-dom-statemachine-account-state">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="dom-statemachine-session-state">
+   <b><a href="#dom-statemachine-session-state">#dom-statemachine-session-state</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-dom-statemachine-session-state">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="dom-federatedcredential-idtoken">
@@ -1900,16 +1911,16 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
     <li><a href="#ref-for-dom-idtoken_endpoint_request_request-nonce">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
    </ul>
   </aside>
-  <aside class="dfn-panel" data-for="dictdef-client_id_metadata_endpont_response-privacy_policy_url">
-   <b><a href="#dictdef-client_id_metadata_endpont_response-privacy_policy_url">#dictdef-client_id_metadata_endpont_response-privacy_policy_url</a></b><b>Referenced in:</b>
+  <aside class="dfn-panel" data-for="dom-client_id_metadata_endpont_response-privacy_policy_url">
+   <b><a href="#dom-client_id_metadata_endpont_response-privacy_policy_url">#dom-client_id_metadata_endpont_response-privacy_policy_url</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dictdef-client_id_metadata_endpont_response-privacy_policy_url">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
+    <li><a href="#ref-for-dom-client_id_metadata_endpont_response-privacy_policy_url">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
    </ul>
   </aside>
-  <aside class="dfn-panel" data-for="dictdef-client_id_metadata_endpont_response-terms_of_service_url">
-   <b><a href="#dictdef-client_id_metadata_endpont_response-terms_of_service_url">#dictdef-client_id_metadata_endpont_response-terms_of_service_url</a></b><b>Referenced in:</b>
+  <aside class="dfn-panel" data-for="dom-client_id_metadata_endpont_response-terms_of_service_url">
+   <b><a href="#dom-client_id_metadata_endpont_response-terms_of_service_url">#dom-client_id_metadata_endpont_response-terms_of_service_url</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dictdef-client_id_metadata_endpont_response-terms_of_service_url">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
+    <li><a href="#ref-for-dom-client_id_metadata_endpont_response-terms_of_service_url">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
    </ul>
   </aside>
 <script>/* script-dfn-panel */
