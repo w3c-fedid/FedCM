@@ -393,8 +393,12 @@ if (!window.FederatedCredential) {
 
 User agents MUST internally provide a <dfn export id="concept-state-machine">state machine</dfn> for each pair of [=Relying Party=] and [=Identity Provider=], which is a vendor-specific, opaque storage mechanism that keeps track of the lifecycle of the user's accounts and sessions in the [=Relying Party=].
 
-  1.  <dfn for="account state" abstract-op export>Account State</dfn> can be at [=registered=] or (by default) [=unregistered=].
-  1.  <dfn for="session state" abstract-op export>Session State</dfn> can be at [=logged in=] or (by default) [=logged out=].
+<dl dfn-type="argument" dfn-for="StateMachine">
+    :   <dfn>Account State</dfn>
+    ::  can be at [=registered=] or (by default) [=unregistered=].
+    :   <dfn>Session State</dfn>
+    ::  can be at [=logged in=] or (by default) [=logged out=].
+</dl>
 
 <!-- ============================================================ -->
 # Account Management API # {#AccountManagementAPI}
@@ -523,7 +527,9 @@ When this method is invoked, the user agent MUST execute the following algorithm
             * Let {{idtoken_endpoint_request_request/client_id}} be |provider|["{{FederatedIdentityProvider/clientId}}"].
             * Let the {{idtoken_endpoint_request_request/nonce}} be |provider|["{{FederatedIdentityProvider/nonce}}"].
 
-    17. Return a new {{FederatedCredential}} as:
+    17. Set the user's {{StateMachine/Account State}} from [=unregistered=] to [=registered=] for the [=Identity Provider=] |provider|["{{FederatedIdentityProvider/url}}"] and the [=Relying Party=] |origin|.
+
+    18. Return a new {{FederatedCredential}} as:
         * {{FederatedCredential/id}} with |account|["{{accounts_endpoint_response_accounts/account_id}}"]
         * {{FederatedCredential/idToken}} with |token|
         * {{FederatedCredential/provider}} with |provider|["{{FederatedIdentityProvider/url}}"]
