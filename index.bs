@@ -89,7 +89,7 @@ This specification defines a set of web platform APIs that preserve and extend i
 The below use case scenarios illustrate some basic supported flows. Additional scenarios, including sample code, are given later in the [[Identity-Use-Cases-in-Browser-Catalog]].
 
 <!-- ============================================================ -->
-## Sign-up ## {#sign-up}
+## Sign-up ## {#use-cases-sign-up}
 <!-- ============================================================ -->
 
 A Sign-up occurs when the user is registering a new account at the [=Relying Party=] using their [=Identity Provider=].
@@ -105,13 +105,13 @@ For example:
 * An [=account=] in created in the [=Relying Party=] and a [=session=] initialized.
 
 <!-- ============================================================ -->
-## Sign-in ## {#sign-in}
+## Sign-in ## {#use-cases-sign-in}
 <!-- ============================================================ -->
 
-After a user navigates to a [=Relying Party=] in a browser and decides to create an account by going through their [[#sign-up]] flow, there are two ways a user logs into their [=account=] once their [=session=] expires:
+After a user navigates to a [=Relying Party=] in a browser and decides to create an account by going through their [[#use-cases-sign-up]] flow, there are two ways a user logs into their [=account=] once their [=session=] expires:
 
 <!-- ============================================================ -->
-### Auto Sign-in ### {#auto-sign-in}
+### Auto Sign-in ### {#use-cases-auto-sign-in}
 <!-- ============================================================ -->
 
 Auto Sign-in occurs when the [=Identity Provider=] has already gathered enough permission from the user to share their identity that it doesn't block on gathering further permission and automatically signs the user in.
@@ -125,14 +125,14 @@ For example:
     * The [=Relying Party=] creates a new [=session=] for the user's existing [=account=].
 
 <!-- ============================================================ -->
-### Explicit Sign-in ### {#explicit-sign-in}
+### Explicit Sign-in ### {#use-cases-explicit-sign-in}
 <!-- ============================================================ -->
 
-An explicit sign-in occurs when the [=Identity Provider=] believes it is necessary to gather an explicit permission from the user to sign into a [=Relying Party=], typically after the user goes through a [[#sign-out]] flow.
+An explicit sign-in occurs when the [=Identity Provider=] believes it is necessary to gather an explicit permission from the user to sign into a [=Relying Party=], typically after the user goes through a [[#use-cases-sign-out]] flow.
 
 For example:
 
-* The user decides to [[#sign-out]] of the [=Relying Party=]
+* The user decides to [[#use-cases-sign-out]] of the [=Relying Party=]
 
 A few months later:
 
@@ -146,47 +146,47 @@ A few months later:
 * The [=Relying Party=] creates a new [=session=] for the user's existing [=account=].
 
 <!-- ============================================================ -->
-## Sign-out ## {#sign-out}
+## Sign-out ## {#use-cases-sign-out}
 <!-- ============================================================ -->
 
-After a user navigates to a [=Relying Party=] in a browser and decides to create an [=account=] by going through their [[#sign-up]] flow, there are two ways a user can clear their [=session=]s:
+After a user navigates to a [=Relying Party=] in a browser and decides to create an [=account=] by going through their [[#use-cases-sign-up]] flow, there are two ways a user can clear their [=session=]s:
 
 <!-- ============================================================ -->
-### RP Sign-out ### {#rp-sign-out}
+### RP Sign-out ### {#use-cases-rp-sign-out}
 <!-- ============================================================ -->
 
 * On a shared computer:
     * The user decides to close their session and logs out of the [=Relying Party=].
     * The user is now logged out of the [=Relying Party=].
-    * Upon return to the [=Relying Party=], the user expects to go through an [[#explicit-sign-in]].
+    * Upon return to the [=Relying Party=], the user expects to go through an [[#use-cases-explicit-sign-in]].
 
 <!-- ============================================================ -->
-### IDP Sign-out ### {#idp-sign-out}
+### IDP Sign-out ### {#use-cases-idp-sign-out}
 <!-- ============================================================ -->
 
 * On a shared computer:
     * The user decides to close their [=session=] and logs out of the [=Relying Party=].
     * The [=Relying Party=] lets the [=Identity Provider=] know that the user wants to logout.
     * The [=Identity Provider=] logs the user out of all of the [=Relying Party=]s and itself.
-    * Upon return to the [=Relying Party=], the goes through an [[#explicit-sign-in]].
+    * Upon return to the [=Relying Party=], the goes through an [[#use-cases-explicit-sign-in]].
 
 <!-- ============================================================ -->
-## Revocation ## {#revocation}
+## Revocation ## {#use-cases-revocation}
 <!-- ============================================================ -->
 
-After a user navigates to a [=Relying Party=] in a browser and decides to create an account by going through their [[#sign-up]] flow, there are two ways a user can cancel their account:
+After a user navigates to a [=Relying Party=] in a browser and decides to create an account by going through their [[#use-cases-sign-up]] flow, there are two ways a user can cancel their account:
 
 <!-- ============================================================ -->
-### IDP Revocation ### {#idp-revocation}
+### IDP Revocation ### {#use-cases-idp-revocation}
 <!-- ============================================================ -->
 
 * On the [=Identity Provider=]:
     * The user decides to cancel their account.
     * The user goes to their [=Identity Provider=] and revokes access to the [=Relying Party=].
-    * Upon return to the [=Relying Party=], the user expects to go through a [[#sign-up]].  
+    * Upon return to the [=Relying Party=], the user expects to go through a [[#use-cases-sign-up]].  
 
 <!-- ============================================================ -->
-### RP Revocation ### {#rp-revocation}
+### RP Revocation ### {#use-cases-rp-revocation}
 <!-- ============================================================ -->
 
 * On the [=Relying Party=]:
@@ -218,7 +218,7 @@ The Sign-up and Sign-in APIs are APIs used by the [=Relying Party=]s to ask the 
 
 The [=Relying Party=] makes no delineation between Sign-up and Sign-in, but rather call the same API indistinguishably. The most important parameter to the API call is the set of [=Identity Provider=]s that the [=Relying Party=] supports and has pre-registered with (i.e. it has a `clientId`).
 
-Additionally, the [=Relying Party=] can control a variety of UX knobs. For example, rather the dialog is modal or not, whether to allow an [[#auto-sign-in]] flow and an AbortSignal in case it needs to abort the flow.
+Additionally, the [=Relying Party=] can control a variety of UX knobs. For example, rather the dialog is modal or not, whether to allow an [[#use-cases-auto-sign-in]] flow and an AbortSignal in case it needs to abort the flow.
 
 If all goes well, the [=Relying Party=] receives back an [=id token=] in the form of a signed [[JWT]] which it can use to authenticate the user.
 
@@ -260,11 +260,11 @@ async function login(signal) {
 <!-- ============================================================ -->
 
 When a user wants to log out of their session in the [=Relying Party=],
-the [=Relying Party=] can let the browser know that it wants the [[#auto-sign-in]]
+the [=Relying Party=] can let the browser know that it wants the [[#use-cases-auto-sign-in]]
 flow to be disabled, so that the user doesn't get into an infinite loop.
 
 It does so by calling the `preventSilentAccess()` API, which clear the
-user's current account session and takes them to an [[#explicit-sign-in]] flow
+user's current account session and takes them to an [[#use-cases-explicit-sign-in]] flow
 whenever the user wants to log back in.
 
 <div class=example>
@@ -293,7 +293,7 @@ Each [=Relying Party=] endpoint is responsible for clearing its local state
 (e.g. clearing cookies).
 
 After the completion of this API, the user's session is cleared and will go
-through an [[#explicit-sign-in]] upon return.
+through an [[#use-cases-explicit-sign-in]] upon return.
 
 <div class=example>
 ```js
@@ -319,8 +319,8 @@ Whenever the user decides to delete their account on the [=Relying Party=]
 the [=Relying Party=] can call an API to let the [=Identity Provider=] and
 the browser know.
 
-Upon return to the [=Relying Party=], the user goes through a [[#sign-up]] flow
-instead of a [[#sign-in]] flow.
+Upon return to the [=Relying Party=], the user goes through a [[#use-cases-sign-up]] flow
+instead of a [[#use-cases-sign-in]] flow.
 
 <div class=example>
 ```js
@@ -382,7 +382,7 @@ if (!window.FederatedCredential) {
 Websites call <code><a idl for="CredentialsContainer" lt="get()">navigator.credentials.get({providers:..., ...})</a></code> to retrieve a {{FederatedCredential}}.
 
 <!-- ============================================================ -->
-## Account Creation ## {#account-creation}
+## Sign-up ## {#sign-up}
 <!-- ============================================================ -->
 
 <!-- ============================================================ -->
@@ -473,7 +473,7 @@ enum FederatedCredentialApprovedBy {
 </xmp>
 
 <!-- ============================================================ -->
-## Account Revocation ## {#account-revocation}
+## RP Revocation ## {#rp-revocation}
 <!-- ============================================================ -->
 
 <xmp class=idl>
