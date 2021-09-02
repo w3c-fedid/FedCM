@@ -505,37 +505,35 @@ When this method is invoked, the user agent MUST execute the following algorithm
 
     1. Assert: |provider|["{{FederatedIdentityProvider/nonce}}"] [=map/exists=].
 
-    1. Let the |wellknown| url be the relative url ".well-known/webid" of |provider|["{{FederatedIdentityProvider/url}}"]
+    1. Let |wellknown| be the result of running the [=fetch the well-known=] algorithm with the |provider|.
 
-    1. Fetch the |wellknown| url with the [[#Sec-WebID-CSR|Sec-WebID-CSR]] header but without the [=Identity Provider=]'s cookies.
+    1. Let |accounts list| be the result of running the [=fetch the accounts list=] algorithm.
 
-    1. Let the |acccounts_endpoint| url be the relative url |wellknown|["{{WellKnown/accounts_endpoint}}"] of |provider|["{{FederatedIdentityProvider/url}}"]
+    1. If |accounts list|'s [=list/size=] is 1
 
-    1. Let the |accounts list| be the result of fetching the |accounts_endpoint| with the [=Identity Provider=]'s cookies.
+        1. Let |account| be |accounts list|[0]
 
-    1. Let the |client_id_metadata_endpoint| url be the relative url |wellknown|["{{WellKnown/client_id_metadata_endpoint}}"] of |provider|["{{FederatedIdentityProvider/url}}"]
+        1. If the {{StateMachine/Account State}} for the [=Identity Provider=] |provider|["{{FederatedIdentityProvider/url}}"], the [=Relying Party=] |origin| and the |account|["{{accounts_endpoint_response_accounts/account_id}}"] triple is [=registered=]
 
-    1. Let the |policies| be the result of fetching the |client_id_metadata_endpoint| with the [[#Sec-WebID-CSR|Sec-WebID-CSR]] header but without the [=Identity Provider=]'s cookies.
+            1. Ask the user if they want to sign-in to [=Relying Party=] with their [=Identity Provider=]'s |account|.
 
-    1. Let |account| be the result of asking the user to select an account from the |account list| from their [=Identity Provider=] to sign-up with the [=Relying Party=] under the [=Relying Party=]'s Privacy Policy at |policies|["{{client_id_metadata_endpont_response/privacy_policy_url}}"] and Terms of Service at |policies|["{{client_id_metadata_endpont_response/terms_of_service_url}}"]. 
+            1. If the user chooses not to sign-in return `null`.
+
+            1. Set the account's {{StateMachine/Session State}} from [=logged out=] to [=logged in=].
+
+            1. Return the result of [=minting=] a new [=id token=].
+
+    1. Let |policies| be the result of running the [=fetch the client id metadata=] algorithm.
+
+    1. Let |account| be the result of asking the user to select an account from the |account list| to be used under the [=Relying Party=]'s Privacy Policy at |policies|["{{client_id_metadata_endpont_response/privacy_policy_url}}"] and Terms of Service at |policies|["{{client_id_metadata_endpont_response/terms_of_service_url}}"]. 
 
     1. If the user chooses not to sign-up, return `null`.
 
-    1. For the for the [=Identity Provider=] |provider|["{{FederatedIdentityProvider/url}}"] and the [=Relying Party=] |origin| pair:
-        * Set the user's {{StateMachine/Account State}} from [=unregistered=] to [=registered=].
-        * Set the user's {{StateMachine/Session State}} from [=logged out=] to [=logged in=].
+    1. For the for the [=Identity Provider=] |provider|["{{FederatedIdentityProvider/url}}"], the [=Relying Party=] |origin| and the |account|["{{accounts_endpoint_response_accounts/account_id}}"] triple:
+        * Set the account's {{StateMachine/Account State}} from [=unregistered=] to [=registered=].
+        * Set the account's {{StateMachine/Session State}} from [=logged out=] to [=logged in=].
 
-    1. Let |token| be the result of making a POST request to the |wellknown|["{{WellKnown/idtoken_endpoint}}"] with:
-        * Let the {{idtoken_endpoint_request/account_id}} be |account|["{{accounts_endpoint_response_accounts/account_id}}"].
-        * Let the {{idtoken_endpoint_request/request}} be a new object with
-              * Let {{idtoken_endpoint_request_request/client_id}} be |provider|["{{FederatedIdentityProvider/clientId}}"].
-              * Let the {{idtoken_endpoint_request_request/nonce}} be |provider|["{{FederatedIdentityProvider/nonce}}"].
-
-    1. Return a new {{FederatedCredential}} as:
-        * {{FederatedCredential/id}} with |account|["{{accounts_endpoint_response_accounts/account_id}}"]
-        * {{FederatedCredential/idToken}} with |token|
-        * {{FederatedCredential/provider}} with |provider|["{{FederatedIdentityProvider/url}}"]
-
+    1. Return the result of [=minting=] a new [=id token=].
 
 <!-- ============================================================ -->
 ## Sign-up ## {#sign-up}
@@ -594,6 +592,11 @@ partial interface FederatedCredential : Credential {
     ::  A relative URL that points to an HTTP API that complies with the [[#client_id_metadata_endpoint]].
 </dl>
 
+To <dfn>fetch the well-known</dfn> configuration file, run this algorithm:
+
+1. Let the |wellknown url| be the relative url ".well-known/webid" of |provider|["{{FederatedIdentityProvider/url}}"]
+1. Return the result of fetching the |wellknown url| with the [[#Sec-WebID-CSR|Sec-WebID-CSR]] header but without the [=Identity Provider=]'s cookies.
+
 <!-- ============================================================ -->
 ### <code><dfn data-export="">`Sec-WebID-CSR`</dfn></code> ### {#Sec-WebID-CSR}
 <!-- ============================================================ -->
@@ -601,6 +604,13 @@ partial interface FederatedCredential : Credential {
 <!-- ============================================================ -->
 ### accounts_endpoint ### {#accounts_endpoint}
 <!-- ============================================================ -->
+
+To <dfn>fetch the accounts list</dfn> run this algorithm:
+
+1. Let the |acccounts_endpoint| url be the relative url |wellknown|["{{WellKnown/accounts_endpoint}}"] of |provider|["{{FederatedIdentityProvider/url}}"]
+1. Let the |accounts list| be the result of fetching the |accounts_endpoint| with the [=Identity Provider=]'s cookies.
+1. Return the |accounts list|
+
 
 <!-- ============================================================ -->
 #### The accounts list request  #### {#accounts_endpoint_request}
@@ -635,6 +645,23 @@ partial interface FederatedCredential : Credential {
 <!-- ============================================================ -->
 
 <!-- ============================================================ -->
+#### <dfn for="Minting">Minting</dfn> a new IdToken #### {#minting}
+<!-- ============================================================ -->
+
+    To mint a new id token, run the following algorithm:
+
+    1. Let |token| be the result of making a POST request to the |wellknown|["{{WellKnown/idtoken_endpoint}}"] with:
+        * Let the {{idtoken_endpoint_request/account_id}} be |account|["{{accounts_endpoint_response_accounts/account_id}}"].
+        * Let the {{idtoken_endpoint_request/request}} be a new object with
+              * Let {{idtoken_endpoint_request_request/client_id}} be |provider|["{{FederatedIdentityProvider/clientId}}"].
+              * Let the {{idtoken_endpoint_request_request/nonce}} be |provider|["{{FederatedIdentityProvider/nonce}}"].
+
+    1. Return a new {{FederatedCredential}} as:
+        * {{FederatedCredential/id}} with |account|["{{accounts_endpoint_response_accounts/account_id}}"]
+        * {{FederatedCredential/idToken}} with |token|
+        * {{FederatedCredential/provider}} with |provider|["{{FederatedIdentityProvider/url}}"]
+
+<!-- ============================================================ -->
 #### The idtoken request  #### {#idtoken_endpoint_request}
 <!-- ============================================================ -->
 
@@ -663,6 +690,12 @@ partial interface FederatedCredential : Credential {
 <!-- ============================================================ -->
 
 The [=.well-known=]'s <code><dfn data-export="" data-dfn-for=".well-known">`client_id_metadata_endpoint`</dfn></code> 
+
+To <dfn>fetch the client id metadata</dfn> run this algorithm:
+
+1. Let the |client_id_metadata_endpoint| url be the relative url |wellknown|["{{WellKnown/client_id_metadata_endpoint}}"] of |provider|["{{FederatedIdentityProvider/url}}"]
+1. Let the |policies| be the result of fetching the |client_id_metadata_endpoint| with the [[#Sec-WebID-CSR|Sec-WebID-CSR]] header but without the [=Identity Provider=]'s cookies.
+1. Return |policies|
 
 <!-- ============================================================ -->
 #### The client_id metadata request  #### {#client_id_metadata_endpoint_request}
