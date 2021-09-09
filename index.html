@@ -6,7 +6,7 @@
   <link href="https://www.w3.org/StyleSheets/TR/2016/cg-draft" rel="stylesheet">
   <meta content="Bikeshed version 4f053d00e, updated Tue Aug 10 14:13:32 2021 -0700" name="generator">
   <link href="http://wicg.github.io/WebID" rel="canonical">
-  <meta content="0b0dfcc31c1d360edfc1b8ed7d8b44ac4e11a74c" name="document-revision">
+  <meta content="a21d194627284d0cac7d9ba68400a85020b17abf" name="document-revision">
 <style>
 dl.domintro dt {
     font-family: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
@@ -581,7 +581,7 @@ c-[il] { color: #000000 } /* Literal.Number.Integer.Long */
   <div class="head">
    <p data-fill-with="logo"><a class="logo" href="https://www.w3.org/"> <img alt="W3C" height="48" src="https://www.w3.org/StyleSheets/TR/2016/logos/W3C" width="72"> </a> </p>
    <h1 class="p-name no-ref" id="title">WebID API</h1>
-   <h2 class="no-num no-toc no-ref heading settled" id="profile-and-date"><span class="content">Draft Community Group Report, <time class="dt-updated" datetime="2021-09-01">1 September 2021</time></span></h2>
+   <h2 class="no-num no-toc no-ref heading settled" id="profile-and-date"><span class="content">Draft Community Group Report, <time class="dt-updated" datetime="2021-09-09">9 September 2021</time></span></h2>
    <div data-fill-with="spec-metadata">
     <dl>
      <dt>This version:
@@ -657,7 +657,7 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
       <li><a href="#intro-feature-detection"><span class="secno">3.4</span> <span class="content">Feature Detection</span></a>
      </ol>
     <li><a href="#terminology"><span class="secno">4</span> <span class="content">Terminology</span></a>
-    <li><a href="#Infrastructure"><span class="secno">5</span> <span class="content">Infrastructure</span></a>
+    <li><a href="#lifecycle"><span class="secno">5</span> <span class="content">The Lifecycle of Accounts and Sessions</span></a>
     <li>
      <a href="#AccountManagementAPI"><span class="secno">6</span> <span class="content">Account Management API</span></a>
      <ol class="toc">
@@ -901,10 +901,10 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
    <h3 class="heading settled" data-level="3.1" id="examples-signing-up-and-signing-in"><span class="secno">3.1. </span><span class="content">Signing-up and Signing-in</span><a class="self-link" href="#examples-signing-up-and-signing-in"></a></h3>
    <p>The Sign-up and Sign-in APIs are APIs used by the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party③⑤">Relying Party</a>s to ask the browser to intermediate the relationship with the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②①">Identity Provider</a> and the provisioning of an <a data-link-type="dfn" href="#id-token" id="ref-for-id-token">id token</a>.</p>
    <p>The <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party③⑥">Relying Party</a> makes no delineation between Sign-up and Sign-in, but rather call the same API indistinguishably. The most important parameter to the API call is the set of <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②②">Identity Provider</a>s that the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party③⑦">Relying Party</a> supports and has pre-registered with (i.e. it has a <code>clientId</code>).</p>
-   <p>Additionally, the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party③⑧">Relying Party</a> can control a variety of UX knobs. For example, rather the dialog is modal or not, whether to allow an <a href="#use-cases-auto-sign-in">§ 2.2.1 Auto Sign-in</a> flow and an AbortSignal in case it needs to abort the flow.</p>
+   <p>Additionally, the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party③⑧">Relying Party</a> can control a variety of UX knobs. For example, whether to allow an <a href="#use-cases-auto-sign-in">§ 2.2.1 Auto Sign-in</a> flow and an AbortSignal in case it needs to abort the flow.</p>
    <p>If all goes well, the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party③⑨">Relying Party</a> receives back an <a data-link-type="dfn" href="#id-token" id="ref-for-id-token①">id token</a> in the form of a signed <a data-link-type="biblio" href="https://datatracker.ietf.org/doc/html/rfc7519"><cite>JWT</cite></a> which it can use to authenticate the user.</p>
-   <div class="example" id="example-92f8185b">
-    <a class="self-link" href="#example-92f8185b"></a> 
+   <div class="example" id="example-d666f365">
+    <a class="self-link" href="#example-d666f365"></a> 
 <pre class="language-js highlight"><c- k>async</c-> <c- a>function</c-> login<c- p>(</c->signal<c- p>)</c-> <c- p>{</c->
   <c- a>const</c-> <c- p>{</c->idToken<c- p>}</c-> <c- o>=</c-> <c- k>await</c-> navigator<c- p>.</c->credentials<c- p>.</c->get<c- p>({</c->
     <c- c1>// controls whether auto sign-in is enabled or not</c->
@@ -917,7 +917,6 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
       <c- c1>// controls which UX mode to use</c->
       mode<c- o>:</c-> <c- u>"mediated"</c-><c- p>,</c->
       <c- c1>// controls whether the account chooser is modal or not</c->
-      modal<c- o>:</c-> <c- kc>true</c-><c- p>,</c->  
       providers<c- o>:</c-> <c- p>[{</c->
         url<c- o>:</c-> <c- u>"https://idp.example"</c-><c- p>,</c->
         <c- c1>// the pre-registered client id  </c->
@@ -956,18 +955,16 @@ with cookies.</p>
 (e.g. clearing cookies).</p>
    <p>After the completion of this API, the user’s session is cleared and will go
 through an <a href="#use-cases-explicit-sign-in">§ 2.2.2 Explicit Sign-in</a> upon return.</p>
-   <div class="example" id="example-8af79002">
-    <a class="self-link" href="#example-8af79002"></a> 
+   <div class="example" id="example-ec30aec2">
+    <a class="self-link" href="#example-ec30aec2"></a> 
 <pre class="language-js highlight"><c- k>async</c-> <c- a>function</c-> logout<c- p>()</c-> <c- p>{</c->
-  <c- k>await</c-> FederatedCredential<c- p>.</c->logout<c- p>({</c->
-    endpoints<c- o>:</c-> <c- p>[{</c->
-      url<c- o>:</c-> <c- u>"https://rp1.example"</c-><c- p>,</c->
+  <c- k>await</c-> FederatedCredential<c- p>.</c->logout<c- p>([{</c->
+      endpoint<c- o>:</c-> <c- u>"https://rp1.example"</c-><c- p>,</c->
       accountId<c- o>:</c-> <c- u>"123"</c-><c- p>,</c->
     <c- p>},</c-> <c- p>{</c->
-      url<c- o>:</c-> <c- u>"https://rpN.example"</c-><c- p>,</c->
+      endpiont<c- o>:</c-> <c- u>"https://rpN.example"</c-><c- p>,</c->
       accountId<c- o>:</c-> <c- u>"456"</c-><c- p>,</c->
-    <c- p>}]</c->
-  <c- p>});</c->
+    <c- p>}]);</c->
 <c- p>}</c->
 </pre>
    </div>
@@ -976,10 +973,10 @@ through an <a href="#use-cases-explicit-sign-in">§ 2.2.2 Explicit Sign-in</a>
 the browser know.</p>
    <p>Upon return to the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④⑦">Relying Party</a>, the user goes through a <a href="#use-cases-sign-up">§ 2.1 Sign-up</a> flow
 instead of a <a href="#use-cases-sign-in">§ 2.2 Sign-in</a> flow.</p>
-   <div class="example" id="example-b4534ecf">
-    <a class="self-link" href="#example-b4534ecf"></a> 
-<pre class="language-js highlight"><c- k>async</c-> <c- a>function</c-> revoke<c- p>()</c-> <c- p>{</c->
-  <c- k>return</c-> <c- k>await</c-> FederatedCredential<c- p>.</c->revoke<c- p>(</c-><c- u>"12345"</c-><c- p>);</c->
+   <div class="example" id="example-bed25357">
+    <a class="self-link" href="#example-bed25357"></a> 
+<pre class="language-js highlight"><c- k>async</c-> <c- a>function</c-> revoke<c- p>(</c->accountId<c- p>)</c-> <c- p>{</c->
+  <c- k>return</c-> <c- k>await</c-> FederatedCredential<c- p>.</c->revoke<c- p>(</c->accountId<c- p>);</c->
 <c- p>}</c->
 </pre>
    </div>
@@ -1036,8 +1033,10 @@ instead of a <a href="#use-cases-sign-in">§ 2.2 Sign-in</a> flow.</p>
     <dd data-md>
      <p>TODO(goto: find existing definition.</p>
    </dl>
-   <h2 class="heading settled" data-level="5" id="Infrastructure"><span class="secno">5. </span><span class="content">Infrastructure</span><a class="self-link" href="#Infrastructure"></a></h2>
-   <p>User agents MUST internally provide a <dfn data-dfn-type="dfn" data-export id="concept-state-machine">state machine<a class="self-link" href="#concept-state-machine"></a></dfn> for each pair of <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④⑧">Relying Party</a> and <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②⑥">Identity Provider</a>, which is a vendor-specific, opaque storage mechanism that keeps track of the lifecycle of the user’s accounts and sessions in the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④⑨">Relying Party</a>.</p>
+   <h2 class="heading settled" data-level="5" id="lifecycle"><span class="secno">5. </span><span class="content">The Lifecycle of Accounts and Sessions</span><a class="self-link" href="#lifecycle"></a></h2>
+   <p>User agents MUST internally provide storage for a <dfn data-dfn-type="dfn" data-export id="concept-state-machine">state machine<a class="self-link" href="#concept-state-machine"></a></dfn> that keeps track of the lifecycle of the accounts of <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②⑥">Identity Provider</a> being used at <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④⑧">Relying Party</a>.</p>
+   <p>The account management and session management API allows the user to explicitly move through the state machine and as they do unlock (or lock) access to browser capabilities that would (or wouldn’t) be available otherwise.</p>
+   <p><img src="static/mock42.svg"></p>
    <dl>
     <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="StateMachine" data-dfn-type="argument" data-export id="dom-statemachine-account-state"><code>Account State</code></dfn>
     <dd data-md>
@@ -1069,7 +1068,6 @@ instead of a <a href="#use-cases-sign-in">§ 2.2 Sign-in</a> flow.</p>
 <pre class="idl highlight def"><c- b>partial</c-> <c- b>dictionary</c-> <a class="idl-code" data-link-type="dictionary" href="https://w3c.github.io/webappsec-credential-management/#dictdef-federatedcredentialrequestoptions" id="ref-for-dictdef-federatedcredentialrequestoptions②"><c- g>FederatedCredentialRequestOptions</c-></a> {
   <a data-link-type="dfn" href="https://heycam.github.io/webidl/#idl-sequence" id="ref-for-idl-sequence"><c- b>sequence</c-></a>&lt;(<a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-DOMString" id="ref-for-idl-DOMString"><c- b>DOMString</c-></a> <c- b>or</c-> <a data-link-type="idl-name" href="#dictdef-federatedidentityprovider" id="ref-for-dictdef-federatedidentityprovider①"><c- n>FederatedIdentityProvider</c-></a>)> <dfn class="dfn-paneled idl-code" data-dfn-for="FederatedCredentialRequestOptions" data-dfn-type="dict-member" data-export data-type="sequence<(DOMString or FederatedIdentityProvider)> " id="dom-federatedcredentialrequestoptions-providers"><code><c- g>providers</c-></code></dfn>;
   <a data-link-type="idl-name" href="#enumdef-federatedcredentialrequestmode" id="ref-for-enumdef-federatedcredentialrequestmode"><c- n>FederatedCredentialRequestMode</c-></a> <dfn class="idl-code" data-default="&quot;mediated&quot;" data-dfn-for="FederatedCredentialRequestOptions" data-dfn-type="dict-member" data-export data-type="FederatedCredentialRequestMode " id="dom-federatedcredentialrequestoptions-mode"><code><c- g>mode</c-></code><a class="self-link" href="#dom-federatedcredentialrequestoptions-mode"></a></dfn> = "mediated";
-  <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-boolean" id="ref-for-idl-boolean"><c- b>boolean</c-></a> <dfn class="idl-code" data-default="false" data-dfn-for="FederatedCredentialRequestOptions" data-dfn-type="dict-member" data-export data-type="boolean " id="dom-federatedcredentialrequestoptions-modal"><code><c- g>modal</c-></code><a class="self-link" href="#dom-federatedcredentialrequestoptions-modal"></a></dfn> = <c- b>false</c->;
 };
 
 <c- b>dictionary</c-> <dfn class="dfn-paneled idl-code" data-dfn-type="dictionary" data-export id="dictdef-federatedidentityprovider"><code><c- g>FederatedIdentityProvider</c-></code></dfn> {
@@ -1132,10 +1130,10 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
       <li data-md>
        <p>Let <var>account</var> be <var>accounts list</var>[0]</p>
       <li data-md>
-       <p>If the <code class="idl"><a data-link-type="idl" href="#dom-statemachine-account-state" id="ref-for-dom-statemachine-account-state">Account State</a></code> for the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②⑨">Identity Provider</a> <var>provider</var>["<code class="idl"><a data-link-type="idl" href="#dom-federatedidentityprovider-url" id="ref-for-dom-federatedidentityprovider-url①">url</a></code>"], the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party⑤⓪">Relying Party</a> <var>origin</var> and the <var>account</var>["<code class="idl"><a data-link-type="idl" href="#dom-accounts_endpoint_response_accounts-account_id" id="ref-for-dom-accounts_endpoint_response_accounts-account_id">account_id</a></code>"] triple is <a data-link-type="dfn" href="#registered" id="ref-for-registered①">registered</a></p>
+       <p>If the <code class="idl"><a data-link-type="idl" href="#dom-statemachine-account-state" id="ref-for-dom-statemachine-account-state">Account State</a></code> for the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②⑨">Identity Provider</a> <var>provider</var>["<code class="idl"><a data-link-type="idl" href="#dom-federatedidentityprovider-url" id="ref-for-dom-federatedidentityprovider-url①">url</a></code>"], the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④⑨">Relying Party</a> <var>origin</var> and the <var>account</var>["<code class="idl"><a data-link-type="idl" href="#dom-accounts_endpoint_response_accounts-account_id" id="ref-for-dom-accounts_endpoint_response_accounts-account_id">account_id</a></code>"] triple is <a data-link-type="dfn" href="#registered" id="ref-for-registered①">registered</a></p>
        <ol>
         <li data-md>
-         <p>Ask the user if they want to sign-in to <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party⑤①">Relying Party</a> with their <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider③⓪">Identity Provider</a>'s <var>account</var>.</p>
+         <p>Ask the user if they want to sign-in to <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party⑤⓪">Relying Party</a> with their <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider③⓪">Identity Provider</a>'s <var>account</var>.</p>
         <li data-md>
          <p>If the user chooses not to sign-in return <code>null</code>.</p>
         <li data-md>
@@ -1147,11 +1145,11 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
     <li data-md>
      <p>Let <var>policies</var> be the result of running the <a data-link-type="dfn" href="#fetch-the-client-id-metadata" id="ref-for-fetch-the-client-id-metadata">fetch the client id metadata</a> algorithm.</p>
     <li data-md>
-     <p>Let <var>account</var> be the result of asking the user to select an account from the <var>account list</var> to be used under the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party⑤②">Relying Party</a>'s Privacy Policy at <var>policies</var>["<code class="idl"><a data-link-type="idl" href="#dom-client_id_metadata_endpont_response-privacy_policy_url" id="ref-for-dom-client_id_metadata_endpont_response-privacy_policy_url">privacy_policy_url</a></code>"] and Terms of Service at <var>policies</var>["<code class="idl"><a data-link-type="idl" href="#dom-client_id_metadata_endpont_response-terms_of_service_url" id="ref-for-dom-client_id_metadata_endpont_response-terms_of_service_url">terms_of_service_url</a></code>"].</p>
+     <p>Let <var>account</var> be the result of asking the user to select an account from the <var>account list</var> to be used under the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party⑤①">Relying Party</a>'s Privacy Policy at <var>policies</var>["<code class="idl"><a data-link-type="idl" href="#dom-client_id_metadata_endpont_response-privacy_policy_url" id="ref-for-dom-client_id_metadata_endpont_response-privacy_policy_url">privacy_policy_url</a></code>"] and Terms of Service at <var>policies</var>["<code class="idl"><a data-link-type="idl" href="#dom-client_id_metadata_endpont_response-terms_of_service_url" id="ref-for-dom-client_id_metadata_endpont_response-terms_of_service_url">terms_of_service_url</a></code>"].</p>
     <li data-md>
      <p>If the user chooses not to sign-up, return <code>null</code>.</p>
     <li data-md>
-     <p>For the for the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider③①">Identity Provider</a> <var>provider</var>["<code class="idl"><a data-link-type="idl" href="#dom-federatedidentityprovider-url" id="ref-for-dom-federatedidentityprovider-url②">url</a></code>"], the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party⑤③">Relying Party</a> <var>origin</var> and the <var>account</var>["<code class="idl"><a data-link-type="idl" href="#dom-accounts_endpoint_response_accounts-account_id" id="ref-for-dom-accounts_endpoint_response_accounts-account_id①">account_id</a></code>"] triple:</p>
+     <p>For the for the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider③①">Identity Provider</a> <var>provider</var>["<code class="idl"><a data-link-type="idl" href="#dom-federatedidentityprovider-url" id="ref-for-dom-federatedidentityprovider-url②">url</a></code>"], the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party⑤②">Relying Party</a> <var>origin</var> and the <var>account</var>["<code class="idl"><a data-link-type="idl" href="#dom-accounts_endpoint_response_accounts-account_id" id="ref-for-dom-accounts_endpoint_response_accounts-account_id①">account_id</a></code>"] triple:</p>
      <ul>
       <li data-md>
        <p>Set the account’s <code class="idl"><a data-link-type="idl" href="#dom-statemachine-account-state" id="ref-for-dom-statemachine-account-state①">Account State</a></code> from <a data-link-type="dfn" href="#unregistered" id="ref-for-unregistered①">unregistered</a> to <a data-link-type="dfn" href="#registered" id="ref-for-registered②">registered</a>.</p>
@@ -1304,10 +1302,10 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
    <dl>
     <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="client_id_metadata_endpont_response" data-dfn-type="argument" data-export id="dom-client_id_metadata_endpont_response-privacy_policy_url"><code>privacy_policy_url</code></dfn>
     <dd data-md>
-     <p>A link to the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party⑤④">Relying Party</a>'s privacy policy.</p>
+     <p>A link to the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party⑤③">Relying Party</a>'s privacy policy.</p>
     <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="client_id_metadata_endpont_response" data-dfn-type="argument" data-export id="dom-client_id_metadata_endpont_response-terms_of_service_url"><code>terms_of_service_url</code></dfn>
     <dd data-md>
-     <p>A link to the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party⑤⑤">Relying Party</a>'s terms of service.</p>
+     <p>A link to the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party⑤④">Relying Party</a>'s terms of service.</p>
    </dl>
    <h2 class="heading settled" data-level="7" id="SessionManagementAPI"><span class="secno">7. </span><span class="content">Session Management API</span><a class="self-link" href="#SessionManagementAPI"></a></h2>
    <p>Websites call <code><a data-link-type="idl">FederatedCredential.logout(...)</a></code> to log the user out of a series of relying parties.</p>
@@ -1395,7 +1393,6 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
    <li><a href="#low-level-api">low-level API</a><span>, in § 4</span>
    <li><a href="#dom-federatedcredentialrequestmode-mediated">"mediated"</a><span>, in § 6.2</span>
    <li><a href="#minting-minting">Minting</a><span>, in § 6.6.3.1</span>
-   <li><a href="#dom-federatedcredentialrequestoptions-modal">modal</a><span>, in § 6.2</span>
    <li><a href="#dom-federatedcredentialrequestoptions-mode">mode</a><span>, in § 6.2</span>
    <li><a href="#dom-federatedidentityprovider-nonce">nonce</a><span>, in § 6.2</span>
    <li><a href="#dom-federatedcredentialinterceptor-params">params</a><span>, in § 6.4.1.1</span>
@@ -1581,12 +1578,6 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
     <li><a href="#ref-for-idl-USVString⑤">7.2.2. IDP Sign-out</a>
    </ul>
   </aside>
-  <aside class="dfn-panel" data-for="term-for-idl-boolean">
-   <a href="https://heycam.github.io/webidl/#idl-boolean">https://heycam.github.io/webidl/#idl-boolean</a><b>Referenced in:</b>
-   <ul>
-    <li><a href="#ref-for-idl-boolean">6.2. The FederatedCredentialRequestOptions</a>
-   </ul>
-  </aside>
   <aside class="dfn-panel" data-for="term-for-idl-sequence">
    <a href="https://heycam.github.io/webidl/#idl-sequence">https://heycam.github.io/webidl/#idl-sequence</a><b>Referenced in:</b>
    <ul>
@@ -1635,7 +1626,6 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
      <li><span class="dfn-paneled" id="term-for-idl-promise">Promise</span>
      <li><span class="dfn-paneled" id="term-for-SecureContext">SecureContext</span>
      <li><span class="dfn-paneled" id="term-for-idl-USVString">USVString</span>
-     <li><span class="dfn-paneled" id="term-for-idl-boolean">boolean</span>
      <li><span class="dfn-paneled" id="term-for-idl-sequence">sequence</span>
     </ul>
   </ul>
@@ -1682,7 +1672,6 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
 <c- b>partial</c-> <c- b>dictionary</c-> <a class="idl-code" data-link-type="dictionary" href="https://w3c.github.io/webappsec-credential-management/#dictdef-federatedcredentialrequestoptions"><c- g>FederatedCredentialRequestOptions</c-></a> {
   <a data-link-type="dfn" href="https://heycam.github.io/webidl/#idl-sequence"><c- b>sequence</c-></a>&lt;(<a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-DOMString"><c- b>DOMString</c-></a> <c- b>or</c-> <a data-link-type="idl-name" href="#dictdef-federatedidentityprovider"><c- n>FederatedIdentityProvider</c-></a>)> <a data-type="sequence<(DOMString or FederatedIdentityProvider)> " href="#dom-federatedcredentialrequestoptions-providers"><code><c- g>providers</c-></code></a>;
   <a data-link-type="idl-name" href="#enumdef-federatedcredentialrequestmode"><c- n>FederatedCredentialRequestMode</c-></a> <a data-default="&quot;mediated&quot;" data-type="FederatedCredentialRequestMode " href="#dom-federatedcredentialrequestoptions-mode"><code><c- g>mode</c-></code></a> = "mediated";
-  <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-boolean"><c- b>boolean</c-></a> <a data-default="false" data-type="boolean " href="#dom-federatedcredentialrequestoptions-modal"><code><c- g>modal</c-></code></a> = <c- b>false</c->;
 };
 
 <c- b>dictionary</c-> <a href="#dictdef-federatedidentityprovider"><code><c- g>FederatedIdentityProvider</c-></code></a> {
@@ -1740,9 +1729,9 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
     <li><a href="#ref-for-relying-party④⓪">3.2.1. RP Sign-out</a> <a href="#ref-for-relying-party④①">(2)</a>
     <li><a href="#ref-for-relying-party④②">3.2.2. Front-channel Sign-out</a> <a href="#ref-for-relying-party④③">(2)</a> <a href="#ref-for-relying-party④④">(3)</a>
     <li><a href="#ref-for-relying-party④⑤">3.3. RP Revocation</a> <a href="#ref-for-relying-party④⑥">(2)</a> <a href="#ref-for-relying-party④⑦">(3)</a>
-    <li><a href="#ref-for-relying-party④⑧">5. Infrastructure</a> <a href="#ref-for-relying-party④⑨">(2)</a>
-    <li><a href="#ref-for-relying-party⑤⓪">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a> <a href="#ref-for-relying-party⑤①">(2)</a> <a href="#ref-for-relying-party⑤②">(3)</a> <a href="#ref-for-relying-party⑤③">(4)</a>
-    <li><a href="#ref-for-relying-party⑤④">6.6.4.2. The client_id metadata response</a> <a href="#ref-for-relying-party⑤⑤">(2)</a>
+    <li><a href="#ref-for-relying-party④⑧">5. The Lifecycle of Accounts and Sessions</a>
+    <li><a href="#ref-for-relying-party④⑨">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a> <a href="#ref-for-relying-party⑤⓪">(2)</a> <a href="#ref-for-relying-party⑤①">(3)</a> <a href="#ref-for-relying-party⑤②">(4)</a>
+    <li><a href="#ref-for-relying-party⑤③">6.6.4.2. The client_id metadata response</a> <a href="#ref-for-relying-party⑤④">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="identity-provider">
@@ -1758,7 +1747,7 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
     <li><a href="#ref-for-identity-provider②①">3.1. Signing-up and Signing-in</a> <a href="#ref-for-identity-provider②②">(2)</a>
     <li><a href="#ref-for-identity-provider②③">3.2.2. Front-channel Sign-out</a> <a href="#ref-for-identity-provider②④">(2)</a>
     <li><a href="#ref-for-identity-provider②⑤">3.3. RP Revocation</a>
-    <li><a href="#ref-for-identity-provider②⑥">5. Infrastructure</a>
+    <li><a href="#ref-for-identity-provider②⑥">5. The Lifecycle of Accounts and Sessions</a>
     <li><a href="#ref-for-identity-provider②⑦">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a> <a href="#ref-for-identity-provider②⑧">(2)</a> <a href="#ref-for-identity-provider②⑨">(3)</a> <a href="#ref-for-identity-provider③⓪">(4)</a> <a href="#ref-for-identity-provider③①">(5)</a>
     <li><a href="#ref-for-identity-provider③②">6.6. The .well-known/webid configuration</a>
     <li><a href="#ref-for-identity-provider③③">6.6.2. accounts_endpoint</a>
@@ -1812,28 +1801,28 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
   <aside class="dfn-panel" data-for="registered">
    <b><a href="#registered">#registered</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-registered">5. Infrastructure</a>
+    <li><a href="#ref-for-registered">5. The Lifecycle of Accounts and Sessions</a>
     <li><a href="#ref-for-registered①">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a> <a href="#ref-for-registered②">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="unregistered">
    <b><a href="#unregistered">#unregistered</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-unregistered">5. Infrastructure</a>
+    <li><a href="#ref-for-unregistered">5. The Lifecycle of Accounts and Sessions</a>
     <li><a href="#ref-for-unregistered①">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="logged-in">
    <b><a href="#logged-in">#logged-in</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-logged-in">5. Infrastructure</a>
+    <li><a href="#ref-for-logged-in">5. The Lifecycle of Accounts and Sessions</a>
     <li><a href="#ref-for-logged-in①">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a> <a href="#ref-for-logged-in②">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="logged-out">
    <b><a href="#logged-out">#logged-out</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-logged-out">5. Infrastructure</a>
+    <li><a href="#ref-for-logged-out">5. The Lifecycle of Accounts and Sessions</a>
     <li><a href="#ref-for-logged-out①">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a> <a href="#ref-for-logged-out②">(2)</a>
    </ul>
   </aside>

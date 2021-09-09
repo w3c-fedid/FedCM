@@ -218,7 +218,7 @@ The Sign-up and Sign-in APIs are APIs used by the [=Relying Party=]s to ask the 
 
 The [=Relying Party=] makes no delineation between Sign-up and Sign-in, but rather call the same API indistinguishably. The most important parameter to the API call is the set of [=Identity Provider=]s that the [=Relying Party=] supports and has pre-registered with (i.e. it has a `clientId`).
 
-Additionally, the [=Relying Party=] can control a variety of UX knobs. For example, rather the dialog is modal or not, whether to allow an [[#use-cases-auto-sign-in]] flow and an AbortSignal in case it needs to abort the flow.
+Additionally, the [=Relying Party=] can control a variety of UX knobs. For example, whether to allow an [[#use-cases-auto-sign-in]] flow and an AbortSignal in case it needs to abort the flow.
 
 If all goes well, the [=Relying Party=] receives back an [=id token=] in the form of a signed [[JWT]] which it can use to authenticate the user.
 
@@ -236,7 +236,6 @@ async function login(signal) {
       // controls which UX mode to use
       mode: "mediated",
       // controls whether the account chooser is modal or not
-      modal: true,  
       providers: [{
         url: "https://idp.example",
         // the pre-registered client id  
@@ -298,15 +297,13 @@ through an [[#use-cases-explicit-sign-in]] upon return.
 <div class=example>
 ```js
 async function logout() {
-  await FederatedCredential.logout({
-    endpoints: [{
-      url: "https://rp1.example",
+  await FederatedCredential.logout([{
+      endpoint: "https://rp1.example",
       accountId: "123",
     }, {
-      url: "https://rpN.example",
+      endpiont: "https://rpN.example",
       accountId: "456",
-    }]
-  });
+    }]);
 }
 ```
 </div>
@@ -324,8 +321,8 @@ instead of a [[#use-cases-sign-in]] flow.
 
 <div class=example>
 ```js
-async function revoke() {
-  return await FederatedCredential.revoke("12345");
+async function revoke(accountId) {
+  return await FederatedCredential.revoke(accountId);
 }
 ```
 </div>
@@ -388,10 +385,14 @@ if (!window.FederatedCredential) {
 :: TODO(goto: find existing definition.
 
 <!-- ============================================================ -->
-# Infrastructure # {#Infrastructure}
+# The Lifecycle of Accounts and Sessions # {#lifecycle}
 <!-- ============================================================ -->
 
-User agents MUST internally provide a <dfn export id="concept-state-machine">state machine</dfn> for each pair of [=Relying Party=] and [=Identity Provider=], which is a vendor-specific, opaque storage mechanism that keeps track of the lifecycle of the user's accounts and sessions in the [=Relying Party=].
+User agents MUST internally provide storage for a <dfn export id="concept-state-machine">state machine</dfn> that keeps track of the lifecycle of the accounts of [=Identity Provider=] being used at [=Relying Party=].
+
+The account management and session management API allows the user to explicitly move through the state machine and as they do unlock (or lock) access to browser capabilities that would (or wouldn't) be available otherwise.
+
+<img src="static/mock42.svg">
 
 <dl dfn-type="argument" dfn-for="StateMachine">
     :   <dfn>Account State</dfn>
@@ -438,7 +439,6 @@ It also extends the {{FederatedCredentialRequestOptions}} by adding a list of {{
 partial dictionary FederatedCredentialRequestOptions {
   sequence<(DOMString or FederatedIdentityProvider)> providers;
   FederatedCredentialRequestMode mode = "mediated";
-  boolean modal = false;
 };
 
 dictionary FederatedIdentityProvider {
