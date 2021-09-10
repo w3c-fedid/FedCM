@@ -527,32 +527,40 @@ For example:
 ## Client Metadata ## {#client_id_metadata_endpoint}
 <!-- ============================================================ -->
 
-The [=.well-known=]'s <code><dfn data-export="" data-dfn-for=".well-known">`client_id_metadata_endpoint`</dfn></code> 
+The client metadata endpoint provides metadata about [=RP=]s.
 
-To <dfn>fetch the client id metadata</dfn> run this algorithm:
+The client medata endpoint is fetched (a) **without** cookies and (b) **with** a special [[#Sec-WebID-CSR]] header.
 
-1. Let the |client_id_metadata_endpoint| url be the relative url |wellknown|["{{WellKnown/client_id_metadata_endpoint}}"] of |provider|["{{FederatedIdentityProvider/url}}"]
-1. Let the |policies| be the result of fetching the |client_id_metadata_endpoint| with the [[#Sec-WebID-CSR|Sec-WebID-CSR]] header but without the [=Identity Provider=]'s cookies.
-1. Return |policies|
+For example:
 
-<!-- ============================================================ -->
-### The client_id metadata request  ### {#client_id_metadata_endpoint_request}
-<!-- ============================================================ -->
+<div class=example>
+```http
+GET /client_medata.php HTTPS/1.1
+Host: idp.example
+Content-Type: application/json
+Sec-WebID-CSRF: random_value
+```
+</div>
 
-<!-- ============================================================ -->
-### The client_id metadata response  ### {#client_id_metadata_endpoint_response}
-<!-- ============================================================ -->
-
-The <dfn>Privacy Policy</dfn> are the policies described at {{client_id_metadata_endpont_response/privacy_policy_url}}.
-
-The <dfn>Terms of Service</dfn> are the policies described at {{client_id_metadata_endpont_response/terms_of_service_url}}.
+The file is parsed expecting the following properties:
 
 <dl dfn-type="argument" dfn-for="client_id_metadata_endpont_response">
     :   <dfn>privacy_policy_url</dfn>
-    ::  A link to the [=Relying Party=]'s privacy policy.
+    ::  A link to the [=RP=]'s privacy policy.
     :   <dfn>terms_of_service_url</dfn>
-    ::  A link to the [=Relying Party=]'s terms of service.
+    ::  A link to the [=RP=]'s terms of service.
 </dl>
+
+For example:
+
+<div class=example>
+```json
+{
+  "privacy_policy_url": "/privacy.html",
+  "terms_of_service_url": "/terms.html",
+}
+```
+</div>
 
 <!-- ============================================================ -->
 ## ID Token ## {#idtoken_endpoint}
@@ -802,6 +810,15 @@ To <dfn>fetch the accounts list</dfn> run this algorithm:
 
 1. Return the |accounts list|
 
+To <dfn>fetch the client id metadata</dfn> run this algorithm:
+
+1. Let the |client_id_metadata_endpoint| url be the relative url |wellknown|["{{WellKnown/client_id_metadata_endpoint}}"] of |provider|["{{FederatedIdentityProvider/url}}"]
+1. Let the |policies| be the result of fetching the |client_id_metadata_endpoint| with the [[#Sec-WebID-CSR|Sec-WebID-CSR]] header but without the [=Identity Provider=]'s cookies.
+1. Return |policies|
+
+The <dfn>Privacy Policy</dfn> are the policies described at {{client_id_metadata_endpont_response/privacy_policy_url}}.
+
+The <dfn>Terms of Service</dfn> are the policies described at {{client_id_metadata_endpont_response/terms_of_service_url}}.
 
 <!-- ============================================================ -->
 ### Interceptors ### {#Interceptors}
