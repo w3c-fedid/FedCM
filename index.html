@@ -1,12 +1,12 @@
 <!doctype html><html lang="en">
  <head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
-  <title>WebID API</title>
+  <title>Federated Account and Session Management API</title>
   <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport">
   <link href="https://www.w3.org/StyleSheets/TR/2016/cg-draft" rel="stylesheet">
   <meta content="Bikeshed version 4f053d00e, updated Tue Aug 10 14:13:32 2021 -0700" name="generator">
   <link href="http://wicg.github.io/WebID" rel="canonical">
-  <meta content="68fcf6b41c084494989f51a4a82c8bf567ebe890" name="document-revision">
+  <meta content="d27db476c4494edeed7a1d1774b4990beb5834e2" name="document-revision">
 <style>
 dl.domintro dt {
     font-family: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
@@ -580,7 +580,7 @@ c-[il] { color: #000000 } /* Literal.Number.Integer.Long */
  <body class="h-entry">
   <div class="head">
    <p data-fill-with="logo"><a class="logo" href="https://www.w3.org/"> <img alt="W3C" height="48" src="https://www.w3.org/StyleSheets/TR/2016/logos/W3C" width="72"> </a> </p>
-   <h1 class="p-name no-ref" id="title">WebID API</h1>
+   <h1 class="p-name no-ref" id="title">Federated Account and Session Management API</h1>
    <h2 class="no-num no-toc no-ref heading settled" id="profile-and-date"><span class="content">Draft Community Group Report, <time class="dt-updated" datetime="2021-09-10">10 September 2021</time></span></h2>
    <div data-fill-with="spec-metadata">
     <dl>
@@ -595,7 +595,7 @@ c-[il] { color: #000000 } /* Literal.Number.Integer.Long */
     </dl>
    </div>
    <div data-fill-with="warning"></div>
-   <p class="copyright" data-fill-with="copyright"><a href="http://www.w3.org/Consortium/Legal/ipr-notice#Copyright">Copyright</a> © 2021 the Contributors to the WebID API Specification, published by the <a href="https://www.w3.org/community/wicg/">Web Platform Incubator Community Group</a> under the <a href="https://www.w3.org/community/about/agreements/cla/">W3C Community Contributor License Agreement (CLA)</a>.
+   <p class="copyright" data-fill-with="copyright"><a href="http://www.w3.org/Consortium/Legal/ipr-notice#Copyright">Copyright</a> © 2021 the Contributors to the Federated Account and Session Management API Specification, published by the <a href="https://www.w3.org/community/wicg/">Web Platform Incubator Community Group</a> under the <a href="https://www.w3.org/community/about/agreements/cla/">W3C Community Contributor License Agreement (CLA)</a>.
 A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/">summary</a> is available. </p>
    <hr title="Separator for header">
   </div>
@@ -657,61 +657,60 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
       <li><a href="#intro-feature-detection"><span class="secno">3.4</span> <span class="content">Feature Detection</span></a>
      </ol>
     <li><a href="#terminology"><span class="secno">4</span> <span class="content">Terminology</span></a>
-    <li><a href="#lifecycle"><span class="secno">5</span> <span class="content">Life of a User</span></a>
+    <li><a href="#lifecycle"><span class="secno">5</span> <span class="content">The State Machine</span></a>
     <li>
-     <a href="#AccountManagementAPI"><span class="secno">6</span> <span class="content">Account Management API</span></a>
+     <a href="#API"><span class="secno">6</span> <span class="content">The Browser API</span></a>
      <ol class="toc">
-      <li><a href="#FederatedCredential"><span class="secno">6.1</span> <span class="content">The <code class="idl"><span>FederatedCredential</span></code> Interface</span></a>
-      <li><a href="#FederatedCredentialRequestOptions"><span class="secno">6.2</span> <span class="content">The <code class="idl"><span>FederatedCredentialRequestOptions</span></code></span></a>
-      <li><a href="#federated-credential-discover-from-external-source"><span class="secno">6.3</span> <span class="content">The <code class="idl"><span>FederatedCredential</span></code>'s <code><span><code>[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</code></span></code> Method</span></a>
       <li>
-       <a href="#sign-up①"><span class="secno">6.4</span> <span class="content">Sign-up</span></a>
+       <a href="#sign-in"><span class="secno">6.1</span> <span class="content">The Sign-in API</span></a>
        <ol class="toc">
+        <li><a href="#FederatedCredential"><span class="secno">6.1.1</span> <span class="content">The <code class="idl"><span>FederatedCredential</span></code> Interface</span></a>
+        <li><a href="#FederatedCredentialRequestOptions"><span class="secno">6.1.2</span> <span class="content">The <code class="idl"><span>FederatedCredentialRequestOptions</span></code></span></a>
+        <li><a href="#federated-credential-discover-from-external-source"><span class="secno">6.1.3</span> <span class="content">The <code class="idl"><span>FederatedCredential</span></code>'s <code><span><code>[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</code></span></code> Method</span></a>
         <li>
-         <a href="#Interceptors"><span class="secno">6.4.1</span> <span class="content">Interceptors</span></a>
+         <a href="#Interceptors"><span class="secno">6.1.4</span> <span class="content">Interceptors</span></a>
          <ol class="toc">
-          <li><a href="#FederatedCredentialInterceptor"><span class="secno">6.4.1.1</span> <span class="content"><code>FederatedCredentialInterceptor</code></span></a>
+          <li><a href="#FederatedCredentialInterceptor"><span class="secno">6.1.4.1</span> <span class="content"><code>FederatedCredentialInterceptor</code></span></a>
          </ol>
        </ol>
-      <li><a href="#revocation"><span class="secno">6.5</span> <span class="content">Revocation</span></a>
+      <li><a href="#revocation"><span class="secno">6.2</span> <span class="content">The Revocation API</span></a>
       <li>
-       <a href="#Well-Known"><span class="secno">6.6</span> <span class="content">The .well-known/webid configuration</span></a>
+       <a href="#sign-out"><span class="secno">6.3</span> <span class="content">The Sign-out API</span></a>
        <ol class="toc">
-        <li><a href="#Sec-WebID-CSR"><span class="secno">6.6.1</span> <span class="content"><code><span><code>Sec-WebID-CSR</code></span></code></span></a>
-        <li>
-         <a href="#accounts_endpoint"><span class="secno">6.6.2</span> <span class="content">accounts_endpoint</span></a>
-         <ol class="toc">
-          <li><a href="#accounts_endpoint_request"><span class="secno">6.6.2.1</span> <span class="content">The accounts list request</span></a>
-          <li>
-           <a href="#accounts_endpoint_response"><span class="secno">6.6.2.2</span> <span class="content">The accounts list response</span></a>
-           <ol class="toc">
-            <li><a href="#accounts_endpoint_response_accounts"><span class="secno">6.6.2.2.1</span> <span class="content">Account</span></a>
-           </ol>
-         </ol>
-        <li>
-         <a href="#idtoken_endpoint"><span class="secno">6.6.3</span> <span class="content">idtoken_endpoint</span></a>
-         <ol class="toc">
-          <li><a href="#minting"><span class="secno">6.6.3.1</span> <span class="content"><span>Minting</span> a new IdToken</span></a>
-          <li><a href="#idtoken_endpoint_request"><span class="secno">6.6.3.2</span> <span class="content">The idtoken request</span></a>
-          <li><a href="#idtoken_endpoint_response"><span class="secno">6.6.3.3</span> <span class="content">The idtoken response</span></a>
-         </ol>
-        <li>
-         <a href="#client_id_metadata_endpoint"><span class="secno">6.6.4</span> <span class="content">client_id_metadata_endpoint</span></a>
-         <ol class="toc">
-          <li><a href="#client_id_metadata_endpoint_request"><span class="secno">6.6.4.1</span> <span class="content">The client_id metadata request</span></a>
-          <li><a href="#client_id_metadata_endpoint_response"><span class="secno">6.6.4.2</span> <span class="content">The client_id metadata response</span></a>
-         </ol>
+        <li><a href="#rp-sign-out"><span class="secno">6.3.1</span> <span class="content">RP Sign-out</span></a>
+        <li><a href="#idp-sign-out"><span class="secno">6.3.2</span> <span class="content">IDP Sign-out</span></a>
        </ol>
      </ol>
     <li>
-     <a href="#SessionManagementAPI"><span class="secno">7</span> <span class="content">Session Management API</span></a>
+     <a href="#idp-api"><span class="secno">7</span> <span class="content">The IDP HTTP API</span></a>
      <ol class="toc">
-      <li><a href="#sign-in①"><span class="secno">7.1</span> <span class="content">Sign-in</span></a>
       <li>
-       <a href="#sign-out"><span class="secno">7.2</span> <span class="content">Sign-out</span></a>
+       <a href="#Well-Known"><span class="secno">7.1</span> <span class="content">The .well-known/webid configuration</span></a>
        <ol class="toc">
-        <li><a href="#rp-sign-out"><span class="secno">7.2.1</span> <span class="content">RP Sign-out</span></a>
-        <li><a href="#idp-sign-out"><span class="secno">7.2.2</span> <span class="content">IDP Sign-out</span></a>
+        <li><a href="#Sec-WebID-CSR"><span class="secno">7.1.1</span> <span class="content"><code><span><code>Sec-WebID-CSR</code></span></code></span></a>
+       </ol>
+      <li>
+       <a href="#accounts_endpoint"><span class="secno">7.2</span> <span class="content">accounts_endpoint</span></a>
+       <ol class="toc">
+        <li><a href="#accounts_endpoint_request"><span class="secno">7.2.1</span> <span class="content">The accounts list request</span></a>
+        <li>
+         <a href="#accounts_endpoint_response"><span class="secno">7.2.2</span> <span class="content">The accounts list response</span></a>
+         <ol class="toc">
+          <li><a href="#accounts_endpoint_response_accounts"><span class="secno">7.2.2.1</span> <span class="content">Account</span></a>
+         </ol>
+       </ol>
+      <li>
+       <a href="#idtoken_endpoint"><span class="secno">7.3</span> <span class="content">idtoken_endpoint</span></a>
+       <ol class="toc">
+        <li><a href="#minting"><span class="secno">7.3.1</span> <span class="content"><span>Minting</span> a new IdToken</span></a>
+        <li><a href="#idtoken_endpoint_request"><span class="secno">7.3.2</span> <span class="content">The idtoken request</span></a>
+        <li><a href="#idtoken_endpoint_response"><span class="secno">7.3.3</span> <span class="content">The idtoken response</span></a>
+       </ol>
+      <li>
+       <a href="#client_id_metadata_endpoint"><span class="secno">7.4</span> <span class="content">client_id_metadata_endpoint</span></a>
+       <ol class="toc">
+        <li><a href="#client_id_metadata_endpoint_request"><span class="secno">7.4.1</span> <span class="content">The client_id metadata request</span></a>
+        <li><a href="#client_id_metadata_endpoint_response"><span class="secno">7.4.2</span> <span class="content">The client_id metadata response</span></a>
        </ol>
      </ol>
     <li><a href="#security"><span class="secno">8</span> <span class="content">Security</span></a>
@@ -993,12 +992,12 @@ instead of a <a href="#use-cases-sign-in">§ 2.2 Sign-in</a> flow.</p>
    <h2 class="heading settled" data-level="4" id="terminology"><span class="secno">4. </span><span class="content">Terminology</span><a class="self-link" href="#terminology"></a></h2>
    <dl>
     <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="relying-party">Relying Party</dfn>
-    <dt data-md><dfn data-dfn-type="dfn" data-noexport id="rp">RP<a class="self-link" href="#rp"></a></dfn>
+    <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="rp">RP</dfn>
     <dt data-md><dfn data-dfn-type="dfn" data-noexport id="website">Website<a class="self-link" href="#website"></a></dfn>
     <dd data-md>
      <p>TODO(goto): find existing definitions.</p>
     <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="identity-provider">Identity Provider</dfn>
-    <dt data-md><dfn data-dfn-type="dfn" data-noexport id="idp">IDP<a class="self-link" href="#idp"></a></dfn>
+    <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="idp">IDP</dfn>
     <dd data-md>
      <p>TODO(goto): find existing definition.</p>
     <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="session">session</dfn>
@@ -1033,9 +1032,9 @@ instead of a <a href="#use-cases-sign-in">§ 2.2 Sign-in</a> flow.</p>
     <dd data-md>
      <p>TODO(goto: find existing definition.</p>
    </dl>
-   <h2 class="heading settled" data-level="5" id="lifecycle"><span class="secno">5. </span><span class="content">Life of a User</span><a class="self-link" href="#lifecycle"></a></h2>
-   <p>User agents MUST internally provide storage for a <dfn data-dfn-type="dfn" data-export id="concept-state-machine">state machine<a class="self-link" href="#concept-state-machine"></a></dfn> that keeps track of the lifecycle of the accounts of <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②⑥">Identity Provider</a> being used at <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④⑧">Relying Party</a>.</p>
-   <p>The account management and session management API allows the user to explicitly move through the state machine and as they do unlock (or lock) access to browser capabilities that would (or wouldn’t) be available otherwise.</p>
+   <h2 class="heading settled" data-level="5" id="lifecycle"><span class="secno">5. </span><span class="content">The State Machine</span><a class="self-link" href="#lifecycle"></a></h2>
+   <p>The account management and session management APIs allows the user to explicitly move through the different stages of their accounts. At each stage, the state machine manages the <a data-link-type="dfn" href="#rp" id="ref-for-rp">RP</a>'s and the <a data-link-type="dfn" href="#idp" id="ref-for-idp">IDP</a>'s access to the appropriate browser capabilities.</p>
+   <p>User agents MUST internally provide storage for a <dfn data-dfn-type="dfn" data-export id="concept-state-machine">state machine<a class="self-link" href="#concept-state-machine"></a></dfn> that keeps track of the lifecycle of the accounts of <a data-link-type="dfn" href="#idp" id="ref-for-idp①">IDP</a> being used at <a data-link-type="dfn" href="#rp" id="ref-for-rp①">RP</a>.</p>
    <p><img src="static/mock42.svg"></p>
    <dl>
     <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="StateMachine" data-dfn-type="argument" data-export id="dom-statemachine-account-state"><code>Account State</code></dfn>
@@ -1045,9 +1044,11 @@ instead of a <a href="#use-cases-sign-in">§ 2.2 Sign-in</a> flow.</p>
     <dd data-md>
      <p>Keeps track of whether the user has an open or closed session. Can be <a data-link-type="dfn" href="#logged-in" id="ref-for-logged-in">logged in</a> or (by default) <a data-link-type="dfn" href="#logged-out" id="ref-for-logged-out">logged out</a>.</p>
    </dl>
-   <h2 class="heading settled" data-level="6" id="AccountManagementAPI"><span class="secno">6. </span><span class="content">Account Management API</span><a class="self-link" href="#AccountManagementAPI"></a></h2>
+   <p><img src="static/mock43.svg"></p>
+   <h2 class="heading settled" data-level="6" id="API"><span class="secno">6. </span><span class="content">The Browser API</span><a class="self-link" href="#API"></a></h2>
    <p>Websites call <code><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dom-credentialscontainer-get" id="ref-for-dom-credentialscontainer-get">navigator.credentials.get({providers:..., ...})</a></code> to retrieve a <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential">FederatedCredential</a></code>.</p>
-   <h3 class="heading settled" data-level="6.1" id="FederatedCredential"><span class="secno">6.1. </span><span class="content">The <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential①">FederatedCredential</a></code> Interface</span><a class="self-link" href="#FederatedCredential"></a></h3>
+   <h3 class="heading settled" data-level="6.1" id="sign-in"><span class="secno">6.1. </span><span class="content">The Sign-in API</span><a class="self-link" href="#sign-in"></a></h3>
+   <h4 class="heading settled" data-level="6.1.1" id="FederatedCredential"><span class="secno">6.1.1. </span><span class="content">The <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential①">FederatedCredential</a></code> Interface</span><a class="self-link" href="#FederatedCredential"></a></h4>
    <p>This specification extends the <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential②">FederatedCredential</a></code> type adding two more fields:</p>
 <pre class="idl highlight def">[<a class="idl-code" data-link-type="extended-attribute" href="https://heycam.github.io/webidl/#Exposed" id="ref-for-Exposed"><c- g>Exposed</c-></a>=<c- n>Window</c->, <a class="idl-code" data-link-type="extended-attribute" href="https://heycam.github.io/webidl/#SecureContext" id="ref-for-SecureContext"><c- g>SecureContext</c-></a>]
 <c- b>partial</c-> <c- b>interface</c-> <a class="idl-code" data-link-type="interface" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential③"><c- g>FederatedCredential</c-></a> : <a data-link-type="idl-name" href="https://w3c.github.io/webappsec-credential-management/#credential" id="ref-for-credential"><c- n>Credential</c-></a> {
@@ -1063,7 +1064,7 @@ instead of a <a href="#use-cases-sign-in">§ 2.2 Sign-in</a> flow.</p>
     <dd data-md>
      <p>When used in conjunction with <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dom-credentialrequestoptions-mediation" id="ref-for-dom-credentialrequestoptions-mediation">mediation</a></code>, it indicates whether the credential was provided via a <a href="#use-cases-auto-sign-in">§ 2.2.1 Auto Sign-in</a> or an <a href="#use-cases-explicit-sign-in">§ 2.2.2 Explicit Sign-in</a>.</p>
    </dl>
-   <h3 class="heading settled" data-level="6.2" id="FederatedCredentialRequestOptions"><span class="secno">6.2. </span><span class="content">The <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dictdef-federatedcredentialrequestoptions" id="ref-for-dictdef-federatedcredentialrequestoptions">FederatedCredentialRequestOptions</a></code></span><a class="self-link" href="#FederatedCredentialRequestOptions"></a></h3>
+   <h4 class="heading settled" data-level="6.1.2" id="FederatedCredentialRequestOptions"><span class="secno">6.1.2. </span><span class="content">The <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dictdef-federatedcredentialrequestoptions" id="ref-for-dictdef-federatedcredentialrequestoptions">FederatedCredentialRequestOptions</a></code></span><a class="self-link" href="#FederatedCredentialRequestOptions"></a></h4>
    <p>It also extends the <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dictdef-federatedcredentialrequestoptions" id="ref-for-dictdef-federatedcredentialrequestoptions①">FederatedCredentialRequestOptions</a></code> by adding a list of <code class="idl"><a data-link-type="idl" href="#dictdef-federatedidentityprovider" id="ref-for-dictdef-federatedidentityprovider">FederatedIdentityProvider</a></code>s as well as the UX controls for modality and modes.</p>
 <pre class="idl highlight def"><c- b>partial</c-> <c- b>dictionary</c-> <a class="idl-code" data-link-type="dictionary" href="https://w3c.github.io/webappsec-credential-management/#dictdef-federatedcredentialrequestoptions" id="ref-for-dictdef-federatedcredentialrequestoptions②"><c- g>FederatedCredentialRequestOptions</c-></a> {
   <a data-link-type="dfn" href="https://heycam.github.io/webidl/#idl-sequence" id="ref-for-idl-sequence"><c- b>sequence</c-></a>&lt;(<a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-DOMString" id="ref-for-idl-DOMString"><c- b>DOMString</c-></a> <c- b>or</c-> <a data-link-type="idl-name" href="#dictdef-federatedidentityprovider" id="ref-for-dictdef-federatedidentityprovider①"><c- n>FederatedIdentityProvider</c-></a>)> <dfn class="dfn-paneled idl-code" data-dfn-for="FederatedCredentialRequestOptions" data-dfn-type="dict-member" data-export data-type="sequence<(DOMString or FederatedIdentityProvider)> " id="dom-federatedcredentialrequestoptions-providers"><code><c- g>providers</c-></code></dfn>;
@@ -1086,8 +1087,8 @@ instead of a <a href="#use-cases-sign-in">§ 2.2 Sign-in</a> flow.</p>
   <dfn class="idl-code" data-dfn-for="FederatedCredentialApprovedBy" data-dfn-type="enum-value" data-export id="dom-federatedcredentialapprovedby-user"><code><c- s>"user"</c-></code><a class="self-link" href="#dom-federatedcredentialapprovedby-user"></a></dfn>
 };
 </pre>
-   <h3 class="heading settled" data-level="6.3" id="federated-credential-discover-from-external-source"><span class="secno">6.3. </span><span class="content">The <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential④">FederatedCredential</a></code>'s <code><dfn class="idl-code" data-dfn-for="FederatedCredential" data-dfn-type="method" data-export id="dom-federatedcredential-discoverfromexternalsource-slot"><code>[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</code><a class="self-link" href="#dom-federatedcredential-discoverfromexternalsource-slot"></a></dfn></code> Method</span><a class="self-link" href="#federated-credential-discover-from-external-source"></a></h3>
-   <p>This algorithm runs in parallel inside the <a href="https://w3c.github.io/webappsec-credential-management/#algorithm-request">Credential Management § algorithm-request</a> to request credentials and returns a set of <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential⑤">FederatedCredential</a></code> objects from a remote <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②⑦">Identity Provider</a>.</p>
+   <h4 class="heading settled" data-level="6.1.3" id="federated-credential-discover-from-external-source"><span class="secno">6.1.3. </span><span class="content">The <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential④">FederatedCredential</a></code>'s <code><dfn class="idl-code" data-dfn-for="FederatedCredential" data-dfn-type="method" data-export id="dom-federatedcredential-discoverfromexternalsource-slot"><code>[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</code><a class="self-link" href="#dom-federatedcredential-discoverfromexternalsource-slot"></a></dfn></code> Method</span><a class="self-link" href="#federated-credential-discover-from-external-source"></a></h4>
+   <p>This algorithm runs in parallel inside the <a href="https://w3c.github.io/webappsec-credential-management/#algorithm-request">Credential Management § algorithm-request</a> to request credentials and returns a set of <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential⑤">FederatedCredential</a></code> objects from a remote <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②⑥">Identity Provider</a>.</p>
    <p>This <a data-link-type="dfn">internal method</a> accepts three arguments:</p>
    <dl>
     <dt data-md><dfn class="idl-code" data-dfn-for="FederatedCredential/[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)" data-dfn-type="argument" data-export id="dom-federatedcredential-discoverfromexternalsource-origin-options-sameoriginwithancestors-origin"><code>origin</code><a class="self-link" href="#dom-federatedcredential-discoverfromexternalsource-origin-options-sameoriginwithancestors-origin"></a></dfn>
@@ -1111,7 +1112,7 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
      <p class="assertion">Assert: <var>options</var>["<code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dom-credentialrequestoptions-federated" id="ref-for-dom-credentialrequestoptions-federated①">federated</a></code>"]["<code class="idl"><a data-link-type="idl" href="#dom-federatedcredentialrequestoptions-providers" id="ref-for-dom-federatedcredentialrequestoptions-providers">providers</a></code>"] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists">exists</a>.</p>
     <li data-md>
      <p class="assertion">Assert: <var>options</var>["<code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dom-credentialrequestoptions-federated" id="ref-for-dom-credentialrequestoptions-federated②">federated</a></code>"]["<code class="idl"><a data-link-type="idl" href="#dom-federatedcredentialrequestoptions-providers" id="ref-for-dom-federatedcredentialrequestoptions-providers①">providers</a></code>"] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size" id="ref-for-list-size">size</a> is 1.</p>
-     <p class="note" role="note"><span>Note:</span> At some point we would like to support choosing accounts from multiple <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②⑧">Identity Provider</a>s.</p>
+     <p class="note" role="note"><span>Note:</span> At some point we would like to support choosing accounts from multiple <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②⑦">Identity Provider</a>s.</p>
     <li data-md>
      <p>Let <var>provider</var> be <var>options</var>["<code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dom-credentialrequestoptions-federated" id="ref-for-dom-credentialrequestoptions-federated③">federated</a></code>"]["<code class="idl"><a data-link-type="idl" href="#dom-federatedcredentialrequestoptions-providers" id="ref-for-dom-federatedcredentialrequestoptions-providers②">providers</a></code>"][0].</p>
     <li data-md>
@@ -1141,8 +1142,6 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
     <li data-md>
      <p>Return the result of running the <a data-link-type="dfn" href="#auto-sign-in" id="ref-for-auto-sign-in">auto sign-in</a> algorithm.</p>
    </ol>
-   <p>The <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="privacy-policy">Privacy Policy</dfn> are the policies described at <code class="idl"><a data-link-type="idl" href="#dom-client_id_metadata_endpont_response-privacy_policy_url" id="ref-for-dom-client_id_metadata_endpont_response-privacy_policy_url">privacy_policy_url</a></code>.</p>
-   <p>The <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="terms-of-service">Terms of Service</dfn> are the policies described at <code class="idl"><a data-link-type="idl" href="#dom-client_id_metadata_endpont_response-terms_of_service_url" id="ref-for-dom-client_id_metadata_endpont_response-terms_of_service_url">terms_of_service_url</a></code>.</p>
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="sign-up">sign-up</dfn> the user run this algorithm:</p>
    <ol>
     <li data-md>
@@ -1175,7 +1174,7 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
     <li data-md>
      <p>Return <var>account</var></p>
    </ol>
-   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="sign-in">sign-in</dfn> the user run this algorithm:</p>
+   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="sign-in①">sign-in</dfn> the user run this algorithm:</p>
    <ol>
     <li data-md>
      <p>Assert that the <code class="idl"><a data-link-type="idl" href="#dom-statemachine-account-state" id="ref-for-dom-statemachine-account-state②">Account State</a></code> is <a data-link-type="dfn" href="#registered" id="ref-for-registered②">registered</a></p>
@@ -1187,23 +1186,22 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="auto-sign-in">auto sign-in</dfn> the user run this algorithm:</p>
    <ol>
     <li data-md>
-     <p>Return the result of running the <a data-link-type="dfn" href="#sign-in" id="ref-for-sign-in">sign-in</a> algorithm.</p>
+     <p>Return the result of running the <a data-link-type="dfn" href="#sign-in①" id="ref-for-sign-in①">sign-in</a> algorithm.</p>
    </ol>
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="explicit-sign-in">explicit sign-in</dfn> the user run this algorithm:</p>
    <ol>
     <li data-md>
-     <p>Gather explicit confirmation that the user wants to sign-in to <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④⑨">Relying Party</a> with their <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②⑨">Identity Provider</a>'s <var>account</var></p>
+     <p>Gather explicit confirmation that the user wants to sign-in to <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④⑧">Relying Party</a> with their <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②⑧">Identity Provider</a>'s <var>account</var></p>
     <li data-md>
-     <p>Return the result of running the <a data-link-type="dfn" href="#sign-in" id="ref-for-sign-in①">sign-in</a> algorithm.</p>
+     <p>Return the result of running the <a data-link-type="dfn" href="#sign-in①" id="ref-for-sign-in①①">sign-in</a> algorithm.</p>
    </ol>
-   <h3 class="heading settled" data-level="6.4" id="sign-up①"><span class="secno">6.4. </span><span class="content">Sign-up</span><a class="self-link" href="#sign-up①"></a></h3>
-   <h4 class="heading settled" data-level="6.4.1" id="Interceptors"><span class="secno">6.4.1. </span><span class="content">Interceptors</span><a class="self-link" href="#Interceptors"></a></h4>
+   <h4 class="heading settled" data-level="6.1.4" id="Interceptors"><span class="secno">6.1.4. </span><span class="content">Interceptors</span><a class="self-link" href="#Interceptors"></a></h4>
 <pre class="idl highlight def">[<a class="idl-code" data-link-type="extended-attribute" href="https://heycam.github.io/webidl/#Exposed" id="ref-for-Exposed①"><c- g>Exposed</c-></a>=<c- n>Window</c->, <a class="idl-code" data-link-type="extended-attribute" href="https://heycam.github.io/webidl/#SecureContext" id="ref-for-SecureContext①"><c- g>SecureContext</c-></a>]
 <c- b>partial</c-> <c- b>interface</c-> <a class="idl-code" data-link-type="interface" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential⑥"><c- g>FederatedCredential</c-></a> : <a data-link-type="idl-name" href="https://w3c.github.io/webappsec-credential-management/#credential" id="ref-for-credential①"><c- n>Credential</c-></a> {
   <c- b>static</c-> <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-promise" id="ref-for-idl-promise①"><c- b>Promise</c-></a>&lt;<a data-link-type="idl-name"><c- n>void</c-></a>> <dfn class="idl-code" data-dfn-for="FederatedCredential" data-dfn-type="method" data-export data-lt="registerInterceptor(interceptor)" id="dom-federatedcredential-registerinterceptor"><code><c- g>registerInterceptor</c-></code><a class="self-link" href="#dom-federatedcredential-registerinterceptor"></a></dfn>(<a data-link-type="idl-name" href="#dictdef-federatedcredentialinterceptor" id="ref-for-dictdef-federatedcredentialinterceptor"><c- n>FederatedCredentialInterceptor</c-></a> <dfn class="idl-code" data-dfn-for="FederatedCredential/registerInterceptor(interceptor)" data-dfn-type="argument" data-export id="dom-federatedcredential-registerinterceptor-interceptor-interceptor"><code><c- g>interceptor</c-></code><a class="self-link" href="#dom-federatedcredential-registerinterceptor-interceptor-interceptor"></a></dfn>);
 };
 </pre>
-   <h5 class="heading settled" data-level="6.4.1.1" id="FederatedCredentialInterceptor"><span class="secno">6.4.1.1. </span><span class="content"><code>FederatedCredentialInterceptor</code></span><a class="self-link" href="#FederatedCredentialInterceptor"></a></h5>
+   <h5 class="heading settled" data-level="6.1.4.1" id="FederatedCredentialInterceptor"><span class="secno">6.1.4.1. </span><span class="content"><code>FederatedCredentialInterceptor</code></span><a class="self-link" href="#FederatedCredentialInterceptor"></a></h5>
 <pre class="idl highlight def"><c- b>dictionary</c-> <dfn class="dfn-paneled idl-code" data-dfn-type="dictionary" data-export id="dictdef-federatedcredentialinterceptor"><code><c- g>FederatedCredentialInterceptor</c-></code></dfn> {
   <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-DOMString" id="ref-for-idl-DOMString①"><c- b>DOMString</c-></a> <a class="idl-code" data-link-type="dict-member" data-type="DOMString " href="#dom-federatedcredentialinterceptor-url" id="ref-for-dom-federatedcredentialinterceptor-url"><c- g>url</c-></a>;
   <a data-link-type="dfn" href="https://heycam.github.io/webidl/#idl-sequence" id="ref-for-idl-sequence①"><c- b>sequence</c-></a>&lt;<a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-DOMString" id="ref-for-idl-DOMString②"><c- b>DOMString</c-></a>> <a class="idl-code" data-link-type="dict-member" data-type="sequence<DOMString> " href="#dom-federatedcredentialinterceptor-params" id="ref-for-dom-federatedcredentialinterceptor-params"><c- g>params</c-></a>;
@@ -1219,50 +1217,60 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
       <p>The URL request parameters to intercept navigations.</p>
     </dl>
    </div>
-   <h3 class="heading settled" data-level="6.5" id="revocation"><span class="secno">6.5. </span><span class="content">Revocation</span><a class="self-link" href="#revocation"></a></h3>
+   <h3 class="heading settled" data-level="6.2" id="revocation"><span class="secno">6.2. </span><span class="content">The Revocation API</span><a class="self-link" href="#revocation"></a></h3>
 <pre class="idl highlight def">[<a class="idl-code" data-link-type="extended-attribute" href="https://heycam.github.io/webidl/#Exposed" id="ref-for-Exposed②"><c- g>Exposed</c-></a>=<c- n>Window</c->, <a class="idl-code" data-link-type="extended-attribute" href="https://heycam.github.io/webidl/#SecureContext" id="ref-for-SecureContext②"><c- g>SecureContext</c-></a>]
 <c- b>partial</c-> <c- b>interface</c-> <a class="idl-code" data-link-type="interface" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential⑦"><c- g>FederatedCredential</c-></a> : <a data-link-type="idl-name" href="https://w3c.github.io/webappsec-credential-management/#credential" id="ref-for-credential②"><c- n>Credential</c-></a> {
   <c- b>static</c-> <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-promise" id="ref-for-idl-promise②"><c- b>Promise</c-></a>&lt;<a data-link-type="idl-name"><c- n>void</c-></a>> <dfn class="idl-code" data-dfn-for="FederatedCredential" data-dfn-type="method" data-export data-lt="revoke(accountId)" id="dom-federatedcredential-revoke"><code><c- g>revoke</c-></code><a class="self-link" href="#dom-federatedcredential-revoke"></a></dfn>(<a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-USVString" id="ref-for-idl-USVString④"><c- b>USVString</c-></a> <dfn class="idl-code" data-dfn-for="FederatedCredential/revoke(accountId)" data-dfn-type="argument" data-export id="dom-federatedcredential-revoke-accountid-accountid"><code><c- g>accountId</c-></code><a class="self-link" href="#dom-federatedcredential-revoke-accountid-accountid"></a></dfn>);
 };
 </pre>
-   <h3 class="heading settled" data-level="6.6" id="Well-Known"><span class="secno">6.6. </span><span class="content">The .well-known/webid configuration</span><a class="self-link" href="#Well-Known"></a></h3>
+   <h3 class="heading settled" data-level="6.3" id="sign-out"><span class="secno">6.3. </span><span class="content">The Sign-out API</span><a class="self-link" href="#sign-out"></a></h3>
+   <h4 class="heading settled" data-level="6.3.1" id="rp-sign-out"><span class="secno">6.3.1. </span><span class="content">RP Sign-out</span><a class="self-link" href="#rp-sign-out"></a></h4>
+   <h4 class="heading settled" data-level="6.3.2" id="idp-sign-out"><span class="secno">6.3.2. </span><span class="content">IDP Sign-out</span><a class="self-link" href="#idp-sign-out"></a></h4>
+   <p>Websites call <code><a data-link-type="idl">FederatedCredential.logout(...)</a></code> to log the user out of a series of relying parties.</p>
+<pre class="idl highlight def">[<a class="idl-code" data-link-type="extended-attribute" href="https://heycam.github.io/webidl/#Exposed" id="ref-for-Exposed③"><c- g>Exposed</c-></a>=<c- n>Window</c->, <a class="idl-code" data-link-type="extended-attribute" href="https://heycam.github.io/webidl/#SecureContext" id="ref-for-SecureContext③"><c- g>SecureContext</c-></a>]
+<c- b>partial</c-> <c- b>interface</c-> <a class="idl-code" data-link-type="interface" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential⑧"><c- g>FederatedCredential</c-></a> : <a data-link-type="idl-name" href="https://w3c.github.io/webappsec-credential-management/#credential" id="ref-for-credential③"><c- n>Credential</c-></a> {
+  <c- b>static</c-> <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-promise" id="ref-for-idl-promise③"><c- b>Promise</c-></a>&lt;<a data-link-type="idl-name"><c- n>void</c-></a>> <dfn class="idl-code" data-dfn-for="FederatedCredential" data-dfn-type="method" data-export data-lt="logout(logout_endpoints)|logout()" id="dom-federatedcredential-logout"><code><c- g>logout</c-></code><a class="self-link" href="#dom-federatedcredential-logout"></a></dfn>(<c- b>optional</c-> <a data-link-type="dfn" href="https://heycam.github.io/webidl/#idl-sequence" id="ref-for-idl-sequence②"><c- b>sequence</c-></a>&lt;<a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-USVString" id="ref-for-idl-USVString⑤"><c- b>USVString</c-></a>> <dfn class="idl-code" data-dfn-for="FederatedCredential/logout(logout_endpoints), FederatedCredential/logout()" data-dfn-type="argument" data-export id="dom-federatedcredential-logout-logout_endpoints-logout_endpoints"><code><c- g>logout_endpoints</c-></code><a class="self-link" href="#dom-federatedcredential-logout-logout_endpoints-logout_endpoints"></a></dfn> = []);
+};
+</pre>
+   <h2 class="heading settled" data-level="7" id="idp-api"><span class="secno">7. </span><span class="content">The IDP HTTP API</span><a class="self-link" href="#idp-api"></a></h2>
+   <h3 class="heading settled" data-level="7.1" id="Well-Known"><span class="secno">7.1. </span><span class="content">The .well-known/webid configuration</span><a class="self-link" href="#Well-Known"></a></h3>
    <dl>
     <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="WellKnown" data-dfn-type="argument" data-export id="dom-wellknown-accounts_endpoint"><code>accounts_endpoint</code></dfn>
     <dd data-md>
-     <p>A relative URL that points to an HTTP API that complies with the <a href="#accounts_endpoint">§ 6.6.2 accounts_endpoint</a>.</p>
+     <p>A relative URL that points to an HTTP API that complies with the <a href="#accounts_endpoint">§ 7.2 accounts_endpoint</a>.</p>
     <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="WellKnown" data-dfn-type="argument" data-export id="dom-wellknown-idtoken_endpoint"><code>idtoken_endpoint</code></dfn>
     <dd data-md>
-     <p>A relative URL that points to an HTTP API that complies with the <a href="#idtoken_endpoint">§ 6.6.3 idtoken_endpoint</a>.</p>
+     <p>A relative URL that points to an HTTP API that complies with the <a href="#idtoken_endpoint">§ 7.3 idtoken_endpoint</a>.</p>
     <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="WellKnown" data-dfn-type="argument" data-export id="dom-wellknown-client_id_metadata_endpoint"><code>client_id_metadata_endpoint</code></dfn>
     <dd data-md>
-     <p>A relative URL that points to an HTTP API that complies with the <a href="#client_id_metadata_endpoint">§ 6.6.4 client_id_metadata_endpoint</a>.</p>
+     <p>A relative URL that points to an HTTP API that complies with the <a href="#client_id_metadata_endpoint">§ 7.4 client_id_metadata_endpoint</a>.</p>
    </dl>
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="fetch-the-well-known">fetch the well-known</dfn> configuration file, run this algorithm:</p>
    <ol>
     <li data-md>
      <p>Let the <var>wellknown url</var> be the relative url ".well-known/webid" of <var>provider</var>["<code class="idl"><a data-link-type="idl" href="#dom-federatedidentityprovider-url" id="ref-for-dom-federatedidentityprovider-url①">url</a></code>"]</p>
     <li data-md>
-     <p>Return the result of fetching the <var>wellknown url</var> with the <a href="#Sec-WebID-CSR">Sec-WebID-CSR</a> header but without the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider③⓪">Identity Provider</a>'s cookies.</p>
+     <p>Return the result of fetching the <var>wellknown url</var> with the <a href="#Sec-WebID-CSR">Sec-WebID-CSR</a> header but without the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②⑨">Identity Provider</a>'s cookies.</p>
    </ol>
-   <h4 class="heading settled" data-level="6.6.1" id="Sec-WebID-CSR"><span class="secno">6.6.1. </span><span class="content"><code><dfn data-dfn-type="dfn" data-export id="sec-webid-csr"><code>Sec-WebID-CSR</code><a class="self-link" href="#sec-webid-csr"></a></dfn></code></span><a class="self-link" href="#Sec-WebID-CSR"></a></h4>
-   <h4 class="heading settled" data-level="6.6.2" id="accounts_endpoint"><span class="secno">6.6.2. </span><span class="content">accounts_endpoint</span><a class="self-link" href="#accounts_endpoint"></a></h4>
+   <h4 class="heading settled" data-level="7.1.1" id="Sec-WebID-CSR"><span class="secno">7.1.1. </span><span class="content"><code><dfn data-dfn-type="dfn" data-export id="sec-webid-csr"><code>Sec-WebID-CSR</code><a class="self-link" href="#sec-webid-csr"></a></dfn></code></span><a class="self-link" href="#Sec-WebID-CSR"></a></h4>
+   <h3 class="heading settled" data-level="7.2" id="accounts_endpoint"><span class="secno">7.2. </span><span class="content">accounts_endpoint</span><a class="self-link" href="#accounts_endpoint"></a></h3>
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="fetch-the-accounts-list">fetch the accounts list</dfn> run this algorithm:</p>
    <ol>
     <li data-md>
      <p>Let the <var>acccounts_endpoint</var> url be the relative url <var>wellknown</var>["<code class="idl"><a data-link-type="idl" href="#dom-wellknown-accounts_endpoint" id="ref-for-dom-wellknown-accounts_endpoint">accounts_endpoint</a></code>"] of <var>provider</var>["<code class="idl"><a data-link-type="idl" href="#dom-federatedidentityprovider-url" id="ref-for-dom-federatedidentityprovider-url②">url</a></code>"]</p>
     <li data-md>
-     <p>Let the <var>accounts list</var> be the result of fetching the <var>accounts_endpoint</var> with the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider③①">Identity Provider</a>'s cookies.</p>
+     <p>Let the <var>accounts list</var> be the result of fetching the <var>accounts_endpoint</var> with the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider③⓪">Identity Provider</a>'s cookies.</p>
     <li data-md>
      <p>Return the <var>accounts list</var></p>
    </ol>
-   <h5 class="heading settled" data-level="6.6.2.1" id="accounts_endpoint_request"><span class="secno">6.6.2.1. </span><span class="content">The accounts list request</span><a class="self-link" href="#accounts_endpoint_request"></a></h5>
-   <h5 class="heading settled" data-level="6.6.2.2" id="accounts_endpoint_response"><span class="secno">6.6.2.2. </span><span class="content">The accounts list response</span><a class="self-link" href="#accounts_endpoint_response"></a></h5>
+   <h4 class="heading settled" data-level="7.2.1" id="accounts_endpoint_request"><span class="secno">7.2.1. </span><span class="content">The accounts list request</span><a class="self-link" href="#accounts_endpoint_request"></a></h4>
+   <h4 class="heading settled" data-level="7.2.2" id="accounts_endpoint_response"><span class="secno">7.2.2. </span><span class="content">The accounts list response</span><a class="self-link" href="#accounts_endpoint_response"></a></h4>
    <dl>
     <dt data-md><dfn class="idl-code" data-dfn-for="accounts_endpoint_response" data-dfn-type="argument" data-export id="dom-accounts_endpoint_response-accounts"><code>accounts</code><a class="self-link" href="#dom-accounts_endpoint_response-accounts"></a></dfn>
     <dd data-md>
-     <p>A list of <a href="#accounts_endpoint_response_accounts">§ 6.6.2.2.1 Account</a>.</p>
+     <p>A list of <a href="#accounts_endpoint_response_accounts">§ 7.2.2.1 Account</a>.</p>
    </dl>
-   <h6 class="heading settled" data-level="6.6.2.2.1" id="accounts_endpoint_response_accounts"><span class="secno">6.6.2.2.1. </span><span class="content">Account</span><a class="self-link" href="#accounts_endpoint_response_accounts"></a></h6>
+   <h5 class="heading settled" data-level="7.2.2.1" id="accounts_endpoint_response_accounts"><span class="secno">7.2.2.1. </span><span class="content">Account</span><a class="self-link" href="#accounts_endpoint_response_accounts"></a></h5>
    <dl>
     <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="accounts_endpoint_response_accounts" data-dfn-type="argument" data-export id="dom-accounts_endpoint_response_accounts-account_id"><code>account_id</code></dfn>
     <dd data-md>
@@ -1277,8 +1285,8 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
     <dd data-md>
      <p>The user’s profile picture.</p>
    </dl>
-   <h4 class="heading settled" data-level="6.6.3" id="idtoken_endpoint"><span class="secno">6.6.3. </span><span class="content">idtoken_endpoint</span><a class="self-link" href="#idtoken_endpoint"></a></h4>
-   <h5 class="heading settled" data-level="6.6.3.1" id="minting"><span class="secno">6.6.3.1. </span><span class="content"><dfn class="dfn-paneled" data-dfn-for="Minting" data-dfn-type="dfn" data-noexport id="minting-minting">Minting</dfn> a new IdToken</span><a class="self-link" href="#minting"></a></h5>
+   <h3 class="heading settled" data-level="7.3" id="idtoken_endpoint"><span class="secno">7.3. </span><span class="content">idtoken_endpoint</span><a class="self-link" href="#idtoken_endpoint"></a></h3>
+   <h4 class="heading settled" data-level="7.3.1" id="minting"><span class="secno">7.3.1. </span><span class="content"><dfn class="dfn-paneled" data-dfn-for="Minting" data-dfn-type="dfn" data-noexport id="minting-minting">Minting</dfn> a new IdToken</span><a class="self-link" href="#minting"></a></h4>
    <p>To mint a new id token, run the following algorithm:</p>
    <ol>
     <li data-md>
@@ -1296,7 +1304,7 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
        </ul>
      </ul>
     <li data-md>
-     <p>Return a new <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential⑧">FederatedCredential</a></code> as:</p>
+     <p>Return a new <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential⑨">FederatedCredential</a></code> as:</p>
      <ul>
       <li data-md>
        <p><code class="idl"><a data-link-type="idl">id</a></code> with <var>account</var>["<code class="idl"><a data-link-type="idl" href="#dom-accounts_endpoint_response_accounts-account_id" id="ref-for-dom-accounts_endpoint_response_accounts-account_id①">account_id</a></code>"]</p>
@@ -1306,7 +1314,7 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
        <p><code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dom-federatedcredential-provider" id="ref-for-dom-federatedcredential-provider">provider</a></code> with <var>provider</var>["<code class="idl"><a data-link-type="idl" href="#dom-federatedidentityprovider-url" id="ref-for-dom-federatedidentityprovider-url③">url</a></code>"]</p>
      </ul>
    </ol>
-   <h5 class="heading settled" data-level="6.6.3.2" id="idtoken_endpoint_request"><span class="secno">6.6.3.2. </span><span class="content">The idtoken request</span><a class="self-link" href="#idtoken_endpoint_request"></a></h5>
+   <h4 class="heading settled" data-level="7.3.2" id="idtoken_endpoint_request"><span class="secno">7.3.2. </span><span class="content">The idtoken request</span><a class="self-link" href="#idtoken_endpoint_request"></a></h4>
    <dl>
     <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="idtoken_endpoint_request" data-dfn-type="argument" data-export id="dom-idtoken_endpoint_request-account_id"><code>account_id</code></dfn>
     <dd data-md>
@@ -1317,44 +1325,35 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
     <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="idtoken_endpoint_request_request" data-dfn-type="argument" data-export id="dom-idtoken_endpoint_request_request-client_id"><code>client_id</code></dfn>
     <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="idtoken_endpoint_request_request" data-dfn-type="argument" data-export id="dom-idtoken_endpoint_request_request-nonce"><code>nonce</code></dfn>
    </dl>
-   <h5 class="heading settled" data-level="6.6.3.3" id="idtoken_endpoint_response"><span class="secno">6.6.3.3. </span><span class="content">The idtoken response</span><a class="self-link" href="#idtoken_endpoint_response"></a></h5>
+   <h4 class="heading settled" data-level="7.3.3" id="idtoken_endpoint_response"><span class="secno">7.3.3. </span><span class="content">The idtoken response</span><a class="self-link" href="#idtoken_endpoint_response"></a></h4>
    <dl>
     <dt data-md><dfn class="idl-code" data-dfn-for="idtoken_endpoint_response" data-dfn-type="argument" data-export id="dom-idtoken_endpoint_response-id_token"><code>id_token</code><a class="self-link" href="#dom-idtoken_endpoint_response-id_token"></a></dfn>
     <dd data-md>
      <p>An <a data-link-type="dfn" href="#id-token" id="ref-for-id-token⑤">id token</a>.</p>
    </dl>
-   <h4 class="heading settled" data-level="6.6.4" id="client_id_metadata_endpoint"><span class="secno">6.6.4. </span><span class="content">client_id_metadata_endpoint</span><a class="self-link" href="#client_id_metadata_endpoint"></a></h4>
+   <h3 class="heading settled" data-level="7.4" id="client_id_metadata_endpoint"><span class="secno">7.4. </span><span class="content">client_id_metadata_endpoint</span><a class="self-link" href="#client_id_metadata_endpoint"></a></h3>
    <p>The <a data-link-type="dfn">.well-known</a>'s <code><dfn data-dfn-for=".well-known" data-dfn-type="dfn" data-export id="well-known-client_id_metadata_endpoint"><code>client_id_metadata_endpoint</code><a class="self-link" href="#well-known-client_id_metadata_endpoint"></a></dfn></code></p>
    <p>To <dfn data-dfn-type="dfn" data-noexport id="fetch-the-client-id-metadata">fetch the client id metadata<a class="self-link" href="#fetch-the-client-id-metadata"></a></dfn> run this algorithm:</p>
    <ol>
     <li data-md>
      <p>Let the <var>client_id_metadata_endpoint</var> url be the relative url <var>wellknown</var>["<code class="idl"><a data-link-type="idl" href="#dom-wellknown-client_id_metadata_endpoint" id="ref-for-dom-wellknown-client_id_metadata_endpoint">client_id_metadata_endpoint</a></code>"] of <var>provider</var>["<code class="idl"><a data-link-type="idl" href="#dom-federatedidentityprovider-url" id="ref-for-dom-federatedidentityprovider-url④">url</a></code>"]</p>
     <li data-md>
-     <p>Let the <var>policies</var> be the result of fetching the <var>client_id_metadata_endpoint</var> with the <a href="#Sec-WebID-CSR">Sec-WebID-CSR</a> header but without the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider③②">Identity Provider</a>'s cookies.</p>
+     <p>Let the <var>policies</var> be the result of fetching the <var>client_id_metadata_endpoint</var> with the <a href="#Sec-WebID-CSR">Sec-WebID-CSR</a> header but without the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider③①">Identity Provider</a>'s cookies.</p>
     <li data-md>
      <p>Return <var>policies</var></p>
    </ol>
-   <h5 class="heading settled" data-level="6.6.4.1" id="client_id_metadata_endpoint_request"><span class="secno">6.6.4.1. </span><span class="content">The client_id metadata request</span><a class="self-link" href="#client_id_metadata_endpoint_request"></a></h5>
-   <h5 class="heading settled" data-level="6.6.4.2" id="client_id_metadata_endpoint_response"><span class="secno">6.6.4.2. </span><span class="content">The client_id metadata response</span><a class="self-link" href="#client_id_metadata_endpoint_response"></a></h5>
+   <h4 class="heading settled" data-level="7.4.1" id="client_id_metadata_endpoint_request"><span class="secno">7.4.1. </span><span class="content">The client_id metadata request</span><a class="self-link" href="#client_id_metadata_endpoint_request"></a></h4>
+   <h4 class="heading settled" data-level="7.4.2" id="client_id_metadata_endpoint_response"><span class="secno">7.4.2. </span><span class="content">The client_id metadata response</span><a class="self-link" href="#client_id_metadata_endpoint_response"></a></h4>
+   <p>The <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="privacy-policy">Privacy Policy</dfn> are the policies described at <code class="idl"><a data-link-type="idl" href="#dom-client_id_metadata_endpont_response-privacy_policy_url" id="ref-for-dom-client_id_metadata_endpont_response-privacy_policy_url">privacy_policy_url</a></code>.</p>
+   <p>The <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="terms-of-service">Terms of Service</dfn> are the policies described at <code class="idl"><a data-link-type="idl" href="#dom-client_id_metadata_endpont_response-terms_of_service_url" id="ref-for-dom-client_id_metadata_endpont_response-terms_of_service_url">terms_of_service_url</a></code>.</p>
    <dl>
     <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="client_id_metadata_endpont_response" data-dfn-type="argument" data-export id="dom-client_id_metadata_endpont_response-privacy_policy_url"><code>privacy_policy_url</code></dfn>
     <dd data-md>
-     <p>A link to the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party⑤⓪">Relying Party</a>'s privacy policy.</p>
+     <p>A link to the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④⑨">Relying Party</a>'s privacy policy.</p>
     <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="client_id_metadata_endpont_response" data-dfn-type="argument" data-export id="dom-client_id_metadata_endpont_response-terms_of_service_url"><code>terms_of_service_url</code></dfn>
     <dd data-md>
-     <p>A link to the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party⑤①">Relying Party</a>'s terms of service.</p>
+     <p>A link to the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party⑤⓪">Relying Party</a>'s terms of service.</p>
    </dl>
-   <h2 class="heading settled" data-level="7" id="SessionManagementAPI"><span class="secno">7. </span><span class="content">Session Management API</span><a class="self-link" href="#SessionManagementAPI"></a></h2>
-   <p>Websites call <code><a data-link-type="idl">FederatedCredential.logout(...)</a></code> to log the user out of a series of relying parties.</p>
-   <h3 class="heading settled" data-level="7.1" id="sign-in①"><span class="secno">7.1. </span><span class="content">Sign-in</span><a class="self-link" href="#sign-in①"></a></h3>
-   <h3 class="heading settled" data-level="7.2" id="sign-out"><span class="secno">7.2. </span><span class="content">Sign-out</span><a class="self-link" href="#sign-out"></a></h3>
-   <h4 class="heading settled" data-level="7.2.1" id="rp-sign-out"><span class="secno">7.2.1. </span><span class="content">RP Sign-out</span><a class="self-link" href="#rp-sign-out"></a></h4>
-   <h4 class="heading settled" data-level="7.2.2" id="idp-sign-out"><span class="secno">7.2.2. </span><span class="content">IDP Sign-out</span><a class="self-link" href="#idp-sign-out"></a></h4>
-<pre class="idl highlight def">[<a class="idl-code" data-link-type="extended-attribute" href="https://heycam.github.io/webidl/#Exposed" id="ref-for-Exposed③"><c- g>Exposed</c-></a>=<c- n>Window</c->, <a class="idl-code" data-link-type="extended-attribute" href="https://heycam.github.io/webidl/#SecureContext" id="ref-for-SecureContext③"><c- g>SecureContext</c-></a>]
-<c- b>partial</c-> <c- b>interface</c-> <a class="idl-code" data-link-type="interface" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential⑨"><c- g>FederatedCredential</c-></a> : <a data-link-type="idl-name" href="https://w3c.github.io/webappsec-credential-management/#credential" id="ref-for-credential③"><c- n>Credential</c-></a> {
-  <c- b>static</c-> <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-promise" id="ref-for-idl-promise③"><c- b>Promise</c-></a>&lt;<a data-link-type="idl-name"><c- n>void</c-></a>> <dfn class="idl-code" data-dfn-for="FederatedCredential" data-dfn-type="method" data-export data-lt="logout(logout_endpoints)|logout()" id="dom-federatedcredential-logout"><code><c- g>logout</c-></code><a class="self-link" href="#dom-federatedcredential-logout"></a></dfn>(<c- b>optional</c-> <a data-link-type="dfn" href="https://heycam.github.io/webidl/#idl-sequence" id="ref-for-idl-sequence②"><c- b>sequence</c-></a>&lt;<a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-USVString" id="ref-for-idl-USVString⑤"><c- b>USVString</c-></a>> <dfn class="idl-code" data-dfn-for="FederatedCredential/logout(logout_endpoints), FederatedCredential/logout()" data-dfn-type="argument" data-export id="dom-federatedcredential-logout-logout_endpoints-logout_endpoints"><code><c- g>logout_endpoints</c-></code><a class="self-link" href="#dom-federatedcredential-logout-logout_endpoints-logout_endpoints"></a></dfn> = []);
-};
-</pre>
    <h2 class="heading settled" data-level="8" id="security"><span class="secno">8. </span><span class="content">Security</span><a class="self-link" href="#security"></a></h2>
    <h2 class="heading settled" data-level="9" id="privacy"><span class="secno">9. </span><span class="content">Privacy</span><a class="self-link" href="#privacy"></a></h2>
    <h3 class="heading settled" data-level="9.1" id="privacy-threat-model"><span class="secno">9.1. </span><span class="content">Privacy Threat Model</span><a class="self-link" href="#privacy-threat-model"></a></h3>
@@ -1406,228 +1405,228 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
   <h3 class="no-num no-ref heading settled" id="index-defined-here"><span class="content">Terms defined by this specification</span><a class="self-link" href="#index-defined-here"></a></h3>
   <ul class="index">
    <li><a href="#account">account</a><span>, in § 4</span>
-   <li><a href="#dom-federatedcredential-approvedby">approvedBy</a><span>, in § 6.1</span>
-   <li><a href="#dom-federatedcredentialapprovedby-auto">"auto"</a><span>, in § 6.2</span>
-   <li><a href="#auto-sign-in">auto sign-in</a><span>, in § 6.3</span>
-   <li><a href="#dom-federatedidentityprovider-clientid">clientId</a><span>, in § 6.2</span>
-   <li><a href="#well-known-client_id_metadata_endpoint">client_id_metadata_endpoint</a><span>, in § 6.6.4</span>
-   <li><a href="#dom-federatedcredential-discoverfromexternalsource-slot">[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</a><span>, in § 6.3</span>
-   <li><a href="#explicit-sign-in">explicit sign-in</a><span>, in § 6.3</span>
-   <li><a href="#enumdef-federatedcredentialapprovedby">FederatedCredentialApprovedBy</a><span>, in § 6.2</span>
-   <li><a href="#dictdef-federatedcredentialinterceptor">FederatedCredentialInterceptor</a><span>, in § 6.4.1.1</span>
-   <li><a href="#enumdef-federatedcredentialrequestmode">FederatedCredentialRequestMode</a><span>, in § 6.2</span>
-   <li><a href="#dictdef-federatedidentityprovider">FederatedIdentityProvider</a><span>, in § 6.2</span>
-   <li><a href="#fetch-the-accounts-list">fetch the accounts list</a><span>, in § 6.6.2</span>
-   <li><a href="#fetch-the-client-id-metadata">fetch the client id metadata</a><span>, in § 6.6.4</span>
-   <li><a href="#fetch-the-well-known">fetch the well-known</a><span>, in § 6.6</span>
+   <li><a href="#dom-federatedcredential-approvedby">approvedBy</a><span>, in § 6.1.1</span>
+   <li><a href="#dom-federatedcredentialapprovedby-auto">"auto"</a><span>, in § 6.1.2</span>
+   <li><a href="#auto-sign-in">auto sign-in</a><span>, in § 6.1.3</span>
+   <li><a href="#dom-federatedidentityprovider-clientid">clientId</a><span>, in § 6.1.2</span>
+   <li><a href="#well-known-client_id_metadata_endpoint">client_id_metadata_endpoint</a><span>, in § 7.4</span>
+   <li><a href="#dom-federatedcredential-discoverfromexternalsource-slot">[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</a><span>, in § 6.1.3</span>
+   <li><a href="#explicit-sign-in">explicit sign-in</a><span>, in § 6.1.3</span>
+   <li><a href="#enumdef-federatedcredentialapprovedby">FederatedCredentialApprovedBy</a><span>, in § 6.1.2</span>
+   <li><a href="#dictdef-federatedcredentialinterceptor">FederatedCredentialInterceptor</a><span>, in § 6.1.4.1</span>
+   <li><a href="#enumdef-federatedcredentialrequestmode">FederatedCredentialRequestMode</a><span>, in § 6.1.2</span>
+   <li><a href="#dictdef-federatedidentityprovider">FederatedIdentityProvider</a><span>, in § 6.1.2</span>
+   <li><a href="#fetch-the-accounts-list">fetch the accounts list</a><span>, in § 7.2</span>
+   <li><a href="#fetch-the-client-id-metadata">fetch the client id metadata</a><span>, in § 7.4</span>
+   <li><a href="#fetch-the-well-known">fetch the well-known</a><span>, in § 7.1</span>
    <li><a href="#high-level-api">high-level API</a><span>, in § 4</span>
    <li><a href="#identity-provider">Identity Provider</a><span>, in § 4</span>
    <li><a href="#idp">IDP</a><span>, in § 4</span>
    <li><a href="#id-token">id token</a><span>, in § 4</span>
-   <li><a href="#dom-federatedcredential-idtoken">idToken</a><span>, in § 6.1</span>
+   <li><a href="#dom-federatedcredential-idtoken">idToken</a><span>, in § 6.1.1</span>
    <li><a href="#logged-in">logged in</a><span>, in § 4</span>
    <li><a href="#logged-out">logged out</a><span>, in § 4</span>
-   <li><a href="#dom-federatedcredential-logout">logout()</a><span>, in § 7.2.2</span>
-   <li><a href="#dom-federatedcredential-logout">logout(logout_endpoints)</a><span>, in § 7.2.2</span>
+   <li><a href="#dom-federatedcredential-logout">logout()</a><span>, in § 6.3.2</span>
+   <li><a href="#dom-federatedcredential-logout">logout(logout_endpoints)</a><span>, in § 6.3.2</span>
    <li><a href="#low-level-api">low-level API</a><span>, in § 4</span>
-   <li><a href="#dom-federatedcredentialrequestmode-mediated">"mediated"</a><span>, in § 6.2</span>
-   <li><a href="#minting-minting">Minting</a><span>, in § 6.6.3.1</span>
-   <li><a href="#dom-federatedcredentialrequestoptions-mode">mode</a><span>, in § 6.2</span>
-   <li><a href="#dom-federatedidentityprovider-nonce">nonce</a><span>, in § 6.2</span>
-   <li><a href="#dom-federatedcredentialinterceptor-params">params</a><span>, in § 6.4.1.1</span>
-   <li><a href="#dom-federatedcredentialrequestmode-permission">"permission"</a><span>, in § 6.2</span>
-   <li><a href="#privacy-policy">Privacy Policy</a><span>, in § 6.3</span>
-   <li><a href="#dom-federatedcredentialrequestoptions-providers">providers</a><span>, in § 6.2</span>
+   <li><a href="#dom-federatedcredentialrequestmode-mediated">"mediated"</a><span>, in § 6.1.2</span>
+   <li><a href="#minting-minting">Minting</a><span>, in § 7.3.1</span>
+   <li><a href="#dom-federatedcredentialrequestoptions-mode">mode</a><span>, in § 6.1.2</span>
+   <li><a href="#dom-federatedidentityprovider-nonce">nonce</a><span>, in § 6.1.2</span>
+   <li><a href="#dom-federatedcredentialinterceptor-params">params</a><span>, in § 6.1.4.1</span>
+   <li><a href="#dom-federatedcredentialrequestmode-permission">"permission"</a><span>, in § 6.1.2</span>
+   <li><a href="#privacy-policy">Privacy Policy</a><span>, in § 7.4.2</span>
+   <li><a href="#dom-federatedcredentialrequestoptions-providers">providers</a><span>, in § 6.1.2</span>
    <li><a href="#registered">registered</a><span>, in § 4</span>
-   <li><a href="#dom-federatedcredential-registerinterceptor">registerInterceptor(interceptor)</a><span>, in § 6.4.1</span>
+   <li><a href="#dom-federatedcredential-registerinterceptor">registerInterceptor(interceptor)</a><span>, in § 6.1.4</span>
    <li><a href="#relying-party">Relying Party</a><span>, in § 4</span>
-   <li><a href="#dom-federatedcredential-revoke">revoke(accountId)</a><span>, in § 6.5</span>
+   <li><a href="#dom-federatedcredential-revoke">revoke(accountId)</a><span>, in § 6.2</span>
    <li><a href="#rp">RP</a><span>, in § 4</span>
-   <li><a href="#sec-webid-csr">Sec-WebID-CSR</a><span>, in § 6.6.1</span>
-   <li><a href="#select-an-account">select an account</a><span>, in § 6.3</span>
+   <li><a href="#sec-webid-csr">Sec-WebID-CSR</a><span>, in § 7.1.1</span>
+   <li><a href="#select-an-account">select an account</a><span>, in § 6.1.3</span>
    <li><a href="#session">session</a><span>, in § 4</span>
-   <li><a href="#sign-in">sign-in</a><span>, in § 6.3</span>
-   <li><a href="#sign-up">sign-up</a><span>, in § 6.3</span>
+   <li><a href="#sign-in①">sign-in</a><span>, in § 6.1.3</span>
+   <li><a href="#sign-up">sign-up</a><span>, in § 6.1.3</span>
    <li><a href="#concept-state-machine">state machine</a><span>, in § 5</span>
-   <li><a href="#terms-of-service">Terms of Service</a><span>, in § 6.3</span>
+   <li><a href="#terms-of-service">Terms of Service</a><span>, in § 7.4.2</span>
    <li><a href="#unregistered">unregistered</a><span>, in § 4</span>
    <li>
     url
     <ul>
-     <li><a href="#dom-federatedcredentialinterceptor-url">dict-member for FederatedCredentialInterceptor</a><span>, in § 6.4.1.1</span>
-     <li><a href="#dom-federatedidentityprovider-url">dict-member for FederatedIdentityProvider</a><span>, in § 6.2</span>
+     <li><a href="#dom-federatedcredentialinterceptor-url">dict-member for FederatedCredentialInterceptor</a><span>, in § 6.1.4.1</span>
+     <li><a href="#dom-federatedidentityprovider-url">dict-member for FederatedIdentityProvider</a><span>, in § 6.1.2</span>
     </ul>
-   <li><a href="#dom-federatedcredentialapprovedby-user">"user"</a><span>, in § 6.2</span>
+   <li><a href="#dom-federatedcredentialapprovedby-user">"user"</a><span>, in § 6.1.2</span>
    <li><a href="#website">Website</a><span>, in § 4</span>
   </ul>
   <aside class="dfn-panel" data-for="term-for-credential">
    <a href="https://w3c.github.io/webappsec-credential-management/#credential">https://w3c.github.io/webappsec-credential-management/#credential</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-credential">6.1. The FederatedCredential Interface</a>
-    <li><a href="#ref-for-credential①">6.4.1. Interceptors</a>
-    <li><a href="#ref-for-credential②">6.5. Revocation</a>
-    <li><a href="#ref-for-credential③">7.2.2. IDP Sign-out</a>
+    <li><a href="#ref-for-credential">6.1.1. The FederatedCredential Interface</a>
+    <li><a href="#ref-for-credential①">6.1.4. Interceptors</a>
+    <li><a href="#ref-for-credential②">6.2. The Revocation API</a>
+    <li><a href="#ref-for-credential③">6.3.2. IDP Sign-out</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-dictdef-credentialrequestoptions">
    <a href="https://w3c.github.io/webappsec-credential-management/#dictdef-credentialrequestoptions">https://w3c.github.io/webappsec-credential-management/#dictdef-credentialrequestoptions</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dictdef-credentialrequestoptions">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
+    <li><a href="#ref-for-dictdef-credentialrequestoptions">6.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-credentialscontainer">
    <a href="https://w3c.github.io/webappsec-credential-management/#credentialscontainer">https://w3c.github.io/webappsec-credential-management/#credentialscontainer</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-credentialscontainer">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
+    <li><a href="#ref-for-credentialscontainer">6.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-federatedcredential">
    <a href="https://w3c.github.io/webappsec-credential-management/#federatedcredential">https://w3c.github.io/webappsec-credential-management/#federatedcredential</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-federatedcredential">6. Account Management API</a>
-    <li><a href="#ref-for-federatedcredential①">6.1. The FederatedCredential Interface</a> <a href="#ref-for-federatedcredential②">(2)</a> <a href="#ref-for-federatedcredential③">(3)</a>
-    <li><a href="#ref-for-federatedcredential④">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a> <a href="#ref-for-federatedcredential⑤">(2)</a>
-    <li><a href="#ref-for-federatedcredential⑥">6.4.1. Interceptors</a>
-    <li><a href="#ref-for-federatedcredential⑦">6.5. Revocation</a>
-    <li><a href="#ref-for-federatedcredential⑧">6.6.3.1. Minting a new IdToken</a>
-    <li><a href="#ref-for-federatedcredential⑨">7.2.2. IDP Sign-out</a>
+    <li><a href="#ref-for-federatedcredential">6. The Browser API</a>
+    <li><a href="#ref-for-federatedcredential①">6.1.1. The FederatedCredential Interface</a> <a href="#ref-for-federatedcredential②">(2)</a> <a href="#ref-for-federatedcredential③">(3)</a>
+    <li><a href="#ref-for-federatedcredential④">6.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a> <a href="#ref-for-federatedcredential⑤">(2)</a>
+    <li><a href="#ref-for-federatedcredential⑥">6.1.4. Interceptors</a>
+    <li><a href="#ref-for-federatedcredential⑦">6.2. The Revocation API</a>
+    <li><a href="#ref-for-federatedcredential⑧">6.3.2. IDP Sign-out</a>
+    <li><a href="#ref-for-federatedcredential⑨">7.3.1. Minting a new IdToken</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-dictdef-federatedcredentialrequestoptions">
    <a href="https://w3c.github.io/webappsec-credential-management/#dictdef-federatedcredentialrequestoptions">https://w3c.github.io/webappsec-credential-management/#dictdef-federatedcredentialrequestoptions</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dictdef-federatedcredentialrequestoptions">6.2. The FederatedCredentialRequestOptions</a> <a href="#ref-for-dictdef-federatedcredentialrequestoptions①">(2)</a> <a href="#ref-for-dictdef-federatedcredentialrequestoptions②">(3)</a>
-    <li><a href="#ref-for-dictdef-federatedcredentialrequestoptions③">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
+    <li><a href="#ref-for-dictdef-federatedcredentialrequestoptions">6.1.2. The FederatedCredentialRequestOptions</a> <a href="#ref-for-dictdef-federatedcredentialrequestoptions①">(2)</a> <a href="#ref-for-dictdef-federatedcredentialrequestoptions②">(3)</a>
+    <li><a href="#ref-for-dictdef-federatedcredentialrequestoptions③">6.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-abstract-opdef-request-a-credential">
    <a href="https://w3c.github.io/webappsec-credential-management/#abstract-opdef-request-a-credential">https://w3c.github.io/webappsec-credential-management/#abstract-opdef-request-a-credential</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-abstract-opdef-request-a-credential">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
+    <li><a href="#ref-for-abstract-opdef-request-a-credential">6.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-dom-credentialrequestoptions-federated">
    <a href="https://w3c.github.io/webappsec-credential-management/#dom-credentialrequestoptions-federated">https://w3c.github.io/webappsec-credential-management/#dom-credentialrequestoptions-federated</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dom-credentialrequestoptions-federated">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a> <a href="#ref-for-dom-credentialrequestoptions-federated①">(2)</a> <a href="#ref-for-dom-credentialrequestoptions-federated②">(3)</a> <a href="#ref-for-dom-credentialrequestoptions-federated③">(4)</a>
+    <li><a href="#ref-for-dom-credentialrequestoptions-federated">6.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a> <a href="#ref-for-dom-credentialrequestoptions-federated①">(2)</a> <a href="#ref-for-dom-credentialrequestoptions-federated②">(3)</a> <a href="#ref-for-dom-credentialrequestoptions-federated③">(4)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-dom-credentialscontainer-get">
    <a href="https://w3c.github.io/webappsec-credential-management/#dom-credentialscontainer-get">https://w3c.github.io/webappsec-credential-management/#dom-credentialscontainer-get</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dom-credentialscontainer-get">6. Account Management API</a>
-    <li><a href="#ref-for-dom-credentialscontainer-get①">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a> <a href="#ref-for-dom-credentialscontainer-get②">(2)</a>
+    <li><a href="#ref-for-dom-credentialscontainer-get">6. The Browser API</a>
+    <li><a href="#ref-for-dom-credentialscontainer-get①">6.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a> <a href="#ref-for-dom-credentialscontainer-get②">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-dom-credentialrequestoptions-mediation">
    <a href="https://w3c.github.io/webappsec-credential-management/#dom-credentialrequestoptions-mediation">https://w3c.github.io/webappsec-credential-management/#dom-credentialrequestoptions-mediation</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dom-credentialrequestoptions-mediation">6.1. The FederatedCredential Interface</a>
+    <li><a href="#ref-for-dom-credentialrequestoptions-mediation">6.1.1. The FederatedCredential Interface</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-dom-federatedcredential-provider">
    <a href="https://w3c.github.io/webappsec-credential-management/#dom-federatedcredential-provider">https://w3c.github.io/webappsec-credential-management/#dom-federatedcredential-provider</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dom-federatedcredential-provider">6.6.3.1. Minting a new IdToken</a>
+    <li><a href="#ref-for-dom-federatedcredential-provider">7.3.1. Minting a new IdToken</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-same-origin-with-its-ancestors">
    <a href="https://w3c.github.io/webappsec-credential-management/#same-origin-with-its-ancestors">https://w3c.github.io/webappsec-credential-management/#same-origin-with-its-ancestors</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-same-origin-with-its-ancestors">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
+    <li><a href="#ref-for-same-origin-with-its-ancestors">6.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-environment-settings-object">
    <a href="https://html.spec.whatwg.org/multipage/webappapis.html#environment-settings-object">https://html.spec.whatwg.org/multipage/webappapis.html#environment-settings-object</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-environment-settings-object">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
+    <li><a href="#ref-for-environment-settings-object">6.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-concept-settings-object-origin">
    <a href="https://html.spec.whatwg.org/multipage/webappapis.html#concept-settings-object-origin">https://html.spec.whatwg.org/multipage/webappapis.html#concept-settings-object-origin</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-concept-settings-object-origin">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
+    <li><a href="#ref-for-concept-settings-object-origin">6.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-relevant-settings-object">
    <a href="https://html.spec.whatwg.org/multipage/webappapis.html#relevant-settings-object">https://html.spec.whatwg.org/multipage/webappapis.html#relevant-settings-object</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-relevant-settings-object">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
+    <li><a href="#ref-for-relevant-settings-object">6.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-map-exists">
    <a href="https://infra.spec.whatwg.org/#map-exists">https://infra.spec.whatwg.org/#map-exists</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-map-exists">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a> <a href="#ref-for-map-exists①">(2)</a> <a href="#ref-for-map-exists②">(3)</a> <a href="#ref-for-map-exists③">(4)</a>
+    <li><a href="#ref-for-map-exists">6.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a> <a href="#ref-for-map-exists①">(2)</a> <a href="#ref-for-map-exists②">(3)</a> <a href="#ref-for-map-exists③">(4)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-list-size">
    <a href="https://infra.spec.whatwg.org/#list-size">https://infra.spec.whatwg.org/#list-size</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-list-size">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a> <a href="#ref-for-list-size①">(2)</a>
+    <li><a href="#ref-for-list-size">6.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a> <a href="#ref-for-list-size①">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-idl-DOMException">
    <a href="https://heycam.github.io/webidl/#idl-DOMException">https://heycam.github.io/webidl/#idl-DOMException</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-idl-DOMException">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
+    <li><a href="#ref-for-idl-DOMException">6.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-idl-DOMString">
    <a href="https://heycam.github.io/webidl/#idl-DOMString">https://heycam.github.io/webidl/#idl-DOMString</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-idl-DOMString">6.2. The FederatedCredentialRequestOptions</a>
-    <li><a href="#ref-for-idl-DOMString①">6.4.1.1. FederatedCredentialInterceptor</a> <a href="#ref-for-idl-DOMString②">(2)</a> <a href="#ref-for-idl-DOMString③">(3)</a> <a href="#ref-for-idl-DOMString④">(4)</a>
+    <li><a href="#ref-for-idl-DOMString">6.1.2. The FederatedCredentialRequestOptions</a>
+    <li><a href="#ref-for-idl-DOMString①">6.1.4.1. FederatedCredentialInterceptor</a> <a href="#ref-for-idl-DOMString②">(2)</a> <a href="#ref-for-idl-DOMString③">(3)</a> <a href="#ref-for-idl-DOMString④">(4)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-Exposed">
    <a href="https://heycam.github.io/webidl/#Exposed">https://heycam.github.io/webidl/#Exposed</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-Exposed">6.1. The FederatedCredential Interface</a>
-    <li><a href="#ref-for-Exposed①">6.4.1. Interceptors</a>
-    <li><a href="#ref-for-Exposed②">6.5. Revocation</a>
-    <li><a href="#ref-for-Exposed③">7.2.2. IDP Sign-out</a>
+    <li><a href="#ref-for-Exposed">6.1.1. The FederatedCredential Interface</a>
+    <li><a href="#ref-for-Exposed①">6.1.4. Interceptors</a>
+    <li><a href="#ref-for-Exposed②">6.2. The Revocation API</a>
+    <li><a href="#ref-for-Exposed③">6.3.2. IDP Sign-out</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-notallowederror">
    <a href="https://heycam.github.io/webidl/#notallowederror">https://heycam.github.io/webidl/#notallowederror</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-notallowederror">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
+    <li><a href="#ref-for-notallowederror">6.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-idl-promise">
    <a href="https://heycam.github.io/webidl/#idl-promise">https://heycam.github.io/webidl/#idl-promise</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-idl-promise">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
-    <li><a href="#ref-for-idl-promise①">6.4.1. Interceptors</a>
-    <li><a href="#ref-for-idl-promise②">6.5. Revocation</a>
-    <li><a href="#ref-for-idl-promise③">7.2.2. IDP Sign-out</a>
+    <li><a href="#ref-for-idl-promise">6.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
+    <li><a href="#ref-for-idl-promise①">6.1.4. Interceptors</a>
+    <li><a href="#ref-for-idl-promise②">6.2. The Revocation API</a>
+    <li><a href="#ref-for-idl-promise③">6.3.2. IDP Sign-out</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-SecureContext">
    <a href="https://heycam.github.io/webidl/#SecureContext">https://heycam.github.io/webidl/#SecureContext</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-SecureContext">6.1. The FederatedCredential Interface</a>
-    <li><a href="#ref-for-SecureContext①">6.4.1. Interceptors</a>
-    <li><a href="#ref-for-SecureContext②">6.5. Revocation</a>
-    <li><a href="#ref-for-SecureContext③">7.2.2. IDP Sign-out</a>
+    <li><a href="#ref-for-SecureContext">6.1.1. The FederatedCredential Interface</a>
+    <li><a href="#ref-for-SecureContext①">6.1.4. Interceptors</a>
+    <li><a href="#ref-for-SecureContext②">6.2. The Revocation API</a>
+    <li><a href="#ref-for-SecureContext③">6.3.2. IDP Sign-out</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-idl-USVString">
    <a href="https://heycam.github.io/webidl/#idl-USVString">https://heycam.github.io/webidl/#idl-USVString</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-idl-USVString">6.1. The FederatedCredential Interface</a>
-    <li><a href="#ref-for-idl-USVString①">6.2. The FederatedCredentialRequestOptions</a> <a href="#ref-for-idl-USVString②">(2)</a> <a href="#ref-for-idl-USVString③">(3)</a>
-    <li><a href="#ref-for-idl-USVString④">6.5. Revocation</a>
-    <li><a href="#ref-for-idl-USVString⑤">7.2.2. IDP Sign-out</a>
+    <li><a href="#ref-for-idl-USVString">6.1.1. The FederatedCredential Interface</a>
+    <li><a href="#ref-for-idl-USVString①">6.1.2. The FederatedCredentialRequestOptions</a> <a href="#ref-for-idl-USVString②">(2)</a> <a href="#ref-for-idl-USVString③">(3)</a>
+    <li><a href="#ref-for-idl-USVString④">6.2. The Revocation API</a>
+    <li><a href="#ref-for-idl-USVString⑤">6.3.2. IDP Sign-out</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-idl-sequence">
    <a href="https://heycam.github.io/webidl/#idl-sequence">https://heycam.github.io/webidl/#idl-sequence</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-idl-sequence">6.2. The FederatedCredentialRequestOptions</a>
-    <li><a href="#ref-for-idl-sequence①">6.4.1.1. FederatedCredentialInterceptor</a>
-    <li><a href="#ref-for-idl-sequence②">7.2.2. IDP Sign-out</a>
+    <li><a href="#ref-for-idl-sequence">6.1.2. The FederatedCredentialRequestOptions</a>
+    <li><a href="#ref-for-idl-sequence①">6.1.4.1. FederatedCredentialInterceptor</a>
+    <li><a href="#ref-for-idl-sequence②">6.3.2. IDP Sign-out</a>
    </ul>
   </aside>
   <h3 class="no-num no-ref heading settled" id="index-defined-elsewhere"><span class="content">Terms defined by reference</span><a class="self-link" href="#index-defined-elsewhere"></a></h3>
@@ -1773,9 +1772,14 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
     <li><a href="#ref-for-relying-party④⓪">3.2.1. RP Sign-out</a> <a href="#ref-for-relying-party④①">(2)</a>
     <li><a href="#ref-for-relying-party④②">3.2.2. Front-channel Sign-out</a> <a href="#ref-for-relying-party④③">(2)</a> <a href="#ref-for-relying-party④④">(3)</a>
     <li><a href="#ref-for-relying-party④⑤">3.3. RP Revocation</a> <a href="#ref-for-relying-party④⑥">(2)</a> <a href="#ref-for-relying-party④⑦">(3)</a>
-    <li><a href="#ref-for-relying-party④⑧">5. Life of a User</a>
-    <li><a href="#ref-for-relying-party④⑨">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
-    <li><a href="#ref-for-relying-party⑤⓪">6.6.4.2. The client_id metadata response</a> <a href="#ref-for-relying-party⑤①">(2)</a>
+    <li><a href="#ref-for-relying-party④⑧">6.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
+    <li><a href="#ref-for-relying-party④⑨">7.4.2. The client_id metadata response</a> <a href="#ref-for-relying-party⑤⓪">(2)</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="rp">
+   <b><a href="#rp">#rp</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-rp">5. The State Machine</a> <a href="#ref-for-rp①">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="identity-provider">
@@ -1791,11 +1795,16 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
     <li><a href="#ref-for-identity-provider②①">3.1. Signing-up and Signing-in</a> <a href="#ref-for-identity-provider②②">(2)</a>
     <li><a href="#ref-for-identity-provider②③">3.2.2. Front-channel Sign-out</a> <a href="#ref-for-identity-provider②④">(2)</a>
     <li><a href="#ref-for-identity-provider②⑤">3.3. RP Revocation</a>
-    <li><a href="#ref-for-identity-provider②⑥">5. Life of a User</a>
-    <li><a href="#ref-for-identity-provider②⑦">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a> <a href="#ref-for-identity-provider②⑧">(2)</a> <a href="#ref-for-identity-provider②⑨">(3)</a>
-    <li><a href="#ref-for-identity-provider③⓪">6.6. The .well-known/webid configuration</a>
-    <li><a href="#ref-for-identity-provider③①">6.6.2. accounts_endpoint</a>
-    <li><a href="#ref-for-identity-provider③②">6.6.4. client_id_metadata_endpoint</a>
+    <li><a href="#ref-for-identity-provider②⑥">6.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a> <a href="#ref-for-identity-provider②⑦">(2)</a> <a href="#ref-for-identity-provider②⑧">(3)</a>
+    <li><a href="#ref-for-identity-provider②⑨">7.1. The .well-known/webid configuration</a>
+    <li><a href="#ref-for-identity-provider③⓪">7.2. accounts_endpoint</a>
+    <li><a href="#ref-for-identity-provider③①">7.4. client_id_metadata_endpoint</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="idp">
+   <b><a href="#idp">#idp</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-idp">5. The State Machine</a> <a href="#ref-for-idp①">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="session">
@@ -1825,9 +1834,9 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
    <b><a href="#id-token">#id-token</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-id-token">3.1. Signing-up and Signing-in</a> <a href="#ref-for-id-token①">(2)</a>
-    <li><a href="#ref-for-id-token②">6.1. The FederatedCredential Interface</a>
-    <li><a href="#ref-for-id-token③">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a> <a href="#ref-for-id-token④">(2)</a>
-    <li><a href="#ref-for-id-token⑤">6.6.3.3. The idtoken response</a>
+    <li><a href="#ref-for-id-token②">6.1.1. The FederatedCredential Interface</a>
+    <li><a href="#ref-for-id-token③">6.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a> <a href="#ref-for-id-token④">(2)</a>
+    <li><a href="#ref-for-id-token⑤">7.3.3. The idtoken response</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="high-level-api">
@@ -1845,235 +1854,235 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
   <aside class="dfn-panel" data-for="registered">
    <b><a href="#registered">#registered</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-registered">5. Life of a User</a>
-    <li><a href="#ref-for-registered①">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a> <a href="#ref-for-registered②">(2)</a>
+    <li><a href="#ref-for-registered">5. The State Machine</a>
+    <li><a href="#ref-for-registered①">6.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a> <a href="#ref-for-registered②">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="unregistered">
    <b><a href="#unregistered">#unregistered</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-unregistered">5. Life of a User</a>
-    <li><a href="#ref-for-unregistered①">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a> <a href="#ref-for-unregistered②">(2)</a>
+    <li><a href="#ref-for-unregistered">5. The State Machine</a>
+    <li><a href="#ref-for-unregistered①">6.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a> <a href="#ref-for-unregistered②">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="logged-in">
    <b><a href="#logged-in">#logged-in</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-logged-in">5. Life of a User</a>
-    <li><a href="#ref-for-logged-in①">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a> <a href="#ref-for-logged-in②">(2)</a>
+    <li><a href="#ref-for-logged-in">5. The State Machine</a>
+    <li><a href="#ref-for-logged-in①">6.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a> <a href="#ref-for-logged-in②">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="logged-out">
    <b><a href="#logged-out">#logged-out</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-logged-out">5. Life of a User</a>
-    <li><a href="#ref-for-logged-out①">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a> <a href="#ref-for-logged-out②">(2)</a> <a href="#ref-for-logged-out③">(3)</a>
+    <li><a href="#ref-for-logged-out">5. The State Machine</a>
+    <li><a href="#ref-for-logged-out①">6.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a> <a href="#ref-for-logged-out②">(2)</a> <a href="#ref-for-logged-out③">(3)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="dom-statemachine-account-state">
    <b><a href="#dom-statemachine-account-state">#dom-statemachine-account-state</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dom-statemachine-account-state">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a> <a href="#ref-for-dom-statemachine-account-state①">(2)</a> <a href="#ref-for-dom-statemachine-account-state②">(3)</a>
+    <li><a href="#ref-for-dom-statemachine-account-state">6.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a> <a href="#ref-for-dom-statemachine-account-state①">(2)</a> <a href="#ref-for-dom-statemachine-account-state②">(3)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="dom-statemachine-session-state">
    <b><a href="#dom-statemachine-session-state">#dom-statemachine-session-state</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dom-statemachine-session-state">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a> <a href="#ref-for-dom-statemachine-session-state①">(2)</a> <a href="#ref-for-dom-statemachine-session-state②">(3)</a>
+    <li><a href="#ref-for-dom-statemachine-session-state">6.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a> <a href="#ref-for-dom-statemachine-session-state①">(2)</a> <a href="#ref-for-dom-statemachine-session-state②">(3)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="dom-federatedcredential-idtoken">
    <b><a href="#dom-federatedcredential-idtoken">#dom-federatedcredential-idtoken</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dom-federatedcredential-idtoken">6.1. The FederatedCredential Interface</a>
-    <li><a href="#ref-for-dom-federatedcredential-idtoken①">6.6.3.1. Minting a new IdToken</a>
+    <li><a href="#ref-for-dom-federatedcredential-idtoken">6.1.1. The FederatedCredential Interface</a>
+    <li><a href="#ref-for-dom-federatedcredential-idtoken①">7.3.1. Minting a new IdToken</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="dom-federatedcredential-approvedby">
    <b><a href="#dom-federatedcredential-approvedby">#dom-federatedcredential-approvedby</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dom-federatedcredential-approvedby">6.1. The FederatedCredential Interface</a>
+    <li><a href="#ref-for-dom-federatedcredential-approvedby">6.1.1. The FederatedCredential Interface</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="dom-federatedcredentialrequestoptions-providers">
    <b><a href="#dom-federatedcredentialrequestoptions-providers">#dom-federatedcredentialrequestoptions-providers</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dom-federatedcredentialrequestoptions-providers">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a> <a href="#ref-for-dom-federatedcredentialrequestoptions-providers①">(2)</a> <a href="#ref-for-dom-federatedcredentialrequestoptions-providers②">(3)</a>
+    <li><a href="#ref-for-dom-federatedcredentialrequestoptions-providers">6.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a> <a href="#ref-for-dom-federatedcredentialrequestoptions-providers①">(2)</a> <a href="#ref-for-dom-federatedcredentialrequestoptions-providers②">(3)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="dictdef-federatedidentityprovider">
    <b><a href="#dictdef-federatedidentityprovider">#dictdef-federatedidentityprovider</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dictdef-federatedidentityprovider">6.2. The FederatedCredentialRequestOptions</a> <a href="#ref-for-dictdef-federatedidentityprovider①">(2)</a>
+    <li><a href="#ref-for-dictdef-federatedidentityprovider">6.1.2. The FederatedCredentialRequestOptions</a> <a href="#ref-for-dictdef-federatedidentityprovider①">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="dom-federatedidentityprovider-url">
    <b><a href="#dom-federatedidentityprovider-url">#dom-federatedidentityprovider-url</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dom-federatedidentityprovider-url">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
-    <li><a href="#ref-for-dom-federatedidentityprovider-url①">6.6. The .well-known/webid configuration</a>
-    <li><a href="#ref-for-dom-federatedidentityprovider-url②">6.6.2. accounts_endpoint</a>
-    <li><a href="#ref-for-dom-federatedidentityprovider-url③">6.6.3.1. Minting a new IdToken</a>
-    <li><a href="#ref-for-dom-federatedidentityprovider-url④">6.6.4. client_id_metadata_endpoint</a>
+    <li><a href="#ref-for-dom-federatedidentityprovider-url">6.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
+    <li><a href="#ref-for-dom-federatedidentityprovider-url①">7.1. The .well-known/webid configuration</a>
+    <li><a href="#ref-for-dom-federatedidentityprovider-url②">7.2. accounts_endpoint</a>
+    <li><a href="#ref-for-dom-federatedidentityprovider-url③">7.3.1. Minting a new IdToken</a>
+    <li><a href="#ref-for-dom-federatedidentityprovider-url④">7.4. client_id_metadata_endpoint</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="dom-federatedidentityprovider-clientid">
    <b><a href="#dom-federatedidentityprovider-clientid">#dom-federatedidentityprovider-clientid</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dom-federatedidentityprovider-clientid">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
-    <li><a href="#ref-for-dom-federatedidentityprovider-clientid①">6.6.3.1. Minting a new IdToken</a>
+    <li><a href="#ref-for-dom-federatedidentityprovider-clientid">6.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
+    <li><a href="#ref-for-dom-federatedidentityprovider-clientid①">7.3.1. Minting a new IdToken</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="dom-federatedidentityprovider-nonce">
    <b><a href="#dom-federatedidentityprovider-nonce">#dom-federatedidentityprovider-nonce</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dom-federatedidentityprovider-nonce">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
-    <li><a href="#ref-for-dom-federatedidentityprovider-nonce①">6.6.3.1. Minting a new IdToken</a>
+    <li><a href="#ref-for-dom-federatedidentityprovider-nonce">6.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
+    <li><a href="#ref-for-dom-federatedidentityprovider-nonce①">7.3.1. Minting a new IdToken</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="enumdef-federatedcredentialrequestmode">
    <b><a href="#enumdef-federatedcredentialrequestmode">#enumdef-federatedcredentialrequestmode</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-enumdef-federatedcredentialrequestmode">6.2. The FederatedCredentialRequestOptions</a>
-   </ul>
-  </aside>
-  <aside class="dfn-panel" data-for="privacy-policy">
-   <b><a href="#privacy-policy">#privacy-policy</a></b><b>Referenced in:</b>
-   <ul>
-    <li><a href="#ref-for-privacy-policy">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
-   </ul>
-  </aside>
-  <aside class="dfn-panel" data-for="terms-of-service">
-   <b><a href="#terms-of-service">#terms-of-service</a></b><b>Referenced in:</b>
-   <ul>
-    <li><a href="#ref-for-terms-of-service">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
+    <li><a href="#ref-for-enumdef-federatedcredentialrequestmode">6.1.2. The FederatedCredentialRequestOptions</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="sign-up">
    <b><a href="#sign-up">#sign-up</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-sign-up">2.4.2. RP Revocation</a>
-    <li><a href="#ref-for-sign-up">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
+    <li><a href="#ref-for-sign-up">6.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="select-an-account">
    <b><a href="#select-an-account">#select-an-account</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-select-an-account">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
+    <li><a href="#ref-for-select-an-account">6.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
    </ul>
   </aside>
-  <aside class="dfn-panel" data-for="sign-in">
-   <b><a href="#sign-in">#sign-in</a></b><b>Referenced in:</b>
+  <aside class="dfn-panel" data-for="sign-in①">
+   <b><a href="#sign-in①">#sign-in①</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-sign-in">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a> <a href="#ref-for-sign-in①">(2)</a>
+    <li><a href="#ref-for-sign-in①">6.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a> <a href="#ref-for-sign-in①①">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="auto-sign-in">
    <b><a href="#auto-sign-in">#auto-sign-in</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-auto-sign-in">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
+    <li><a href="#ref-for-auto-sign-in">6.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="explicit-sign-in">
    <b><a href="#explicit-sign-in">#explicit-sign-in</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-explicit-sign-in">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
+    <li><a href="#ref-for-explicit-sign-in">6.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="dictdef-federatedcredentialinterceptor">
    <b><a href="#dictdef-federatedcredentialinterceptor">#dictdef-federatedcredentialinterceptor</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dictdef-federatedcredentialinterceptor">6.4.1. Interceptors</a>
+    <li><a href="#ref-for-dictdef-federatedcredentialinterceptor">6.1.4. Interceptors</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="dom-federatedcredentialinterceptor-url">
    <b><a href="#dom-federatedcredentialinterceptor-url">#dom-federatedcredentialinterceptor-url</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dom-federatedcredentialinterceptor-url">6.4.1.1. FederatedCredentialInterceptor</a>
+    <li><a href="#ref-for-dom-federatedcredentialinterceptor-url">6.1.4.1. FederatedCredentialInterceptor</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="dom-federatedcredentialinterceptor-params">
    <b><a href="#dom-federatedcredentialinterceptor-params">#dom-federatedcredentialinterceptor-params</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dom-federatedcredentialinterceptor-params">6.4.1.1. FederatedCredentialInterceptor</a>
+    <li><a href="#ref-for-dom-federatedcredentialinterceptor-params">6.1.4.1. FederatedCredentialInterceptor</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="dom-wellknown-accounts_endpoint">
    <b><a href="#dom-wellknown-accounts_endpoint">#dom-wellknown-accounts_endpoint</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dom-wellknown-accounts_endpoint">6.6.2. accounts_endpoint</a>
+    <li><a href="#ref-for-dom-wellknown-accounts_endpoint">7.2. accounts_endpoint</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="dom-wellknown-idtoken_endpoint">
    <b><a href="#dom-wellknown-idtoken_endpoint">#dom-wellknown-idtoken_endpoint</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dom-wellknown-idtoken_endpoint">6.6.3.1. Minting a new IdToken</a>
+    <li><a href="#ref-for-dom-wellknown-idtoken_endpoint">7.3.1. Minting a new IdToken</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="dom-wellknown-client_id_metadata_endpoint">
    <b><a href="#dom-wellknown-client_id_metadata_endpoint">#dom-wellknown-client_id_metadata_endpoint</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dom-wellknown-client_id_metadata_endpoint">6.6.4. client_id_metadata_endpoint</a>
+    <li><a href="#ref-for-dom-wellknown-client_id_metadata_endpoint">7.4. client_id_metadata_endpoint</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="fetch-the-well-known">
    <b><a href="#fetch-the-well-known">#fetch-the-well-known</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-fetch-the-well-known">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
+    <li><a href="#ref-for-fetch-the-well-known">6.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="fetch-the-accounts-list">
    <b><a href="#fetch-the-accounts-list">#fetch-the-accounts-list</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-fetch-the-accounts-list">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
+    <li><a href="#ref-for-fetch-the-accounts-list">6.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="dom-accounts_endpoint_response_accounts-account_id">
    <b><a href="#dom-accounts_endpoint_response_accounts-account_id">#dom-accounts_endpoint_response_accounts-account_id</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dom-accounts_endpoint_response_accounts-account_id">6.6.3.1. Minting a new IdToken</a> <a href="#ref-for-dom-accounts_endpoint_response_accounts-account_id①">(2)</a>
+    <li><a href="#ref-for-dom-accounts_endpoint_response_accounts-account_id">7.3.1. Minting a new IdToken</a> <a href="#ref-for-dom-accounts_endpoint_response_accounts-account_id①">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="minting-minting">
    <b><a href="#minting-minting">#minting-minting</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-minting-minting">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a> <a href="#ref-for-minting-minting①">(2)</a>
+    <li><a href="#ref-for-minting-minting">6.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a> <a href="#ref-for-minting-minting①">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="dom-idtoken_endpoint_request-account_id">
    <b><a href="#dom-idtoken_endpoint_request-account_id">#dom-idtoken_endpoint_request-account_id</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dom-idtoken_endpoint_request-account_id">6.6.3.1. Minting a new IdToken</a>
+    <li><a href="#ref-for-dom-idtoken_endpoint_request-account_id">7.3.1. Minting a new IdToken</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="dom-idtoken_endpoint_request-request">
    <b><a href="#dom-idtoken_endpoint_request-request">#dom-idtoken_endpoint_request-request</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dom-idtoken_endpoint_request-request">6.6.3.1. Minting a new IdToken</a>
+    <li><a href="#ref-for-dom-idtoken_endpoint_request-request">7.3.1. Minting a new IdToken</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="dom-idtoken_endpoint_request_request-client_id">
    <b><a href="#dom-idtoken_endpoint_request_request-client_id">#dom-idtoken_endpoint_request_request-client_id</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dom-idtoken_endpoint_request_request-client_id">6.6.3.1. Minting a new IdToken</a>
+    <li><a href="#ref-for-dom-idtoken_endpoint_request_request-client_id">7.3.1. Minting a new IdToken</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="dom-idtoken_endpoint_request_request-nonce">
    <b><a href="#dom-idtoken_endpoint_request_request-nonce">#dom-idtoken_endpoint_request_request-nonce</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dom-idtoken_endpoint_request_request-nonce">6.6.3.1. Minting a new IdToken</a>
+    <li><a href="#ref-for-dom-idtoken_endpoint_request_request-nonce">7.3.1. Minting a new IdToken</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="privacy-policy">
+   <b><a href="#privacy-policy">#privacy-policy</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-privacy-policy">6.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="terms-of-service">
+   <b><a href="#terms-of-service">#terms-of-service</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-terms-of-service">6.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="dom-client_id_metadata_endpont_response-privacy_policy_url">
    <b><a href="#dom-client_id_metadata_endpont_response-privacy_policy_url">#dom-client_id_metadata_endpont_response-privacy_policy_url</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dom-client_id_metadata_endpont_response-privacy_policy_url">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
+    <li><a href="#ref-for-dom-client_id_metadata_endpont_response-privacy_policy_url">7.4.2. The client_id metadata response</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="dom-client_id_metadata_endpont_response-terms_of_service_url">
    <b><a href="#dom-client_id_metadata_endpont_response-terms_of_service_url">#dom-client_id_metadata_endpont_response-terms_of_service_url</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dom-client_id_metadata_endpont_response-terms_of_service_url">6.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a>
+    <li><a href="#ref-for-dom-client_id_metadata_endpont_response-terms_of_service_url">7.4.2. The client_id metadata response</a>
    </ul>
   </aside>
 <script>/* script-dfn-panel */

@@ -1,5 +1,5 @@
 <pre class='metadata'>
-Title: WebID API
+Title: Federated Account and Session Management API
 Shortname: webid
 Level: 1
 Status: CG-DRAFT
@@ -385,12 +385,12 @@ if (!window.FederatedCredential) {
 :: TODO(goto: find existing definition.
 
 <!-- ============================================================ -->
-# Life of a User # {#lifecycle}
+# The State Machine # {#lifecycle}
 <!-- ============================================================ -->
 
-User agents MUST internally provide storage for a <dfn export id="concept-state-machine">state machine</dfn> that keeps track of the lifecycle of the accounts of [=Identity Provider=] being used at [=Relying Party=].
+The account management and session management APIs allows the user to explicitly move through the different stages of their accounts. At each stage, the state machine manages the [=RP=]'s and the [=IDP=]'s access to the appropriate browser capabilities.
 
-The account management and session management API allows the user to explicitly move through the state machine and as they do unlock (or lock) access to browser capabilities that would (or wouldn't) be available otherwise.
+User agents MUST internally provide storage for a <dfn export id="concept-state-machine">state machine</dfn> that keeps track of the lifecycle of the accounts of [=IDP=] being used at [=RP=].
 
 <img src="static/mock42.svg">
 
@@ -401,14 +401,20 @@ The account management and session management API allows the user to explicitly 
     ::  Keeps track of whether the user has an open or closed session. Can be [=logged in=] or (by default) [=logged out=].
 </dl>
 
+<img src="static/mock43.svg">
+
 <!-- ============================================================ -->
-# Account Management API # {#AccountManagementAPI}
+# The Browser API # {#API}
 <!-- ============================================================ -->
 
 Websites call <code><a idl for="CredentialsContainer" lt="get()">navigator.credentials.get({providers:..., ...})</a></code> to retrieve a {{FederatedCredential}}.
 
 <!-- ============================================================ -->
-## The {{FederatedCredential}} Interface ## {#FederatedCredential}
+## The Sign-in API ## {#sign-in}
+<!-- ============================================================ -->
+
+<!-- ============================================================ -->
+### The {{FederatedCredential}} Interface ### {#FederatedCredential}
 <!-- ============================================================ -->
 
 This specification extends the {{FederatedCredential}} type adding two more fields:
@@ -430,7 +436,7 @@ partial interface FederatedCredential : Credential {
 </dl>
 
 <!-- ============================================================ -->
-## The {{FederatedCredentialRequestOptions}} ## {#FederatedCredentialRequestOptions}
+### The {{FederatedCredentialRequestOptions}} ### {#FederatedCredentialRequestOptions}
 <!-- ============================================================ -->
 
 It also extends the {{FederatedCredentialRequestOptions}} by adding a list of {{FederatedIdentityProvider}}s as well as the UX controls for modality and modes.
@@ -459,7 +465,7 @@ enum FederatedCredentialApprovedBy {
 </xmp>
 
 <!-- ============================================================ -->
-## The {{FederatedCredential}}'s <code><dfn for="FederatedCredential" method>\[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</dfn></code> Method ## {#federated-credential-discover-from-external-source}
+### The {{FederatedCredential}}'s <code><dfn for="FederatedCredential" method>\[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</dfn></code> Method ### {#federated-credential-discover-from-external-source}
 <!-- ============================================================ -->
 
 This algorithm runs in parallel inside the [[CM#algorithm-request]] to request credentials and returns a set of {{FederatedCredential}} objects from a remote [=Identity Provider=].
@@ -523,10 +529,6 @@ When this method is invoked, the user agent MUST execute the following algorithm
 
 
 
-The <dfn>Privacy Policy</dfn> are the policies described at {{client_id_metadata_endpont_response/privacy_policy_url}}.
-
-The <dfn>Terms of Service</dfn> are the policies described at {{client_id_metadata_endpont_response/terms_of_service_url}}.
-
 To <dfn>sign-up</dfn> the user run this algorithm:
 
     1. Gather explicit intent to create an account
@@ -577,10 +579,6 @@ To <dfn>explicit sign-in</dfn> the user run this algorithm:
     1. Return the result of running the [=sign-in=] algorithm.
 
 <!-- ============================================================ -->
-## Sign-up ## {#sign-up}
-<!-- ============================================================ -->
-
-<!-- ============================================================ -->
 ### Interceptors ### {#Interceptors}
 <!-- ============================================================ -->
 
@@ -610,7 +608,7 @@ dictionary FederatedCredentialInterceptor {
 </div>
 
 <!-- ============================================================ -->
-## Revocation ## {#revocation}
+## The Revocation API ## {#revocation}
 <!-- ============================================================ -->
 
 <xmp class=idl>
@@ -619,6 +617,31 @@ partial interface FederatedCredential : Credential {
   static Promise<void> revoke(USVString accountId);
 };
 </xmp>
+
+<!-- ============================================================ -->
+## The Sign-out API ## {#sign-out}
+<!-- ============================================================ -->
+
+<!-- ============================================================ -->
+### RP Sign-out ### {#rp-sign-out}
+<!-- ============================================================ -->
+
+<!-- ============================================================ -->
+### IDP Sign-out ### {#idp-sign-out}
+<!-- ============================================================ -->
+
+Websites call <code><a idl for="FederatedCredential" lt="get()">FederatedCredential.logout(...)</a></code> to log the user out of a series of relying parties.
+
+<xmp class=idl>
+[Exposed=Window, SecureContext]
+partial interface FederatedCredential : Credential {
+  static Promise<void> logout(optional sequence<USVString> logout_endpoints = []);
+};
+</xmp>
+
+<!-- ============================================================ -->
+# The IDP HTTP API # {#idp-api}
+<!-- ============================================================ -->
 
 <!-- ============================================================ -->
 ## The .well-known/webid configuration ## {#Well-Known}
@@ -643,7 +666,7 @@ To <dfn>fetch the well-known</dfn> configuration file, run this algorithm:
 <!-- ============================================================ -->
 
 <!-- ============================================================ -->
-### accounts_endpoint ### {#accounts_endpoint}
+## accounts_endpoint ## {#accounts_endpoint}
 <!-- ============================================================ -->
 
 To <dfn>fetch the accounts list</dfn> run this algorithm:
@@ -652,13 +675,12 @@ To <dfn>fetch the accounts list</dfn> run this algorithm:
 1. Let the |accounts list| be the result of fetching the |accounts_endpoint| with the [=Identity Provider=]'s cookies.
 1. Return the |accounts list|
 
+<!-- ============================================================ -->
+### The accounts list request  ### {#accounts_endpoint_request}
+<!-- ============================================================ -->
 
 <!-- ============================================================ -->
-#### The accounts list request  #### {#accounts_endpoint_request}
-<!-- ============================================================ -->
-
-<!-- ============================================================ -->
-#### The accounts list response  #### {#accounts_endpoint_response}
+### The accounts list response  ### {#accounts_endpoint_response}
 <!-- ============================================================ -->
 
 <dl dfn-type="argument" dfn-for="accounts_endpoint_response">
@@ -667,7 +689,7 @@ To <dfn>fetch the accounts list</dfn> run this algorithm:
 </dl>
 
 <!-- ============================================================ -->
-##### Account  ##### {#accounts_endpoint_response_accounts}
+#### Account  #### {#accounts_endpoint_response_accounts}
 <!-- ============================================================ -->
 
 <dl dfn-type="argument" dfn-for="accounts_endpoint_response_accounts">
@@ -682,11 +704,11 @@ To <dfn>fetch the accounts list</dfn> run this algorithm:
 </dl>
 
 <!-- ============================================================ -->
-### idtoken_endpoint ### {#idtoken_endpoint}
+## idtoken_endpoint ## {#idtoken_endpoint}
 <!-- ============================================================ -->
 
 <!-- ============================================================ -->
-#### <dfn for="Minting">Minting</dfn> a new IdToken #### {#minting}
+### <dfn for="Minting">Minting</dfn> a new IdToken ### {#minting}
 <!-- ============================================================ -->
 
     To mint a new id token, run the following algorithm:
@@ -703,7 +725,7 @@ To <dfn>fetch the accounts list</dfn> run this algorithm:
         * {{FederatedCredential/provider}} with |provider|["{{FederatedIdentityProvider/url}}"]
 
 <!-- ============================================================ -->
-#### The idtoken request  #### {#idtoken_endpoint_request}
+### The idtoken request  ### {#idtoken_endpoint_request}
 <!-- ============================================================ -->
 
 <dl dfn-type="argument" dfn-for="idtoken_endpoint_request">
@@ -718,7 +740,7 @@ To <dfn>fetch the accounts list</dfn> run this algorithm:
 </dl>
 
 <!-- ============================================================ -->
-#### The idtoken response  #### {#idtoken_endpoint_response}
+### The idtoken response  ### {#idtoken_endpoint_response}
 <!-- ============================================================ -->
 
 <dl dfn-type="argument" dfn-for="idtoken_endpoint_response">
@@ -727,7 +749,7 @@ To <dfn>fetch the accounts list</dfn> run this algorithm:
 </dl>
 
 <!-- ============================================================ -->
-### client_id_metadata_endpoint ### {#client_id_metadata_endpoint}
+## client_id_metadata_endpoint ## {#client_id_metadata_endpoint}
 <!-- ============================================================ -->
 
 The [=.well-known=]'s <code><dfn data-export="" data-dfn-for=".well-known">`client_id_metadata_endpoint`</dfn></code> 
@@ -739,12 +761,16 @@ To <dfn>fetch the client id metadata</dfn> run this algorithm:
 1. Return |policies|
 
 <!-- ============================================================ -->
-#### The client_id metadata request  #### {#client_id_metadata_endpoint_request}
+### The client_id metadata request  ### {#client_id_metadata_endpoint_request}
 <!-- ============================================================ -->
 
 <!-- ============================================================ -->
-#### The client_id metadata response  #### {#client_id_metadata_endpoint_response}
+### The client_id metadata response  ### {#client_id_metadata_endpoint_response}
 <!-- ============================================================ -->
+
+The <dfn>Privacy Policy</dfn> are the policies described at {{client_id_metadata_endpont_response/privacy_policy_url}}.
+
+The <dfn>Terms of Service</dfn> are the policies described at {{client_id_metadata_endpont_response/terms_of_service_url}}.
 
 <dl dfn-type="argument" dfn-for="client_id_metadata_endpont_response">
     :   <dfn>privacy_policy_url</dfn>
@@ -753,34 +779,6 @@ To <dfn>fetch the client id metadata</dfn> run this algorithm:
     ::  A link to the [=Relying Party=]'s terms of service.
 </dl>
 
-<!-- ============================================================ -->
-# Session Management API # {#SessionManagementAPI}
-<!-- ============================================================ -->
-
-Websites call <code><a idl for="FederatedCredential" lt="get()">FederatedCredential.logout(...)</a></code> to log the user out of a series of relying parties.
-
-<!-- ============================================================ -->
-## Sign-in ## {#sign-in}
-<!-- ============================================================ -->
-
-<!-- ============================================================ -->
-## Sign-out ## {#sign-out}
-<!-- ============================================================ -->
-
-<!-- ============================================================ -->
-### RP Sign-out ### {#rp-sign-out}
-<!-- ============================================================ -->
-
-<!-- ============================================================ -->
-### IDP Sign-out ### {#idp-sign-out}
-<!-- ============================================================ -->
-
-<xmp class=idl>
-[Exposed=Window, SecureContext]
-partial interface FederatedCredential : Credential {
-  static Promise<void> logout(optional sequence<USVString> logout_endpoints = []);
-};
-</xmp>
 
 <!-- ============================================================ -->
 # Security # {#security}
