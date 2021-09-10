@@ -1,5 +1,5 @@
 <pre class='metadata'>
-Title: Federated Account and Session Management API
+Title: Identity Federation Management API
 Shortname: webid
 Level: 1
 Status: CG-DRAFT
@@ -13,7 +13,7 @@ Text Macro: FALSE <code>false</code>
 Text Macro: TRUE <code>true</code>
 Text Macro: RP Relying Party
 Text Macro: IDP Identity Provider
-Abstract: This specification defines a set of [=high-level API=]s that enables users to continue to use [=Identity Provider=]s to authenticate to [=Website=]s without incurring into [=unsactioned tracking=] on the Web. It accomplishes that by exposing the explicit user controls needed to manage the lifecycle of their federated accounts.
+Abstract: This specification defines a set of [=high-level API=]s that enables users to continue to use [=Identity Provider=]s to authenticate to [=Relying Party=]s without incurring into [=unsactioned tracking=] on the Web. It accomplishes that by exposing the explicit user controls needed to manage the lifecycle of their federated accounts.
 Test Suite: https://github.com/web-platform-tests/wpt/blob/master/credential-management/webid.https.html
 </pre>
 
@@ -385,7 +385,7 @@ if (!window.FederatedCredential) {
 :: TODO(goto: find existing definition.
 
 <!-- ============================================================ -->
-# The State Machine # {#lifecycle}
+# High Level Design # {#lifecycle}
 <!-- ============================================================ -->
 
 The account management and session management APIs allows the user to explicitly move through the different stages of their accounts. At each stage, the state machine manages the [=RP=]'s and the [=IDP=]'s access to the appropriate browser capabilities.
@@ -404,243 +404,7 @@ User agents MUST internally provide storage for a <dfn export id="concept-state-
 <img src="static/mock43.svg">
 
 <!-- ============================================================ -->
-# The Browser API # {#API}
-<!-- ============================================================ -->
-
-Websites call <code><a idl for="CredentialsContainer" lt="get()">navigator.credentials.get({providers:..., ...})</a></code> to retrieve a {{FederatedCredential}}.
-
-<!-- ============================================================ -->
-## The Sign-in API ## {#sign-in}
-<!-- ============================================================ -->
-
-<!-- ============================================================ -->
-### The {{FederatedCredential}} Interface ### {#FederatedCredential}
-<!-- ============================================================ -->
-
-This specification extends the {{FederatedCredential}} type adding two more fields:
-
-<xmp class=idl>
-[Exposed=Window, SecureContext]
-partial interface FederatedCredential : Credential {
-  readonly attribute USVString idToken;
-  readonly attribute FederatedCredentialApprover approvedBy;
-};
-</xmp>
-
-<dl dfn-type="attribute" dfn-for="FederatedCredential">
-    :   {{idToken}}
-    ::  The [=id token=].
-
-    :   {{approvedBy}}
-    ::  When used in conjunction with {{CredentialRequestOptions/mediation}}, it indicates whether the credential was provided via a [[#use-cases-auto-sign-in]] or an [[#use-cases-explicit-sign-in]].
-</dl>
-
-<!-- ============================================================ -->
-### The {{FederatedCredentialRequestOptions}} ### {#FederatedCredentialRequestOptions}
-<!-- ============================================================ -->
-
-It also extends the {{FederatedCredentialRequestOptions}} by adding a list of {{FederatedIdentityProvider}}s as well as the UX controls for modality and modes.
-
-<xmp class=idl>
-partial dictionary FederatedCredentialRequestOptions {
-  sequence<(DOMString or FederatedIdentityProvider)> providers;
-  FederatedCredentialRequestMode mode = "mediated";
-};
-
-dictionary FederatedIdentityProvider {
-  required USVString url;
-  USVString clientId;
-  USVString nonce;
-};
-
-enum FederatedCredentialRequestMode {
-  "mediated",
-  "permission"
-};
-
-enum FederatedCredentialApprovedBy {
-  "auto",
-  "user"
-};
-</xmp>
-
-<!-- ============================================================ -->
-### The {{FederatedCredential}}'s <code><dfn for="FederatedCredential" method>\[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</dfn></code> Method ### {#federated-credential-discover-from-external-source}
-<!-- ============================================================ -->
-
-This algorithm runs in parallel inside the [[CM#algorithm-request]] to request credentials and returns a set of {{FederatedCredential}} objects from a remote [=Identity Provider=].
-
-This [=internal method=] accepts three arguments:
-
-<dl dfn-type="argument" dfn-for="FederatedCredential/[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)">
-
-    :   <dfn>origin</dfn>
-    ::  This argument is the [=relevant settings object=]'s [=environment settings object/origin=], as determined by the
-        calling {{CredentialsContainer/get()}} implementation, i.e., {{CredentialsContainer}}'s <a abstract-op>Request a `Credential`</a> abstract operation.
-
-    :   <dfn>options</dfn>
-    ::  This argument is a {{CredentialRequestOptions}} object whose
-        <code>|options|.{{CredentialRequestOptions/federated}}</code> member contains a {{FederatedCredentialRequestOptions}}
-        object specifying the exchange options.
-
-    :   <dfn>sameOriginWithAncestors</dfn>
-    ::  This argument is a Boolean value which is [TRUE] if and only if the caller's [=environment settings object=] is
-        [=same-origin with its ancestors=]. It is [FALSE] if caller is cross-origin.
-</dl>
-
-Note: <strong>This algorithm is synchronous:</strong> the {{Promise}} resolution/rejection is handled by
-{{CredentialsContainer/get()|navigator.credentials.get()}}.
-
-When this method is invoked, the user agent MUST execute the following algorithm:
-
-    1.  If <var ignore>sameOriginWithAncestors</var> is `false`, return a "{{NotAllowedError}}" {{DOMException}}.
-
-        Note: This restriction aims to address the concern raised in [[Security-Origin-Confusion]].
-
-    1.  Assert: |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"] [=map/exists=].
-
-    1.  Assert: |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"] [=list/size=] is 1.
-
-        Note: At some point we would like to support choosing accounts from multiple [=Identity Provider=]s.
-
-    1. Let |provider| be |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"][0].
-
-    1. Assert: |provider|["{{FederatedIdentityProvider/url}}"] [=map/exists=].
-
-    1. Assert: |provider|["{{FederatedIdentityProvider/clientId}}"] [=map/exists=].
-
-    1. Assert: |provider|["{{FederatedIdentityProvider/nonce}}"] [=map/exists=].
-
-    1. Let |wellknown| be the result of running the [=fetch the well-known=] algorithm with the |provider|.
-
-    1. Let |accounts list| be the result of running the [=fetch the accounts list=] algorithm.
-
-    1. Let |account| be the result of running the [=select an account=] from the |accounts list| algorithm.
-
-    1. If the {{StateMachine/Account State}} is [=unregistered=]
-
-        1. Return the result of running the [=sign-up=] algorithm.
-
-    1.  If the {{StateMachine/Session State}} is  [=logged out=] then
-
-        1. Return the result of running the [=explicit sign-in=] algorithm.
-
-    1. Return the result of running the [=auto sign-in=] algorithm.
-
-
-
-To <dfn>sign-up</dfn> the user run this algorithm:
-
-    1. Gather explicit intent to create an account
-
-    1. Gather explicit agreement with the [=Privacy Policy=]
-
-    1. Gather explicit agreement with the [=Terms of Service=]
-
-    1. Set the account's {{StateMachine/Account State}} from [=unregistered=] to [=registered=].
-
-    1. Set the account's {{StateMachine/Session State}} from [=logged out=] to [=logged in=].
-
-    1. Return the result of [=minting=] a new [=id token=].
-
-To <dfn>select an account</dfn> from the accounts list run this algorithm:
-
-    1. If |accounts list|'s [=list/size=] is 1
-
-        1. Let |account| be |accounts list|[0]
-
-        1. Return |account|
-
-    1. Display an account chooser
- 
-    1. Let |account| be an account that the user manually selects from the accounts chooser
-
-    1. Return |account|
-
-
-To <dfn>sign-in</dfn> the user run this algorithm:
-
-    1. Assert that the {{StateMachine/Account State}} is [=registered=]
-
-    1. Set the account's {{StateMachine/Session State}} from [=logged out=] to [=logged in=].
-
-    1. Return the result of [=minting=] a new [=id token=].
-
-
-To <dfn>auto sign-in</dfn> the user run this algorithm:
-
-    1. Return the result of running the [=sign-in=] algorithm.
-
-
-To <dfn>explicit sign-in</dfn> the user run this algorithm:
-
-    1. Gather explicit confirmation that the user wants to sign-in to [=Relying Party=] with their [=Identity Provider=]'s |account|
-
-    1. Return the result of running the [=sign-in=] algorithm.
-
-<!-- ============================================================ -->
-### Interceptors ### {#Interceptors}
-<!-- ============================================================ -->
-
-<xmp class=idl>
-[Exposed=Window, SecureContext]
-partial interface FederatedCredential : Credential {
-  static Promise<void> registerInterceptor(FederatedCredentialInterceptor interceptor);
-};
-</xmp>
-
-<!-- ============================================================ -->
-#### `FederatedCredentialInterceptor` #### {#FederatedCredentialInterceptor}
-<!-- ============================================================ -->
-
-<xmp class="idl">
-dictionary FederatedCredentialInterceptor {
-  DOMString url;
-  sequence<DOMString> params;
-};
-</xmp>
-
-<div dfn-type="dict-member" dfn-for="FederatedCredentialInterceptor">
-    :   <dfn>url</dfn>
-    ::  The url that points the browser to the .well-known configuration file.
-    :   <dfn>params</dfn>
-    ::  The URL request parameters to intercept navigations. 
-</div>
-
-<!-- ============================================================ -->
-## The Revocation API ## {#revocation}
-<!-- ============================================================ -->
-
-<xmp class=idl>
-[Exposed=Window, SecureContext]
-partial interface FederatedCredential : Credential {
-  static Promise<void> revoke(USVString accountId);
-};
-</xmp>
-
-<!-- ============================================================ -->
-## The Sign-out API ## {#sign-out}
-<!-- ============================================================ -->
-
-<!-- ============================================================ -->
-### RP Sign-out ### {#rp-sign-out}
-<!-- ============================================================ -->
-
-<!-- ============================================================ -->
-### IDP Sign-out ### {#idp-sign-out}
-<!-- ============================================================ -->
-
-Websites call <code><a idl for="FederatedCredential" lt="get()">FederatedCredential.logout(...)</a></code> to log the user out of a series of relying parties.
-
-<xmp class=idl>
-[Exposed=Window, SecureContext]
-partial interface FederatedCredential : Credential {
-  static Promise<void> logout(optional sequence<USVString> logout_endpoints = []);
-};
-</xmp>
-
-<!-- ============================================================ -->
-# The IDP HTTP API # {#idp-api}
+# The Identity Provider API # {#idp-api}
 <!-- ============================================================ -->
 
 <!-- ============================================================ -->
@@ -778,6 +542,245 @@ The <dfn>Terms of Service</dfn> are the policies described at {{client_id_metada
     :   <dfn>terms_of_service_url</dfn>
     ::  A link to the [=Relying Party=]'s terms of service.
 </dl>
+
+<!-- ============================================================ -->
+# The Relying Party API # {#rp-api}
+<!-- ============================================================ -->
+
+<!-- ============================================================ -->
+# The Browser API # {#API}
+<!-- ============================================================ -->
+
+Websites call <code><a idl for="CredentialsContainer" lt="get()">navigator.credentials.get({providers:..., ...})</a></code> to retrieve a {{FederatedCredential}}.
+
+<!-- ============================================================ -->
+## The Sign-in API ## {#sign-in}
+<!-- ============================================================ -->
+
+<!-- ============================================================ -->
+### The {{FederatedCredential}} Interface ### {#FederatedCredential}
+<!-- ============================================================ -->
+
+This specification extends the {{FederatedCredential}} type adding two more fields:
+
+<xmp class=idl>
+[Exposed=Window, SecureContext]
+partial interface FederatedCredential : Credential {
+  readonly attribute USVString idToken;
+  readonly attribute FederatedCredentialApprover approvedBy;
+};
+</xmp>
+
+<dl dfn-type="attribute" dfn-for="FederatedCredential">
+    :   {{idToken}}
+    ::  The [=id token=].
+
+    :   {{approvedBy}}
+    ::  When used in conjunction with {{CredentialRequestOptions/mediation}}, it indicates whether the credential was provided via a [[#use-cases-auto-sign-in]] or an [[#use-cases-explicit-sign-in]].
+</dl>
+
+<!-- ============================================================ -->
+### The {{FederatedCredentialRequestOptions}} ### {#FederatedCredentialRequestOptions}
+<!-- ============================================================ -->
+
+It also extends the {{FederatedCredentialRequestOptions}} by adding a list of {{FederatedIdentityProvider}}s as well as the UX controls for modality and modes.
+
+<xmp class=idl>
+partial dictionary FederatedCredentialRequestOptions {
+  sequence<(DOMString or FederatedIdentityProvider)> providers;
+  FederatedCredentialRequestMode mode = "mediated";
+};
+
+dictionary FederatedIdentityProvider {
+  required USVString url;
+  USVString clientId;
+  USVString nonce;
+};
+
+enum FederatedCredentialRequestMode {
+  "mediated",
+  "permission"
+};
+
+enum FederatedCredentialApprovedBy {
+  "auto",
+  "user"
+};
+</xmp>
+
+<!-- ============================================================ -->
+### The {{FederatedCredential}}'s <code><dfn for="FederatedCredential" method>\[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</dfn></code> Method ### {#federated-credential-discover-from-external-source}
+<!-- ============================================================ -->
+
+This algorithm runs in parallel inside the [[CM#algorithm-request]] to request credentials and returns a set of {{FederatedCredential}} objects from a remote [=Identity Provider=].
+
+This [=internal method=] accepts three arguments:
+
+<dl dfn-type="argument" dfn-for="FederatedCredential/[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)">
+
+    :   <dfn>origin</dfn>
+    ::  This argument is the [=relevant settings object=]'s [=environment settings object/origin=], as determined by the
+        calling {{CredentialsContainer/get()}} implementation, i.e., {{CredentialsContainer}}'s <a abstract-op>Request a `Credential`</a> abstract operation.
+
+    :   <dfn>options</dfn>
+    ::  This argument is a {{CredentialRequestOptions}} object whose
+        <code>|options|.{{CredentialRequestOptions/federated}}</code> member contains a {{FederatedCredentialRequestOptions}}
+        object specifying the exchange options.
+
+    :   <dfn>sameOriginWithAncestors</dfn>
+    ::  This argument is a Boolean value which is [TRUE] if and only if the caller's [=environment settings object=] is
+        [=same-origin with its ancestors=]. It is [FALSE] if caller is cross-origin.
+</dl>
+
+Note: <strong>This algorithm is synchronous:</strong> the {{Promise}} resolution/rejection is handled by
+{{CredentialsContainer/get()|navigator.credentials.get()}}.
+
+When this method is invoked, the user agent MUST execute the following algorithm:
+
+    1.  If <var ignore>sameOriginWithAncestors</var> is `false`, return a "{{NotAllowedError}}" {{DOMException}}.
+
+        Note: This restriction aims to address the concern raised in [[Security-Origin-Confusion]].
+
+    1.  Assert: |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"] [=map/exists=].
+
+    1.  Assert: |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"] [=list/size=] is 1.
+
+        Note: At some point we would like to support choosing accounts from multiple [=Identity Provider=]s.
+
+    1. Let |provider| be |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"][0].
+
+    1. Assert: |provider|["{{FederatedIdentityProvider/url}}"] [=map/exists=].
+
+    1. Assert: |provider|["{{FederatedIdentityProvider/clientId}}"] [=map/exists=].
+
+    1. Assert: |provider|["{{FederatedIdentityProvider/nonce}}"] [=map/exists=].
+
+    1. Let |wellknown| be the result of running the [=fetch the well-known=] algorithm with the |provider|.
+
+    1. Let |accounts list| be the result of running the [=fetch the accounts list=] algorithm.
+
+    1. Let |account| be the result of running the [=select an account=] from the |accounts list| algorithm.
+
+    1. If the {{StateMachine/Account State}} is [=unregistered=]
+
+        1. Return the result of running the [=sign-up=] algorithm.
+
+    1.  If the {{StateMachine/Session State}} is  [=logged out=] then
+
+        1. Return the result of running the [=explicit sign-in=] algorithm.
+
+    1. Return the result of running the [=auto sign-in=] algorithm.
+
+
+To <dfn>sign-up</dfn> the user run this algorithm:
+
+    1. Gather explicit intent to create an account
+
+    1. Gather explicit agreement with the [=Privacy Policy=]
+
+    1. Gather explicit agreement with the [=Terms of Service=]
+
+    1. Set the account's {{StateMachine/Account State}} from [=unregistered=] to [=registered=].
+
+    1. Set the account's {{StateMachine/Session State}} from [=logged out=] to [=logged in=].
+
+    1. Return the result of [=minting=] a new [=id token=].
+
+To <dfn>select an account</dfn> from the accounts list run this algorithm:
+
+    1. If |accounts list|'s [=list/size=] is 1
+
+        1. Let |account| be |accounts list|[0]
+
+        1. Return |account|
+
+    1. Display an account chooser
+ 
+    1. Let |account| be an account that the user manually selects from the accounts chooser
+
+    1. Return |account|
+
+
+To <dfn>sign-in</dfn> the user run this algorithm:
+
+    1. Assert that the {{StateMachine/Account State}} is [=registered=]
+
+    1. Set the account's {{StateMachine/Session State}} from [=logged out=] to [=logged in=].
+
+    1. Return the result of [=minting=] a new [=id token=].
+
+
+To <dfn>auto sign-in</dfn> the user run this algorithm:
+
+    1. Return the result of running the [=sign-in=] algorithm.
+
+
+To <dfn>explicit sign-in</dfn> the user run this algorithm:
+
+    1. Gather explicit confirmation that the user wants to sign-in to [=Relying Party=] with their [=Identity Provider=]'s |account|
+
+    1. Return the result of running the [=sign-in=] algorithm.
+
+<!-- ============================================================ -->
+### Interceptors ### {#Interceptors}
+<!-- ============================================================ -->
+
+<xmp class=idl>
+[Exposed=Window, SecureContext]
+partial interface FederatedCredential : Credential {
+  static Promise<void> registerInterceptor(FederatedCredentialInterceptor interceptor);
+};
+</xmp>
+
+<!-- ============================================================ -->
+#### `FederatedCredentialInterceptor` #### {#FederatedCredentialInterceptor}
+<!-- ============================================================ -->
+
+<xmp class="idl">
+dictionary FederatedCredentialInterceptor {
+  DOMString url;
+  sequence<DOMString> params;
+};
+</xmp>
+
+<div dfn-type="dict-member" dfn-for="FederatedCredentialInterceptor">
+    :   <dfn>url</dfn>
+    ::  The url that points the browser to the .well-known configuration file.
+    :   <dfn>params</dfn>
+    ::  The URL request parameters to intercept navigations. 
+</div>
+
+<!-- ============================================================ -->
+## The Revocation API ## {#revocation}
+<!-- ============================================================ -->
+
+<xmp class=idl>
+[Exposed=Window, SecureContext]
+partial interface FederatedCredential : Credential {
+  static Promise<void> revoke(USVString accountId);
+};
+</xmp>
+
+<!-- ============================================================ -->
+## The Sign-out API ## {#sign-out}
+<!-- ============================================================ -->
+
+<!-- ============================================================ -->
+### RP Sign-out ### {#rp-sign-out}
+<!-- ============================================================ -->
+
+<!-- ============================================================ -->
+### IDP Sign-out ### {#idp-sign-out}
+<!-- ============================================================ -->
+
+Websites call <code><a idl for="FederatedCredential" lt="get()">FederatedCredential.logout(...)</a></code> to log the user out of a series of relying parties.
+
+<xmp class=idl>
+[Exposed=Window, SecureContext]
+partial interface FederatedCredential : Credential {
+  static Promise<void> logout(optional sequence<USVString> logout_endpoints = []);
+};
+</xmp>
 
 
 <!-- ============================================================ -->
