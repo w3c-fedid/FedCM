@@ -385,7 +385,7 @@ if (!window.FederatedCredential) {
 :: TODO(goto: find existing definition.
 
 <!-- ============================================================ -->
-# The Lifecycle of Accounts and Sessions # {#lifecycle}
+# Life of a User # {#lifecycle}
 <!-- ============================================================ -->
 
 User agents MUST internally provide storage for a <dfn export id="concept-state-machine">state machine</dfn> that keeps track of the lifecycle of the accounts of [=Identity Provider=] being used at [=Relying Party=].
@@ -509,31 +509,72 @@ When this method is invoked, the user agent MUST execute the following algorithm
 
     1. Let |accounts list| be the result of running the [=fetch the accounts list=] algorithm.
 
+    1. Let |account| be the result of running the [=select an account=] from the |accounts list| algorithm.
+
+    1. If the {{StateMachine/Account State}} is [=unregistered=]
+
+        1. Return the result of running the [=sign-up=] algorithm.
+
+    1.  If the {{StateMachine/Session State}} is  [=logged out=] then
+
+        1. Return the result of running the [=explicit sign-in=] algorithm.
+
+    1. Return the result of running the [=auto sign-in=] algorithm.
+
+
+
+The <dfn>Privacy Policy</dfn> are the policies described at {{client_id_metadata_endpont_response/privacy_policy_url}}.
+
+The <dfn>Terms of Service</dfn> are the policies described at {{client_id_metadata_endpont_response/terms_of_service_url}}.
+
+To <dfn>sign-up</dfn> the user run this algorithm:
+
+    1. Gather explicit intent to create an account
+
+    1. Gather explicit agreement with the [=Privacy Policy=]
+
+    1. Gather explicit agreement with the [=Terms of Service=]
+
+    1. Set the account's {{StateMachine/Account State}} from [=unregistered=] to [=registered=].
+
+    1. Set the account's {{StateMachine/Session State}} from [=logged out=] to [=logged in=].
+
+    1. Return the result of [=minting=] a new [=id token=].
+
+To <dfn>select an account</dfn> from the accounts list run this algorithm:
+
     1. If |accounts list|'s [=list/size=] is 1
 
         1. Let |account| be |accounts list|[0]
 
-        1. If the {{StateMachine/Account State}} for the [=Identity Provider=] |provider|["{{FederatedIdentityProvider/url}}"], the [=Relying Party=] |origin| and the |account|["{{accounts_endpoint_response_accounts/account_id}}"] triple is [=registered=]
+        1. Return |account|
 
-            1. Ask the user if they want to sign-in to [=Relying Party=] with their [=Identity Provider=]'s |account|.
+    1. Display an account chooser
+ 
+    1. Let |account| be an account that the user manually selects from the accounts chooser
 
-            1. If the user chooses not to sign-in return `null`.
+    1. Return |account|
 
-            1. Set the account's {{StateMachine/Session State}} from [=logged out=] to [=logged in=].
 
-            1. Return the result of [=minting=] a new [=id token=].
+To <dfn>sign-in</dfn> the user run this algorithm:
 
-    1. Let |policies| be the result of running the [=fetch the client id metadata=] algorithm.
+    1. Assert that the {{StateMachine/Account State}} is [=registered=]
 
-    1. Let |account| be the result of asking the user to select an account from the |account list| to be used under the [=Relying Party=]'s Privacy Policy at |policies|["{{client_id_metadata_endpont_response/privacy_policy_url}}"] and Terms of Service at |policies|["{{client_id_metadata_endpont_response/terms_of_service_url}}"]. 
-
-    1. If the user chooses not to sign-up, return `null`.
-
-    1. For the for the [=Identity Provider=] |provider|["{{FederatedIdentityProvider/url}}"], the [=Relying Party=] |origin| and the |account|["{{accounts_endpoint_response_accounts/account_id}}"] triple:
-        * Set the account's {{StateMachine/Account State}} from [=unregistered=] to [=registered=].
-        * Set the account's {{StateMachine/Session State}} from [=logged out=] to [=logged in=].
+    1. Set the account's {{StateMachine/Session State}} from [=logged out=] to [=logged in=].
 
     1. Return the result of [=minting=] a new [=id token=].
+
+
+To <dfn>auto sign-in</dfn> the user run this algorithm:
+
+    1. Return the result of running the [=sign-in=] algorithm.
+
+
+To <dfn>explicit sign-in</dfn> the user run this algorithm:
+
+    1. Gather explicit confirmation that the user wants to sign-in to [=Relying Party=] with their [=Identity Provider=]'s |account|
+
+    1. Return the result of running the [=sign-in=] algorithm.
 
 <!-- ============================================================ -->
 ## Sign-up ## {#sign-up}
