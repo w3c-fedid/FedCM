@@ -206,97 +206,34 @@ After a user navigates to a [=Relying Party=] in a browser and decides to create
 # Examples # {#examples}
 <!-- ============================================================ -->
 
-<!-- ============================================================ -->
-## Signing-up and Signing-in ## {#examples-signing-up-and-signing-in}
-<!-- ============================================================ -->
-
-<!-- ============================================================ -->
-## Signing-out ## {#examples-signing-out}
-<!-- ============================================================ -->
-
-<!-- ============================================================ -->
-### RP Sign-out ### {#examples-rp-sign-out}
-<!-- ============================================================ -->
-
-When a user wants to log out of their session in the [=Relying Party=],
-the [=Relying Party=] can let the browser know that it wants the [[#use-cases-auto-sign-in]]
-flow to be disabled, so that the user doesn't get into an infinite loop.
-
-It does so by calling the `preventSilentAccess()` API, which clear the
-user's current account session and takes them to an [[#use-cases-explicit-sign-in]] flow
-whenever the user wants to log back in.
+This specification extends the {{FederatedCredential}} type and internal algorithms to allow the exchange
+of identity between [=IDP=]s and [=RP=]s. When it succeeds, it returns to the [=RP=] a signed [=id token=]
+which the [=RP=] can use to authenticate the user.
 
 <div class=example>
 ```js
-function logout() {
-  navigator.credentials.preventSilentAccess();
-}
-```
-</div>
+async function login(signal) {
+  const {idToken} = await navigator.credentials.get({
+    // controls whether auto sign-in is enabled or not
+    mediation: "optional",
+    // controls abortions of the account chooser
+    signal: signal
 
-<!-- ============================================================ -->
-### Front-channel Sign-out ### {#examples-front-channel-sign-out}
-<!-- ============================================================ -->
+    // controls which identity providers to use
+    federated: {
+      // controls which UX mode to use
+      mode: "mediated",
+      // controls whether the account chooser is modal or not
+      providers: [{
+        url: "https://idp.example",
+        // the pre-registered client id  
+        clientId: "123",
+        nonce: "456"
+      }],
+    }
+  });
 
-In enterprise scenarios, it is common for the user to want to clear all of
-their existing sessions in all of the [=Relying Party=]s they are logged into.
-
-It does so by being navigated to their [=Identity Provider=] who initiates
-what's called a [[Front-Channel-Logout]].
-
-The browser exposes an API that takes the list of [=Relying Party=]s that the
-[=Identity Provider=] wants to initiate the logout which are loaded in parallel
-with cookies.
-
-Each [=Relying Party=] endpoint is responsible for clearing its local state
-(e.g. clearing cookies).
-
-After the completion of this API, the user's session is cleared and will go
-through an [[#use-cases-explicit-sign-in]] upon return.
-
-<div class=example>
-```js
-async function logout() {
-  await FederatedCredential.logout([{
-      endpoint: "https://rp1.example",
-      accountId: "123",
-    }, {
-      endpiont: "https://rpN.example",
-      accountId: "456",
-    }]);
-}
-```
-</div>
-
-<!-- ============================================================ -->
-## RP Revocation ## {#examples-rp-revocation}
-<!-- ============================================================ -->
-
-Whenever the user decides to delete their account on the [=Relying Party=]
-the [=Relying Party=] can call an API to let the [=Identity Provider=] and
-the browser know.
-
-Upon return to the [=Relying Party=], the user goes through a [[#use-cases-sign-up]] flow
-instead of a [[#use-cases-sign-in]] flow.
-
-<div class=example>
-```js
-async function revoke(accountId) {
-  return await FederatedCredential.revoke(accountId);
-}
-```
-</div>
-
-<!-- ============================================================ -->
-## Feature Detection ## {#intro-feature-detection}
-<!-- ============================================================ -->
-
-<div class=example>
-```js
-if (!window.FederatedCredential) {
-  // feature not available
-  // TODO(goto): this is probably insufficient.
-  return;
+  return idToken;
 }
 ```
 </div>
@@ -315,13 +252,13 @@ if (!window.FederatedCredential) {
 :: TODO(goto): find existing definition.
 
 : <dfn>session</dfn>
-:: TODO(goto: find existing definition.
+:: TODO(goto): find existing definition.
 
 : <dfn>account</dfn>
-:: TODO(goto: find existing definition.
+:: TODO(goto): find existing definition.
 
 : <dfn>id token</dfn>
-:: TODO(goto: find existing definition.
+:: TODO(goto): find existing definition.
 
 : <df>unsactioned tracking</dfn>
 :: The type of tracking on the web described in [[Unsanctioned-Web-Tracking]].
@@ -333,16 +270,16 @@ if (!window.FederatedCredential) {
 :: A general purpose API, as opposed to a [=high-level API=].
 
 : <dfn>registered</dfn>
-:: TODO(goto: find existing definition.
+:: TODO(goto): find existing definition.
 
 : <dfn>unregistered</dfn>
-:: TODO(goto: find existing definition.
+:: TODO(goto): find existing definition.
 
 : <dfn>logged in</dfn>
-:: TODO(goto: find existing definition.
+:: TODO(goto): find existing definition.
 
 : <dfn>logged out</dfn>
-:: TODO(goto: find existing definition.
+:: TODO(goto): find existing definition.
 
 : <dfn>out-of-band</dfn>
 :: Outside of the user agent's context.
@@ -880,7 +817,22 @@ To <dfn>mint a new id token</dfn>, run the following algorithm:
 ## The Revocation API ## {#revocation}
 <!-- ============================================================ -->
 
-Note: go over the revocation API.
+Whenever the user decides to delete their account on the [=Relying Party=]
+the [=Relying Party=] can call an API to let the [=Identity Provider=] and
+the browser know.
+
+Upon return to the [=Relying Party=], the user goes through a [[#use-cases-sign-up]] flow
+instead of a [[#use-cases-sign-in]] flow.
+
+<div class=example>
+```js
+async function revoke(accountId) {
+  return await FederatedCredential.revoke(accountId);
+}
+```
+</div>
+
+This specification extends the {{FederatedCredential}} interface with an extra static method:
 
 <xmp class=idl>
 [Exposed=Window, SecureContext]
@@ -889,21 +841,67 @@ partial interface FederatedCredential : Credential {
 };
 </xmp>
 
+Note: go over the revocation API.
+
 <!-- ============================================================ -->
 ## The Sign-out API ## {#sign-out}
 <!-- ============================================================ -->
 
-Note: go over the sign-out APIs.
-
 <!-- ============================================================ -->
 ### RP Sign-out ### {#rp-sign-out}
 <!-- ============================================================ -->
+
+When a user wants to log out of their session in the [=Relying Party=],
+the [=Relying Party=] can let the browser know that it wants the [[#use-cases-auto-sign-in]]
+flow to be disabled, so that the user doesn't get into an infinite loop.
+
+It does so by calling the `preventSilentAccess()` API, which clear the
+user's current account session and takes them to an [[#use-cases-explicit-sign-in]] flow
+whenever the user wants to log back in.
+
+<div class=example>
+```js
+function logout() {
+  navigator.credentials.preventSilentAccess();
+}
+```
+</div>
 
 Note: go over the RP sign-out API.
 
 <!-- ============================================================ -->
 ### IDP Sign-out ### {#idp-sign-out}
 <!-- ============================================================ -->
+
+In enterprise scenarios, it is common for the user to want to clear all of
+their existing sessions in all of the [=Relying Party=]s they are logged into.
+
+It does so by being navigated to their [=Identity Provider=] who initiates
+what's called a [[Front-Channel-Logout]].
+
+The browser exposes an API that takes the list of [=Relying Party=]s that the
+[=Identity Provider=] wants to initiate the logout which are loaded in parallel
+with cookies.
+
+Each [=Relying Party=] endpoint is responsible for clearing its local state
+(e.g. clearing cookies).
+
+After the completion of this API, the user's session is cleared and will go
+through an [[#use-cases-explicit-sign-in]] upon return.
+
+<div class=example>
+```js
+async function logout() {
+  await FederatedCredential.logout([{
+      endpoint: "https://rp1.example",
+      accountId: "123",
+    }, {
+      endpiont: "https://rpN.example",
+      accountId: "456",
+    }]);
+}
+```
+</div>
 
 [=IDP=]s can call <code><a idl for="FederatedCredential" lt="get()">FederatedCredential.logout(...)</a></code> to log the user out of the [=RP=]s they are signed into.
 
@@ -918,6 +916,8 @@ partial interface FederatedCredential : Credential {
   static Promise<void> logout(optional sequence<WebIdLogoutRequest> logout_requests = []);
 };
 </xmp>
+
+Note: go over how this is implemented.
 
 <!-- ============================================================ -->
 ## Backwards Compatibility ## {#backwards-compatibility}

@@ -6,7 +6,7 @@
   <link href="https://www.w3.org/StyleSheets/TR/2016/cg-draft" rel="stylesheet">
   <meta content="Bikeshed version 4f053d00e, updated Tue Aug 10 14:13:32 2021 -0700" name="generator">
   <link href="http://wicg.github.io/WebID" rel="canonical">
-  <meta content="75fe68dea32b70d7d419500c5dd96489e6933ce4" name="document-revision">
+  <meta content="76bfaf613938a3c739dbcbeb77010e7d595ed872" name="document-revision">
 <style>
 dl.domintro dt {
     font-family: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
@@ -643,19 +643,7 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
        </ol>
       <li><a href="#Access"><span class="secno">2.5</span> <span class="content">Access</span></a>
      </ol>
-    <li>
-     <a href="#examples"><span class="secno">3</span> <span class="content">Examples</span></a>
-     <ol class="toc">
-      <li><a href="#examples-signing-up-and-signing-in"><span class="secno">3.1</span> <span class="content">Signing-up and Signing-in</span></a>
-      <li>
-       <a href="#examples-signing-out"><span class="secno">3.2</span> <span class="content">Signing-out</span></a>
-       <ol class="toc">
-        <li><a href="#examples-rp-sign-out"><span class="secno">3.2.1</span> <span class="content">RP Sign-out</span></a>
-        <li><a href="#examples-front-channel-sign-out"><span class="secno">3.2.2</span> <span class="content">Front-channel Sign-out</span></a>
-       </ol>
-      <li><a href="#examples-rp-revocation"><span class="secno">3.3</span> <span class="content">RP Revocation</span></a>
-      <li><a href="#intro-feature-detection"><span class="secno">3.4</span> <span class="content">Feature Detection</span></a>
-     </ol>
+    <li><a href="#examples"><span class="secno">3</span> <span class="content">Examples</span></a>
     <li><a href="#terminology"><span class="secno">4</span> <span class="content">Terminology</span></a>
     <li><a href="#lifecycle"><span class="secno">5</span> <span class="content">High Level Design</span></a>
     <li>
@@ -873,64 +861,32 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
      <p>Shows the user their calendar entries provided by the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②⓪">Identity Provider</a>.</p>
    </ul>
    <h2 class="heading settled" data-level="3" id="examples"><span class="secno">3. </span><span class="content">Examples</span><a class="self-link" href="#examples"></a></h2>
-   <h3 class="heading settled" data-level="3.1" id="examples-signing-up-and-signing-in"><span class="secno">3.1. </span><span class="content">Signing-up and Signing-in</span><a class="self-link" href="#examples-signing-up-and-signing-in"></a></h3>
-   <h3 class="heading settled" data-level="3.2" id="examples-signing-out"><span class="secno">3.2. </span><span class="content">Signing-out</span><a class="self-link" href="#examples-signing-out"></a></h3>
-   <h4 class="heading settled" data-level="3.2.1" id="examples-rp-sign-out"><span class="secno">3.2.1. </span><span class="content">RP Sign-out</span><a class="self-link" href="#examples-rp-sign-out"></a></h4>
-   <p>When a user wants to log out of their session in the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party③⑥">Relying Party</a>,
-the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party③⑦">Relying Party</a> can let the browser know that it wants the <a href="#use-cases-auto-sign-in">§ 2.2.1 Auto Sign-in</a> flow to be disabled, so that the user doesn’t get into an infinite loop.</p>
-   <p>It does so by calling the <code>preventSilentAccess()</code> API, which clear the
-user’s current account session and takes them to an <a href="#use-cases-explicit-sign-in">§ 2.2.2 Explicit Sign-in</a> flow
-whenever the user wants to log back in.</p>
-   <div class="example" id="example-bf78b3ca">
-    <a class="self-link" href="#example-bf78b3ca"></a> 
-<pre class="language-js highlight"><c- a>function</c-> logout<c- p>()</c-> <c- p>{</c->
-  navigator<c- p>.</c->credentials<c- p>.</c->preventSilentAccess<c- p>();</c->
-<c- p>}</c->
-</pre>
-   </div>
-   <h4 class="heading settled" data-level="3.2.2" id="examples-front-channel-sign-out"><span class="secno">3.2.2. </span><span class="content">Front-channel Sign-out</span><a class="self-link" href="#examples-front-channel-sign-out"></a></h4>
-   <p>In enterprise scenarios, it is common for the user to want to clear all of
-their existing sessions in all of the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party③⑧">Relying Party</a>s they are logged into.</p>
-   <p>It does so by being navigated to their <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②①">Identity Provider</a> who initiates
-what’s called a <a data-link-type="biblio" href="https://openid.net/specs/openid-connect-frontchannel-1_0.html"><cite>Front-Channel Logout</cite></a>.</p>
-   <p>The browser exposes an API that takes the list of <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party③⑨">Relying Party</a>s that the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②②">Identity Provider</a> wants to initiate the logout which are loaded in parallel
-with cookies.</p>
-   <p>Each <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④⓪">Relying Party</a> endpoint is responsible for clearing its local state
-(e.g. clearing cookies).</p>
-   <p>After the completion of this API, the user’s session is cleared and will go
-through an <a href="#use-cases-explicit-sign-in">§ 2.2.2 Explicit Sign-in</a> upon return.</p>
-   <div class="example" id="example-ec30aec2">
-    <a class="self-link" href="#example-ec30aec2"></a> 
-<pre class="language-js highlight"><c- k>async</c-> <c- a>function</c-> logout<c- p>()</c-> <c- p>{</c->
-  <c- k>await</c-> FederatedCredential<c- p>.</c->logout<c- p>([{</c->
-      endpoint<c- o>:</c-> <c- u>"https://rp1.example"</c-><c- p>,</c->
-      accountId<c- o>:</c-> <c- u>"123"</c-><c- p>,</c->
-    <c- p>},</c-> <c- p>{</c->
-      endpiont<c- o>:</c-> <c- u>"https://rpN.example"</c-><c- p>,</c->
-      accountId<c- o>:</c-> <c- u>"456"</c-><c- p>,</c->
-    <c- p>}]);</c->
-<c- p>}</c->
-</pre>
-   </div>
-   <h3 class="heading settled" data-level="3.3" id="examples-rp-revocation"><span class="secno">3.3. </span><span class="content">RP Revocation</span><a class="self-link" href="#examples-rp-revocation"></a></h3>
-   <p>Whenever the user decides to delete their account on the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④①">Relying Party</a> the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④②">Relying Party</a> can call an API to let the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②③">Identity Provider</a> and
-the browser know.</p>
-   <p>Upon return to the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④③">Relying Party</a>, the user goes through a <a href="#use-cases-sign-up">§ 2.1 Sign-up</a> flow
-instead of a <a href="#use-cases-sign-in">§ 2.2 Sign-in</a> flow.</p>
-   <div class="example" id="example-bed25357">
-    <a class="self-link" href="#example-bed25357"></a> 
-<pre class="language-js highlight"><c- k>async</c-> <c- a>function</c-> revoke<c- p>(</c->accountId<c- p>)</c-> <c- p>{</c->
-  <c- k>return</c-> <c- k>await</c-> FederatedCredential<c- p>.</c->revoke<c- p>(</c->accountId<c- p>);</c->
-<c- p>}</c->
-</pre>
-   </div>
-   <h3 class="heading settled" data-level="3.4" id="intro-feature-detection"><span class="secno">3.4. </span><span class="content">Feature Detection</span><a class="self-link" href="#intro-feature-detection"></a></h3>
-   <div class="example" id="example-d96c7eb9">
-    <a class="self-link" href="#example-d96c7eb9"></a> 
-<pre class="language-js highlight"><c- k>if</c-> <c- p>(</c-><c- o>!</c->window<c- p>.</c->FederatedCredential<c- p>)</c-> <c- p>{</c->
-  <c- c1>// feature not available</c->
-  <c- c1>// TODO(goto): this is probably insufficient.</c->
-  <c- k>return</c-><c- p>;</c->
+   <p>This specification extends the <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential">FederatedCredential</a></code> type and internal algorithms to allow the exchange
+of identity between <a data-link-type="dfn" href="#idp" id="ref-for-idp">IDP</a>s and <a data-link-type="dfn" href="#rp" id="ref-for-rp">RP</a>s. When it succeeds, it returns to the <a data-link-type="dfn" href="#rp" id="ref-for-rp①">RP</a> a signed <a data-link-type="dfn" href="#id-token" id="ref-for-id-token">id token</a> which the <a data-link-type="dfn" href="#rp" id="ref-for-rp②">RP</a> can use to authenticate the user.</p>
+   <div class="example" id="example-d666f365">
+    <a class="self-link" href="#example-d666f365"></a> 
+<pre class="language-js highlight"><c- k>async</c-> <c- a>function</c-> login<c- p>(</c->signal<c- p>)</c-> <c- p>{</c->
+  <c- a>const</c-> <c- p>{</c->idToken<c- p>}</c-> <c- o>=</c-> <c- k>await</c-> navigator<c- p>.</c->credentials<c- p>.</c->get<c- p>({</c->
+    <c- c1>// controls whether auto sign-in is enabled or not</c->
+    mediation<c- o>:</c-> <c- u>"optional"</c-><c- p>,</c->
+    <c- c1>// controls abortions of the account chooser</c->
+    signal<c- o>:</c-> signal
+
+    <c- c1>// controls which identity providers to use</c->
+    federated<c- o>:</c-> <c- p>{</c->
+      <c- c1>// controls which UX mode to use</c->
+      mode<c- o>:</c-> <c- u>"mediated"</c-><c- p>,</c->
+      <c- c1>// controls whether the account chooser is modal or not</c->
+      providers<c- o>:</c-> <c- p>[{</c->
+        url<c- o>:</c-> <c- u>"https://idp.example"</c-><c- p>,</c->
+        <c- c1>// the pre-registered client id  </c->
+        clientId<c- o>:</c-> <c- u>"123"</c-><c- p>,</c->
+        nonce<c- o>:</c-> <c- u>"456"</c->
+      <c- p>}],</c->
+    <c- p>}</c->
+  <c- p>});</c->
+
+  <c- k>return</c-> idToken<c- p>;</c->
 <c- p>}</c->
 </pre>
    </div>
@@ -947,13 +903,13 @@ instead of a <a href="#use-cases-sign-in">§ 2.2 Sign-in</a> flow.</p>
      <p>TODO(goto): find existing definition.</p>
     <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="session">session</dfn>
     <dd data-md>
-     <p>TODO(goto: find existing definition.</p>
+     <p>TODO(goto): find existing definition.</p>
     <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="account">account</dfn>
     <dd data-md>
-     <p>TODO(goto: find existing definition.</p>
+     <p>TODO(goto): find existing definition.</p>
     <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="id-token">id token</dfn>
     <dd data-md>
-     <p>TODO(goto: find existing definition.</p>
+     <p>TODO(goto): find existing definition.</p>
     <dt data-md>
      <df>unsactioned tracking </df>
     <dd data-md>
@@ -966,23 +922,23 @@ instead of a <a href="#use-cases-sign-in">§ 2.2 Sign-in</a> flow.</p>
      <p>A general purpose API, as opposed to a <a data-link-type="dfn" href="#high-level-api" id="ref-for-high-level-api②">high-level API</a>.</p>
     <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="registered">registered</dfn>
     <dd data-md>
-     <p>TODO(goto: find existing definition.</p>
+     <p>TODO(goto): find existing definition.</p>
     <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="unregistered">unregistered</dfn>
     <dd data-md>
-     <p>TODO(goto: find existing definition.</p>
+     <p>TODO(goto): find existing definition.</p>
     <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="logged-in">logged in</dfn>
     <dd data-md>
-     <p>TODO(goto: find existing definition.</p>
+     <p>TODO(goto): find existing definition.</p>
     <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="logged-out">logged out</dfn>
     <dd data-md>
-     <p>TODO(goto: find existing definition.</p>
+     <p>TODO(goto): find existing definition.</p>
     <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="out-of-band">out-of-band</dfn>
     <dd data-md>
      <p>Outside of the user agent’s context.</p>
    </dl>
    <h2 class="heading settled" data-level="5" id="lifecycle"><span class="secno">5. </span><span class="content">High Level Design</span><a class="self-link" href="#lifecycle"></a></h2>
-   <p>At a high level, the Identity Federation Management API works by the intermediation of cooperating <a data-link-type="dfn" href="#idp" id="ref-for-idp">IDP</a>s and <a data-link-type="dfn" href="#rp" id="ref-for-rp">RP</a>s.</p>
-   <p>The <a href="#idp-api">§ 6 The Identity Provider API</a> and the <a href="#rp-api">§ 7 The Relying Party API</a> defines a set of HTTP APIs that cooperating <a data-link-type="dfn" href="#idp" id="ref-for-idp①">IDP</a>s and <a data-link-type="dfn" href="#idp" id="ref-for-idp②">IDP</a>s exposes as well as the entry points in the <a href="#API">§ 8 The Browser API</a> that they can use.</p>
+   <p>At a high level, the Identity Federation Management API works by the intermediation of cooperating <a data-link-type="dfn" href="#idp" id="ref-for-idp①">IDP</a>s and <a data-link-type="dfn" href="#rp" id="ref-for-rp③">RP</a>s.</p>
+   <p>The <a href="#idp-api">§ 6 The Identity Provider API</a> and the <a href="#rp-api">§ 7 The Relying Party API</a> defines a set of HTTP APIs that cooperating <a data-link-type="dfn" href="#idp" id="ref-for-idp②">IDP</a>s and <a data-link-type="dfn" href="#idp" id="ref-for-idp③">IDP</a>s exposes as well as the entry points in the <a href="#API">§ 8 The Browser API</a> that they can use.</p>
    <p><img src="static/mock43.svg"></p>
    <p>The user agent intermediates in such a matter that makes it impractical for the API to be used for tracking purposes, while preserving the functionality of identity federation.</p>
    <p>This document defines the APIs in the following order:</p>
@@ -995,7 +951,7 @@ instead of a <a href="#use-cases-sign-in">§ 2.2 Sign-in</a> flow.</p>
      <p>The <a href="#API">§ 8 The Browser API</a></p>
    </ol>
    <h2 class="heading settled" data-level="6" id="idp-api"><span class="secno">6. </span><span class="content">The Identity Provider API</span><a class="self-link" href="#idp-api"></a></h2>
-   <p>The <a data-link-type="dfn" href="#idp" id="ref-for-idp③">IDP</a> proactively and cooperatively exposes itself as a comformant agent by exposing a series of HTTP endpoints:</p>
+   <p>The <a data-link-type="dfn" href="#idp" id="ref-for-idp④">IDP</a> proactively and cooperatively exposes itself as a comformant agent by exposing a series of HTTP endpoints:</p>
    <ol>
     <li data-md>
      <p>A <a href="#well-known">§ 6.1 Discovery</a> endpoint in a well-known location that points to	   ,</p>
@@ -1007,7 +963,7 @@ instead of a <a href="#use-cases-sign-in">§ 2.2 Sign-in</a> flow.</p>
      <p>An <a href="#idtoken_endpoint">§ 6.4 ID Token</a> endpoint</p>
    </ol>
    <h3 class="heading settled" data-level="6.1" id="well-known"><span class="secno">6.1. </span><span class="content">Discovery</span><a class="self-link" href="#well-known"></a></h3>
-   <p>The well-known discovery endpoint is an endpoint located at the <a data-link-type="dfn" href="#idp" id="ref-for-idp④">IDP</a>'s <code>.well-known/webid</code> and serves as a discovery device to other endpoints provided by the <a data-link-type="dfn" href="#idp" id="ref-for-idp⑤">IDP</a>.</p>
+   <p>The well-known discovery endpoint is an endpoint located at the <a data-link-type="dfn" href="#idp" id="ref-for-idp⑤">IDP</a>'s <code>.well-known/webid</code> and serves as a discovery device to other endpoints provided by the <a data-link-type="dfn" href="#idp" id="ref-for-idp⑥">IDP</a>.</p>
    <p>The well-known discovery endpoint is fetched (a) <strong>without</strong> cookies and (b) <strong>with</strong> a special <a href="#Sec-WebID-CSR">§ 6.6 Sec-WebID-CSR</a> header.</p>
    <p>For example:</p>
    <div class="example" id="example-d6b169db">
@@ -1041,7 +997,7 @@ Sec-WebID-CSRF: random_value
 </pre>
    </div>
    <h3 class="heading settled" data-level="6.2" id="accounts_endpoint"><span class="secno">6.2. </span><span class="content">Accounts List</span><a class="self-link" href="#accounts_endpoint"></a></h3>
-   <p>The accounts list endpoint provides the list of accounts the user has at the <a data-link-type="dfn" href="#idp" id="ref-for-idp⑥">IDP</a>.</p>
+   <p>The accounts list endpoint provides the list of accounts the user has at the <a data-link-type="dfn" href="#idp" id="ref-for-idp⑦">IDP</a>.</p>
    <p>The accounts list endpoint is fetched (a) <strong>with</strong> any cookies and (b) <strong>with</strong> a special <a href="#Sec-WebID-CSR">§ 6.6 Sec-WebID-CSR</a> header.</p>
    <p>For example:</p>
    <div class="example" id="example-026e262e">
@@ -1102,7 +1058,7 @@ Sec-WebID-CSRF: random_value
 </pre>
    </div>
    <h3 class="heading settled" data-level="6.3" id="client_id_metadata_endpoint"><span class="secno">6.3. </span><span class="content">Client Metadata</span><a class="self-link" href="#client_id_metadata_endpoint"></a></h3>
-   <p>The client metadata endpoint provides metadata about <a data-link-type="dfn" href="#rp" id="ref-for-rp①">RP</a>s.</p>
+   <p>The client metadata endpoint provides metadata about <a data-link-type="dfn" href="#rp" id="ref-for-rp④">RP</a>s.</p>
    <p>The client medata endpoint is fetched (a) <strong>without</strong> cookies and (b) <strong>with</strong> a special <a href="#Sec-WebID-CSR">§ 6.6 Sec-WebID-CSR</a> header.</p>
    <p>For example:</p>
    <div class="example" id="example-21872a8c">
@@ -1117,10 +1073,10 @@ Sec-WebID-CSRF: random_value
    <dl>
     <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="client_id_metadata_endpont_response" data-dfn-type="argument" data-export id="dom-client_id_metadata_endpont_response-privacy_policy_url"><code>privacy_policy_url</code></dfn>
     <dd data-md>
-     <p>A link to the <a data-link-type="dfn" href="#rp" id="ref-for-rp②">RP</a>'s privacy policy.</p>
+     <p>A link to the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑤">RP</a>'s privacy policy.</p>
     <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="client_id_metadata_endpont_response" data-dfn-type="argument" data-export id="dom-client_id_metadata_endpont_response-terms_of_service_url"><code>terms_of_service_url</code></dfn>
     <dd data-md>
-     <p>A link to the <a data-link-type="dfn" href="#rp" id="ref-for-rp③">RP</a>'s terms of service.</p>
+     <p>A link to the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑥">RP</a>'s terms of service.</p>
    </dl>
    <p>For example:</p>
    <div class="example" id="example-56e40745">
@@ -1147,10 +1103,10 @@ Sec-WebID-CSRF: random_value
    <dl>
     <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="idtoken_endpoint_request_request" data-dfn-type="argument" data-export id="dom-idtoken_endpoint_request_request-client_id"><code>client_id</code></dfn>
     <dd data-md>
-     <p>The <a data-link-type="dfn" href="#rp" id="ref-for-rp④">RP</a>'s client it</p>
+     <p>The <a data-link-type="dfn" href="#rp" id="ref-for-rp⑦">RP</a>'s client it</p>
     <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="idtoken_endpoint_request_request" data-dfn-type="argument" data-export id="dom-idtoken_endpoint_request_request-nonce"><code>nonce</code></dfn>
     <dd data-md>
-     <p>A random number of the choice of the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑤">RP</a></p>
+     <p>A random number of the choice of the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑧">RP</a></p>
    </dl>
    <p>For example:</p>
    <div class="example" id="example-afad4478">
@@ -1174,7 +1130,7 @@ Sec-WebID-CSRF: random_value
    <dl>
     <dt data-md><dfn class="idl-code" data-dfn-for="idtoken_endpoint_response" data-dfn-type="argument" data-export id="dom-idtoken_endpoint_response-id_token"><code>id_token</code><a class="self-link" href="#dom-idtoken_endpoint_response-id_token"></a></dfn>
     <dd data-md>
-     <p>The resulting <a data-link-type="dfn" href="#id-token" id="ref-for-id-token">id token</a>.</p>
+     <p>The resulting <a data-link-type="dfn" href="#id-token" id="ref-for-id-token①">id token</a>.</p>
    </dl>
    <p>For example:</p>
    <div class="example" id="example-e01ff354">
@@ -1188,32 +1144,32 @@ Sec-WebID-CSRF: random_value
    <p class="note" role="note"><span>Note:</span> support revocation.</p>
    <h3 class="heading settled" data-level="6.6" id="Sec-WebID-CSR"><span class="secno">6.6. </span><span class="content"><code><dfn data-dfn-type="dfn" data-export id="sec-webid-csr"><code>Sec-WebID-CSR</code><a class="self-link" href="#sec-webid-csr"></a></dfn></code></span><a class="self-link" href="#Sec-WebID-CSR"></a></h3>
    <h2 class="heading settled" data-level="7" id="rp-api"><span class="secno">7. </span><span class="content">The Relying Party API</span><a class="self-link" href="#rp-api"></a></h2>
-   <p><a data-link-type="dfn" href="#rp" id="ref-for-rp⑥">RP</a>'s expose a <a href="#logout_endpoint">§ 7.1 Logout</a> to facilitate with <a href="#use-cases-idp-sign-out">§ 2.3.2 IDP Sign-out</a>.</p>
+   <p><a data-link-type="dfn" href="#rp" id="ref-for-rp⑨">RP</a>'s expose a <a href="#logout_endpoint">§ 7.1 Logout</a> to facilitate with <a href="#use-cases-idp-sign-out">§ 2.3.2 IDP Sign-out</a>.</p>
    <h3 class="heading settled" data-level="7.1" id="logout_endpoint"><span class="secno">7.1. </span><span class="content">Logout</span><a class="self-link" href="#logout_endpoint"></a></h3>
-   <p>When <a data-link-type="dfn" href="#idp" id="ref-for-idp⑦">IDP</a>s call the <a href="#idp-sign-out">§ 8.4.2 IDP Sign-out</a> API, every <a data-link-type="dfn" href="#rp" id="ref-for-rp⑦">RP</a> gets a
+   <p>When <a data-link-type="dfn" href="#idp" id="ref-for-idp⑧">IDP</a>s call the <a href="#idp-sign-out">§ 8.4.2 IDP Sign-out</a> API, every <a data-link-type="dfn" href="#rp" id="ref-for-rp①⓪">RP</a> gets a
 chance to log the user out (e.g. clear cookies, clear local storage)
 via the logout endpoint.</p>
-   <p>The logout endpoint is an endpoint that is registered with the <a data-link-type="dfn" href="#idp" id="ref-for-idp⑧">IDP</a> <a data-link-type="dfn" href="#out-of-band" id="ref-for-out-of-band">out-of-band</a>.</p>
-   <p>The logout endpoint is called (a) with a <strong>GET</strong> and (b) with the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑧">RP</a>'s cookies.</p>
+   <p>The logout endpoint is an endpoint that is registered with the <a data-link-type="dfn" href="#idp" id="ref-for-idp⑨">IDP</a> <a data-link-type="dfn" href="#out-of-band" id="ref-for-out-of-band">out-of-band</a>.</p>
+   <p>The logout endpoint is called (a) with a <strong>GET</strong> and (b) with the <a data-link-type="dfn" href="#rp" id="ref-for-rp①①">RP</a>'s cookies.</p>
    <h2 class="heading settled" data-level="8" id="API"><span class="secno">8. </span><span class="content">The Browser API</span><a class="self-link" href="#API"></a></h2>
-   <p>The Browser API exposes APIs to <a data-link-type="dfn" href="#rp" id="ref-for-rp⑨">RP</a>s and <a data-link-type="dfn" href="#idp" id="ref-for-idp⑨">IDP</a>s to call and intermediates the exchange of the user’s identity.</p>
-   <p>For <a data-link-type="dfn" href="#rp" id="ref-for-rp①⓪">RP</a>s, it allows them to:</p>
+   <p>The Browser API exposes APIs to <a data-link-type="dfn" href="#rp" id="ref-for-rp①②">RP</a>s and <a data-link-type="dfn" href="#idp" id="ref-for-idp①⓪">IDP</a>s to call and intermediates the exchange of the user’s identity.</p>
+   <p>For <a data-link-type="dfn" href="#rp" id="ref-for-rp①③">RP</a>s, it allows them to:</p>
    <ol>
     <li data-md>
-     <p>The <a href="#sign-in">§ 8.2 The Sign-in API</a> allows <a data-link-type="dfn" href="#rp" id="ref-for-rp①①">RP</a>'s users to <a href="#use-cases-sign-up">§ 2.1 Sign-up</a> and <a href="#use-cases-sign-up">§ 2.1 Sign-up</a></p>
+     <p>The <a href="#sign-in">§ 8.2 The Sign-in API</a> allows <a data-link-type="dfn" href="#rp" id="ref-for-rp①④">RP</a>'s users to <a href="#use-cases-sign-up">§ 2.1 Sign-up</a> and <a href="#use-cases-sign-up">§ 2.1 Sign-up</a></p>
     <li data-md>
-     <p>The <a href="#revocation">§ 8.3 The Revocation API</a> allows <a data-link-type="dfn" href="#rp" id="ref-for-rp①②">RP</a>'s users to go through <a href="#use-cases-rp-revocation">§ 2.4.2 RP Revocation</a> of their accounts</p>
+     <p>The <a href="#revocation">§ 8.3 The Revocation API</a> allows <a data-link-type="dfn" href="#rp" id="ref-for-rp①⑤">RP</a>'s users to go through <a href="#use-cases-rp-revocation">§ 2.4.2 RP Revocation</a> of their accounts</p>
     <li data-md>
-     <p>The <a href="#rp-sign-out">§ 8.4.1 RP Sign-out</a> API allows <a data-link-type="dfn" href="#rp" id="ref-for-rp①③">RP</a>s to <a href="#use-cases-rp-sign-out">§ 2.3.1 RP Sign-out</a> of their accounts.</p>
+     <p>The <a href="#rp-sign-out">§ 8.4.1 RP Sign-out</a> API allows <a data-link-type="dfn" href="#rp" id="ref-for-rp①⑥">RP</a>s to <a href="#use-cases-rp-sign-out">§ 2.3.1 RP Sign-out</a> of their accounts.</p>
    </ol>
-   <p>For <a data-link-type="dfn" href="#idp" id="ref-for-idp①⓪">IDP</a>s, it allows them to:</p>
+   <p>For <a data-link-type="dfn" href="#idp" id="ref-for-idp①①">IDP</a>s, it allows them to:</p>
    <ol>
     <li data-md>
-     <p>The <a href="#idp-sign-out">§ 8.4.2 IDP Sign-out</a> API allows <a data-link-type="dfn" href="#idp" id="ref-for-idp①①">IDP</a>s to <a href="#use-cases-idp-sign-out">§ 2.3.2 IDP Sign-out</a> of their accounts.</p>
+     <p>The <a href="#idp-sign-out">§ 8.4.2 IDP Sign-out</a> API allows <a data-link-type="dfn" href="#idp" id="ref-for-idp①②">IDP</a>s to <a href="#use-cases-idp-sign-out">§ 2.3.2 IDP Sign-out</a> of their accounts.</p>
    </ol>
    <p>The Browser API manages the lifecycle of the user’s accounts and sessions with an internal <a href="#state-machine">§ 8.1 The State Machine</a>.</p>
    <h3 class="heading settled" data-level="8.1" id="state-machine"><span class="secno">8.1. </span><span class="content">The State Machine</span><a class="self-link" href="#state-machine"></a></h3>
-   <p>Internally, the account management and session management APIs allows the user to explicitly move through the different stages of their accounts. At each stage, the state machine manages the <a data-link-type="dfn" href="#rp" id="ref-for-rp①④">RP</a>'s and the <a data-link-type="dfn" href="#idp" id="ref-for-idp①②">IDP</a>'s access to the appropriate browser capabilities.</p>
+   <p>Internally, the account management and session management APIs allows the user to explicitly move through the different stages of their accounts. At each stage, the state machine manages the <a data-link-type="dfn" href="#rp" id="ref-for-rp①⑦">RP</a>'s and the <a data-link-type="dfn" href="#idp" id="ref-for-idp①③">IDP</a>'s access to the appropriate browser capabilities.</p>
    <p><img src="static/mock42.svg"></p>
    <dl>
     <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="StateMachine" data-dfn-type="argument" data-export id="dom-statemachine-account-state"><code>Account State</code></dfn>
@@ -1224,12 +1180,12 @@ via the logout endpoint.</p>
      <p>Keeps track of whether the user has an open or closed session. Can be <a data-link-type="dfn" href="#logged-in" id="ref-for-logged-in">logged in</a> or (by default) <a data-link-type="dfn" href="#logged-out" id="ref-for-logged-out">logged out</a>.</p>
    </dl>
    <h3 class="heading settled" data-level="8.2" id="sign-in"><span class="secno">8.2. </span><span class="content">The Sign-in API</span><a class="self-link" href="#sign-in"></a></h3>
-   <p>The Sign-up and Sign-in APIs are APIs used by the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④④">Relying Party</a>s to ask the browser to intermediate the relationship with the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②④">Identity Provider</a> and the provisioning of an <a data-link-type="dfn" href="#id-token" id="ref-for-id-token①">id token</a>.</p>
-   <p>The <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④⑤">Relying Party</a> makes no delineation between Sign-up and Sign-in, but rather call the same API indistinguishably. The most important parameter to the API call is the set of <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②⑤">Identity Provider</a>s that the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④⑥">Relying Party</a> supports and has pre-registered with (i.e. it has a <code>clientId</code>).</p>
-   <p>Additionally, the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④⑦">Relying Party</a> can control a variety of UX knobs. For example, whether to allow an <a href="#use-cases-auto-sign-in">§ 2.2.1 Auto Sign-in</a> flow and an AbortSignal in case it needs to abort the flow.</p>
-   <p>If all goes well, the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④⑧">Relying Party</a> receives back an <a data-link-type="dfn" href="#id-token" id="ref-for-id-token②">id token</a> in the form of a signed <a data-link-type="biblio" href="https://datatracker.ietf.org/doc/html/rfc7519"><cite>JWT</cite></a> which it can use to authenticate the user.</p>
-   <div class="example" id="example-d666f365">
-    <a class="self-link" href="#example-d666f365"></a> 
+   <p>The Sign-up and Sign-in APIs are APIs used by the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party③⑥">Relying Party</a>s to ask the browser to intermediate the relationship with the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②①">Identity Provider</a> and the provisioning of an <a data-link-type="dfn" href="#id-token" id="ref-for-id-token②">id token</a>.</p>
+   <p>The <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party③⑦">Relying Party</a> makes no delineation between Sign-up and Sign-in, but rather call the same API indistinguishably. The most important parameter to the API call is the set of <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②②">Identity Provider</a>s that the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party③⑧">Relying Party</a> supports and has pre-registered with (i.e. it has a <code>clientId</code>).</p>
+   <p>Additionally, the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party③⑨">Relying Party</a> can control a variety of UX knobs. For example, whether to allow an <a href="#use-cases-auto-sign-in">§ 2.2.1 Auto Sign-in</a> flow and an AbortSignal in case it needs to abort the flow.</p>
+   <p>If all goes well, the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④⓪">Relying Party</a> receives back an <a data-link-type="dfn" href="#id-token" id="ref-for-id-token③">id token</a> in the form of a signed <a data-link-type="biblio" href="https://datatracker.ietf.org/doc/html/rfc7519"><cite>JWT</cite></a> which it can use to authenticate the user.</p>
+   <div class="example" id="example-d666f365①">
+    <a class="self-link" href="#example-d666f365①"></a> 
 <pre class="language-js highlight"><c- k>async</c-> <c- a>function</c-> login<c- p>(</c->signal<c- p>)</c-> <c- p>{</c->
   <c- a>const</c-> <c- p>{</c->idToken<c- p>}</c-> <c- o>=</c-> <c- k>await</c-> navigator<c- p>.</c->credentials<c- p>.</c->get<c- p>({</c->
     <c- c1>// controls whether auto sign-in is enabled or not</c->
@@ -1258,20 +1214,20 @@ via the logout endpoint.</p>
    <p>To accomplish that, this specification does three things:</p>
    <ol>
     <li data-md>
-     <p>It extends <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential">FederatedCredential</a></code> with more fields.</p>
+     <p>It extends <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential①">FederatedCredential</a></code> with more fields.</p>
     <li data-md>
-     <p>It redefines <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential①">FederatedCredential</a></code>'s <code><dfn class="idl-code" data-dfn-for="FederatedCredential" data-dfn-type="method" data-export id="dom-federatedcredential-discoverfromexternalsource-slot"><code>[[DiscoverFromExternalSource]]()</code><a class="self-link" href="#dom-federatedcredential-discoverfromexternalsource-slot"></a></dfn></code>.</p>
+     <p>It redefines <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential②">FederatedCredential</a></code>'s <code><dfn class="idl-code" data-dfn-for="FederatedCredential" data-dfn-type="method" data-export id="dom-federatedcredential-discoverfromexternalsource-slot"><code>[[DiscoverFromExternalSource]]()</code><a class="self-link" href="#dom-federatedcredential-discoverfromexternalsource-slot"></a></dfn></code>.</p>
     <li data-md>
      <p>It extends <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dictdef-federatedcredentialrequestoptions" id="ref-for-dictdef-federatedcredentialrequestoptions">FederatedCredentialRequestOptions</a></code> with more options.</p>
    </ol>
-   <p>First, this specification extends the <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential②">FederatedCredential</a></code> type adding two more fields:</p>
+   <p>First, this specification extends the <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential③">FederatedCredential</a></code> type adding two more fields:</p>
 <pre class="idl highlight def"><c- b>enum</c-> <dfn class="idl-code" data-dfn-type="enum" data-export id="enumdef-federatedcredentialapprovedby"><code><c- g>FederatedCredentialApprovedBy</c-></code><a class="self-link" href="#enumdef-federatedcredentialapprovedby"></a></dfn> {
   <dfn class="idl-code" data-dfn-for="FederatedCredentialApprovedBy" data-dfn-type="enum-value" data-export id="dom-federatedcredentialapprovedby-auto"><code><c- s>"auto"</c-></code><a class="self-link" href="#dom-federatedcredentialapprovedby-auto"></a></dfn>,
   <dfn class="idl-code" data-dfn-for="FederatedCredentialApprovedBy" data-dfn-type="enum-value" data-export id="dom-federatedcredentialapprovedby-user"><code><c- s>"user"</c-></code><a class="self-link" href="#dom-federatedcredentialapprovedby-user"></a></dfn>
 };
 
 [<a class="idl-code" data-link-type="extended-attribute" href="https://heycam.github.io/webidl/#Exposed" id="ref-for-Exposed"><c- g>Exposed</c-></a>=<c- n>Window</c->, <a class="idl-code" data-link-type="extended-attribute" href="https://heycam.github.io/webidl/#SecureContext" id="ref-for-SecureContext"><c- g>SecureContext</c-></a>]
-<c- b>partial</c-> <c- b>interface</c-> <a class="idl-code" data-link-type="interface" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential③"><c- g>FederatedCredential</c-></a> : <a data-link-type="idl-name" href="https://w3c.github.io/webappsec-credential-management/#credential" id="ref-for-credential"><c- n>Credential</c-></a> {
+<c- b>partial</c-> <c- b>interface</c-> <a class="idl-code" data-link-type="interface" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential④"><c- g>FederatedCredential</c-></a> : <a data-link-type="idl-name" href="https://w3c.github.io/webappsec-credential-management/#credential" id="ref-for-credential"><c- n>Credential</c-></a> {
   <c- b>readonly</c-> <c- b>attribute</c-> <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-USVString" id="ref-for-idl-USVString"><c- b>USVString</c-></a> <dfn class="dfn-paneled idl-code" data-dfn-for="FederatedCredential" data-dfn-type="attribute" data-export data-readonly data-type="USVString" id="dom-federatedcredential-idtoken"><code><c- g>idToken</c-></code></dfn>;
   <c- b>readonly</c-> <c- b>attribute</c-> <a data-link-type="idl-name"><c- n>FederatedCredentialApprover</c-></a> <dfn class="dfn-paneled idl-code" data-dfn-for="FederatedCredential" data-dfn-type="attribute" data-export data-readonly data-type="FederatedCredentialApprover" id="dom-federatedcredential-approvedby"><code><c- g>approvedBy</c-></code></dfn>;
 };
@@ -1279,7 +1235,7 @@ via the logout endpoint.</p>
    <dl>
     <dt data-md><code class="idl"><a data-link-type="idl" href="#dom-federatedcredential-idtoken" id="ref-for-dom-federatedcredential-idtoken">idToken</a></code>
     <dd data-md>
-     <p>The <a data-link-type="dfn" href="#id-token" id="ref-for-id-token③">id token</a>.</p>
+     <p>The <a data-link-type="dfn" href="#id-token" id="ref-for-id-token④">id token</a>.</p>
     <dt data-md><code class="idl"><a data-link-type="idl" href="#dom-federatedcredential-approvedby" id="ref-for-dom-federatedcredential-approvedby">approvedBy</a></code>
     <dd data-md>
      <p>When used in conjunction with <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dom-credentialrequestoptions-mediation" id="ref-for-dom-credentialrequestoptions-mediation">mediation</a></code>, it indicates whether the credential was provided via a <a href="#use-cases-auto-sign-in">§ 2.2.1 Auto Sign-in</a> or an <a href="#use-cases-explicit-sign-in">§ 2.2.2 Explicit Sign-in</a>.</p>
@@ -1295,8 +1251,8 @@ via the logout endpoint.</p>
   <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-USVString" id="ref-for-idl-USVString③"><c- b>USVString</c-></a> <dfn class="dfn-paneled idl-code" data-dfn-for="FederatedIdentityProvider" data-dfn-type="dict-member" data-export data-type="USVString " id="dom-federatedidentityprovider-nonce"><code><c- g>nonce</c-></code></dfn>;
 };
 </pre>
-   <p>And finally, this specification overrides the <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential④">FederatedCredential</a></code>'s <code><dfn class="idl-code" data-dfn-for="FederatedCredential" data-dfn-type="method" data-export id="dom-federatedcredential-discoverfromexternalsource-origin-options-sameoriginwithancestors-slot"><code>[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</code><a class="self-link" href="#dom-federatedcredential-discoverfromexternalsource-origin-options-sameoriginwithancestors-slot"></a></dfn></code> Method.</p>
-   <p>This algorithm runs in parallel inside the <a href="https://w3c.github.io/webappsec-credential-management/#algorithm-request">Credential Management § algorithm-request</a> to request credentials and returns a set of <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential⑤">FederatedCredential</a></code> objects from a remote <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②⑥">Identity Provider</a>.</p>
+   <p>And finally, this specification overrides the <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential⑤">FederatedCredential</a></code>'s <code><dfn class="idl-code" data-dfn-for="FederatedCredential" data-dfn-type="method" data-export id="dom-federatedcredential-discoverfromexternalsource-origin-options-sameoriginwithancestors-slot"><code>[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</code><a class="self-link" href="#dom-federatedcredential-discoverfromexternalsource-origin-options-sameoriginwithancestors-slot"></a></dfn></code> Method.</p>
+   <p>This algorithm runs in parallel inside the <a href="https://w3c.github.io/webappsec-credential-management/#algorithm-request">Credential Management § algorithm-request</a> to request credentials and returns a set of <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential⑥">FederatedCredential</a></code> objects from a remote <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②③">Identity Provider</a>.</p>
    <p>This <a data-link-type="dfn">internal method</a> accepts three arguments:</p>
    <dl>
     <dt data-md><dfn class="idl-code" data-dfn-for="FederatedCredential/[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)" data-dfn-type="argument" data-export id="dom-federatedcredential-discoverfromexternalsource-origin-options-sameoriginwithancestors-origin"><code>origin</code><a class="self-link" href="#dom-federatedcredential-discoverfromexternalsource-origin-options-sameoriginwithancestors-origin"></a></dfn>
@@ -1319,7 +1275,7 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
      <p class="assertion">Assert: <var>options</var>["<code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dom-credentialrequestoptions-federated" id="ref-for-dom-credentialrequestoptions-federated①">federated</a></code>"]["<code class="idl"><a data-link-type="idl" href="#dom-federatedcredentialrequestoptions-providers" id="ref-for-dom-federatedcredentialrequestoptions-providers">providers</a></code>"] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists">exists</a>.</p>
     <li data-md>
      <p class="assertion">Assert: <var>options</var>["<code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dom-credentialrequestoptions-federated" id="ref-for-dom-credentialrequestoptions-federated②">federated</a></code>"]["<code class="idl"><a data-link-type="idl" href="#dom-federatedcredentialrequestoptions-providers" id="ref-for-dom-federatedcredentialrequestoptions-providers①">providers</a></code>"] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size" id="ref-for-list-size">size</a> is 1.</p>
-     <p class="note" role="note"><span>Note:</span> At some point we would like to support choosing accounts from multiple <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②⑦">Identity Provider</a>s.</p>
+     <p class="note" role="note"><span>Note:</span> At some point we would like to support choosing accounts from multiple <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②④">Identity Provider</a>s.</p>
     <li data-md>
      <p>Let <var>provider</var> be <var>options</var>["<code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dom-credentialrequestoptions-federated" id="ref-for-dom-credentialrequestoptions-federated③">federated</a></code>"]["<code class="idl"><a data-link-type="idl" href="#dom-federatedcredentialrequestoptions-providers" id="ref-for-dom-federatedcredentialrequestoptions-providers②">providers</a></code>"][0].</p>
     <li data-md>
@@ -1362,7 +1318,7 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
     <li data-md>
      <p>Set the account’s <code class="idl"><a data-link-type="idl" href="#dom-statemachine-session-state" id="ref-for-dom-statemachine-session-state①">Session State</a></code> from <a data-link-type="dfn" href="#logged-out" id="ref-for-logged-out②">logged out</a> to <a data-link-type="dfn" href="#logged-in" id="ref-for-logged-in①">logged in</a>.</p>
     <li data-md>
-     <p>Return the result of <a data-link-type="dfn">minting</a> a new <a data-link-type="dfn" href="#id-token" id="ref-for-id-token④">id token</a>.</p>
+     <p>Return the result of <a data-link-type="dfn">minting</a> a new <a data-link-type="dfn" href="#id-token" id="ref-for-id-token⑤">id token</a>.</p>
    </ol>
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="select-an-account">select an account</dfn> from the accounts list run this algorithm:</p>
    <ol>
@@ -1388,7 +1344,7 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
     <li data-md>
      <p>Set the account’s <code class="idl"><a data-link-type="idl" href="#dom-statemachine-session-state" id="ref-for-dom-statemachine-session-state②">Session State</a></code> from <a data-link-type="dfn" href="#logged-out" id="ref-for-logged-out③">logged out</a> to <a data-link-type="dfn" href="#logged-in" id="ref-for-logged-in②">logged in</a>.</p>
     <li data-md>
-     <p>Return the result of <a data-link-type="dfn">minting</a> a new <a data-link-type="dfn" href="#id-token" id="ref-for-id-token⑤">id token</a>.</p>
+     <p>Return the result of <a data-link-type="dfn">minting</a> a new <a data-link-type="dfn" href="#id-token" id="ref-for-id-token⑥">id token</a>.</p>
    </ol>
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="auto-sign-in">auto sign-in</dfn> the user run this algorithm:</p>
    <ol>
@@ -1398,7 +1354,7 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="explicit-sign-in">explicit sign-in</dfn> the user run this algorithm:</p>
    <ol>
     <li data-md>
-     <p>Gather explicit confirmation that the user wants to sign-in to <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④⑨">Relying Party</a> with their <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②⑧">Identity Provider</a>'s <var>account</var></p>
+     <p>Gather explicit confirmation that the user wants to sign-in to <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④①">Relying Party</a> with their <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②⑤">Identity Provider</a>'s <var>account</var></p>
     <li data-md>
      <p>Return the result of running the <a data-link-type="dfn" href="#sign-in①" id="ref-for-sign-in①①">sign-in</a> algorithm.</p>
    </ol>
@@ -1407,14 +1363,14 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
     <li data-md>
      <p>Let the <var>wellknown url</var> be the relative url ".well-known/webid" of <var>provider</var>["<code class="idl"><a data-link-type="idl" href="#dom-federatedidentityprovider-url" id="ref-for-dom-federatedidentityprovider-url①">url</a></code>"]</p>
     <li data-md>
-     <p>Return the result of fetching the <var>wellknown url</var> with the <a href="#Sec-WebID-CSR">Sec-WebID-CSR</a> header but without the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②⑨">Identity Provider</a>'s cookies.</p>
+     <p>Return the result of fetching the <var>wellknown url</var> with the <a href="#Sec-WebID-CSR">Sec-WebID-CSR</a> header but without the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②⑥">Identity Provider</a>'s cookies.</p>
    </ol>
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="fetch-the-accounts-list">fetch the accounts list</dfn> run this algorithm:</p>
    <ol>
     <li data-md>
      <p>Let the <var>acccounts_endpoint</var> url be the relative url <var>wellknown</var>["<code class="idl"><a data-link-type="idl" href="#dom-wellknown-accounts_endpoint" id="ref-for-dom-wellknown-accounts_endpoint">accounts_endpoint</a></code>"] of <var>provider</var>["<code class="idl"><a data-link-type="idl" href="#dom-federatedidentityprovider-url" id="ref-for-dom-federatedidentityprovider-url②">url</a></code>"]</p>
     <li data-md>
-     <p>Let the <var>accounts list</var> be the result of fetching the <var>accounts_endpoint</var> with the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider③⓪">Identity Provider</a>'s cookies.</p>
+     <p>Let the <var>accounts list</var> be the result of fetching the <var>accounts_endpoint</var> with the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②⑦">Identity Provider</a>'s cookies.</p>
     <li data-md>
      <p>Return the <var>accounts list</var></p>
    </ol>
@@ -1423,7 +1379,7 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
     <li data-md>
      <p>Let the <var>client_id_metadata_endpoint</var> url be the relative url <var>wellknown</var>["<code class="idl"><a data-link-type="idl" href="#dom-wellknown-client_id_metadata_endpoint" id="ref-for-dom-wellknown-client_id_metadata_endpoint">client_id_metadata_endpoint</a></code>"] of <var>provider</var>["<code class="idl"><a data-link-type="idl" href="#dom-federatedidentityprovider-url" id="ref-for-dom-federatedidentityprovider-url③">url</a></code>"]</p>
     <li data-md>
-     <p>Let the <var>policies</var> be the result of fetching the <var>client_id_metadata_endpoint</var> with the <a href="#Sec-WebID-CSR">Sec-WebID-CSR</a> header but without the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider③①">Identity Provider</a>'s cookies.</p>
+     <p>Let the <var>policies</var> be the result of fetching the <var>client_id_metadata_endpoint</var> with the <a href="#Sec-WebID-CSR">Sec-WebID-CSR</a> header but without the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②⑧">Identity Provider</a>'s cookies.</p>
     <li data-md>
      <p>Return <var>policies</var></p>
    </ol>
@@ -1446,7 +1402,7 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
        </ul>
      </ul>
     <li data-md>
-     <p>Return a new <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential⑥">FederatedCredential</a></code> as:</p>
+     <p>Return a new <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential⑦">FederatedCredential</a></code> as:</p>
      <ul>
       <li data-md>
        <p><code class="idl"><a data-link-type="idl">id</a></code> with <var>account</var>["<code class="idl"><a data-link-type="idl" href="#dom-accounts_endpoint_response_accounts-account_id" id="ref-for-dom-accounts_endpoint_response_accounts-account_id①">account_id</a></code>"]</p>
@@ -1457,33 +1413,80 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
      </ul>
    </ol>
    <h3 class="heading settled" data-level="8.3" id="revocation"><span class="secno">8.3. </span><span class="content">The Revocation API</span><a class="self-link" href="#revocation"></a></h3>
-   <p class="note" role="note"><span>Note:</span> go over the revocation API.</p>
+   <p>Whenever the user decides to delete their account on the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④②">Relying Party</a> the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④③">Relying Party</a> can call an API to let the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②⑨">Identity Provider</a> and
+the browser know.</p>
+   <p>Upon return to the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④④">Relying Party</a>, the user goes through a <a href="#use-cases-sign-up">§ 2.1 Sign-up</a> flow
+instead of a <a href="#use-cases-sign-in">§ 2.2 Sign-in</a> flow.</p>
+   <div class="example" id="example-bed25357">
+    <a class="self-link" href="#example-bed25357"></a> 
+<pre class="language-js highlight"><c- k>async</c-> <c- a>function</c-> revoke<c- p>(</c->accountId<c- p>)</c-> <c- p>{</c->
+  <c- k>return</c-> <c- k>await</c-> FederatedCredential<c- p>.</c->revoke<c- p>(</c->accountId<c- p>);</c->
+<c- p>}</c->
+</pre>
+   </div>
+   <p>This specification extends the <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential⑧">FederatedCredential</a></code> interface with an extra static method:</p>
 <pre class="idl highlight def">[<a class="idl-code" data-link-type="extended-attribute" href="https://heycam.github.io/webidl/#Exposed" id="ref-for-Exposed①"><c- g>Exposed</c-></a>=<c- n>Window</c->, <a class="idl-code" data-link-type="extended-attribute" href="https://heycam.github.io/webidl/#SecureContext" id="ref-for-SecureContext①"><c- g>SecureContext</c-></a>]
-<c- b>partial</c-> <c- b>interface</c-> <a class="idl-code" data-link-type="interface" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential⑦"><c- g>FederatedCredential</c-></a> : <a data-link-type="idl-name" href="https://w3c.github.io/webappsec-credential-management/#credential" id="ref-for-credential①"><c- n>Credential</c-></a> {
+<c- b>partial</c-> <c- b>interface</c-> <a class="idl-code" data-link-type="interface" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential⑨"><c- g>FederatedCredential</c-></a> : <a data-link-type="idl-name" href="https://w3c.github.io/webappsec-credential-management/#credential" id="ref-for-credential①"><c- n>Credential</c-></a> {
   <c- b>static</c-> <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-promise" id="ref-for-idl-promise"><c- b>Promise</c-></a>&lt;<a data-link-type="idl-name"><c- n>void</c-></a>> <dfn class="idl-code" data-dfn-for="FederatedCredential" data-dfn-type="method" data-export data-lt="revoke(accountId)" id="dom-federatedcredential-revoke"><code><c- g>revoke</c-></code><a class="self-link" href="#dom-federatedcredential-revoke"></a></dfn>(<a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-USVString" id="ref-for-idl-USVString④"><c- b>USVString</c-></a> <dfn class="idl-code" data-dfn-for="FederatedCredential/revoke(accountId)" data-dfn-type="argument" data-export id="dom-federatedcredential-revoke-accountid-accountid"><code><c- g>accountId</c-></code><a class="self-link" href="#dom-federatedcredential-revoke-accountid-accountid"></a></dfn>);
 };
 </pre>
+   <p class="note" role="note"><span>Note:</span> go over the revocation API.</p>
    <h3 class="heading settled" data-level="8.4" id="sign-out"><span class="secno">8.4. </span><span class="content">The Sign-out API</span><a class="self-link" href="#sign-out"></a></h3>
-   <p class="note" role="note"><span>Note:</span> go over the sign-out APIs.</p>
    <h4 class="heading settled" data-level="8.4.1" id="rp-sign-out"><span class="secno">8.4.1. </span><span class="content">RP Sign-out</span><a class="self-link" href="#rp-sign-out"></a></h4>
+   <p>When a user wants to log out of their session in the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④⑤">Relying Party</a>,
+the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④⑥">Relying Party</a> can let the browser know that it wants the <a href="#use-cases-auto-sign-in">§ 2.2.1 Auto Sign-in</a> flow to be disabled, so that the user doesn’t get into an infinite loop.</p>
+   <p>It does so by calling the <code>preventSilentAccess()</code> API, which clear the
+user’s current account session and takes them to an <a href="#use-cases-explicit-sign-in">§ 2.2.2 Explicit Sign-in</a> flow
+whenever the user wants to log back in.</p>
+   <div class="example" id="example-bf78b3ca">
+    <a class="self-link" href="#example-bf78b3ca"></a> 
+<pre class="language-js highlight"><c- a>function</c-> logout<c- p>()</c-> <c- p>{</c->
+  navigator<c- p>.</c->credentials<c- p>.</c->preventSilentAccess<c- p>();</c->
+<c- p>}</c->
+</pre>
+   </div>
    <p class="note" role="note"><span>Note:</span> go over the RP sign-out API.</p>
    <h4 class="heading settled" data-level="8.4.2" id="idp-sign-out"><span class="secno">8.4.2. </span><span class="content">IDP Sign-out</span><a class="self-link" href="#idp-sign-out"></a></h4>
-   <p><a data-link-type="dfn" href="#idp" id="ref-for-idp①③">IDP</a>s can call <code><a data-link-type="idl">FederatedCredential.logout(...)</a></code> to log the user out of the <a data-link-type="dfn" href="#rp" id="ref-for-rp①⑤">RP</a>s they are signed into.</p>
+   <p>In enterprise scenarios, it is common for the user to want to clear all of
+their existing sessions in all of the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④⑦">Relying Party</a>s they are logged into.</p>
+   <p>It does so by being navigated to their <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider③⓪">Identity Provider</a> who initiates
+what’s called a <a data-link-type="biblio" href="https://openid.net/specs/openid-connect-frontchannel-1_0.html"><cite>Front-Channel Logout</cite></a>.</p>
+   <p>The browser exposes an API that takes the list of <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④⑧">Relying Party</a>s that the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider③①">Identity Provider</a> wants to initiate the logout which are loaded in parallel
+with cookies.</p>
+   <p>Each <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④⑨">Relying Party</a> endpoint is responsible for clearing its local state
+(e.g. clearing cookies).</p>
+   <p>After the completion of this API, the user’s session is cleared and will go
+through an <a href="#use-cases-explicit-sign-in">§ 2.2.2 Explicit Sign-in</a> upon return.</p>
+   <div class="example" id="example-ec30aec2">
+    <a class="self-link" href="#example-ec30aec2"></a> 
+<pre class="language-js highlight"><c- k>async</c-> <c- a>function</c-> logout<c- p>()</c-> <c- p>{</c->
+  <c- k>await</c-> FederatedCredential<c- p>.</c->logout<c- p>([{</c->
+      endpoint<c- o>:</c-> <c- u>"https://rp1.example"</c-><c- p>,</c->
+      accountId<c- o>:</c-> <c- u>"123"</c-><c- p>,</c->
+    <c- p>},</c-> <c- p>{</c->
+      endpiont<c- o>:</c-> <c- u>"https://rpN.example"</c-><c- p>,</c->
+      accountId<c- o>:</c-> <c- u>"456"</c-><c- p>,</c->
+    <c- p>}]);</c->
+<c- p>}</c->
+</pre>
+   </div>
+   <p><a data-link-type="dfn" href="#idp" id="ref-for-idp①④">IDP</a>s can call <code><a data-link-type="idl">FederatedCredential.logout(...)</a></code> to log the user out of the <a data-link-type="dfn" href="#rp" id="ref-for-rp①⑧">RP</a>s they are signed into.</p>
 <pre class="idl highlight def"><c- b>dictionary</c-> <dfn class="dfn-paneled idl-code" data-dfn-type="dictionary" data-export id="dictdef-webidlogoutrequest"><code><c- g>WebIdLogoutRequest</c-></code></dfn> {
     <c- b>required</c-> <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-USVString" id="ref-for-idl-USVString⑤"><c- b>USVString</c-></a> <dfn class="idl-code" data-dfn-for="WebIdLogoutRequest" data-dfn-type="dict-member" data-export data-type="USVString " id="dom-webidlogoutrequest-endpoint"><code><c- g>endpoint</c-></code><a class="self-link" href="#dom-webidlogoutrequest-endpoint"></a></dfn>;
     <c- b>required</c-> <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-USVString" id="ref-for-idl-USVString⑥"><c- b>USVString</c-></a> <dfn class="idl-code" data-dfn-for="WebIdLogoutRequest" data-dfn-type="dict-member" data-export data-type="USVString " id="dom-webidlogoutrequest-account_id"><code><c- g>account_id</c-></code><a class="self-link" href="#dom-webidlogoutrequest-account_id"></a></dfn>;
 };
 
 [<a class="idl-code" data-link-type="extended-attribute" href="https://heycam.github.io/webidl/#Exposed" id="ref-for-Exposed②"><c- g>Exposed</c-></a>=<c- n>Window</c->, <a class="idl-code" data-link-type="extended-attribute" href="https://heycam.github.io/webidl/#SecureContext" id="ref-for-SecureContext②"><c- g>SecureContext</c-></a>]
-<c- b>partial</c-> <c- b>interface</c-> <a class="idl-code" data-link-type="interface" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential⑧"><c- g>FederatedCredential</c-></a> : <a data-link-type="idl-name" href="https://w3c.github.io/webappsec-credential-management/#credential" id="ref-for-credential②"><c- n>Credential</c-></a> {
+<c- b>partial</c-> <c- b>interface</c-> <a class="idl-code" data-link-type="interface" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential①⓪"><c- g>FederatedCredential</c-></a> : <a data-link-type="idl-name" href="https://w3c.github.io/webappsec-credential-management/#credential" id="ref-for-credential②"><c- n>Credential</c-></a> {
   <c- b>static</c-> <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-promise" id="ref-for-idl-promise①"><c- b>Promise</c-></a>&lt;<a data-link-type="idl-name"><c- n>void</c-></a>> <dfn class="idl-code" data-dfn-for="FederatedCredential" data-dfn-type="method" data-export data-lt="logout(logout_requests)|logout()" id="dom-federatedcredential-logout"><code><c- g>logout</c-></code><a class="self-link" href="#dom-federatedcredential-logout"></a></dfn>(<c- b>optional</c-> <a data-link-type="dfn" href="https://heycam.github.io/webidl/#idl-sequence" id="ref-for-idl-sequence①"><c- b>sequence</c-></a>&lt;<a data-link-type="idl-name" href="#dictdef-webidlogoutrequest" id="ref-for-dictdef-webidlogoutrequest"><c- n>WebIdLogoutRequest</c-></a>> <dfn class="idl-code" data-dfn-for="FederatedCredential/logout(logout_requests), FederatedCredential/logout()" data-dfn-type="argument" data-export id="dom-federatedcredential-logout-logout_requests-logout_requests"><code><c- g>logout_requests</c-></code><a class="self-link" href="#dom-federatedcredential-logout-logout_requests-logout_requests"></a></dfn> = []);
 };
 </pre>
+   <p class="note" role="note"><span>Note:</span> go over how this is implemented.</p>
    <h3 class="heading settled" data-level="8.5" id="backwards-compatibility"><span class="secno">8.5. </span><span class="content">Backwards Compatibility</span><a class="self-link" href="#backwards-compatibility"></a></h3>
    <h4 class="heading settled" data-level="8.5.1" id="Interceptors"><span class="secno">8.5.1. </span><span class="content">Interceptors</span><a class="self-link" href="#Interceptors"></a></h4>
    <p class="note" role="note"><span>Note:</span> go over how interceptors work.</p>
 <pre class="idl highlight def">[<a class="idl-code" data-link-type="extended-attribute" href="https://heycam.github.io/webidl/#Exposed" id="ref-for-Exposed③"><c- g>Exposed</c-></a>=<c- n>Window</c->, <a class="idl-code" data-link-type="extended-attribute" href="https://heycam.github.io/webidl/#SecureContext" id="ref-for-SecureContext③"><c- g>SecureContext</c-></a>]
-<c- b>partial</c-> <c- b>interface</c-> <a class="idl-code" data-link-type="interface" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential⑨"><c- g>FederatedCredential</c-></a> : <a data-link-type="idl-name" href="https://w3c.github.io/webappsec-credential-management/#credential" id="ref-for-credential③"><c- n>Credential</c-></a> {
+<c- b>partial</c-> <c- b>interface</c-> <a class="idl-code" data-link-type="interface" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential①①"><c- g>FederatedCredential</c-></a> : <a data-link-type="idl-name" href="https://w3c.github.io/webappsec-credential-management/#credential" id="ref-for-credential③"><c- n>Credential</c-></a> {
   <c- b>static</c-> <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-promise" id="ref-for-idl-promise②"><c- b>Promise</c-></a>&lt;<a data-link-type="idl-name"><c- n>void</c-></a>> <dfn class="idl-code" data-dfn-for="FederatedCredential" data-dfn-type="method" data-export data-lt="registerInterceptor(interceptor)" id="dom-federatedcredential-registerinterceptor"><code><c- g>registerInterceptor</c-></code><a class="self-link" href="#dom-federatedcredential-registerinterceptor"></a></dfn>(<a data-link-type="idl-name" href="#dictdef-federatedcredentialinterceptor" id="ref-for-dictdef-federatedcredentialinterceptor"><c- n>FederatedCredentialInterceptor</c-></a> <dfn class="idl-code" data-dfn-for="FederatedCredential/registerInterceptor(interceptor)" data-dfn-type="argument" data-export id="dom-federatedcredential-registerinterceptor-interceptor-interceptor"><code><c- g>interceptor</c-></code><a class="self-link" href="#dom-federatedcredential-registerinterceptor-interceptor-interceptor"></a></dfn>);
 };
 </pre>
@@ -1636,10 +1639,11 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
   <aside class="dfn-panel" data-for="term-for-federatedcredential">
    <a href="https://w3c.github.io/webappsec-credential-management/#federatedcredential">https://w3c.github.io/webappsec-credential-management/#federatedcredential</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-federatedcredential">8.2. The Sign-in API</a> <a href="#ref-for-federatedcredential①">(2)</a> <a href="#ref-for-federatedcredential②">(3)</a> <a href="#ref-for-federatedcredential③">(4)</a> <a href="#ref-for-federatedcredential④">(5)</a> <a href="#ref-for-federatedcredential⑤">(6)</a> <a href="#ref-for-federatedcredential⑥">(7)</a>
-    <li><a href="#ref-for-federatedcredential⑦">8.3. The Revocation API</a>
-    <li><a href="#ref-for-federatedcredential⑧">8.4.2. IDP Sign-out</a>
-    <li><a href="#ref-for-federatedcredential⑨">8.5.1. Interceptors</a>
+    <li><a href="#ref-for-federatedcredential">3. Examples</a>
+    <li><a href="#ref-for-federatedcredential①">8.2. The Sign-in API</a> <a href="#ref-for-federatedcredential②">(2)</a> <a href="#ref-for-federatedcredential③">(3)</a> <a href="#ref-for-federatedcredential④">(4)</a> <a href="#ref-for-federatedcredential⑤">(5)</a> <a href="#ref-for-federatedcredential⑥">(6)</a> <a href="#ref-for-federatedcredential⑦">(7)</a>
+    <li><a href="#ref-for-federatedcredential⑧">8.3. The Revocation API</a> <a href="#ref-for-federatedcredential⑨">(2)</a>
+    <li><a href="#ref-for-federatedcredential①⓪">8.4.2. IDP Sign-out</a>
+    <li><a href="#ref-for-federatedcredential①①">8.5.1. Interceptors</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-dictdef-federatedcredentialrequestoptions">
@@ -1913,23 +1917,24 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
     <li><a href="#ref-for-relying-party②⑦">2.4.1. IDP Revocation</a> <a href="#ref-for-relying-party②⑧">(2)</a>
     <li><a href="#ref-for-relying-party②⑨">2.4.2. RP Revocation</a> <a href="#ref-for-relying-party③⓪">(2)</a> <a href="#ref-for-relying-party③①">(3)</a>
     <li><a href="#ref-for-relying-party③②">2.5. Access</a> <a href="#ref-for-relying-party③③">(2)</a> <a href="#ref-for-relying-party③④">(3)</a> <a href="#ref-for-relying-party③⑤">(4)</a>
-    <li><a href="#ref-for-relying-party③⑥">3.2.1. RP Sign-out</a> <a href="#ref-for-relying-party③⑦">(2)</a>
-    <li><a href="#ref-for-relying-party③⑧">3.2.2. Front-channel Sign-out</a> <a href="#ref-for-relying-party③⑨">(2)</a> <a href="#ref-for-relying-party④⓪">(3)</a>
-    <li><a href="#ref-for-relying-party④①">3.3. RP Revocation</a> <a href="#ref-for-relying-party④②">(2)</a> <a href="#ref-for-relying-party④③">(3)</a>
-    <li><a href="#ref-for-relying-party④④">8.2. The Sign-in API</a> <a href="#ref-for-relying-party④⑤">(2)</a> <a href="#ref-for-relying-party④⑥">(3)</a> <a href="#ref-for-relying-party④⑦">(4)</a> <a href="#ref-for-relying-party④⑧">(5)</a> <a href="#ref-for-relying-party④⑨">(6)</a>
+    <li><a href="#ref-for-relying-party③⑥">8.2. The Sign-in API</a> <a href="#ref-for-relying-party③⑦">(2)</a> <a href="#ref-for-relying-party③⑧">(3)</a> <a href="#ref-for-relying-party③⑨">(4)</a> <a href="#ref-for-relying-party④⓪">(5)</a> <a href="#ref-for-relying-party④①">(6)</a>
+    <li><a href="#ref-for-relying-party④②">8.3. The Revocation API</a> <a href="#ref-for-relying-party④③">(2)</a> <a href="#ref-for-relying-party④④">(3)</a>
+    <li><a href="#ref-for-relying-party④⑤">8.4.1. RP Sign-out</a> <a href="#ref-for-relying-party④⑥">(2)</a>
+    <li><a href="#ref-for-relying-party④⑦">8.4.2. IDP Sign-out</a> <a href="#ref-for-relying-party④⑧">(2)</a> <a href="#ref-for-relying-party④⑨">(3)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="rp">
    <b><a href="#rp">#rp</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-rp">5. High Level Design</a>
-    <li><a href="#ref-for-rp①">6.3. Client Metadata</a> <a href="#ref-for-rp②">(2)</a> <a href="#ref-for-rp③">(3)</a>
-    <li><a href="#ref-for-rp④">6.4. ID Token</a> <a href="#ref-for-rp⑤">(2)</a>
-    <li><a href="#ref-for-rp⑥">7. The Relying Party API</a>
-    <li><a href="#ref-for-rp⑦">7.1. Logout</a> <a href="#ref-for-rp⑧">(2)</a>
-    <li><a href="#ref-for-rp⑨">8. The Browser API</a> <a href="#ref-for-rp①⓪">(2)</a> <a href="#ref-for-rp①①">(3)</a> <a href="#ref-for-rp①②">(4)</a> <a href="#ref-for-rp①③">(5)</a>
-    <li><a href="#ref-for-rp①④">8.1. The State Machine</a>
-    <li><a href="#ref-for-rp①⑤">8.4.2. IDP Sign-out</a>
+    <li><a href="#ref-for-rp">3. Examples</a> <a href="#ref-for-rp①">(2)</a> <a href="#ref-for-rp②">(3)</a>
+    <li><a href="#ref-for-rp③">5. High Level Design</a>
+    <li><a href="#ref-for-rp④">6.3. Client Metadata</a> <a href="#ref-for-rp⑤">(2)</a> <a href="#ref-for-rp⑥">(3)</a>
+    <li><a href="#ref-for-rp⑦">6.4. ID Token</a> <a href="#ref-for-rp⑧">(2)</a>
+    <li><a href="#ref-for-rp⑨">7. The Relying Party API</a>
+    <li><a href="#ref-for-rp①⓪">7.1. Logout</a> <a href="#ref-for-rp①①">(2)</a>
+    <li><a href="#ref-for-rp①②">8. The Browser API</a> <a href="#ref-for-rp①③">(2)</a> <a href="#ref-for-rp①④">(3)</a> <a href="#ref-for-rp①⑤">(4)</a> <a href="#ref-for-rp①⑥">(5)</a>
+    <li><a href="#ref-for-rp①⑦">8.1. The State Machine</a>
+    <li><a href="#ref-for-rp①⑧">8.4.2. IDP Sign-out</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="identity-provider">
@@ -1942,22 +1947,23 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
     <li><a href="#ref-for-identity-provider①④">2.4.1. IDP Revocation</a> <a href="#ref-for-identity-provider①⑤">(2)</a>
     <li><a href="#ref-for-identity-provider①⑥">2.4.2. RP Revocation</a>
     <li><a href="#ref-for-identity-provider①⑦">2.5. Access</a> <a href="#ref-for-identity-provider①⑧">(2)</a> <a href="#ref-for-identity-provider①⑨">(3)</a> <a href="#ref-for-identity-provider②⓪">(4)</a>
-    <li><a href="#ref-for-identity-provider②①">3.2.2. Front-channel Sign-out</a> <a href="#ref-for-identity-provider②②">(2)</a>
-    <li><a href="#ref-for-identity-provider②③">3.3. RP Revocation</a>
-    <li><a href="#ref-for-identity-provider②④">8.2. The Sign-in API</a> <a href="#ref-for-identity-provider②⑤">(2)</a> <a href="#ref-for-identity-provider②⑥">(3)</a> <a href="#ref-for-identity-provider②⑦">(4)</a> <a href="#ref-for-identity-provider②⑧">(5)</a> <a href="#ref-for-identity-provider②⑨">(6)</a> <a href="#ref-for-identity-provider③⓪">(7)</a> <a href="#ref-for-identity-provider③①">(8)</a>
+    <li><a href="#ref-for-identity-provider②①">8.2. The Sign-in API</a> <a href="#ref-for-identity-provider②②">(2)</a> <a href="#ref-for-identity-provider②③">(3)</a> <a href="#ref-for-identity-provider②④">(4)</a> <a href="#ref-for-identity-provider②⑤">(5)</a> <a href="#ref-for-identity-provider②⑥">(6)</a> <a href="#ref-for-identity-provider②⑦">(7)</a> <a href="#ref-for-identity-provider②⑧">(8)</a>
+    <li><a href="#ref-for-identity-provider②⑨">8.3. The Revocation API</a>
+    <li><a href="#ref-for-identity-provider③⓪">8.4.2. IDP Sign-out</a> <a href="#ref-for-identity-provider③①">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="idp">
    <b><a href="#idp">#idp</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-idp">5. High Level Design</a> <a href="#ref-for-idp①">(2)</a> <a href="#ref-for-idp②">(3)</a>
-    <li><a href="#ref-for-idp③">6. The Identity Provider API</a>
-    <li><a href="#ref-for-idp④">6.1. Discovery</a> <a href="#ref-for-idp⑤">(2)</a>
-    <li><a href="#ref-for-idp⑥">6.2. Accounts List</a>
-    <li><a href="#ref-for-idp⑦">7.1. Logout</a> <a href="#ref-for-idp⑧">(2)</a>
-    <li><a href="#ref-for-idp⑨">8. The Browser API</a> <a href="#ref-for-idp①⓪">(2)</a> <a href="#ref-for-idp①①">(3)</a>
-    <li><a href="#ref-for-idp①②">8.1. The State Machine</a>
-    <li><a href="#ref-for-idp①③">8.4.2. IDP Sign-out</a>
+    <li><a href="#ref-for-idp">3. Examples</a>
+    <li><a href="#ref-for-idp①">5. High Level Design</a> <a href="#ref-for-idp②">(2)</a> <a href="#ref-for-idp③">(3)</a>
+    <li><a href="#ref-for-idp④">6. The Identity Provider API</a>
+    <li><a href="#ref-for-idp⑤">6.1. Discovery</a> <a href="#ref-for-idp⑥">(2)</a>
+    <li><a href="#ref-for-idp⑦">6.2. Accounts List</a>
+    <li><a href="#ref-for-idp⑧">7.1. Logout</a> <a href="#ref-for-idp⑨">(2)</a>
+    <li><a href="#ref-for-idp①⓪">8. The Browser API</a> <a href="#ref-for-idp①①">(2)</a> <a href="#ref-for-idp①②">(3)</a>
+    <li><a href="#ref-for-idp①③">8.1. The State Machine</a>
+    <li><a href="#ref-for-idp①④">8.4.2. IDP Sign-out</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="session">
@@ -1986,8 +1992,9 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
   <aside class="dfn-panel" data-for="id-token">
    <b><a href="#id-token">#id-token</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-id-token">6.4. ID Token</a>
-    <li><a href="#ref-for-id-token①">8.2. The Sign-in API</a> <a href="#ref-for-id-token②">(2)</a> <a href="#ref-for-id-token③">(3)</a> <a href="#ref-for-id-token④">(4)</a> <a href="#ref-for-id-token⑤">(5)</a>
+    <li><a href="#ref-for-id-token">3. Examples</a>
+    <li><a href="#ref-for-id-token①">6.4. ID Token</a>
+    <li><a href="#ref-for-id-token②">8.2. The Sign-in API</a> <a href="#ref-for-id-token③">(2)</a> <a href="#ref-for-id-token④">(3)</a> <a href="#ref-for-id-token⑤">(4)</a> <a href="#ref-for-id-token⑥">(5)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="high-level-api">
