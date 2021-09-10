@@ -6,7 +6,7 @@
   <link href="https://www.w3.org/StyleSheets/TR/2016/cg-draft" rel="stylesheet">
   <meta content="Bikeshed version 4f053d00e, updated Tue Aug 10 14:13:32 2021 -0700" name="generator">
   <link href="http://wicg.github.io/WebID" rel="canonical">
-  <meta content="e75e624e2589a8373873351623436391253662cf" name="document-revision">
+  <meta content="c346caf27d66024555317f4dc3700fd82ff4a7a9" name="document-revision">
 <style>
 dl.domintro dt {
     font-family: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
@@ -641,7 +641,7 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
         <li><a href="#use-cases-idp-revocation"><span class="secno">2.4.1</span> <span class="content">IDP Revocation</span></a>
         <li><a href="#use-cases-rp-revocation"><span class="secno">2.4.2</span> <span class="content">RP Revocation</span></a>
        </ol>
-      <li><a href="#authorization"><span class="secno">2.5</span> <span class="content">Authorization</span></a>
+      <li><a href="#Access"><span class="secno">2.5</span> <span class="content">Access</span></a>
      </ol>
     <li>
      <a href="#examples"><span class="secno">3</span> <span class="content">Examples</span></a>
@@ -749,11 +749,9 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
    <p>The standards that define how identity federation works today on the Web were built independently of the Web Platform (namely, <a data-link-type="biblio" href="http://saml.xml.org/saml-specifications"><cite>SAML</cite></a>, <a data-link-type="biblio" href="https://openid.net/developers/specs/"><cite>OpenID</cite></a> and <a data-link-type="biblio" href="https://datatracker.ietf.org/doc/html/rfc6749"><cite>OAuth</cite></a>), and their designers had to (rightfully so) work around its limitations rather than extend them.</p>
    <p>Because of that, existing user authentication flows were designed on top of general-purpose web platform capabilities such as top-level navigations/redirects with parameters, window popups, iframes and cookies.</p>
    <p>However, because these general purpose primitives can be used for an open ended number of use cases (again, notably, by design), browsers have to apply policies that capture the lowest common denominator of abuse, at best applying cumbersome permissions (e.g. popup blockers) and at worst entirely blocking them (e.g. blocking third party cookies).</p>
-   <p>Over the years, as these low level primitives get abused, browsers intervene and federation adjusts itself. For example, popup blockers became common and federation had to adjust itself to work in a world where popups blockers were widely deployed.</p>
-   <p>The challenge, now more than ever, is that some of these low level primitives are getting increasingly abused to allow users on the web tobe tracked. So, as a result, browsers are applying stricter and stricter policies around them.</p>
-   <p>Blocking third party cookies broke important parts of the protocols in those browsers (e.g. front channel logouts) and made some user experiences inviable (e.g. social buttons personalization).</p>
-   <p>While it is clearer to see the current impact of third party cookies, it is equally important to understand the ways in which the low level primitives that identity federation depends on (e.g. redirects) are being abused and the principles browsers are using to control them, so that we don’t corner ourselves into another dead end.</p>
-   <p>This specification defines a set of web platform APIs that preserve and extend identity federation compatible with a more private Web.</p>
+   <p>Over the years, as these <a data-link-type="dfn" href="#low-level-api" id="ref-for-low-level-api">low-level API</a>s get abused, browsers intervene and federation adjusts itself. For example, popup blockers became common and federation had to adjust itself to work in a world where popups blockers were widely deployed.</p>
+   <p>The challenge is that some of these low level primitives are getting increasingly abused to allow users on the web to be tracked. So, as a result, browsers are applying stricter and stricter policies around them.</p>
+   <p>This specification defines a set of <a data-link-type="dfn" href="#high-level-api" id="ref-for-high-level-api①">high-level API</a>s that serve as a foundation where identity federation on Web can thrive without incurring into <a data-link-type="dfn">unsactioned tracking</a>.</p>
    <h2 class="heading settled" data-level="2" id="use-cases"><span class="secno">2. </span><span class="content">Use Cases</span><a class="self-link" href="#use-cases"></a></h2>
    <p>The below use case scenarios illustrate some basic supported flows. Additional scenarios, including sample code, are given later in the <a data-link-type="biblio" href="https://datatracker.ietf.org/doc/html/draft-bertocci-identity-in-browser-00"><cite>Identity Use Cases in Browser Catalog</cite></a>.</p>
    <h3 class="heading settled" data-level="2.1" id="use-cases-sign-up"><span class="secno">2.1. </span><span class="content">Sign-up</span><a class="self-link" href="#use-cases-sign-up"></a></h3>
@@ -880,7 +878,7 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
        <p>Upon return to the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party③①">Relying Party</a>, the user expects to go through a <a href="#sign-up" id="ref-for-sign-up"></a>.</p>
      </ul>
    </ul>
-   <h3 class="heading settled" data-level="2.5" id="authorization"><span class="secno">2.5. </span><span class="content">Authorization</span><a class="self-link" href="#authorization"></a></h3>
+   <h3 class="heading settled" data-level="2.5" id="Access"><span class="secno">2.5. </span><span class="content">Access</span><a class="self-link" href="#Access"></a></h3>
    <ul>
     <li data-md>
      <p>A user navigates to a <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party③②">Relying Party</a> in a browser and decides to create an <a data-link-type="dfn" href="#account" id="ref-for-account⑥">account</a>.</p>
@@ -1016,10 +1014,10 @@ instead of a <a href="#use-cases-sign-in">§ 2.2 Sign-in</a> flow.</p>
      <p>The type of tracking on the web described in <a data-link-type="biblio" href="https://www.w3.org/2001/tag/doc/unsanctioned-tracking/"><cite>Unsactioned Web Tracking</cite></a>.</p>
     <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="high-level-api">high-level API</dfn>
     <dd data-md>
-     <p>A use case specific API, as opposed to a <a data-link-type="dfn" href="#low-level-api" id="ref-for-low-level-api">low-level API</a>.</p>
+     <p>A use case specific API, as opposed to a <a data-link-type="dfn" href="#low-level-api" id="ref-for-low-level-api①">low-level API</a>.</p>
     <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="low-level-api">low-level API</dfn>
     <dd data-md>
-     <p>A general purpose API, as opposed to a <a data-link-type="dfn" href="#high-level-api" id="ref-for-high-level-api①">high-level API</a>.</p>
+     <p>A general purpose API, as opposed to a <a data-link-type="dfn" href="#high-level-api" id="ref-for-high-level-api②">high-level API</a>.</p>
     <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="registered">registered</dfn>
     <dd data-md>
      <p>TODO(goto: find existing definition.</p>
@@ -1769,7 +1767,7 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
     <li><a href="#ref-for-relying-party②⑥">2.4. Revocation</a>
     <li><a href="#ref-for-relying-party②⑦">2.4.1. IDP Revocation</a> <a href="#ref-for-relying-party②⑧">(2)</a>
     <li><a href="#ref-for-relying-party②⑨">2.4.2. RP Revocation</a> <a href="#ref-for-relying-party③⓪">(2)</a> <a href="#ref-for-relying-party③①">(3)</a>
-    <li><a href="#ref-for-relying-party③②">2.5. Authorization</a> <a href="#ref-for-relying-party③③">(2)</a> <a href="#ref-for-relying-party③④">(3)</a> <a href="#ref-for-relying-party③⑤">(4)</a>
+    <li><a href="#ref-for-relying-party③②">2.5. Access</a> <a href="#ref-for-relying-party③③">(2)</a> <a href="#ref-for-relying-party③④">(3)</a> <a href="#ref-for-relying-party③⑤">(4)</a>
     <li><a href="#ref-for-relying-party③⑥">3.1. Signing-up and Signing-in</a> <a href="#ref-for-relying-party③⑦">(2)</a> <a href="#ref-for-relying-party③⑧">(3)</a> <a href="#ref-for-relying-party③⑨">(4)</a> <a href="#ref-for-relying-party④⓪">(5)</a>
     <li><a href="#ref-for-relying-party④①">3.2.1. RP Sign-out</a> <a href="#ref-for-relying-party④②">(2)</a>
     <li><a href="#ref-for-relying-party④③">3.2.2. Front-channel Sign-out</a> <a href="#ref-for-relying-party④④">(2)</a> <a href="#ref-for-relying-party④⑤">(3)</a>
@@ -1793,7 +1791,7 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
     <li><a href="#ref-for-identity-provider①②">2.3.2. IDP Sign-out</a> <a href="#ref-for-identity-provider①③">(2)</a>
     <li><a href="#ref-for-identity-provider①④">2.4.1. IDP Revocation</a> <a href="#ref-for-identity-provider①⑤">(2)</a>
     <li><a href="#ref-for-identity-provider①⑥">2.4.2. RP Revocation</a>
-    <li><a href="#ref-for-identity-provider①⑦">2.5. Authorization</a> <a href="#ref-for-identity-provider①⑧">(2)</a> <a href="#ref-for-identity-provider①⑨">(3)</a> <a href="#ref-for-identity-provider②⓪">(4)</a>
+    <li><a href="#ref-for-identity-provider①⑦">2.5. Access</a> <a href="#ref-for-identity-provider①⑧">(2)</a> <a href="#ref-for-identity-provider①⑨">(3)</a> <a href="#ref-for-identity-provider②⓪">(4)</a>
     <li><a href="#ref-for-identity-provider②①">3.1. Signing-up and Signing-in</a> <a href="#ref-for-identity-provider②②">(2)</a>
     <li><a href="#ref-for-identity-provider②③">3.2.2. Front-channel Sign-out</a> <a href="#ref-for-identity-provider②④">(2)</a>
     <li><a href="#ref-for-identity-provider②⑤">3.3. RP Revocation</a>
@@ -1818,7 +1816,7 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
     <li><a href="#ref-for-session③">2.2.2. Explicit Sign-in</a>
     <li><a href="#ref-for-session④">2.3. Sign-out</a>
     <li><a href="#ref-for-session⑤">2.3.2. IDP Sign-out</a>
-    <li><a href="#ref-for-session⑥">2.5. Authorization</a>
+    <li><a href="#ref-for-session⑥">2.5. Access</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="account">
@@ -1829,7 +1827,7 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
     <li><a href="#ref-for-account②">2.2.1. Auto Sign-in</a> <a href="#ref-for-account③">(2)</a>
     <li><a href="#ref-for-account④">2.2.2. Explicit Sign-in</a>
     <li><a href="#ref-for-account⑤">2.3. Sign-out</a>
-    <li><a href="#ref-for-account⑥">2.5. Authorization</a>
+    <li><a href="#ref-for-account⑥">2.5. Access</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="id-token">
@@ -1844,13 +1842,15 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
   <aside class="dfn-panel" data-for="high-level-api">
    <b><a href="#high-level-api">#high-level-api</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-high-level-api①">4. Terminology</a>
+    <li><a href="#ref-for-high-level-api①">1. Introduction</a>
+    <li><a href="#ref-for-high-level-api②">4. Terminology</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="low-level-api">
    <b><a href="#low-level-api">#low-level-api</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-low-level-api">4. Terminology</a>
+    <li><a href="#ref-for-low-level-api">1. Introduction</a>
+    <li><a href="#ref-for-low-level-api①">4. Terminology</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="registered">
