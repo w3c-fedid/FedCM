@@ -384,87 +384,178 @@ if (!window.FederatedCredential) {
 # High Level Design # {#lifecycle}
 <!-- ============================================================ -->
 
-The account management and session management APIs allows the user to explicitly move through the different stages of their accounts. At each stage, the state machine manages the [=RP=]'s and the [=IDP=]'s access to the appropriate browser capabilities.
+At a high level, the Identity Federation Management API works by the intermediation of cooperating [=IDP=]s and [=RP=]s.
 
-User agents MUST internally provide storage for a <dfn export id="concept-state-machine">state machine</dfn> that keeps track of the lifecycle of the accounts of [=IDP=] being used at [=RP=].
+The [[#idp-api]] and the [[#rp-api]] defines a set of HTTP APIs that cooperating [=IDP=]s and [=IDP=]s exposes as well as the entry points in the [[#API]] that they can use.
+
+<img src="static/mock43.svg">
+
+The user agent intermediates in such a matter that makes it impractical for the API to be used for tracking purposes, while preserving the functionality of identity federation.
+
+Internally, the account management and session management APIs allows the user to explicitly move through the different stages of their accounts. At each stage, the state machine manages the [=RP=]'s and the [=IDP=]'s access to the appropriate browser capabilities.
 
 <img src="static/mock42.svg">
 
-<dl dfn-type="argument" dfn-for="StateMachine">
-    :   <dfn>Account State</dfn>
-    ::  Keeps track of whether the user has an account or not. Can be [=registered=] or (by default) [=unregistered=].
-    :   <dfn>Session State</dfn>
-    ::  Keeps track of whether the user has an open or closed session. Can be [=logged in=] or (by default) [=logged out=].
-</dl>
+This document defines the APIs in the following order:
 
-<img src="static/mock43.svg">
+1. The [[#idp-api]]
+1. The [[#rp-api]] 
+1. The [[#API]] 
 
 <!-- ============================================================ -->
 # The Identity Provider API # {#idp-api}
 <!-- ============================================================ -->
 
+The [=IDP=] proactively and cooperatively exposes itself as a comformant agent by exposing a series of HTTP endpoints:
+
+1. A [[#well-known]] endpoint in a well-known location that points to	   ,
+1. An [[#accounts_endpoint]] endpoint
+1. A [[#client_id_metadata_endpoint]] endpoint
+1. An [[#idtoken_endpoint]] endpoint
+
 <!-- ============================================================ -->
-## The .well-known/webid configuration ## {#Well-Known}
+## Discovery ## {#well-known}
 <!-- ============================================================ -->
+
+The well-known discovery endpoint is an endpoint located at the [=IDP=]'s `.well-known/webid` and serves as a discovery device to other endpoints provided by the [=IDP=]. 
+
+The well-known discovery endpoint is fetched (a) **without** cookies and (b) **with** a special [[#Sec-WebID-CSR]] header.
+
+For example:
+
+<div class=example>
+```http
+GET /.well-known/webid HTTPS/1.1
+Host: idp.example
+Content-Type: application/json
+Sec-WebID-CSRF: random_value
+```
+</div>
+
+The file is parsed expecting the following properties:
 
 <dl dfn-type="argument" dfn-for="WellKnown">
     :   <dfn>accounts_endpoint</dfn>
-    ::  A relative URL that points to an HTTP API that complies with the [[#accounts_endpoint]].
-    :   <dfn>idtoken_endpoint</dfn>
-    ::  A relative URL that points to an HTTP API that complies with the [[#idtoken_endpoint]].
+    ::  A URL that points to an HTTP API that complies with the [[#accounts_endpoint]] API.
     :   <dfn>client_id_metadata_endpoint</dfn>
-    ::  A relative URL that points to an HTTP API that complies with the [[#client_id_metadata_endpoint]].
+    ::  A URL that points to an HTTP API that complies with the [[#client_id_metadata_endpoint]] API.
+    :   <dfn>idtoken_endpoint</dfn>
+    ::  A URL that points to an HTTP API that complies with the [[#idtoken_endpoint]] API.
 </dl>
 
-To <dfn>fetch the well-known</dfn> configuration file, run this algorithm:
+For example:
 
-1. Let the |wellknown url| be the relative url ".well-known/webid" of |provider|["{{FederatedIdentityProvider/url}}"]
-1. Return the result of fetching the |wellknown url| with the [[#Sec-WebID-CSR|Sec-WebID-CSR]] header but without the [=Identity Provider=]'s cookies.
-
-<!-- ============================================================ -->
-### <code><dfn data-export="">`Sec-WebID-CSR`</dfn></code> ### {#Sec-WebID-CSR}
-<!-- ============================================================ -->
-
-<!-- ============================================================ -->
-## accounts_endpoint ## {#accounts_endpoint}
-<!-- ============================================================ -->
-
-To <dfn>fetch the accounts list</dfn> run this algorithm:
-
-1. Let the |acccounts_endpoint| url be the relative url |wellknown|["{{WellKnown/accounts_endpoint}}"] of |provider|["{{FederatedIdentityProvider/url}}"]
-1. Let the |accounts list| be the result of fetching the |accounts_endpoint| with the [=Identity Provider=]'s cookies.
-1. Return the |accounts list|
+<div class=example>
+```json
+{
+  "accounts_endpoint": "/accounts.php",
+  "client_id_metadata_endpoint": "/metadata.php",
+  "idtoken_endpoint": "/idtokens.php",
+}
+```
+</div>
 
 <!-- ============================================================ -->
-### The accounts list request  ### {#accounts_endpoint_request}
+## Accounts List ## {#accounts_endpoint}
 <!-- ============================================================ -->
 
-<!-- ============================================================ -->
-### The accounts list response  ### {#accounts_endpoint_response}
-<!-- ============================================================ -->
+The accounts list endpoint provides the list of accounts the user has at the [=IDP=].
+
+The accounts list endpoint is fetched (a) **with** any cookies and (b) **with** a special [[#Sec-WebID-CSR]] header.
+
+For example:
+
+<div class=example>
+```http
+GET /accounts_list.php HTTPS/1.1
+Host: idp.example
+Content-Type: application/json
+Cookie: 0x23223
+Sec-WebID-CSRF: random_value
+```
+</div>
+
+The response is expected to have the following properties:
 
 <dl dfn-type="argument" dfn-for="accounts_endpoint_response">
     :   <dfn>accounts</dfn>
-    ::  A list of [[#accounts_endpoint_response_accounts]].
+    ::  A list of [=Account JSON=].
 </dl>
 
-<!-- ============================================================ -->
-#### Account  #### {#accounts_endpoint_response_accounts}
-<!-- ============================================================ -->
+Every <dfn>Account JSON</dfn> is expected to have the following properties:
 
 <dl dfn-type="argument" dfn-for="accounts_endpoint_response_accounts">
     :   <dfn>account_id</dfn>
     ::  An account identifier.
     :   <dfn>name</dfn>
-    ::  The user's name.
+    ::  The user's full name.
+    :   <dfn>given_name</dfn>
+    ::  The user's given name.
     :   <dfn>email</dfn>
     ::  The user's email address.
     :   <dfn>picture</dfn>
     :: The user's profile picture.
 </dl>
 
+For example:
+
+<div class=example>
+```json
+{
+ "accounts": [
+  { 
+   "account_id": "1234", 
+   "given_name": "John",  
+   "name": "John Doe",
+   "email": "john_doe@idp.example", 
+   "picture": "https://idp.example/profile/123",
+
+  },
+  {
+   "account_id": "5678", 
+   "given_name": "Johnny", 
+   "name": "Johnny",
+   "email": "johnny@idp.example",
+   "picture": "https://idp.example/profile/456"
+  }
+ ]
+}
+```
+</div>
+
 <!-- ============================================================ -->
-## idtoken_endpoint ## {#idtoken_endpoint}
+## Client Metadata ## {#client_id_metadata_endpoint}
+<!-- ============================================================ -->
+
+The [=.well-known=]'s <code><dfn data-export="" data-dfn-for=".well-known">`client_id_metadata_endpoint`</dfn></code> 
+
+To <dfn>fetch the client id metadata</dfn> run this algorithm:
+
+1. Let the |client_id_metadata_endpoint| url be the relative url |wellknown|["{{WellKnown/client_id_metadata_endpoint}}"] of |provider|["{{FederatedIdentityProvider/url}}"]
+1. Let the |policies| be the result of fetching the |client_id_metadata_endpoint| with the [[#Sec-WebID-CSR|Sec-WebID-CSR]] header but without the [=Identity Provider=]'s cookies.
+1. Return |policies|
+
+<!-- ============================================================ -->
+### The client_id metadata request  ### {#client_id_metadata_endpoint_request}
+<!-- ============================================================ -->
+
+<!-- ============================================================ -->
+### The client_id metadata response  ### {#client_id_metadata_endpoint_response}
+<!-- ============================================================ -->
+
+The <dfn>Privacy Policy</dfn> are the policies described at {{client_id_metadata_endpont_response/privacy_policy_url}}.
+
+The <dfn>Terms of Service</dfn> are the policies described at {{client_id_metadata_endpont_response/terms_of_service_url}}.
+
+<dl dfn-type="argument" dfn-for="client_id_metadata_endpont_response">
+    :   <dfn>privacy_policy_url</dfn>
+    ::  A link to the [=Relying Party=]'s privacy policy.
+    :   <dfn>terms_of_service_url</dfn>
+    ::  A link to the [=Relying Party=]'s terms of service.
+</dl>
+
+<!-- ============================================================ -->
+## ID Token ## {#idtoken_endpoint}
 <!-- ============================================================ -->
 
 <!-- ============================================================ -->
@@ -509,35 +600,8 @@ To <dfn>fetch the accounts list</dfn> run this algorithm:
 </dl>
 
 <!-- ============================================================ -->
-## client_id_metadata_endpoint ## {#client_id_metadata_endpoint}
+## <code><dfn data-export="">`Sec-WebID-CSR`</dfn></code> ## {#Sec-WebID-CSR}
 <!-- ============================================================ -->
-
-The [=.well-known=]'s <code><dfn data-export="" data-dfn-for=".well-known">`client_id_metadata_endpoint`</dfn></code> 
-
-To <dfn>fetch the client id metadata</dfn> run this algorithm:
-
-1. Let the |client_id_metadata_endpoint| url be the relative url |wellknown|["{{WellKnown/client_id_metadata_endpoint}}"] of |provider|["{{FederatedIdentityProvider/url}}"]
-1. Let the |policies| be the result of fetching the |client_id_metadata_endpoint| with the [[#Sec-WebID-CSR|Sec-WebID-CSR]] header but without the [=Identity Provider=]'s cookies.
-1. Return |policies|
-
-<!-- ============================================================ -->
-### The client_id metadata request  ### {#client_id_metadata_endpoint_request}
-<!-- ============================================================ -->
-
-<!-- ============================================================ -->
-### The client_id metadata response  ### {#client_id_metadata_endpoint_response}
-<!-- ============================================================ -->
-
-The <dfn>Privacy Policy</dfn> are the policies described at {{client_id_metadata_endpont_response/privacy_policy_url}}.
-
-The <dfn>Terms of Service</dfn> are the policies described at {{client_id_metadata_endpont_response/terms_of_service_url}}.
-
-<dl dfn-type="argument" dfn-for="client_id_metadata_endpont_response">
-    :   <dfn>privacy_policy_url</dfn>
-    ::  A link to the [=Relying Party=]'s privacy policy.
-    :   <dfn>terms_of_service_url</dfn>
-    ::  A link to the [=Relying Party=]'s terms of service.
-</dl>
 
 <!-- ============================================================ -->
 # The Relying Party API # {#rp-api}
@@ -548,6 +612,13 @@ The <dfn>Terms of Service</dfn> are the policies described at {{client_id_metada
 <!-- ============================================================ -->
 
 Websites call <code><a idl for="CredentialsContainer" lt="get()">navigator.credentials.get({providers:..., ...})</a></code> to retrieve a {{FederatedCredential}}.
+
+<dl dfn-type="argument" dfn-for="StateMachine">
+    :   <dfn>Account State</dfn>
+    ::  Keeps track of whether the user has an account or not. Can be [=registered=] or (by default) [=unregistered=].
+    :   <dfn>Session State</dfn>
+    ::  Keeps track of whether the user has an open or closed session. Can be [=logged in=] or (by default) [=logged out=].
+</dl>
 
 <!-- ============================================================ -->
 ## The Sign-in API ## {#sign-in}
@@ -716,6 +787,21 @@ To <dfn>explicit sign-in</dfn> the user run this algorithm:
     1. Gather explicit confirmation that the user wants to sign-in to [=Relying Party=] with their [=Identity Provider=]'s |account|
 
     1. Return the result of running the [=sign-in=] algorithm.
+
+To <dfn>fetch the well-known</dfn> configuration file, run this algorithm:
+
+1. Let the |wellknown url| be the relative url ".well-known/webid" of |provider|["{{FederatedIdentityProvider/url}}"]
+
+1. Return the result of fetching the |wellknown url| with the [[#Sec-WebID-CSR|Sec-WebID-CSR]] header but without the [=Identity Provider=]'s cookies.
+
+To <dfn>fetch the accounts list</dfn> run this algorithm:
+
+1. Let the |acccounts_endpoint| url be the relative url |wellknown|["{{WellKnown/accounts_endpoint}}"] of |provider|["{{FederatedIdentityProvider/url}}"]
+
+1. Let the |accounts list| be the result of fetching the |accounts_endpoint| with the [=Identity Provider=]'s cookies.
+
+1. Return the |accounts list|
+
 
 <!-- ============================================================ -->
 ### Interceptors ### {#Interceptors}
