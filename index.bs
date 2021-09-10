@@ -663,6 +663,10 @@ The logout endpoint is called (a) with a **GET** and (b) with the [=RP=]'s cooki
 
 Websites call <code><a idl for="CredentialsContainer" lt="get()">navigator.credentials.get({providers:..., ...})</a></code> to retrieve a {{FederatedCredential}}.
 
+<!-- ============================================================ -->
+## The State Machine ## {#state-machine}
+<!-- ============================================================ -->
+
 <dl dfn-type="argument" dfn-for="StateMachine">
     :   <dfn>Account State</dfn>
     ::  Keeps track of whether the user has an account or not. Can be [=registered=] or (by default) [=unregistered=].
@@ -674,13 +678,14 @@ Websites call <code><a idl for="CredentialsContainer" lt="get()">navigator.crede
 ## The Sign-in API ## {#sign-in}
 <!-- ============================================================ -->
 
-<!-- ============================================================ -->
-### The {{FederatedCredential}} Interface ### {#FederatedCredential}
-<!-- ============================================================ -->
-
 This specification extends the {{FederatedCredential}} type adding two more fields:
 
 <xmp class=idl>
+enum FederatedCredentialApprovedBy {
+  "auto",
+  "user"
+};
+
 [Exposed=Window, SecureContext]
 partial interface FederatedCredential : Credential {
   readonly attribute USVString idToken;
@@ -696,16 +701,11 @@ partial interface FederatedCredential : Credential {
     ::  When used in conjunction with {{CredentialRequestOptions/mediation}}, it indicates whether the credential was provided via a [[#use-cases-auto-sign-in]] or an [[#use-cases-explicit-sign-in]].
 </dl>
 
-<!-- ============================================================ -->
-### The {{FederatedCredentialRequestOptions}} ### {#FederatedCredentialRequestOptions}
-<!-- ============================================================ -->
-
-It also extends the {{FederatedCredentialRequestOptions}} by adding a list of {{FederatedIdentityProvider}}s as well as the UX controls for modality and modes.
+It also extends the {{FederatedCredentialRequestOptions}} by adding a list of {{FederatedIdentityProvider}}s.
 
 <xmp class=idl>
 partial dictionary FederatedCredentialRequestOptions {
   sequence<(DOMString or FederatedIdentityProvider)> providers;
-  FederatedCredentialRequestMode mode = "mediated";
 };
 
 dictionary FederatedIdentityProvider {
@@ -713,21 +713,9 @@ dictionary FederatedIdentityProvider {
   USVString clientId;
   USVString nonce;
 };
-
-enum FederatedCredentialRequestMode {
-  "mediated",
-  "permission"
-};
-
-enum FederatedCredentialApprovedBy {
-  "auto",
-  "user"
-};
 </xmp>
 
-<!-- ============================================================ -->
-### The {{FederatedCredential}}'s <code><dfn for="FederatedCredential" method>\[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</dfn></code> Method ### {#federated-credential-discover-from-external-source}
-<!-- ============================================================ -->
+This specification also overrides the {{FederatedCredential}}'s <code><dfn for="FederatedCredential" method>\[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</dfn></code> Method.
 
 This algorithm runs in parallel inside the [[CM#algorithm-request]] to request credentials and returns a set of {{FederatedCredential}} objects from a remote [=Identity Provider=].
 
@@ -748,9 +736,6 @@ This [=internal method=] accepts three arguments:
     ::  This argument is a Boolean value which is [TRUE] if and only if the caller's [=environment settings object=] is
         [=same-origin with its ancestors=]. It is [FALSE] if caller is cross-origin.
 </dl>
-
-Note: <strong>This algorithm is synchronous:</strong> the {{Promise}} resolution/rejection is handled by
-{{CredentialsContainer/get()|navigator.credentials.get()}}.
 
 When this method is invoked, the user agent MUST execute the following algorithm:
 
@@ -817,7 +802,6 @@ To <dfn>select an account</dfn> from the accounts list run this algorithm:
 
     1. Return |account|
 
-
 To <dfn>sign-in</dfn> the user run this algorithm:
 
     1. Assert that the {{StateMachine/Account State}} is [=registered=]
@@ -875,8 +859,57 @@ To <dfn>mint a new id token</dfn>, run the following algorithm:
   * {{FederatedCredential/provider}} with |provider|["{{FederatedIdentityProvider/url}}"]
 
 <!-- ============================================================ -->
+## The Revocation API ## {#revocation}
+<!-- ============================================================ -->
+
+Note: go over the revocation API.
+
+<xmp class=idl>
+[Exposed=Window, SecureContext]
+partial interface FederatedCredential : Credential {
+  static Promise<void> revoke(USVString accountId);
+};
+</xmp>
+
+<!-- ============================================================ -->
+## The Sign-out API ## {#sign-out}
+<!-- ============================================================ -->
+
+Note: go over the sign-out APIs.
+
+<!-- ============================================================ -->
+### RP Sign-out ### {#rp-sign-out}
+<!-- ============================================================ -->
+
+Note: go over the RP sign-out API.
+
+<!-- ============================================================ -->
+### IDP Sign-out ### {#idp-sign-out}
+<!-- ============================================================ -->
+
+[=IDP=]s can call <code><a idl for="FederatedCredential" lt="get()">FederatedCredential.logout(...)</a></code> to log the user out of the [=RP=]s they are signed into.
+
+<xmp class=idl>
+dictionary WebIdLogoutRequest {
+    required USVString endpoint;
+    required USVString account_id;
+};
+
+[Exposed=Window, SecureContext]
+partial interface FederatedCredential : Credential {
+  static Promise<void> logout(optional sequence<WebIdLogoutRequest> logout_requests = []);
+};
+</xmp>
+
+<!-- ============================================================ -->
+## Backwards Compatibility ## {#backwards-compatibility}
+<!-- ============================================================ -->
+
+<!-- ============================================================ -->
 ### Interceptors ### {#Interceptors}
 <!-- ============================================================ -->
+
+Note: go over how interceptors work.
 
 <xmp class=idl>
 [Exposed=Window, SecureContext]
@@ -884,10 +917,6 @@ partial interface FederatedCredential : Credential {
   static Promise<void> registerInterceptor(FederatedCredentialInterceptor interceptor);
 };
 </xmp>
-
-<!-- ============================================================ -->
-#### `FederatedCredentialInterceptor` #### {#FederatedCredentialInterceptor}
-<!-- ============================================================ -->
 
 <xmp class="idl">
 dictionary FederatedCredentialInterceptor {
@@ -903,54 +932,30 @@ dictionary FederatedCredentialInterceptor {
     ::  The URL request parameters to intercept navigations. 
 </div>
 
-<!-- ============================================================ -->
-## The Revocation API ## {#revocation}
-<!-- ============================================================ -->
-
-<xmp class=idl>
-[Exposed=Window, SecureContext]
-partial interface FederatedCredential : Credential {
-  static Promise<void> revoke(USVString accountId);
-};
-</xmp>
-
-<!-- ============================================================ -->
-## The Sign-out API ## {#sign-out}
-<!-- ============================================================ -->
-
-<!-- ============================================================ -->
-### RP Sign-out ### {#rp-sign-out}
-<!-- ============================================================ -->
-
-<!-- ============================================================ -->
-### IDP Sign-out ### {#idp-sign-out}
-<!-- ============================================================ -->
-
-Websites call <code><a idl for="FederatedCredential" lt="get()">FederatedCredential.logout(...)</a></code> to log the user out of a series of relying parties.
-
-<xmp class=idl>
-[Exposed=Window, SecureContext]
-partial interface FederatedCredential : Credential {
-  static Promise<void> logout(optional sequence<USVString> logout_endpoints = []);
-};
-</xmp>
-
 
 <!-- ============================================================ -->
 # Security # {#security}
 <!-- ============================================================ -->
 
+Note: go over security.
+
 <!-- ============================================================ -->
 # Privacy # {#privacy}
 <!-- ============================================================ -->
+
+Note: go over privacy.
 
 <!-- ============================================================ -->
 ## Privacy Threat Model ## {#privacy-threat-model}
 <!-- ============================================================ -->
 
+Note: port the privacy threat model.
+
 <!-- ====================================================================== -->
 # Acknowledgements # {#acknowledgements}
 <!-- ====================================================================== -->
+
+Note: write down the Acknowledgements section.
 
 
 <pre class="biblio">
