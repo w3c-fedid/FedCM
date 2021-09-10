@@ -6,7 +6,7 @@
   <link href="https://www.w3.org/StyleSheets/TR/2016/cg-draft" rel="stylesheet">
   <meta content="Bikeshed version 4f053d00e, updated Tue Aug 10 14:13:32 2021 -0700" name="generator">
   <link href="http://wicg.github.io/WebID" rel="canonical">
-  <meta content="7d772833965dfb3456cf734d1ff18ee1d430d9d4" name="document-revision">
+  <meta content="efb7a5baf35c3be0843b9a04b56a8020a9930ec1" name="document-revision">
 <style>
 dl.domintro dt {
     font-family: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
@@ -668,7 +668,11 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
       <li><a href="#revocation_endpoint"><span class="secno">6.5</span> <span class="content">Revocation</span></a>
       <li><a href="#Sec-WebID-CSR"><span class="secno">6.6</span> <span class="content"><code><span><code>Sec-WebID-CSR</code></span></code></span></a>
      </ol>
-    <li><a href="#rp-api"><span class="secno">7</span> <span class="content">The Relying Party API</span></a>
+    <li>
+     <a href="#rp-api"><span class="secno">7</span> <span class="content">The Relying Party API</span></a>
+     <ol class="toc">
+      <li><a href="#logout_endpoint"><span class="secno">7.1</span> <span class="content">Logout</span></a>
+     </ol>
     <li>
      <a href="#API"><span class="secno">8</span> <span class="content">The Browser API</span></a>
      <ol class="toc">
@@ -1008,6 +1012,9 @@ instead of a <a href="#use-cases-sign-in">§ 2.2 Sign-in</a> flow.</p>
     <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="logged-out">logged out</dfn>
     <dd data-md>
      <p>TODO(goto: find existing definition.</p>
+    <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="out-of-band">out-of-band</dfn>
+    <dd data-md>
+     <p>Outside of the user agent’s context.</p>
    </dl>
    <h2 class="heading settled" data-level="5" id="lifecycle"><span class="secno">5. </span><span class="content">High Level Design</span><a class="self-link" href="#lifecycle"></a></h2>
    <p>At a high level, the Identity Federation Management API works by the intermediation of cooperating <a data-link-type="dfn" href="#idp" id="ref-for-idp">IDP</a>s and <a data-link-type="dfn" href="#rp" id="ref-for-rp">RP</a>s.</p>
@@ -1219,6 +1226,13 @@ Sec-WebID-CSRF: random_value
    <p class="note" role="note"><span>Note:</span> support revocation.</p>
    <h3 class="heading settled" data-level="6.6" id="Sec-WebID-CSR"><span class="secno">6.6. </span><span class="content"><code><dfn data-dfn-type="dfn" data-export id="sec-webid-csr"><code>Sec-WebID-CSR</code><a class="self-link" href="#sec-webid-csr"></a></dfn></code></span><a class="self-link" href="#Sec-WebID-CSR"></a></h3>
    <h2 class="heading settled" data-level="7" id="rp-api"><span class="secno">7. </span><span class="content">The Relying Party API</span><a class="self-link" href="#rp-api"></a></h2>
+   <p><a data-link-type="dfn" href="#rp" id="ref-for-rp⑦">RP</a>'s expose a <a href="#logout_endpoint">§ 7.1 Logout</a> to facilitate with <a href="#use-cases-idp-sign-out">§ 2.3.2 IDP Sign-out</a>.</p>
+   <h3 class="heading settled" data-level="7.1" id="logout_endpoint"><span class="secno">7.1. </span><span class="content">Logout</span><a class="self-link" href="#logout_endpoint"></a></h3>
+   <p>When <a data-link-type="dfn" href="#idp" id="ref-for-idp⑧">IDP</a>s call the <a href="#idp-sign-out">§ 8.3.2 IDP Sign-out</a> API, every <a data-link-type="dfn" href="#rp" id="ref-for-rp⑧">RP</a> gets a
+chance to log the user out (e.g. clear cookies, clear local storage)
+via the logout endpoint.</p>
+   <p>The logout endpoint is an endpoint that is registered with the <a data-link-type="dfn" href="#idp" id="ref-for-idp⑨">IDP</a> <a data-link-type="dfn" href="#out-of-band" id="ref-for-out-of-band">out-of-band</a>.</p>
+   <p>The logout endpoint is called (a) with a <strong>GET</strong> and (b) with the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑨">RP</a>'s cookies.</p>
    <h2 class="heading settled" data-level="8" id="API"><span class="secno">8. </span><span class="content">The Browser API</span><a class="self-link" href="#API"></a></h2>
    <p>Websites call <code><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dom-credentialscontainer-get" id="ref-for-dom-credentialscontainer-get">navigator.credentials.get({providers:..., ...})</a></code> to retrieve a <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential">FederatedCredential</a></code>.</p>
    <dl>
@@ -1547,6 +1561,7 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
    <li><a href="#mint-a-new-id-token">mint a new id token</a><span>, in § 8.1.3</span>
    <li><a href="#dom-federatedcredentialrequestoptions-mode">mode</a><span>, in § 8.1.2</span>
    <li><a href="#dom-federatedidentityprovider-nonce">nonce</a><span>, in § 8.1.2</span>
+   <li><a href="#out-of-band">out-of-band</a><span>, in § 4</span>
    <li><a href="#dom-federatedcredentialinterceptor-params">params</a><span>, in § 8.1.4.1</span>
    <li><a href="#dom-federatedcredentialrequestmode-permission">"permission"</a><span>, in § 8.1.2</span>
    <li><a href="#privacy-policy">Privacy Policy</a><span>, in § 8.1.3</span>
@@ -1894,6 +1909,8 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
     <li><a href="#ref-for-rp">5. High Level Design</a> <a href="#ref-for-rp①">(2)</a>
     <li><a href="#ref-for-rp②">6.3. Client Metadata</a> <a href="#ref-for-rp③">(2)</a> <a href="#ref-for-rp④">(3)</a>
     <li><a href="#ref-for-rp⑤">6.4. ID Token</a> <a href="#ref-for-rp⑥">(2)</a>
+    <li><a href="#ref-for-rp⑦">7. The Relying Party API</a>
+    <li><a href="#ref-for-rp⑧">7.1. Logout</a> <a href="#ref-for-rp⑨">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="identity-provider">
@@ -1919,6 +1936,7 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
     <li><a href="#ref-for-idp④">6. The Identity Provider API</a>
     <li><a href="#ref-for-idp⑤">6.1. Discovery</a> <a href="#ref-for-idp⑥">(2)</a>
     <li><a href="#ref-for-idp⑦">6.2. Accounts List</a>
+    <li><a href="#ref-for-idp⑧">7.1. Logout</a> <a href="#ref-for-idp⑨">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="session">
@@ -1993,6 +2011,12 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
    <ul>
     <li><a href="#ref-for-logged-out">8. The Browser API</a>
     <li><a href="#ref-for-logged-out①">8.1.3. The FederatedCredential's [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) Method</a> <a href="#ref-for-logged-out②">(2)</a> <a href="#ref-for-logged-out③">(3)</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="out-of-band">
+   <b><a href="#out-of-band">#out-of-band</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-out-of-band">7.1. Logout</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="dom-wellknown-accounts_endpoint">
