@@ -566,46 +566,70 @@ For example:
 ## ID Token ## {#idtoken_endpoint}
 <!-- ============================================================ -->
 
-<!-- ============================================================ -->
-### <dfn for="Minting">Minting</dfn> a new IdToken ### {#minting}
-<!-- ============================================================ -->
+The ID Token endpoint is responsible for minting a new idtoken for the user.
 
-    To mint a new id token, run the following algorithm:
+The ID Token endpoint is fetched (a) as a **POST** request, (b)  **with** cookies and (c) **with** a special [[#Sec-WebID-CSR]] header.
 
-    1. Let |token| be the result of making a POST request to the |wellknown|["{{WellKnown/idtoken_endpoint}}"] with:
-        * Let the {{idtoken_endpoint_request/account_id}} be |account|["{{accounts_endpoint_response_accounts/account_id}}"].
-        * Let the {{idtoken_endpoint_request/request}} be a new object with
-              * Let {{idtoken_endpoint_request_request/client_id}} be |provider|["{{FederatedIdentityProvider/clientId}}"].
-              * Let the {{idtoken_endpoint_request_request/nonce}} be |provider|["{{FederatedIdentityProvider/nonce}}"].
-
-    1. Return a new {{FederatedCredential}} as:
-        * {{FederatedCredential/id}} with |account|["{{accounts_endpoint_response_accounts/account_id}}"]
-        * {{FederatedCredential/idToken}} with |token|
-        * {{FederatedCredential/provider}} with |provider|["{{FederatedIdentityProvider/url}}"]
-
-<!-- ============================================================ -->
-### The idtoken request  ### {#idtoken_endpoint_request}
-<!-- ============================================================ -->
+It will also contain the following parameters passed as a JSON object:
 
 <dl dfn-type="argument" dfn-for="idtoken_endpoint_request">
     :   <dfn>account_id</dfn>
-    :: An account identifier.
+    :: The account identifier that was selected.
     :   <dfn>request</dfn>
+    :: The [=RP request=]
 </dl>
+
+The <dfn>RP request</dfn> has the following properties:
 
 <dl dfn-type="argument" dfn-for="idtoken_endpoint_request_request">
     :   <dfn>client_id</dfn>
+    :: The [=RP=]'s client it
     :   <dfn>nonce</dfn>
+    :: A random number of the choice of the [=RP=]
 </dl>
 
-<!-- ============================================================ -->
-### The idtoken response  ### {#idtoken_endpoint_response}
-<!-- ============================================================ -->
+For example:
+
+<div class=example>
+```http
+POST /webid_token_endpoint HTTPS/1.1
+Host: idp.example
+Referrer: rp.example
+Content-Type: application/json
+Cookie: 0x23223
+Sec-WebID-CSRF: random_value
+{
+  "account_id": "123",
+  "request": {
+    "client_id": "client1234",
+    "nonce": "Ct60bD" 
+  }
+}
+```
+</div>
+
+The response is parsed as a JSON file expecting the following properties:
 
 <dl dfn-type="argument" dfn-for="idtoken_endpoint_response">
     :   <dfn>id_token</dfn>
-    ::  An [=id token=].
+    ::  The resulting [=id token=].
 </dl>
+
+For example:
+
+<div class=example>
+```json
+{
+  "id_token" : "eyJC...J9.eyJzdWTE2...MjM5MDIyfQ.SflV_adQssw....5c"
+}
+```
+</div>
+
+<!-- ============================================================ -->
+## Revocation ## {#revocation_endpoint}
+<!-- ============================================================ -->
+
+Note: support revocation.
 
 <!-- ============================================================ -->
 ## <code><dfn data-export="">`Sec-WebID-CSR`</dfn></code> ## {#Sec-WebID-CSR}
@@ -819,6 +843,18 @@ To <dfn>fetch the client id metadata</dfn> run this algorithm:
 The <dfn>Privacy Policy</dfn> are the policies described at {{client_id_metadata_endpont_response/privacy_policy_url}}.
 
 The <dfn>Terms of Service</dfn> are the policies described at {{client_id_metadata_endpont_response/terms_of_service_url}}.
+
+To <dfn>mint a new id token</dfn>, run the following algorithm:
+
+1. Let |token| be the result of making a POST request to the |wellknown|["{{WellKnown/idtoken_endpoint}}"] with:
+    * Let the {{idtoken_endpoint_request/account_id}} be |account|["{{accounts_endpoint_response_accounts/account_id}}"].
+    * Let the {{idtoken_endpoint_request/request}} be a new object with
+        * Let {{idtoken_endpoint_request_request/client_id}} be |provider|["{{FederatedIdentityProvider/clientId}}"].
+        * Let the {{idtoken_endpoint_request_request/nonce}} be |provider|["{{FederatedIdentityProvider/nonce}}"].
+1. Return a new {{FederatedCredential}} as:
+  * {{FederatedCredential/id}} with |account|["{{accounts_endpoint_response_accounts/account_id}}"]
+  * {{FederatedCredential/idToken}} with |token|
+  * {{FederatedCredential/provider}} with |provider|["{{FederatedIdentityProvider/url}}"]
 
 <!-- ============================================================ -->
 ### Interceptors ### {#Interceptors}
