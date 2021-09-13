@@ -1006,23 +1006,27 @@ When the user agrees to allow the IDP to provide information to the RP, the cons
 #### Identity Provider collecting information
 
 ##### (<dfn>IDP1</dfn>) Identity Provider tracking user sign-ins to Relying Party sites
- Existing federation protocols require that the Identity Provider know the CLIENT_ID of the Relying Party in order to allow identity federation. Identity providers can use this fact to build profiles of users across sites where the user has decided to use federation with the same account. This profile could be used, for example, to serve targeted advertisements to those users browsing on sites that the IDP controls.
 
-This risk can exist even in the case where the IDP does not having pre-existing user account information (for instance, if it is not a _bona fide_ IDP), because WebID requests sent to the IDP are credentialed. This is more likely to occur if the RP is colluding with the IDP to enable tracking; expanded variants are described in [COL2](#col2-rp-sharing-user-identifying-information-with-the-idp).
+Existing federation protocols require that the Identity Provider know the CLIENT_ID of the Relying Party in order to allow identity federation. Identity providers can use this fact to build profiles of users across sites where the user has decided to use federation with the same account. This profile could be used, for example, to serve targeted advertisements to those users browsing on sites that the IDP controls.
 
-##### (<dfn>IDP2</dfn>) Identity Provider misusing federated sign-in capabilities
+This risk can exist even in the case where the IDP does not having pre-existing user account information (for instance, if it is not a bona fide IDP), because WebID requests sent to the IDP are credentialed. This is more likely to occur if the RP is colluding with the IDP to enable tracking; expanded variants are described in [=COL2=].
+
+##### (<dfn>IDP2</dfn>) Identity Provider Impersonation
+
 Since Identity Providers have unconstrained ability to issue ID tokens, they are capable of logging in to users’ federated accounts without user knowledge or action.
 
 #### Relying Party and Identity Provider colluding to collect information
 
 ##### (<dfn>COL1</dfn>) IDP exceeding user’s information sharing permission
+
 Existing federated identity protocols are clear on what information an RP is requesting, which the IDP can provide. While the browser can inspect the request and response and consider whether user permission has been granted for that transfer, it is difficult to know that there is no additional information embedded in the response. An example could be if the IDP encodes an identifier that could be used to load user-targeted advertisements on RP pages, which could be of value where the IDP has much more profiling information about the user. Another example is if the ID token is shared out-of-band, invisible to the browser, in which case it could contain anything.
 
 ##### (<dfn>COL2</dfn>) RP sharing user-identifying information with the IDP
 
 The potential for IDPs profiling users based on their visits to RPs (described in [=IDP1=]) can be partially mitigated by hiding the RP from the IDP until after the user has consented to that tracking risk. However, there is residual risk in cases where the RP and IDP are colluding.
 
-If a credentialed request is sent to the IDP that does not explicitly identify the RP, either of the following would still allow tracking by the IDP (again, possibly not a _bona fide_ IDP that has existing knowledge of the user):
+If a credentialed request is sent to the IDP that does not explicitly identify the RP, either of the following would still allow tracking by the IDP (again, possibly not a bona fide IDP that has existing knowledge of the user):
+
 * The RP controlling any field in the request that can be used to convey identifying data in the request that the IDP could correlate to other requests from other RPs;
 * The RP being able to provide fine-resolution timing information about the request to the IDP out of band.
 

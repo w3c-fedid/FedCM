@@ -6,7 +6,7 @@
   <link href="https://www.w3.org/StyleSheets/TR/2016/cg-draft" rel="stylesheet">
   <meta content="Bikeshed version 4f053d00e, updated Tue Aug 10 14:13:32 2021 -0700" name="generator">
   <link href="http://wicg.github.io/WebID" rel="canonical">
-  <meta content="6b567cc47becc2598e828ce3f79c66ffd097ed1a" name="document-revision">
+  <meta content="80a59398447fed21a9cbeec8fea279a5c850ec0f" name="document-revision">
 <style>
 dl.domintro dt {
     font-family: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
@@ -702,7 +702,7 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
            <a href="#identity-provider-collecting-information"><span class="secno">10.1.2.2</span> <span class="content">Identity Provider collecting information</span></a>
            <ol class="toc">
             <li><a href="#-idp1-identity-provider-tracking-user-sign-ins-to-relying-party-sites"><span class="secno">10.1.2.2.1</span> <span class="content">(<span>IDP1</span>) Identity Provider tracking user sign-ins to Relying Party sites</span></a>
-            <li><a href="#-idp2-identity-provider-misusing-federated-sign-in-capabilities"><span class="secno">10.1.2.2.2</span> <span class="content">(<span>IDP2</span>) Identity Provider misusing federated sign-in capabilities</span></a>
+            <li><a href="#-idp2-identity-provider-impersonation"><span class="secno">10.1.2.2.2</span> <span class="content">(<span>IDP2</span>) Identity Provider Impersonation</span></a>
            </ol>
           <li>
            <a href="#relying-party-and-identity-provider-colluding-to-collect-information"><span class="secno">10.1.2.3</span> <span class="content">Relying Party and Identity Provider colluding to collect information</span></a>
@@ -1567,16 +1567,16 @@ through an <a href="#use-cases-explicit-sign-in">§ 2.2.2 Explicit Sign-in</a>
    <p>Any API that exposes any kind of client state to the web risk becoming a vector for fingerprinting or ‘supercookies’. Neither the status quo of federated identity nor current proposals for browser mediation add detectable client state that would increase fingerprinting risk, but any changes or additional features need to be analyzed as to whether they increase the feasibility of sites tracking users without cookies.</p>
    <h5 class="heading settled" data-level="10.1.2.2" id="identity-provider-collecting-information"><span class="secno">10.1.2.2. </span><span class="content">Identity Provider collecting information</span><a class="self-link" href="#identity-provider-collecting-information"></a></h5>
    <h6 class="heading settled" data-level="10.1.2.2.1" id="-idp1-identity-provider-tracking-user-sign-ins-to-relying-party-sites"><span class="secno">10.1.2.2.1. </span><span class="content">(<dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="idp1">IDP1</dfn>) Identity Provider tracking user sign-ins to Relying Party sites</span><a class="self-link" href="#-idp1-identity-provider-tracking-user-sign-ins-to-relying-party-sites"></a></h6>
-    Existing federation protocols require that the Identity Provider know the CLIENT_ID of the Relying Party in order to allow identity federation. Identity providers can use this fact to build profiles of users across sites where the user has decided to use federation with the same account. This profile could be used, for example, to serve targeted advertisements to those users browsing on sites that the IDP controls. 
-   <p>This risk can exist even in the case where the IDP does not having pre-existing user account information (for instance, if it is not a _bona fide_ IDP), because WebID requests sent to the IDP are credentialed. This is more likely to occur if the RP is colluding with the IDP to enable tracking; expanded variants are described in <a href="#col2-rp-sharing-user-identifying-information-with-the-idp">COL2</a>.</p>
-   <h6 class="heading settled" data-level="10.1.2.2.2" id="-idp2-identity-provider-misusing-federated-sign-in-capabilities"><span class="secno">10.1.2.2.2. </span><span class="content">(<dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="idp2">IDP2</dfn>) Identity Provider misusing federated sign-in capabilities</span><a class="self-link" href="#-idp2-identity-provider-misusing-federated-sign-in-capabilities"></a></h6>
-    Since Identity Providers have unconstrained ability to issue ID tokens, they are capable of logging in to users’ federated accounts without user knowledge or action. 
+   <p>Existing federation protocols require that the Identity Provider know the CLIENT_ID of the Relying Party in order to allow identity federation. Identity providers can use this fact to build profiles of users across sites where the user has decided to use federation with the same account. This profile could be used, for example, to serve targeted advertisements to those users browsing on sites that the IDP controls.</p>
+   <p>This risk can exist even in the case where the IDP does not having pre-existing user account information (for instance, if it is not a bona fide IDP), because WebID requests sent to the IDP are credentialed. This is more likely to occur if the RP is colluding with the IDP to enable tracking; expanded variants are described in <a data-link-type="dfn" href="#col2" id="ref-for-col2">COL2</a>.</p>
+   <h6 class="heading settled" data-level="10.1.2.2.2" id="-idp2-identity-provider-impersonation"><span class="secno">10.1.2.2.2. </span><span class="content">(<dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="idp2">IDP2</dfn>) Identity Provider Impersonation</span><a class="self-link" href="#-idp2-identity-provider-impersonation"></a></h6>
+   <p>Since Identity Providers have unconstrained ability to issue ID tokens, they are capable of logging in to users’ federated accounts without user knowledge or action.</p>
    <h5 class="heading settled" data-level="10.1.2.3" id="relying-party-and-identity-provider-colluding-to-collect-information"><span class="secno">10.1.2.3. </span><span class="content">Relying Party and Identity Provider colluding to collect information</span><a class="self-link" href="#relying-party-and-identity-provider-colluding-to-collect-information"></a></h5>
    <h6 class="heading settled" data-level="10.1.2.3.1" id="-col1-idp-exceeding-users-information-sharing-permission"><span class="secno">10.1.2.3.1. </span><span class="content">(<dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="col1">COL1</dfn>) IDP exceeding user’s information sharing permission</span><a class="self-link" href="#-col1-idp-exceeding-users-information-sharing-permission"></a></h6>
-    Existing federated identity protocols are clear on what information an RP is requesting, which the IDP can provide. While the browser can inspect the request and response and consider whether user permission has been granted for that transfer, it is difficult to know that there is no additional information embedded in the response. An example could be if the IDP encodes an identifier that could be used to load user-targeted advertisements on RP pages, which could be of value where the IDP has much more profiling information about the user. Another example is if the ID token is shared out-of-band, invisible to the browser, in which case it could contain anything. 
+   <p>Existing federated identity protocols are clear on what information an RP is requesting, which the IDP can provide. While the browser can inspect the request and response and consider whether user permission has been granted for that transfer, it is difficult to know that there is no additional information embedded in the response. An example could be if the IDP encodes an identifier that could be used to load user-targeted advertisements on RP pages, which could be of value where the IDP has much more profiling information about the user. Another example is if the ID token is shared out-of-band, invisible to the browser, in which case it could contain anything.</p>
    <h6 class="heading settled" data-level="10.1.2.3.2" id="-col2-rp-sharing-user-identifying-information-with-the-idp"><span class="secno">10.1.2.3.2. </span><span class="content">(<dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="col2">COL2</dfn>) RP sharing user-identifying information with the IDP</span><a class="self-link" href="#-col2-rp-sharing-user-identifying-information-with-the-idp"></a></h6>
    <p>The potential for IDPs profiling users based on their visits to RPs (described in <a data-link-type="dfn" href="#idp1" id="ref-for-idp1">IDP1</a>) can be partially mitigated by hiding the RP from the IDP until after the user has consented to that tracking risk. However, there is residual risk in cases where the RP and IDP are colluding.</p>
-   <p>If a credentialed request is sent to the IDP that does not explicitly identify the RP, either of the following would still allow tracking by the IDP (again, possibly not a _bona fide_ IDP that has existing knowledge of the user):</p>
+   <p>If a credentialed request is sent to the IDP that does not explicitly identify the RP, either of the following would still allow tracking by the IDP (again, possibly not a bona fide IDP that has existing knowledge of the user):</p>
    <ul>
     <li data-md>
      <p>The RP controlling any field in the request that can be used to convey identifying data in the request that the IDP could correlate to other requests from other RPs;</p>
@@ -1594,7 +1594,7 @@ through an <a href="#use-cases-explicit-sign-in">§ 2.2.2 Explicit Sign-in</a>
    <h5 class="heading settled" data-level="10.1.3.2" id="browser-enforced-consent"><span class="secno">10.1.3.2. </span><span class="content">Browser-enforced consent</span><a class="self-link" href="#browser-enforced-consent"></a></h5>
    <ul>
     <li data-md>
-     <p>Mitigates: <a data-link-type="dfn" href="#rp2" id="ref-for-rp2">RP2</a>, <a data-link-type="dfn" href="#idp1" id="ref-for-idp1①">IDP1</a>, <a data-link-type="dfn" href="#col2" id="ref-for-col2">COL2</a></p>
+     <p>Mitigates: <a data-link-type="dfn" href="#rp2" id="ref-for-rp2">RP2</a>, <a data-link-type="dfn" href="#idp1" id="ref-for-idp1①">IDP1</a>, <a data-link-type="dfn" href="#col2" id="ref-for-col2①">COL2</a></p>
    </ul>
    <p>IDPs, whom the user has entrusted with their personal data, are currently responsible for ensuring that the user consents to their information being shared. With browser mediation in place, the user agent might have to assume responsibility for ensuring the user understands what is being shared and that it is intentional. This is certainly the case if the browser is able to entirely intermediate the identity flow without showing any IDP web content, but also might be desirable if there are concerns that the IDP is not collecting consent in an adequate manner.
 Additionally, a consent prompt preceding the sharing of the RP’s request to the IDP can mitigate risks around IDP tracking of user visits to RPs.</p>
@@ -1613,7 +1613,7 @@ Additionally, a consent prompt preceding the sharing of the RP’s request to th
    <h5 class="heading settled" data-level="10.1.3.5" id="hiding-the-rp-from-the-idp"><span class="secno">10.1.3.5. </span><span class="content">Hiding the RP from the IDP</span><a class="self-link" href="#hiding-the-rp-from-the-idp"></a></h5>
    <ul>
     <li data-md>
-     <p>Mitigates: <a data-link-type="dfn" href="#idp1" id="ref-for-idp1②">IDP1</a>, <a data-link-type="dfn" href="#col2" id="ref-for-col2①">COL2</a></p>
+     <p>Mitigates: <a data-link-type="dfn" href="#idp1" id="ref-for-idp1②">IDP1</a>, <a data-link-type="dfn" href="#col2" id="ref-for-col2②">COL2</a></p>
    </ul>
    <p>Preventing tracking of users by the IDP is difficult because the RP has to be coded into the identity token for security reasons, to prevent reuse of the token. There have been cryptographic schemes developed to blind the IDP to the RP while still preventing token reuse in that way (see Mozilla’s <a href="https://wiki.mozilla.org/Identity/Persona_AAR">personas</a>) but there are other valid uses that the IDP has for knowing the RP, such as fraud and abuse prevention. Also, it may conflict with <a href="#directed-identifiers">directed identifiers</a>, since the IDP has to have the ability to map RP+User → directed ID.</p>
    <h5 class="heading settled" data-level="10.1.3.6" id="identity-provider-has-a-relationship-with-the-rp"><span class="secno">10.1.3.6. </span><span class="content">Identity Provider has a relationship with the RP</span><a class="self-link" href="#identity-provider-has-a-relationship-with-the-rp"></a></h5>
@@ -2429,8 +2429,9 @@ Additionally, a consent prompt preceding the sharing of the RP’s request to th
   <aside class="dfn-panel" data-for="col2">
    <b><a href="#col2">#col2</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-col2">10.1.3.2. Browser-enforced consent</a>
-    <li><a href="#ref-for-col2①">10.1.3.5. Hiding the RP from the IDP</a>
+    <li><a href="#ref-for-col2">10.1.2.2.1. (IDP1) Identity Provider tracking user sign-ins to Relying Party sites</a>
+    <li><a href="#ref-for-col2①">10.1.3.2. Browser-enforced consent</a>
+    <li><a href="#ref-for-col2②">10.1.3.5. Hiding the RP from the IDP</a>
    </ul>
   </aside>
 <script>/* script-dfn-panel */
