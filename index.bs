@@ -325,7 +325,7 @@ For example:
 ```http
 GET /.well-known/webid HTTPS/1.1
 Host: idp.example
-Content-Type: application/json
+Accept: application/json
 Sec-WebID-CSRF: random_value
 ```
 </div>
@@ -367,7 +367,7 @@ For example:
 ```http
 GET /accounts_list.php HTTPS/1.1
 Host: idp.example
-Content-Type: application/json
+Accept: application/json
 Cookie: 0x23223
 Sec-WebID-CSRF: random_value
 ```
@@ -376,22 +376,22 @@ Sec-WebID-CSRF: random_value
 The response is expected to have the following properties:
 
 <dl dfn-type="argument" dfn-for="accounts_endpoint_response">
-    :   <dfn>accounts</dfn>
+    :   <dfn>accounts</dfn> (required)
     ::  A list of [=Account JSON=].
 </dl>
 
 Every <dfn>Account JSON</dfn> is expected to have the following properties:
 
 <dl dfn-type="argument" dfn-for="accounts_endpoint_response_accounts">
-    :   <dfn>account_id</dfn>
+    :   <dfn>account_id</dfn> (required)
     ::  An account identifier.
-    :   <dfn>name</dfn>
+    :   <dfn>name</dfn> (required)
     ::  The user's full name.
-    :   <dfn>given_name</dfn>
+    :   <dfn>given_name</dfn> (required)
     ::  The user's given name.
-    :   <dfn>email</dfn>
+    :   <dfn>email</dfn> (optional)
     ::  The user's email address.
-    :   <dfn>picture</dfn>
+    :   <dfn>picture</dfn> (optional)
     :: The user's profile picture.
 </dl>
 
@@ -425,13 +425,15 @@ The client metadata endpoint provides metadata about [=RP=]s.
 
 The client medata endpoint is fetched (a) **without** cookies and (b) **with** a special [[#Sec-WebID-CSR]] header.
 
+The user agent also passes the **client_id**.
+
 For example:
 
 <div class=example>
 ```http
-GET /client_medata.php HTTPS/1.1
+GET /client_medata.php?client_id=1234 HTTPS/1.1
 Host: idp.example
-Content-Type: application/json
+Accept: application/json
 Sec-WebID-CSRF: random_value
 ```
 </div>
@@ -460,7 +462,7 @@ For example:
 ## ID Token ## {#idtoken_endpoint}
 <!-- ============================================================ -->
 
-The ID Token endpoint is responsible for minting a new idtoken for the user.
+The ID Token endpoint is responsible for minting a new [=idtoken=] for the user.
 
 The ID Token endpoint is fetched (a) as a **POST** request, (b)  **with** cookies and (c) **with** a special [[#Sec-WebID-CSR]] header.
 
@@ -547,6 +549,12 @@ The logout endpoint is an endpoint that is registered with the [=IDP=]
 [=out-of-band=].
 
 The logout endpoint is called (a) with a **GET** and (b) with the [=RP=]'s cookies.
+
+Note: the logout API introduces a credentialed request from the [=IDP=] to
+the [=RP=]s, so it exposes a potential tracking surface area. It is a fairly
+limited and controlled tracking area because the logout API is only available
+when accounts **and** sessions are already established between the [=IDP=] and
+the [=RP=].
 
 <!-- ============================================================ -->
 # The Browser API # {#API}
@@ -888,7 +896,7 @@ async function logout() {
       endpoint: "https://rp1.example",
       accountId: "123",
     }, {
-      endpiont: "https://rpN.example",
+      endpoint: "https://rpN.example",
       accountId: "456",
     }]);
 }
