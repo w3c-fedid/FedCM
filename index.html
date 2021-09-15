@@ -6,7 +6,7 @@
   <link href="https://www.w3.org/StyleSheets/TR/2016/cg-draft" rel="stylesheet">
   <meta content="Bikeshed version 4f053d00e, updated Tue Aug 10 14:13:32 2021 -0700" name="generator">
   <link href="http://wicg.github.io/WebID" rel="canonical">
-  <meta content="c68db3a6d4c28a761b76611d9070d511bcd75df6" name="document-revision">
+  <meta content="821b0a900cce470bdfb20ef41f665fa71fc134bd" name="document-revision">
 <style>
 dl.domintro dt {
     font-family: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
@@ -1575,20 +1575,39 @@ The RP might use that data for other purposes that the user would not expect and
 did not authorize, such as selling email addresses to a spam list.</p>
    <p class="note" role="note"><span>Note:</span> Spamming risk can exist even when using <a data-link-type="dfn" href="#directed" id="ref-for-directed">directed</a> identifiers.</p>
    <p>An important sub case of <a data-link-type="dfn" href="#rp1" id="ref-for-rp1">RP1</a> is:</p>
-   <p>(<dfn data-dfn-type="dfn" data-noexport id="rp1a">RP1.a<a class="self-link" href="#rp1a"></a></dfn>): Multiple Relying Parties correlate user information for tracking purposes</p>
+   <p>(<dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="rp1a">RP1.a</dfn>): Multiple Relying Parties correlate user information for tracking purposes</p>
    <p>When a user willingly provides their full name, email address, phone number, etc,
 to multiple relying parties, those relying parties can collaborate to build a
 profile of that user and their activity across collaborating sites. Sometimes this is referred to as <a data-link-type="dfn" href="#joining" id="ref-for-joining">joining</a> since it amounts to a join of user records between the account databases of multiple RPs.</p>
    <p>This correlation and profile-building is outside the user’s control and entirely out of the user agent’s or IDP’s view.</p>
+   <p>For example:</p>
+   <ol>
+    <li data-md>
+     <p>User signs into RP1 (which sells jewelry) with an IDP, providing to RP1 their email address user@email.example</p>
+    <li data-md>
+     <p>User signs into RP2 (which sells houses) with an IDP, providing to RP2 their email address user@email.example</p>
+    <li data-md>
+     <p>User browses the collection of wedding rings in RP1.</p>
+    <li data-md>
+     <p>Out of band, RP1 tells RP2 that user@email.example is shopping for wedding rings</p>
+    <li data-md>
+     <p>User browses the housing inventory in RP2.</p>
+    <li data-md>
+     <p>RP2 uses the fact that the user is shopping for wedding rings in RP1 to advertise and filters their housing inventory.</p>
+    <li data-md>
+     <p>User is surprised that RP2 knows that they are shopping for wedding rings.</p>
+   </ol>
    <h6 class="heading settled" data-level="10.1.2.1.2" id="-rp2-relying-party-obtains-personal-user-information-from-identity-provider-without-user-consent"><span class="secno">10.1.2.1.2. </span><span class="content">(<dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="rp2">RP2</dfn>)  Relying Party obtains personal user information from Identity Provider without user consent</span><a class="self-link" href="#-rp2-relying-party-obtains-personal-user-information-from-identity-provider-without-user-consent"></a></h6>
    <p>An RP might attempt to obtain user information from an IDP without the user
 having consented to the information being released, or being aware of it being released.</p>
    <p>This can happen if user consent mechanisms are missing, inadequate, or susceptible to bypass.</p>
+   <p>For example, an RP can use clickjacking to trick the user into signing-into their site.</p>
    <h6 class="heading settled" data-level="10.1.2.1.3" id="-rp3-relying-party-employs-client-state-based-tracking-to-identify-user"><span class="secno">10.1.2.1.3. </span><span class="content">(<dfn data-dfn-type="dfn" data-noexport id="rp3">RP3<a class="self-link" href="#rp3"></a></dfn>) Relying Party employs client state-based tracking to identify user</span><a class="self-link" href="#-rp3-relying-party-employs-client-state-based-tracking-to-identify-user"></a></h6>
    <p>Any API that exposes any kind of client state to the web risk becoming a
 vector for fingerprinting or ‘supercookies’.</p>
    <p>This risk would be increased by any proposal for browser mediation that
 adds directly (or indirectly) detectable client state.</p>
+   <p>For example, an RP can use the browser state of the WebID to add bits of entropy and fingerprint the user.</p>
    <h5 class="heading settled" data-level="10.1.2.2" id="identity-provider-collecting-information"><span class="secno">10.1.2.2. </span><span class="content">Identity Provider collecting information</span><a class="self-link" href="#identity-provider-collecting-information"></a></h5>
    <h6 class="heading settled" data-level="10.1.2.2.1" id="-idp1-identity-provider-tracking-user-sign-ins-to-relying-party-sites"><span class="secno">10.1.2.2.1. </span><span class="content">(<dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="idp1">IDP1</dfn>) Identity Provider tracking user sign-ins to Relying Party sites</span><a class="self-link" href="#-idp1-identity-provider-tracking-user-sign-ins-to-relying-party-sites"></a></h6>
    <p>Existing federation protocols require that the IDP know which service is
@@ -1600,10 +1619,36 @@ to serve targeted advertisements to those users browsing on sites that the IDP c
 account information (for instance, if it is not a _bona fide_ IDP), because WebID
 requests sent to the IDP are credentialed. This is more likely to occur if the RP is
 colluding with the IDP to enable tracking; expanded variants are described in <a data-link-type="dfn" href="#col2" id="ref-for-col2">COL2</a>.</p>
+   <p>For example:</p>
+   <ol>
+    <li data-md>
+     <p>User signs into RP1 (which sells jewelry) with an IDP.</p>
+    <li data-md>
+     <p>User signs into RP2 (which sells houses) with the same IDP.</p>
+    <li data-md>
+     <p>User navigates to the IDP.</p>
+    <li data-md>
+     <p>Because the IDP knows that the user has an account with RP1 and RP2, the IDP can show ads about vacations for honeymoons.</p>
+    <li data-md>
+     <p>The user is surprised that their IDP is aware of their plans to get married.</p>
+   </ol>
    <h6 class="heading settled" data-level="10.1.2.2.2" id="-idp2-identity-provider-misusing-federated-sign-in-capabilities"><span class="secno">10.1.2.2.2. </span><span class="content">(<dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="idp2">IDP2</dfn>) Identity Provider misusing federated sign-in capabilities</span><a class="self-link" href="#-idp2-identity-provider-misusing-federated-sign-in-capabilities"></a></h6>
    <p>Since IDPs have unconstrained ability to issue ID tokens, they are capable
 of logging in to users’ federated accounts without user knowledge or action,
 impersonating the user and potentially gaining full access to the user’s account on the RP.</p>
+   <p>For example:</p>
+   <ol>
+    <li data-md>
+     <p>User signs into RP1 (which is a online dating site) with an IDP.</p>
+    <li data-md>
+     <p>An evil employee at IDP is an ex-spouse of the user.</p>
+    <li data-md>
+     <p>The evil employee impersonates themselves as the User and gains access to RP1</p>
+    <li data-md>
+     <p>The evil employee looks at the user’s dating history.</p>
+    <li data-md>
+     <p>The user is surprised by their ex-spouse’s knowledge of their recent dating affairs.</p>
+   </ol>
    <h5 class="heading settled" data-level="10.1.2.3" id="relying-party-and-identity-provider-colluding-to-collect-information"><span class="secno">10.1.2.3. </span><span class="content">Relying Party and Identity Provider colluding to collect information</span><a class="self-link" href="#relying-party-and-identity-provider-colluding-to-collect-information"></a></h5>
    <h6 class="heading settled" data-level="10.1.2.3.1" id="-col1-idp-exceeding-users-information-sharing-permission"><span class="secno">10.1.2.3.1. </span><span class="content">(<dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="col1">COL1</dfn>) IDP exceeding user’s information sharing permission</span><a class="self-link" href="#-col1-idp-exceeding-users-information-sharing-permission"></a></h6>
    <p>Existing federated identity protocols are clear on what information an RP
@@ -1614,7 +1659,29 @@ additional information embedded in the response. An example could be if
 the IDP encodes an identifier that could be used to load user-targeted
 advertisements on RP pages, which could be of value where the IDP has much
 more profiling information about the user.</p>
-   <p>Another example is if identifying information is shared out-of-band, invisible to the browser, in which case it could contain anything.</p>
+   <p>Another example is if identifying information is shared out-of-band,
+invisible to the browser, in which case it could contain anything.</p>
+   <p>For example:</p>
+   <ol>
+    <li data-md>
+     <p>User signs into RP1 (which sells jewelry) with an IDP, providing to RP1 their <a data-link-type="dfn" href="#directed" id="ref-for-directed①">directed</a> email address SHA256(user + RP1)@email.example</p>
+    <li data-md>
+     <p>User signs into RP2 (which sells houses) with an IDP, providing to RP2 their <a data-link-type="dfn" href="#directed" id="ref-for-directed②">directed</a> email address SHA256(user + RP2)@email.example</p>
+    <li data-md>
+     <p>User browses the collection of wedding rings in RP1.</p>
+    <li data-md>
+     <p>Out of band, RP1 colludes with the IDP and exchanges SHA256(user + RP1)@email.example to user@email.example.</p>
+    <li data-md>
+     <p>RP1 tells RP2 that user@email.example is shopping for wedding rings</p>
+    <li data-md>
+     <p>User browses the housing inventory in RP2.</p>
+    <li data-md>
+     <p>Out of band, RP2 colludes with the IDP and exchanges SHA256(user + RP2)@email.example to user@email.example.</p>
+    <li data-md>
+     <p>RP2 uses the fact that the user is shopping for wedding rings in RP1 to advertise and filters their housing inventory.</p>
+    <li data-md>
+     <p>User is surprised that RP2 knows that they are shopping for wedding rings.</p>
+   </ol>
    <h6 class="heading settled" data-level="10.1.2.3.2" id="-col2-rp-sharing-user-identifying-information-with-the-idp"><span class="secno">10.1.2.3.2. </span><span class="content">(<dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="col2">COL2</dfn>) RP sharing user-identifying information with the IDP</span><a class="self-link" href="#-col2-rp-sharing-user-identifying-information-with-the-idp"></a></h6>
    <p>The potential for IDPs profiling users based on their visits to RPs <a data-link-type="dfn" href="#idp1" id="ref-for-idp1">IDP1</a> can
 be partially mitigated by hiding the RP from the IDP until after the user has
@@ -1631,18 +1698,23 @@ in the request that the IDP could correlate to other requests from other RPs;</p
      <p>The RP being able to provide fine-resolution timing information about
 the request to the IDP out of band.</p>
    </ul>
-   <p>The timing information can enable tracking in the following way: The RP logs the
-time at which it invoked the API, and the IDP logs the time at which it received
-a credentialed WebID request from the user, and later they attempt to link the
-invocation and the request together using that information. Notably, this is possible
-without WebID using simple cross-origin top-level navigations, but using WebID
-for this purpose would worsen the problem if it improved timing resolution or was
-less visible to users.</p>
+   <p>The timing information can enable tracking in the following way:</p>
+   <ol>
+    <li data-md>
+     <p>The RP logs the time at which it invoked the API, and</p>
+    <li data-md>
+     <p>The IDP logs the time at which it received a credentialed WebID request from the user, and later</p>
+    <li data-md>
+     <p>They attempt to link the invocation and the request together using that information.</p>
+   </ol>
+   <p>Notably, this is possible without WebID using simple cross-origin top-level navigations,
+but using WebID for this purpose would worsen the problem if it improved timing resolution
+or was less visible to users.</p>
    <h4 class="heading settled" data-level="10.1.3" id="mitigations"><span class="secno">10.1.3. </span><span class="content">Mitigations</span><a class="self-link" href="#mitigations"></a></h4>
    <h5 class="heading settled" data-level="10.1.3.1" id="directed-identifiers"><span class="secno">10.1.3.1. </span><span class="content">Directed identifiers</span><a class="self-link" href="#directed-identifiers"></a></h5>
    <ul>
     <li data-md>
-     <p>Mitigates: <a data-link-type="dfn">RP1a</a></p>
+     <p>Mitigates: <a data-link-type="dfn" href="#rp1a" id="ref-for-rp1a">RP1.a</a></p>
    </ul>
    <p>The problem of RPs joining user data via back-channels is inherent to the proliferation of identifying user data. This can be solved by issuing ‘directed’ identifiers that provide an effective handle to a user’s identity with a given IDP that is unique and therefore cannot be correlated with other RPs. The term ‘directed’ implies that it is unidirectionally identifying, such as in a directed graph. In the past, there have been schemes to accomplish this using one-way hashes of, for example, the user’s name, the IDP and the RP. Notably, this mitigation is not robust against collusion from between the IDP and the RP, or the IDP participating in tracking itself. Also, collaborating RPs might be able to defeat this mitigation by sharing the same CLIENT_ID, although possibly this could be detected and presumably would violate RP agreements with IDPs.</p>
    <h5 class="heading settled" data-level="10.1.3.2" id="browser-enforced-consent"><span class="secno">10.1.3.2. </span><span class="content">Browser-enforced consent</span><a class="self-link" href="#browser-enforced-consent"></a></h5>
@@ -2249,6 +2321,7 @@ Additionally, a consent prompt preceding the sharing of the RP’s request to th
    <b><a href="#directed">#directed</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-directed">10.1.2.1.1. (RP1) Relying Party uses user information for purposes not authorized by the user</a>
+    <li><a href="#ref-for-directed①">10.1.2.3.1. (COL1) IDP exceeding user’s information sharing permission</a> <a href="#ref-for-directed②">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="dom-wellknown-accounts_endpoint">
@@ -2461,6 +2534,12 @@ Additionally, a consent prompt preceding the sharing of the RP’s request to th
    <ul>
     <li><a href="#ref-for-rp1">10.1.2.1.1. (RP1) Relying Party uses user information for purposes not authorized by the user</a>
     <li><a href="#ref-for-rp1①">10.1.3.6. Identity Provider has a relationship with the RP</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="rp1a">
+   <b><a href="#rp1a">#rp1a</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-rp1a">10.1.3.1. Directed identifiers</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="rp2">

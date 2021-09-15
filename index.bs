@@ -1022,12 +1022,24 @@ since it amounts to a join of user records between the account databases of mult
 
 This correlation and profile-building is outside the user’s control and entirely out of the user agent’s or IDP’s view.
 
+For example:
+
+    1. User signs into RP1 (which sells jewelry) with an IDP, providing to RP1 their email address user@email.example
+    1. User signs into RP2 (which sells houses) with an IDP, providing to RP2 their email address user@email.example
+    1. User browses the collection of wedding rings in RP1.
+    1. Out of band, RP1 tells RP2 that user@email.example is shopping for wedding rings
+    1. User browses the housing inventory in RP2.
+    1. RP2 uses the fact that the user is shopping for wedding rings in RP1 to advertise and filters their housing inventory.
+    1. User is surprised that RP2 knows that they are shopping for wedding rings.
+
 ##### (<dfn>RP2</dfn>)  Relying Party obtains personal user information from Identity Provider without user consent
 
 An RP might attempt to obtain user information from an IDP without the user
 having consented to the information being released, or being aware of it being released.
 
 This can happen if user consent mechanisms are missing, inadequate, or susceptible to bypass.
+
+For example, an RP can use clickjacking to trick the user into signing-into their site.
 
 ##### (<dfn>RP3</dfn>) Relying Party employs client state-based tracking to identify user
 
@@ -1036,6 +1048,8 @@ vector for fingerprinting or ‘supercookies’.
 
 This risk would be increased by any proposal for browser mediation that
 adds directly (or indirectly) detectable client state.
+
+For example, an RP can use the browser state of the WebID to add bits of entropy and fingerprint the user.
 
 #### Identity Provider collecting information
 
@@ -1053,11 +1067,27 @@ account information (for instance, if it is not a _bona fide_ IDP), because WebI
 requests sent to the IDP are credentialed. This is more likely to occur if the RP is
 colluding with the IDP to enable tracking; expanded variants are described in [=COL2=].
 
+For example:
+
+    1. User signs into RP1 (which sells jewelry) with an IDP.
+    1. User signs into RP2 (which sells houses) with the same IDP.
+    1. User navigates to the IDP.
+    1. Because the IDP knows that the user has an account with RP1 and RP2, the IDP can show ads about vacations for honeymoons.
+    1. The user is surprised that their IDP is aware of their plans to get married.
+
 ##### (<dfn>IDP2</dfn>) Identity Provider misusing federated sign-in capabilities
 
 Since IDPs have unconstrained ability to issue ID tokens, they are capable
 of logging in to users’ federated accounts without user knowledge or action,
 impersonating the user and potentially gaining full access to the user's account on the RP.
+
+For example:
+
+    1. User signs into RP1 (which is a online dating site) with an IDP.
+    1. An evil employee at IDP is an ex-spouse of the user.
+    1. The evil employee impersonates themselves as the User and gains access to RP1
+    1. The evil employee looks at the user's dating history.
+    1. The user is surprised by their ex-spouse's knowledge of their recent dating affairs.
 
 #### Relying Party and Identity Provider colluding to collect information
 
@@ -1072,7 +1102,20 @@ the IDP encodes an identifier that could be used to load user-targeted
 advertisements on RP pages, which could be of value where the IDP has much
 more profiling information about the user.
 
-Another example is if identifying information is shared out-of-band, invisible to the browser, in which case it could contain anything.
+Another example is if identifying information is shared out-of-band,
+invisible to the browser, in which case it could contain anything.
+
+For example:
+
+    1. User signs into RP1 (which sells jewelry) with an IDP, providing to RP1 their [=directed=] email address SHA256(user + RP1)@email.example
+    1. User signs into RP2 (which sells houses) with an IDP, providing to RP2 their [=directed=] email address SHA256(user + RP2)@email.example
+    1. User browses the collection of wedding rings in RP1.
+    1. Out of band, RP1 colludes with the IDP and exchanges SHA256(user + RP1)@email.example to user@email.example.
+    1. RP1 tells RP2 that user@email.example is shopping for wedding rings
+    1. User browses the housing inventory in RP2.
+    1. Out of band, RP2 colludes with the IDP and exchanges SHA256(user + RP2)@email.example to user@email.example.
+    1. RP2 uses the fact that the user is shopping for wedding rings in RP1 to advertise and filters their housing inventory.
+    1. User is surprised that RP2 knows that they are shopping for wedding rings.
 
 ##### (<dfn>COL2</dfn>) RP sharing user-identifying information with the IDP
 
@@ -1092,19 +1135,21 @@ in the request that the IDP could correlate to other requests from other RPs;
 * The RP being able to provide fine-resolution timing information about
 the request to the IDP out of band.
 
-The timing information can enable tracking in the following way: The RP logs the
-time at which it invoked the API, and the IDP logs the time at which it received
-a credentialed WebID request from the user, and later they attempt to link the
-invocation and the request together using that information. Notably, this is possible
-without WebID using simple cross-origin top-level navigations, but using WebID
-for this purpose would worsen the problem if it improved timing resolution or was
-less visible to users.
+The timing information can enable tracking in the following way:
+
+    1. The RP logs the time at which it invoked the API, and
+    1. The IDP logs the time at which it received a credentialed WebID request from the user, and later
+    1. They attempt to link the invocation and the request together using that information.
+
+Notably, this is possible without WebID using simple cross-origin top-level navigations,
+but using WebID for this purpose would worsen the problem if it improved timing resolution
+or was less visible to users.
 
 ### Mitigations
 
 #### Directed identifiers
 
-* Mitigates: [=RP1a=]
+* Mitigates: [=RP1.a=]
 
 The problem of RPs joining user data via back-channels is inherent to the proliferation of identifying user data. This can be solved by issuing ‘directed’ identifiers that provide an effective handle to a user’s identity with a given IDP that is unique and therefore cannot be correlated with other RPs. The term ‘directed’ implies that it is unidirectionally identifying, such as in a directed graph. In the past, there have been schemes to accomplish this using one-way hashes of, for example, the user’s name, the IDP and the RP. Notably, this mitigation is not robust against collusion from between the IDP and the RP, or the IDP participating in tracking itself. Also, collaborating RPs might be able to defeat this mitigation by sharing the same CLIENT_ID, although possibly this could be detected and presumably would violate RP agreements with IDPs.
 
