@@ -282,6 +282,15 @@ async function login(signal) {
 : <dfn>out-of-band</dfn>
 :: Outside of the user agent's context.
 
+: <dfn>joining</dfn>
+:: 
+
+: <dfn>directed</dfn>
+:: 
+
+: <dfn>global</dfn>
+:: 
+
 <!-- ============================================================ -->
 # High Level Design # {#lifecycle}
 <!-- ============================================================ -->
@@ -993,52 +1002,103 @@ For the purpose of discussion this document assumes that third-party cookies are
 #### Relying Party collecting information
 <!-- ============================================================ -->
 
-<!-- ============================================================ -->
-##### (<dfn>RP1</dfn>) Multiple Relying Parties correlate user information for tracking purposes
-<!-- ============================================================ -->
+##### (<dfn>RP1</dfn>) Relying Party uses user information for purposes not authorized by the user
 
-When a user willingly provides their full name, email address, phone number, etc, to multiple relying parties, those relying parties can collaborate to build a profile of that user and their activity across collaborating sites. This correlation and profile-building is outside the user’s control and entirely out of the browser’s or IDP’s view.
+When the user agrees to allow the IDP to provide information to the RP,
+the consent is specific to certain purposes, such as sign-in and personalization.
+The RP might use that data for other purposes that the user would not expect and
+did not authorize, such as selling email addresses to a spam list.
 
-##### (<dfn>RP2</dfn>) Relying Party obtains personal user information from IDP without user consent
+Note: Spamming risk can exist even when using [=directed=] identifiers.
 
-A relying party might attempt to obtain user information from an identity provider without the user having consenting to the information being released, or being aware of it being released. This can happen if consent mechanisms are missing, inadequate, or susceptible to bypass.
+An important sub case of [=RP1=] is:
 
-##### (<dfn>RP3</dfn>) Relying Party uses user information for purposes to which the user did not consent
+(<dfn>RP1.a</dfn>): Multiple Relying Parties correlate user information for tracking purposes
 
-When the user agrees to allow the IDP to provide information to the RP, the consent is specific to specific purposes, such as sign-in and personalization. The RP might use that data for other purposes, such as selling email addresses to a spam list. Spamming risk can exist even when using [directed identifiers](#directed-identifiers).
+When a user willingly provides their full name, email address, phone number, etc,
+to multiple relying parties, those relying parties can collaborate to build a
+profile of that user and their activity across collaborating sites. Sometimes this is referred to as [=joining=]
+since it amounts to a join of user records between the account databases of multiple RPs.
 
-##### (<dfn>RP4</dfn>) Relying Party employs client state-based tracking to identify user
+This correlation and profile-building is outside the user’s control and entirely out of the user agent’s or IDP’s view.
 
- Any API that exposes any kind of client state to the web risk becoming a vector for fingerprinting or ‘supercookies’. Neither the status quo of federated identity nor current proposals for browser mediation add detectable client state that would increase fingerprinting risk, but any changes or additional features need to be analyzed as to whether they increase the feasibility of sites tracking users without cookies.
+##### (<dfn>RP2</dfn>)  Relying Party obtains personal user information from Identity Provider without user consent
+
+An RP might attempt to obtain user information from an IDP without the user
+having consented to the information being released, or being aware of it being released.
+
+This can happen if user consent mechanisms are missing, inadequate, or susceptible to bypass.
+
+##### (<dfn>RP3</dfn>) Relying Party employs client state-based tracking to identify user
+
+Any API that exposes any kind of client state to the web risk becoming a
+vector for fingerprinting or ‘supercookies’.
+
+This risk would be increased by any proposal for browser mediation that
+adds directly (or indirectly) detectable client state.
 
 #### Identity Provider collecting information
 
 ##### (<dfn>IDP1</dfn>) Identity Provider tracking user sign-ins to Relying Party sites
 
-Existing federation protocols require that the Identity Provider know the CLIENT_ID of the Relying Party in order to allow identity federation. Identity providers can use this fact to build profiles of users across sites where the user has decided to use federation with the same account. This profile could be used, for example, to serve targeted advertisements to those users browsing on sites that the IDP controls.
+Existing federation protocols require that the IDP know which service is
+requesting an ID token in order to allow identity federation (e.g. the IDP must know the OAuth `client_id`).
 
-This risk can exist even in the case where the IDP does not having pre-existing user account information (for instance, if it is not a bona fide IDP), because WebID requests sent to the IDP are credentialed. This is more likely to occur if the RP is colluding with the IDP to enable tracking; expanded variants are described in [=COL2=].
+Identity providers can use this fact to build profiles of users across sites where the user
+has decided to use federation with the same account. This profile could be used, for example,
+to serve targeted advertisements to those users browsing on sites that the IDP controls.
 
-##### (<dfn>IDP2</dfn>) Identity Provider Impersonation
+This risk can exist even in the case where the IDP does not having pre-existing user
+account information (for instance, if it is not a _bona fide_ IDP), because WebID
+requests sent to the IDP are credentialed. This is more likely to occur if the RP is
+colluding with the IDP to enable tracking; expanded variants are described in [=COL2=].
 
-Since Identity Providers have unconstrained ability to issue ID tokens, they are capable of logging in to users’ federated accounts without user knowledge or action.
+##### (<dfn>IDP2</dfn>) Identity Provider misusing federated sign-in capabilities
+
+Since IDPs have unconstrained ability to issue ID tokens, they are capable
+of logging in to users’ federated accounts without user knowledge or action,
+impersonating the user and potentially gaining full access to the user's account on the RP.
 
 #### Relying Party and Identity Provider colluding to collect information
 
 ##### (<dfn>COL1</dfn>) IDP exceeding user’s information sharing permission
 
-Existing federated identity protocols are clear on what information an RP is requesting, which the IDP can provide. While the browser can inspect the request and response and consider whether user permission has been granted for that transfer, it is difficult to know that there is no additional information embedded in the response. An example could be if the IDP encodes an identifier that could be used to load user-targeted advertisements on RP pages, which could be of value where the IDP has much more profiling information about the user. Another example is if the ID token is shared out-of-band, invisible to the browser, in which case it could contain anything.
+Existing federated identity protocols are clear on what information an RP
+is requesting, which the IDP can provide. While the browser can inspect
+the request and response and consider whether user permission has been
+granted for that transfer, it is difficult to know that there is no
+additional information embedded in the response. An example could be if
+the IDP encodes an identifier that could be used to load user-targeted
+advertisements on RP pages, which could be of value where the IDP has much
+more profiling information about the user.
 
-##### (<dfn>COL2</dfn>) RP sharing user-identifying information with the IDP
+Another example is if identifying information is shared out-of-band, invisible to the browser, in which case it could contain anything.
 
-The potential for IDPs profiling users based on their visits to RPs (described in [=IDP1=]) can be partially mitigated by hiding the RP from the IDP until after the user has consented to that tracking risk. However, there is residual risk in cases where the RP and IDP are colluding.
+### (<dfn>COL2</dfn>) RP sharing user-identifying information with the IDP
 
-If a credentialed request is sent to the IDP that does not explicitly identify the RP, either of the following would still allow tracking by the IDP (again, possibly not a bona fide IDP that has existing knowledge of the user):
+The potential for IDPs profiling users based on their visits to RPs [=IDP1=] can
+be partially mitigated by hiding the RP from the IDP until after the user has
+consented to that tracking risk.
 
-* The RP controlling any field in the request that can be used to convey identifying data in the request that the IDP could correlate to other requests from other RPs;
-* The RP being able to provide fine-resolution timing information about the request to the IDP out of band.
+However, there is residual risk in cases where the RP and IDP are colluding.
 
-The timing information can enable tracking in the following way: The RP logs the time at which it invoked the API, and the IDP logs the time at which it received a credentialed WebID request from the user, and later they attempt to link the invocation and the request together using that information. Notably, this is possible without WebID using simple cross-origin top-level navigations, but using WebID for this purpose would worsen the problem if it improved timing resolution or was less visible to users.
+If a credentialed request is sent to the IDP that does not explicitly identify
+the RP, either of the following would still allow tracking by the IDP (again,
+possibly not a _bona fide_ IDP that has existing knowledge of the user):
+
+* The RP controlling any field in the request that can be used to convey identifying data
+in the request that the IDP could correlate to other requests from other RPs;
+
+* The RP being able to provide fine-resolution timing information about
+the request to the IDP out of band.
+
+The timing information can enable tracking in the following way: The RP logs the
+time at which it invoked the API, and the IDP logs the time at which it received
+a credentialed WebID request from the user, and later they attempt to link the
+invocation and the request together using that information. Notably, this is possible
+without WebID using simple cross-origin top-level navigations, but using WebID
+for this purpose would worsen the problem if it improved timing resolution or was
+less visible to users.
 
 ### Mitigation
 
