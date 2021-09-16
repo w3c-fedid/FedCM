@@ -221,28 +221,61 @@ of identity between [=IDP=]s and [=RP=]s. When it succeeds, it returns to the [=
 which the [=RP=] can use to authenticate the user.
 
 <div class=example>
-```js
-async function login(signal) {
-  const {idToken} = await navigator.credentials.get({
-    // controls whether auto sign-in is enabled or not
-    mediation: "optional",
-    // controls abortions of the account chooser
-    signal: signal
+```html
+<html>
+  <head>
+    <title>Welcome to my WebSite!</title>
+  </head>
+  <body>
+    <button onclick="login('https://foo.example', '123')">Sign-in with Foo</button>
+    <button onclick="logout()">logout</button>
 
-    // controls which identity providers to use
-    federated: {
-      // controls whether the account chooser is modal or not
-      providers: [{
-        url: "https://idp.example",
-        // the pre-registered client id  
-        clientId: "123",
-        nonce: "456"
-      }],
+    Welcome <span id="name"></span>!!
+
+    <button onclick="revoke">delete account</button>
+
+    <script>
+
+    var user;
+
+    async function login(provider, clientId) {
+      const {idToken} = await navigator.credentials.get({
+        // controls whether auto sign-in is enabled or not
+        mediation: "optional",
+        // controls abortions of the account chooser
+        signal: signal
+
+        // controls which identity providers to use
+        federated: {
+          // controls whether the account chooser is modal or not
+          providers: [{
+            url: provider,
+            // the pre-registered client id  
+            clientId: clientId,
+            nonce: "456"
+          }],
+        }
+      });
+
+      // ... do stuff ...
+      // ... send to server ...
+      // ... validate ...
+      // ... update local storage ...
+
+      user = parse(idToken);
+      document.getElementById("name").innerText = user.name;
     }
-  });
 
-  return idToken;
-}
+    async function logout() {
+      await navigator.credentials.preventSilentAccess();
+    }
+
+    async function revoke() {
+      await FederatedCredential.revoke(user.id);
+    }
+    </script>
+  </body>
+</html>
 ```
 </div>
 

@@ -6,7 +6,7 @@
   <link href="https://www.w3.org/StyleSheets/TR/2016/cg-draft" rel="stylesheet">
   <meta content="Bikeshed version 4f053d00e, updated Tue Aug 10 14:13:32 2021 -0700" name="generator">
   <link href="http://wicg.github.io/WebID" rel="canonical">
-  <meta content="d1a61a68379d8cdcd841f855eae4e9ed6ee0aa21" name="document-revision">
+  <meta content="7d6ca857d53430cc9f9e7ec6303c02c23cccabf7" name="document-revision">
 <style>
 dl.domintro dt {
     font-family: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
@@ -922,29 +922,62 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
    <h2 class="heading settled" data-level="3" id="examples"><span class="secno">3. </span><span class="content">Examples</span><a class="self-link" href="#examples"></a></h2>
    <p>This specification extends the <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#federatedcredential" id="ref-for-federatedcredential">FederatedCredential</a></code> type and internal algorithms to allow the exchange
 of identity between <a data-link-type="dfn" href="#idp" id="ref-for-idp">IDP</a>s and <a data-link-type="dfn" href="#rp" id="ref-for-rp">RP</a>s. When it succeeds, it returns to the <a data-link-type="dfn" href="#rp" id="ref-for-rp①">RP</a> a signed <a data-link-type="dfn" href="#id-token" id="ref-for-id-token">id token</a> which the <a data-link-type="dfn" href="#rp" id="ref-for-rp②">RP</a> can use to authenticate the user.</p>
-   <div class="example" id="example-4b8efa39">
-    <a class="self-link" href="#example-4b8efa39"></a> 
-<pre class="language-js highlight"><c- k>async</c-> <c- a>function</c-> login<c- p>(</c->signal<c- p>)</c-> <c- p>{</c->
-  <c- a>const</c-> <c- p>{</c->idToken<c- p>}</c-> <c- o>=</c-> <c- k>await</c-> navigator<c- p>.</c->credentials<c- p>.</c->get<c- p>({</c->
-    <c- c1>// controls whether auto sign-in is enabled or not</c->
-    mediation<c- o>:</c-> <c- u>"optional"</c-><c- p>,</c->
-    <c- c1>// controls abortions of the account chooser</c->
-    signal<c- o>:</c-> signal
+   <div class="example" id="example-e9b7d444">
+    <a class="self-link" href="#example-e9b7d444"></a> 
+<pre class="language-html highlight"><c- p>&lt;</c-><c- f>html</c-><c- p>></c->
+  <c- p>&lt;</c-><c- f>head</c-><c- p>></c->
+    <c- p>&lt;</c-><c- f>title</c-><c- p>></c->Welcome to my WebSite!<c- p>&lt;/</c-><c- f>title</c-><c- p>></c->
+  <c- p>&lt;/</c-><c- f>head</c-><c- p>></c->
+  <c- p>&lt;</c-><c- f>body</c-><c- p>></c->
+    <c- p>&lt;</c-><c- f>button</c-> <c- e>onclick</c-><c- o>=</c-><c- s>"login('https://foo.example', '123')"</c-><c- p>></c->Sign-in with Foo<c- p>&lt;/</c-><c- f>button</c-><c- p>></c->
+    <c- p>&lt;</c-><c- f>button</c-> <c- e>onclick</c-><c- o>=</c-><c- s>"logout()"</c-><c- p>></c->logout<c- p>&lt;/</c-><c- f>button</c-><c- p>></c->
 
-    <c- c1>// controls which identity providers to use</c->
-    federated<c- o>:</c-> <c- p>{</c->
-      <c- c1>// controls whether the account chooser is modal or not</c->
-      providers<c- o>:</c-> <c- p>[{</c->
-        url<c- o>:</c-> <c- u>"https://idp.example"</c-><c- p>,</c->
-        <c- c1>// the pre-registered client id  </c->
-        clientId<c- o>:</c-> <c- u>"123"</c-><c- p>,</c->
-        nonce<c- o>:</c-> <c- u>"456"</c->
-      <c- p>}],</c->
+    Welcome <c- p>&lt;</c-><c- f>span</c-> <c- e>id</c-><c- o>=</c-><c- s>"name"</c-><c- p>>&lt;/</c-><c- f>span</c-><c- p>></c->!!
+
+    <c- p>&lt;</c-><c- f>button</c-> <c- e>onclick</c-><c- o>=</c-><c- s>"revoke"</c-><c- p>></c->delete account<c- p>&lt;/</c-><c- f>button</c-><c- p>></c->
+
+    <c- p>&lt;</c-><c- f>script</c-><c- p>></c->
+
+    <c- a>var</c-> user<c- p>;</c->
+
+    <c- k>async</c-> <c- a>function</c-> login<c- p>(</c->provider<c- p>,</c-> clientId<c- p>)</c-> <c- p>{</c->
+      <c- a>const</c-> <c- p>{</c->idToken<c- p>}</c-> <c- o>=</c-> <c- k>await</c-> navigator<c- p>.</c->credentials<c- p>.</c->get<c- p>({</c->
+        <c- c1>// controls whether auto sign-in is enabled or not</c->
+        mediation<c- o>:</c-> <c- u>"optional"</c-><c- p>,</c->
+        <c- c1>// controls abortions of the account chooser</c->
+        signal<c- o>:</c-> signal
+
+        <c- c1>// controls which identity providers to use</c->
+        federated<c- o>:</c-> <c- p>{</c->
+          <c- c1>// controls whether the account chooser is modal or not</c->
+          providers<c- o>:</c-> <c- p>[{</c->
+            url<c- o>:</c-> provider<c- p>,</c->
+            <c- c1>// the pre-registered client id  </c->
+            clientId<c- o>:</c-> clientId<c- p>,</c->
+            nonce<c- o>:</c-> <c- u>"456"</c->
+          <c- p>}],</c->
+        <c- p>}</c->
+      <c- p>});</c->
+
+      <c- c1>// ... do stuff ...</c->
+      <c- c1>// ... send to server ...</c->
+      <c- c1>// ... validate ...</c->
+      <c- c1>// ... update local storage ...</c->
+
+      user <c- o>=</c-> parse<c- p>(</c->idToken<c- p>);</c->
+      document<c- p>.</c->getElementById<c- p>(</c-><c- u>"name"</c-><c- p>).</c->innerText <c- o>=</c-> user<c- p>.</c->name<c- p>;</c->
     <c- p>}</c->
-  <c- p>});</c->
 
-  <c- k>return</c-> idToken<c- p>;</c->
-<c- p>}</c->
+    <c- k>async</c-> <c- a>function</c-> logout<c- p>()</c-> <c- p>{</c->
+      <c- k>await</c-> navigator<c- p>.</c->credentials<c- p>.</c->preventSilentAccess<c- p>();</c->
+    <c- p>}</c->
+
+    <c- k>async</c-> <c- a>function</c-> revoke<c- p>()</c-> <c- p>{</c->
+      <c- k>await</c-> FederatedCredential<c- p>.</c->revoke<c- p>(</c->user<c- p>.</c->id<c- p>);</c->
+    <c- p>}</c->
+    <c- p>&lt;/</c-><c- f>script</c-><c- p>></c->
+  <c- p>&lt;/</c-><c- f>body</c-><c- p>></c->
+<c- p>&lt;/</c-><c- f>html</c-><c- p>></c->
 </pre>
    </div>
    <h2 class="heading settled" data-level="4" id="terminology"><span class="secno">4. </span><span class="content">Terminology</span><a class="self-link" href="#terminology"></a></h2>
@@ -1249,8 +1282,8 @@ the <a data-link-type="dfn" href="#rp" id="ref-for-rp①③">RP</a>.</p>
    <p>The <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party③⑦">Relying Party</a> makes no delineation between Sign-up and Sign-in, but rather call the same API indistinguishably. The most important parameter to the API call is the set of <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②②">Identity Provider</a>s that the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party③⑧">Relying Party</a> supports and has pre-registered with (i.e. it has a <code>clientId</code>).</p>
    <p>Additionally, the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party③⑨">Relying Party</a> can control a variety of UX knobs. For example, whether to allow an <a href="#use-cases-auto-sign-in">§ 2.2.1 Auto Sign-in</a> flow and an AbortSignal in case it needs to abort the flow.</p>
    <p>If all goes well, the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④⓪">Relying Party</a> receives back an <a data-link-type="dfn" href="#id-token" id="ref-for-id-token③">id token</a> in the form of a signed <a data-link-type="biblio" href="https://datatracker.ietf.org/doc/html/rfc7519"><cite>JWT</cite></a> which it can use to authenticate the user.</p>
-   <div class="example" id="example-4b8efa39①">
-    <a class="self-link" href="#example-4b8efa39①"></a> 
+   <div class="example" id="example-4b8efa39">
+    <a class="self-link" href="#example-4b8efa39"></a> 
 <pre class="language-js highlight"><c- k>async</c-> <c- a>function</c-> login<c- p>(</c->signal<c- p>)</c-> <c- p>{</c->
   <c- a>const</c-> <c- p>{</c->idToken<c- p>}</c-> <c- o>=</c-> <c- k>await</c-> navigator<c- p>.</c->credentials<c- p>.</c->get<c- p>({</c->
     <c- c1>// controls whether auto sign-in is enabled or not</c->
