@@ -1034,6 +1034,8 @@ See also:
 
     * [[PRINCIPLES]]
     * [[ETHICS]]
+    * [[SELF-REVIEW#threats]]
+    * [[PRIVACY-CONSIDERATIONS#privacy-threats]]
     * [A Potential Privacy Model for the Web](https://github.com/michaelkleber/privacy-model)
     * [Editor’s Draft for a Web Privacy Threat Model](https://w3cping.github.io/privacy-threat-model/)
     * [Security and Privacy Considerations for SAML V2.0](https://docs.oasis-open.org/security/saml/v2.0/saml-sec-consider-2.0-os.pdf)
@@ -1073,8 +1075,10 @@ See also:
 <!-- ============================================================ -->
 
 <!-- ============================================================ -->
-##### RP Tracking ##### {#rp-tracking}
+##### RP Correlation ##### {#rp-correlation}
 <!-- ============================================================ -->
+
+Correlation is the combination of various pieces of information related to an individual or that obtain that characteristic when combined.
 
 This attack happens when multiple [=RP=]s correlate user information for tracking purposes.
 
@@ -1095,7 +1099,7 @@ This correlation and profile-building is outside the user’s control and entire
     1. User is surprised that RP2 knows that they are shopping for wedding rings.
 </div>
 
-A generalization of [[#rp-tracking]] is:
+A generalization of [[#rp-correlation]] is:
 
 (<dfn>RP1.g</dfn>) Relying Party uses user information for purposes not authorized by the user
 
@@ -1122,10 +1126,15 @@ An RP can use clickjacking to trick the user into signing-into their site.
 </div>
 
 <!-- ============================================================ -->
-##### Fingerprinting ##### {#fingerprinting}
+##### Identification by Fingerprinting ##### {#fingerprinting}
 <!-- ============================================================ -->
 
-This attack happens when the Relying Party employs client state-based tracking to identify user.
+Identification is the linking of information to a particular individual
+to infer an individual’s identity or to allow the inference of an
+individual’s identity.
+
+This attack happens when the Relying Party employs client state-based
+tracking to identify user.
 
 Any API that exposes any kind of client state to the web risk becoming a
 vector for fingerprinting or ‘supercookies’.
@@ -1146,10 +1155,15 @@ See also:
 <!-- ============================================================ -->
 
 <!-- ============================================================ -->
-##### IDP Tracking ##### {#idp-tracking}
+##### IDP Secondary Use ##### {#idp-secondary-use}
 <!-- ============================================================ -->
 
-This attack happens when Identity Providers tracks user sign-ins to Relying Party sites.
+Secondary use is the use of collected information about an individual
+without the individual’s consent for a purpose different from that for
+which the information was collected.
+
+This attack happens when Identity Providers misuses the the information
+collected to enable sign-in for other purposes.
 
 Existing federation protocols require that the IDP know which service is
 requesting an ID token in order to allow identity federation (e.g. the IDP must know the OAuth `client_id`).
@@ -1255,19 +1269,19 @@ See also:
 
     1. [[DESIGN-PRINCIPLES#safe-to-browse]]
 
-## Mitigations
+## Mitigation Strategies
 
 ### Directed Identifiers
 
 Mitigates:
 
-    * [[#rp-tracking]]
+    * [[#rp-correlation]]
 
 The problem of RPs joining user data via back-channels is inherent to the proliferation of identifying user data. This can be solved by issuing ‘directed’ identifiers that provide an effective handle to a user’s identity with a given IDP that is unique and therefore cannot be correlated with other RPs. The term ‘directed’ implies that it is unidirectionally identifying, such as in a directed graph. In the past, there have been schemes to accomplish this using one-way hashes of, for example, the user’s name, the IDP and the RP.
 
 Note: this mitigation is not robust against [[#idp-rp-collusion]], or the [[#idp-tracking]]. Also, collaborating RPs might be able to defeat this mitigation by sharing the same CLIENT_ID, although possibly this could be detected and presumably would violate RP agreements with IDPs with [[#pre-registration]].
 
-### Browser-enforced consent
+### Explicit User Mediation
 
 Mitigates:
 
@@ -1281,6 +1295,7 @@ Additionally, a consent prompt preceding the sharing of the RP’s request to th
 See also:
 
   1. [[DESIGN-PRINCIPLES#consent]]
+  1. [[SELF-REVIEW#user-mediation]]
   1. [[ETHICS|Ethical Principles]]: [[ETHICS#verify|The web must make it possible for people to verify the information they see]]
   1. [[ETHICS|Ethical Principles]]: [[ETHICS#control|The web must enhance individuals' control and power]]
   1. [[LEAST-POWER]]
@@ -1316,7 +1331,7 @@ Preventing tracking of users by the IDP is difficult because the RP has to be co
 Mitigates:
 
     * [[#clickjacking]],
-    * [[#rp-tracking]]
+    * [[#rp-correlation]]
 
 Currently, IDPs require that an RP pre-registers and agrees to specific terms before the IDP will issue an ID token to them. T
 his conflicts with [the previous mitigation](#idp-blindness), but can provide a measure of RP accountability.
@@ -1392,8 +1407,9 @@ Note: write down the Acknowledgements section.
    "href": "https://www.w3.org/2001/tag/doc/ethical-web-principles",
    "title": "W3C TAG Ethical Web Principles"
   },
-  "PRIVACY": {
-    "href": "https://w3c.github.io/privacy-considerations/"
+  "PRIVACY-CONSIDERATIONS": {
+    "href": "https://w3c.github.io/privacy-considerations/",
+    "title": "Privacy Considerations for Web Protocols"
   },
   "RFC7258": {
     "href": "https://datatracker.ietf.org/doc/html/rfc7258",
@@ -1402,6 +1418,10 @@ Note: write down the Acknowledgements section.
   "SELF-REVIEW": {
     "href": "https://www.w3.org/TR/security-privacy-questionnaire/",
     "title": "Self-Review Questionnaire: Security and Privacy"
+  },
+  "FINGERPRINTING-GUIDANCE": {
+    "href": "https://w3c.github.io/fingerprinting-guidance/",
+    "title": "Mitigating Browser Fingerprinting in Web Specifications"
   },
   "Identity-Use-Cases-in-Browser-Catalog": {
     "authors": [ "V. Bertocci", "G. Fletcher" ],
