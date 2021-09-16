@@ -992,7 +992,13 @@ This section describes the three principals that would participate in an invocat
 ### Attack Scenarios ### {#attack-scenarios}
 <!-- ============================================================ -->
 
-This section describes the scenarios in which various agents might attempt to gain user information. It considers the possibilities when the RP is collecting information, the IDP is collecting information, or both the RP and the IDP are colluding. For the purposes of this section, a principal is considered to be participating in the collection of information if it directly or indirectly performs actions with the aim of realizing one of the above threats.
+This section describes the scenarios in which various agents might attempt to gain user information. It considers the possibilities when:
+
+    * [[#by-rp|The RP is collecting information]],
+    * [[#by-idp|The IDP is collecting information]], or
+    * [[#by-collusion|Both the RP and the IDP are colluding]].
+
+For the purposes of this section, a principal is considered to be participating in the collection of information if it directly or indirectly performs actions with the aim of realizing one of the above threats.
 
 Note: An example of indirect collusion would be an RP importing a script supplied by an IDP where the IDP intends to track users.
 
@@ -1003,10 +1009,12 @@ See also:
     1. [[RFC7258]]
 
 <!-- ============================================================ -->
-#### [=RP=]s collecting information
+#### By the RP #### {#by-rp}
 <!-- ============================================================ -->
 
+<!-- ============================================================ -->
 ##### RP Tracking ##### {#rp-tracking}
+<!-- ============================================================ -->
 
 This attack happens when multiple [=RP=]s correlate user information for tracking purposes.
 
@@ -1038,7 +1046,9 @@ did not authorize, such as selling email addresses to a spam list.
 
 Spamming risk can exist even when using [=directed=] identifiers.
 
-##### (<dfn>RP2</dfn>) Clickjacking
+<!-- ============================================================ -->
+##### Clickjacking ##### {#clickjacking}
+<!-- ============================================================ -->
 
 This attack scenario happens when the Relying Party tries to obtain personal user information from Identity Provider without user consent.
 
@@ -1051,7 +1061,9 @@ This can happen if user consent mechanisms are missing, inadequate, or susceptib
 An RP can use clickjacking to trick the user into signing-into their site.
 </div>
 
-##### (<dfn>RP3</dfn>) Fingerprinting
+<!-- ============================================================ -->
+##### Fingerprinting ##### {#fingerprinting}
+<!-- ============================================================ -->
 
 This attack happens when the Relying Party employs client state-based tracking to identify user.
 
@@ -1069,9 +1081,13 @@ See also:
 
    1. [[FINGERPRINTING-GUIDANCE]]
 
-#### Identity Providers collecting information
+<!-- ============================================================ -->
+#### By the IDP #### {#by-idp}
+<!-- ============================================================ -->
 
-##### (<dfn>IDP1</dfn>) IDP Tracking
+<!-- ============================================================ -->
+##### IDP Tracking ##### {#idp-tracking}
+<!-- ============================================================ -->
 
 This attack happens when Identity Providers tracks user sign-ins to Relying Party sites.
 
@@ -1095,7 +1111,9 @@ colluding with the IDP to enable tracking; expanded variants are described in [=
     1. The user is surprised that their IDP is aware of their plans to get married.
 </div>
 
-##### (<dfn>IDP2</dfn>) IDP Impersonation
+<!-- ============================================================ -->
+##### IDP Impersonation ##### {#idp-impersonation}
+<!-- ============================================================ -->
 
 Since IDPs have unconstrained ability to issue ID tokens, they are capable
 of logging in to users’ federated accounts without user knowledge or action,
@@ -1109,9 +1127,15 @@ impersonating the user and potentially gaining full access to the user's account
     1. The user is surprised by their ex-spouse's knowledge of their recent dating affairs.
 </div>
 
-#### Relying Party and Identity Provider colluding to collect information
+<!-- ============================================================ -->
+#### By Collusion #### {#by-collusion}
+<!-- ============================================================ -->
 
-##### (<dfn>COL1</dfn>) IDP exceeding user’s information sharing permission
+<!-- ============================================================ -->
+##### IDP RP Collusion ##### {#idp-rp-collusion}
+<!-- ============================================================ -->
+
+This attack scenario happens when IDP exceed the user’s information sharing permission.
 
 Existing federated identity protocols are clear on what information an RP
 is requesting, which the IDP can provide. While the browser can inspect
@@ -1137,9 +1161,11 @@ invisible to the browser, in which case it could contain anything.
     1. User is surprised that RP2 knows that they are shopping for wedding rings.
 </div>
 
-##### (<dfn>COL2</dfn>) RP sharing user-identifying information with the IDP
+<!-- ============================================================ -->
+##### Timming Attacks ##### {#timming-attacks}
+<!-- ============================================================ -->
 
-The potential for IDPs profiling users based on their visits to RPs [=IDP1=] can
+The potential for IDPs profiling users based on their visits to RPs [[#idp-tracking]] can
 be partially mitigated by hiding the RP from the IDP until after the user has
 consented to that tracking risk.
 
@@ -1173,13 +1199,17 @@ See also:
 
 #### Directed identifiers
 
-* Mitigates: [[#rp-tracking]]
+* Mitigates:
+    * [[#rp-tracking]]
 
 The problem of RPs joining user data via back-channels is inherent to the proliferation of identifying user data. This can be solved by issuing ‘directed’ identifiers that provide an effective handle to a user’s identity with a given IDP that is unique and therefore cannot be correlated with other RPs. The term ‘directed’ implies that it is unidirectionally identifying, such as in a directed graph. In the past, there have been schemes to accomplish this using one-way hashes of, for example, the user’s name, the IDP and the RP. Notably, this mitigation is not robust against collusion from between the IDP and the RP, or the IDP participating in tracking itself. Also, collaborating RPs might be able to defeat this mitigation by sharing the same CLIENT_ID, although possibly this could be detected and presumably would violate RP agreements with IDPs.
 
 #### Browser-enforced consent
 
-* Mitigates: [=RP2=], [=IDP1=], [=COL2=]
+* Mitigates:
+    * [[#clickjacking]],
+    * [[#idp-tracking]],
+    * [=COL2=]
 
 IDPs, whom the user has entrusted with their personal data, are currently responsible for ensuring that the user consents to their information being shared. With browser mediation in place, the user agent might have to assume responsibility for ensuring the user understands what is being shared and that it is intentional. This is certainly the case if the browser is able to entirely intermediate the identity flow without showing any IDP web content, but also might be desirable if there are concerns that the IDP is not collecting consent in an adequate manner.
 Additionally, a consent prompt preceding the sharing of the RP’s request to the IDP can mitigate risks around IDP tracking of user visits to RPs.
@@ -1193,7 +1223,9 @@ See also:
 
 #### Identity Provider policy
 
-* Mitigates: [=IDP2=], [=COL1=]
+* Mitigates:
+    * [[#idp-impersonation]],
+    * [[#idp-rp-collusion]]
 
 Beyond technical constraints, the browser can recognize explicit assertions by the IDP about the privacy characteristics it provides and rely on those assertions in order to guide the user appropriately. An example is a hypothetical case in which the IDP asserts it will only issue directed identifiers and will not provide identifying information to the RPs out of view of the browser. In that case the browser may not have to warn the user about sharing personalized information.
 
@@ -1205,13 +1237,17 @@ Any RPs or IDPs observed to be using this API to compromise user privacy in a de
 
 #### Hiding the RP from the IDP
 
-* Mitigates: [=IDP1=], [=COL2=]
+* Mitigates:
+    * [[#idp-tracking]],
+    * [=COL2=]
 
 Preventing tracking of users by the IDP is difficult because the RP has to be coded into the identity token for security reasons, to prevent reuse of the token. There have been cryptographic schemes developed to blind the IDP to the RP while still preventing token reuse in that way (see Mozilla’s [personas](https://wiki.mozilla.org/Identity/Persona_AAR)) but there are other valid uses that the IDP has for knowing the RP, such as fraud and abuse prevention. Also, it may conflict with [directed identifiers](#directed-identifiers), since the IDP has to have the ability to map RP+User → directed ID.
 
 #### Identity Provider has a relationship with the RP
 
-* Mitigates: [=RP2=], [[#rp-tracking]]
+* Mitigates:
+    * [[#clickjacking]],
+    * [[#rp-tracking]]
 
 Currently, IDPs require that an RP agree to specific terms before the IDP will issue an ID token to them. This conflicts with [the previous mitigation](#Hiding-the-RP-from-the-IDP), but can provide a measure of RP accountability.
 
