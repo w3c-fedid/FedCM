@@ -6,7 +6,7 @@
   <link href="https://www.w3.org/StyleSheets/TR/2016/cg-draft" rel="stylesheet">
   <meta content="Bikeshed version 4f053d00e, updated Tue Aug 10 14:13:32 2021 -0700" name="generator">
   <link href="http://wicg.github.io/WebID" rel="canonical">
-  <meta content="34250377544ccc1e2c6dbf827bed2d1f3075051f" name="document-revision">
+  <meta content="75a6458c533eba717f77266015f4ecf449ef07aa" name="document-revision">
 <style>
 dl.domintro dt {
     font-family: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
@@ -713,14 +713,13 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
         <li>
          <a href="#mitigations"><span class="secno">10.1.3</span> <span class="content">Mitigations</span></a>
          <ol class="toc">
-          <li><a href="#directed-identifiers"><span class="secno">10.1.3.1</span> <span class="content">Directed identifiers</span></a>
+          <li><a href="#directed-identifiers"><span class="secno">10.1.3.1</span> <span class="content">Directed Identifiers</span></a>
           <li><a href="#browser-enforced-consent"><span class="secno">10.1.3.2</span> <span class="content">Browser-enforced consent</span></a>
-          <li><a href="#identity-provider-policy"><span class="secno">10.1.3.3</span> <span class="content">Identity Provider policy</span></a>
+          <li><a href="#identity-provider-policy"><span class="secno">10.1.3.3</span> <span class="content">Identity Provider Policy</span></a>
           <li><a href="#denylists"><span class="secno">10.1.3.4</span> <span class="content">Denylists</span></a>
           <li><a href="#hiding-the-rp-from-the-idp"><span class="secno">10.1.3.5</span> <span class="content">Hiding the RP from the IDP</span></a>
-          <li><a href="#identity-provider-has-a-relationship-with-the-rp"><span class="secno">10.1.3.6</span> <span class="content">Identity Provider has a relationship with the RP</span></a>
+          <li><a href="#pre-registration"><span class="secno">10.1.3.6</span> <span class="content">Pre-registration</span></a>
          </ol>
-        <li><a href="#related-reading"><span class="secno">10.1.4</span> <span class="content">Related reading</span></a>
        </ol>
      </ol>
     <li><a href="#acknowledgements"><span class="secno">11</span> <span class="content">Acknowledgements</span></a>
@@ -1553,6 +1552,19 @@ through an <a href="#use-cases-explicit-sign-in">§ 2.2.2 Explicit Sign-in</a>
    <p class="note" role="note"><span>Note:</span> go over privacy.</p>
    <h3 class="heading settled" data-level="10.1" id="privacy-threat-model"><span class="secno">10.1. </span><span class="content">Privacy Threat Model</span><a class="self-link" href="#privacy-threat-model"></a></h3>
    <p>This section is intended to provide a comprehensive overview of the privacy risks associated with federated identity on the web for the purpose of measuring the privacy risks and benefits of proposed browser intermediation designs.</p>
+   <p>See also:</p>
+   <ul>
+    <li data-md>
+     <p><a data-link-type="biblio" href="https://w3ctag.github.io/design-principles"><cite>Web Platform Design Principles</cite></a></p>
+    <li data-md>
+     <p><a data-link-type="biblio" href="https://www.w3.org/2001/tag/doc/ethical-web-principles"><cite>W3C TAG Ethical Web Principles</cite></a></p>
+    <li data-md>
+     <p><a href="https://github.com/michaelkleber/privacy-model">A Potential Privacy Model for the Web</a></p>
+    <li data-md>
+     <p><a href="https://w3cping.github.io/privacy-threat-model/">Editor’s Draft for a Web Privacy Threat Model</a></p>
+    <li data-md>
+     <p><a href="https://docs.oasis-open.org/security/saml/v2.0/saml-sec-consider-2.0-os.pdf">Security and Privacy Considerations for SAML V2.0</a></p>
+   </ul>
    <h4 class="heading settled" data-level="10.1.1" id="principals"><span class="secno">10.1.1. </span><span class="content">Principals</span><a class="self-link" href="#principals"></a></h4>
    <p>This section describes the three principals that would participate in an invocation of the API and expectations around their behavior.</p>
    <ol>
@@ -1643,7 +1655,7 @@ to serve targeted advertisements to those users browsing on sites that the IDP c
    <p>This risk can exist even in the case where the IDP does not having pre-existing user
 account information (for instance, if it is not a _bona fide_ IDP), because WebID
 requests sent to the IDP are credentialed. This is more likely to occur if the RP is
-colluding with the IDP to enable tracking; expanded variants are described in <a data-link-type="dfn">COL2</a>.</p>
+colluding with the IDP to enable tracking; expanded variants are described in <a href="#timming-attacks">§ 10.1.2.3.2 Timming Attacks</a>.</p>
    <div class="example" id="example-ee3423e4">
     <a class="self-link" href="#example-ee3423e4"></a> 
     <ol>
@@ -1748,7 +1760,7 @@ or was less visible to users.</p>
      <p><a data-link-type="biblio" href="https://w3ctag.github.io/design-principles">Web Platform Design Principles</a>: <a href="https://w3ctag.github.io/design-principles#safe-to-browse">It should be safe to visit a web page</a></p>
    </ol>
    <h4 class="heading settled" data-level="10.1.3" id="mitigations"><span class="secno">10.1.3. </span><span class="content">Mitigations</span><a class="self-link" href="#mitigations"></a></h4>
-   <h5 class="heading settled" data-level="10.1.3.1" id="directed-identifiers"><span class="secno">10.1.3.1. </span><span class="content">Directed identifiers</span><a class="self-link" href="#directed-identifiers"></a></h5>
+   <h5 class="heading settled" data-level="10.1.3.1" id="directed-identifiers"><span class="secno">10.1.3.1. </span><span class="content">Directed Identifiers</span><a class="self-link" href="#directed-identifiers"></a></h5>
    <ul>
     <li data-md>
      <p>Mitigates:</p>
@@ -1768,7 +1780,7 @@ or was less visible to users.</p>
       <li data-md>
        <p><a href="#idp-tracking">§ 10.1.2.2.1 IDP Tracking</a>,</p>
       <li data-md>
-       <p><a data-link-type="dfn">COL2</a></p>
+       <p><a href="#timming-attacks">§ 10.1.2.3.2 Timming Attacks</a></p>
      </ul>
    </ul>
    <p>IDPs, whom the user has entrusted with their personal data, are currently responsible for ensuring that the user consents to their information being shared. With browser mediation in place, the user agent might have to assume responsibility for ensuring the user understands what is being shared and that it is intentional. This is certainly the case if the browser is able to entirely intermediate the identity flow without showing any IDP web content, but also might be desirable if there are concerns that the IDP is not collecting consent in an adequate manner.
@@ -1784,7 +1796,7 @@ Additionally, a consent prompt preceding the sharing of the RP’s request to th
     <li data-md>
      <p><a data-link-type="biblio" href="https://www.w3.org/2001/tag/doc/leastPower"><cite>The Rule of Least Power</cite></a></p>
    </ol>
-   <h5 class="heading settled" data-level="10.1.3.3" id="identity-provider-policy"><span class="secno">10.1.3.3. </span><span class="content">Identity Provider policy</span><a class="self-link" href="#identity-provider-policy"></a></h5>
+   <h5 class="heading settled" data-level="10.1.3.3" id="identity-provider-policy"><span class="secno">10.1.3.3. </span><span class="content">Identity Provider Policy</span><a class="self-link" href="#identity-provider-policy"></a></h5>
    <ul>
     <li data-md>
      <p>Mitigates:</p>
@@ -1810,11 +1822,11 @@ Additionally, a consent prompt preceding the sharing of the RP’s request to th
       <li data-md>
        <p><a href="#idp-tracking">§ 10.1.2.2.1 IDP Tracking</a>,</p>
       <li data-md>
-       <p><a data-link-type="dfn">COL2</a></p>
+       <p><a href="#timming-attacks">§ 10.1.2.3.2 Timming Attacks</a></p>
      </ul>
    </ul>
    <p>Preventing tracking of users by the IDP is difficult because the RP has to be coded into the identity token for security reasons, to prevent reuse of the token. There have been cryptographic schemes developed to blind the IDP to the RP while still preventing token reuse in that way (see Mozilla’s <a href="https://wiki.mozilla.org/Identity/Persona_AAR">personas</a>) but there are other valid uses that the IDP has for knowing the RP, such as fraud and abuse prevention. Also, it may conflict with <a href="#directed-identifiers">directed identifiers</a>, since the IDP has to have the ability to map RP+User → directed ID.</p>
-   <h5 class="heading settled" data-level="10.1.3.6" id="identity-provider-has-a-relationship-with-the-rp"><span class="secno">10.1.3.6. </span><span class="content">Identity Provider has a relationship with the RP</span><a class="self-link" href="#identity-provider-has-a-relationship-with-the-rp"></a></h5>
+   <h5 class="heading settled" data-level="10.1.3.6" id="pre-registration"><span class="secno">10.1.3.6. </span><span class="content">Pre-registration</span><a class="self-link" href="#pre-registration"></a></h5>
    <ul>
     <li data-md>
      <p>Mitigates:</p>
@@ -1825,16 +1837,7 @@ Additionally, a consent prompt preceding the sharing of the RP’s request to th
        <p><a href="#rp-tracking">§ 10.1.2.1.1 RP Tracking</a></p>
      </ul>
    </ul>
-   <p>Currently, IDPs require that an RP agree to specific terms before the IDP will issue an ID token to them. This conflicts with <a href="#Hiding-the-RP-from-the-IDP">the previous mitigation</a>, but can provide a measure of RP accountability.</p>
-   <h4 class="heading settled" data-level="10.1.4" id="related-reading"><span class="secno">10.1.4. </span><span class="content">Related reading</span><a class="self-link" href="#related-reading"></a></h4>
-   <ul>
-    <li data-md>
-     <p><a href="https://github.com/michaelkleber/privacy-model">A Potential Privacy Model for the Web</a></p>
-    <li data-md>
-     <p><a href="https://w3cping.github.io/privacy-threat-model/">Editor’s Draft for a Web Privacy Threat Model</a></p>
-    <li data-md>
-     <p><a href="https://docs.oasis-open.org/security/saml/v2.0/saml-sec-consider-2.0-os.pdf">Security and Privacy Considerations for SAML V2.0</a></p>
-   </ul>
+   <p>Currently, IDPs require that an RP pre-registers and agrees to specific terms before the IDP will issue an ID token to them. This conflicts with <a href="#hiding-the-rp-from-the-idp">the previous mitigation</a>, but can provide a measure of RP accountability.</p>
    <h2 class="heading settled" data-level="11" id="acknowledgements"><span class="secno">11. </span><span class="content">Acknowledgements</span><a class="self-link" href="#acknowledgements"></a></h2>
    <p class="note" role="note"><span>Note:</span> write down the Acknowledgements section.</p>
   </main>

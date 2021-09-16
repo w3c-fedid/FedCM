@@ -978,6 +978,14 @@ Note: go over privacy.
 
 This section is intended to provide a comprehensive overview of the privacy risks associated with federated identity on the web for the purpose of measuring the privacy risks and benefits of proposed browser intermediation designs.
 
+See also:
+
+    * [[PRINCIPLES]]
+    * [[ETHICS]]
+    * [A Potential Privacy Model for the Web](https://github.com/michaelkleber/privacy-model)
+    * [Editor’s Draft for a Web Privacy Threat Model](https://w3cping.github.io/privacy-threat-model/)
+    * [Security and Privacy Considerations for SAML V2.0](https://docs.oasis-open.org/security/saml/v2.0/saml-sec-consider-2.0-os.pdf)
+
 <!-- ============================================================ -->
 ### Principals ### {#principals}
 <!-- ============================================================ -->
@@ -1101,7 +1109,7 @@ to serve targeted advertisements to those users browsing on sites that the IDP c
 This risk can exist even in the case where the IDP does not having pre-existing user
 account information (for instance, if it is not a _bona fide_ IDP), because WebID
 requests sent to the IDP are credentialed. This is more likely to occur if the RP is
-colluding with the IDP to enable tracking; expanded variants are described in [=COL2=].
+colluding with the IDP to enable tracking; expanded variants are described in [[#timming-attacks]].
 
 <div class="example">
     1. User signs into RP1 (which sells jewelry) with an IDP.
@@ -1197,7 +1205,7 @@ See also:
 
 ### Mitigations
 
-#### Directed identifiers
+#### Directed Identifiers
 
 * Mitigates:
     * [[#rp-tracking]]
@@ -1209,7 +1217,7 @@ The problem of RPs joining user data via back-channels is inherent to the prolif
 * Mitigates:
     * [[#clickjacking]],
     * [[#idp-tracking]],
-    * [=COL2=]
+    * [[#timming-attacks]]
 
 IDPs, whom the user has entrusted with their personal data, are currently responsible for ensuring that the user consents to their information being shared. With browser mediation in place, the user agent might have to assume responsibility for ensuring the user understands what is being shared and that it is intentional. This is certainly the case if the browser is able to entirely intermediate the identity flow without showing any IDP web content, but also might be desirable if there are concerns that the IDP is not collecting consent in an adequate manner.
 Additionally, a consent prompt preceding the sharing of the RP’s request to the IDP can mitigate risks around IDP tracking of user visits to RPs.
@@ -1221,7 +1229,7 @@ See also:
   1. [[ETHICS|Ethical Principles]]: [[ETHICS#control|The web must enhance individuals' control and power]]
   1. [[LEAST-POWER]]
 
-#### Identity Provider policy
+#### Identity Provider Policy
 
 * Mitigates:
     * [[#idp-impersonation]],
@@ -1239,23 +1247,17 @@ Any RPs or IDPs observed to be using this API to compromise user privacy in a de
 
 * Mitigates:
     * [[#idp-tracking]],
-    * [=COL2=]
+    * [[#timming-attacks]]
 
 Preventing tracking of users by the IDP is difficult because the RP has to be coded into the identity token for security reasons, to prevent reuse of the token. There have been cryptographic schemes developed to blind the IDP to the RP while still preventing token reuse in that way (see Mozilla’s [personas](https://wiki.mozilla.org/Identity/Persona_AAR)) but there are other valid uses that the IDP has for knowing the RP, such as fraud and abuse prevention. Also, it may conflict with [directed identifiers](#directed-identifiers), since the IDP has to have the ability to map RP+User → directed ID.
 
-#### Identity Provider has a relationship with the RP
+#### Pre-registration
 
 * Mitigates:
     * [[#clickjacking]],
     * [[#rp-tracking]]
 
-Currently, IDPs require that an RP agree to specific terms before the IDP will issue an ID token to them. This conflicts with [the previous mitigation](#Hiding-the-RP-from-the-IDP), but can provide a measure of RP accountability.
-
-### Related reading
-
-* [A Potential Privacy Model for the Web](https://github.com/michaelkleber/privacy-model)
-* [Editor’s Draft for a Web Privacy Threat Model](https://w3cping.github.io/privacy-threat-model/)
-* [Security and Privacy Considerations for SAML V2.0](https://docs.oasis-open.org/security/saml/v2.0/saml-sec-consider-2.0-os.pdf)
+Currently, IDPs require that an RP pre-registers and agrees to specific terms before the IDP will issue an ID token to them. This conflicts with [the previous mitigation](#hiding-the-rp-from-the-idp), but can provide a measure of RP accountability.
 
 <!-- ====================================================================== -->
 # Acknowledgements # {#acknowledgements}
