@@ -98,6 +98,7 @@ A Sign-up occurs when the user is registering a new account at the [=Relying Par
 * The user agrees.
 * The [=Relying Party=] shows the message "Registration complete."
 * An [=account=] in created in the [=Relying Party=] and a [=session=] initialized.
+
 </div>
 
 <!-- ============================================================ -->
@@ -118,6 +119,7 @@ Auto Sign-in occurs when the [=Identity Provider=] has already gathered enough p
     * The user selects their favorite [=Identity Provider=] to sign-in.
     * The [=Identity Provider=] remembers and proves that the user already has an [=account=] with the [=Relying Party=].
     * The [=Relying Party=] creates a new [=session=] for the user's existing [=account=].
+
 </div>
 
 <!-- ============================================================ -->
@@ -139,6 +141,7 @@ A few months later:
 * The [=Identity Provider=] prompts, "Do you want to sign-in with the [=Relying Party=]?"
 * The user agrees.
 * The [=Relying Party=] creates a new [=session=] for the user's existing [=account=].
+
 </div>
 
 <!-- ============================================================ -->
@@ -156,6 +159,7 @@ After a user navigates to a [=Relying Party=] in a browser and decides to create
     * The user decides to close their session and logs out of the [=Relying Party=].
     * The user is now logged out of the [=Relying Party=].
     * Upon return to the [=Relying Party=], the user expects to go through an [[#use-cases-explicit-sign-in]].
+
 </div>
 
 <!-- ============================================================ -->
@@ -168,6 +172,7 @@ After a user navigates to a [=Relying Party=] in a browser and decides to create
     * The [=Relying Party=] lets the [=Identity Provider=] know that the user wants to logout.
     * The [=Identity Provider=] logs the user out of all of the [=Relying Party=]s and itself.
     * Upon return to the [=Relying Party=], the goes through an [[#use-cases-explicit-sign-in]].
+
 </div>
 
 <!-- ============================================================ -->
@@ -185,6 +190,7 @@ After a user navigates to a [=Relying Party=] in a browser and decides to create
     * The user decides to cancel their account.
     * The user goes to their [=Identity Provider=] and revokes access to the [=Relying Party=].
     * Upon return to the [=Relying Party=], the user expects to go through a [[#use-cases-sign-up]].  
+
 </div>
 
 <!-- ============================================================ -->
@@ -195,7 +201,8 @@ After a user navigates to a [=Relying Party=] in a browser and decides to create
 * On the [=Relying Party=]:
     * The user decides to cancel their account.
     * The user navigates to the [=Relying Party=] and cancels their account, also letting the [=Identity Provider=] know.
-    * Upon return to the [=Relying Party=], the user expects to go through a [[#sign-up]].  
+    * Upon return to the [=Relying Party=], the user expects to go through a [[#use-cases-sign-up]].  
+
 </div>
 
 <!-- ============================================================ -->
@@ -210,6 +217,7 @@ After a user navigates to a [=Relying Party=] in a browser and decides to create
 * The user agrees.
 * The [=Relying Party=] shows message, "Registration complete.", creates a [=session=] for the user and
 * Shows the user their calendar entries provided by the [=Identity Provider=].
+
 </div>
 
 <!-- ============================================================ -->
@@ -275,6 +283,7 @@ which the [=RP=] can use to authenticate the user.
     }
     </script>
   </body>
+
 </html>
 ```
 </div>
@@ -514,7 +523,7 @@ For example:
 ## ID Token ## {#idtoken_endpoint}
 <!-- ============================================================ -->
 
-The ID Token endpoint is responsible for minting a new [=idtoken=] for the user.
+The ID Token endpoint is responsible for minting a new [=id token=] for the user.
 
 The ID Token endpoint is fetched (a) as a **POST** request, (b)  **with** cookies and (c) **with** a special [[#Sec-WebID-CSR]] header.
 
@@ -696,7 +705,7 @@ enum FederatedCredentialApprovedBy {
 [Exposed=Window, SecureContext]
 partial interface FederatedCredential : Credential {
   readonly attribute USVString idToken;
-  readonly attribute FederatedCredentialApprover approvedBy;
+  readonly attribute FederatedCredentialApprovedBy approvedBy;
 };
 </xmp>
 
@@ -858,12 +867,12 @@ To <dfn>mint a new id token</dfn>, run the following algorithm:
 1. Let |token| be the result of making a POST request to the |wellknown|["{{WellKnown/idtoken_endpoint}}"] with:
     * Let the {{idtoken_endpoint_request/account_id}} be |account|["{{accounts_endpoint_response_accounts/account_id}}"].
     * Let the {{idtoken_endpoint_request/request}} be a new object with
-        * Let {{idtoken_endpoint_request_request/client_id}} be |provider|["{{FederatedIdentityProvider/clientId}}"].
-        * Let the {{idtoken_endpoint_request_request/nonce}} be |provider|["{{FederatedIdentityProvider/nonce}}"].
+          * Let {{idtoken_endpoint_request_request/client_id}} be |provider|["{{FederatedIdentityProvider/clientId}}"].
+          * Let the {{idtoken_endpoint_request_request/nonce}} be |provider|["{{FederatedIdentityProvider/nonce}}"].
 1. Return a new {{FederatedCredential}} as:
-  * {{FederatedCredential/id}} with |account|["{{accounts_endpoint_response_accounts/account_id}}"]
-  * {{FederatedCredential/idToken}} with |token|
-  * {{FederatedCredential/provider}} with |provider|["{{FederatedIdentityProvider/url}}"]
+    * {{FederatedCredential/id}} with |account|["{{accounts_endpoint_response_accounts/account_id}}"]
+    * {{FederatedCredential/idToken}} with |token|
+    * {{FederatedCredential/provider}} with |provider|["{{FederatedIdentityProvider/url}}"]
 
 <!-- ============================================================ -->
 ## The Revocation API ## {#revocation}
@@ -1226,11 +1235,11 @@ If a credentialed request is sent to the IDP that does not explicitly identify
 the RP, either of the following would still allow tracking by the IDP (again,
 possibly not a _bona fide_ IDP that has existing knowledge of the user):
 
-* The RP controlling any field in the request that can be used to convey identifying data
-in the request that the IDP could correlate to other requests from other RPs;
+    * The RP controlling any field in the request that can be used to convey identifying 
+          data in the request that the IDP could correlate to other requests from other RPs;
 
 * The RP being able to provide fine-resolution timing information about
-the request to the IDP out of band.
+    the request to the IDP out of band.
 
 The timing information can enable tracking in the following way:
 
@@ -1309,7 +1318,8 @@ Mitigates:
     * [[#clickjacking]],
     * [[#rp-tracking]]
 
-Currently, IDPs require that an RP pre-registers and agrees to specific terms before the IDP will issue an ID token to them. This conflicts with [the previous mitigation](#hiding-the-rp-from-the-idp), but can provide a measure of RP accountability.
+Currently, IDPs require that an RP pre-registers and agrees to specific terms before the IDP will issue an ID token to them. T
+his conflicts with [the previous mitigation](#idp-blindness), but can provide a measure of RP accountability.
 
 <!-- ====================================================================== -->
 # Extensibility # {#extensibility}
