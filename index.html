@@ -6,7 +6,7 @@
   <link href="https://www.w3.org/StyleSheets/TR/2016/cg-draft" rel="stylesheet">
   <meta content="Bikeshed version 4f053d00e, updated Tue Aug 10 14:13:32 2021 -0700" name="generator">
   <link href="http://wicg.github.io/WebID" rel="canonical">
-  <meta content="6c1363674895f6f52938b87025635b694d6a4105" name="document-revision">
+  <meta content="28e96dbb6d37b8f24bb9649332452909f646b204" name="document-revision">
 <style>
 dl.domintro dt {
     font-family: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
@@ -693,15 +693,15 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
           <li>
            <a href="#by-rp"><span class="secno">10.1.2.1</span> <span class="content">By the RP</span></a>
            <ol class="toc">
-            <li><a href="#rp-correlation"><span class="secno">10.1.2.1.1</span> <span class="content">RP Correlation</span></a>
-            <li><a href="#clickjacking"><span class="secno">10.1.2.1.2</span> <span class="content">Clickjacking</span></a>
-            <li><a href="#fingerprinting"><span class="secno">10.1.2.1.3</span> <span class="content">Identification by Fingerprinting</span></a>
+            <li><a href="#cross-site-correlation"><span class="secno">10.1.2.1.1</span> <span class="content">Cross-Site Correlation</span></a>
+            <li><a href="#same-site-identification"><span class="secno">10.1.2.1.2</span> <span class="content">Same-Site Identification</span></a>
+            <li><a href="#intrusion"><span class="secno">10.1.2.1.3</span> <span class="content">Intrusion</span></a>
            </ol>
           <li>
            <a href="#by-idp"><span class="secno">10.1.2.2</span> <span class="content">By the IDP</span></a>
            <ol class="toc">
-            <li><a href="#idp-secondary-use"><span class="secno">10.1.2.2.1</span> <span class="content">IDP Secondary Use</span></a>
-            <li><a href="#idp-impersonation"><span class="secno">10.1.2.2.2</span> <span class="content">IDP Impersonation</span></a>
+            <li><a href="#idp-secondary-use"><span class="secno">10.1.2.2.1</span> <span class="content">Secondary Use</span></a>
+            <li><a href="#idp-impersonation"><span class="secno">10.1.2.2.2</span> <span class="content">Impersonation</span></a>
            </ol>
           <li>
            <a href="#by-collusion"><span class="secno">10.1.2.3</span> <span class="content">By Collusion</span></a>
@@ -1660,7 +1660,16 @@ through an <a href="#use-cases-explicit-sign-in">§ 2.2.2 Explicit Sign-in</a>
      <p><a data-link-type="biblio" href="https://datatracker.ietf.org/doc/html/rfc7258"><cite>Pervasive Monitoring Is an Attack</cite></a></p>
    </ol>
    <h5 class="heading settled" data-level="10.1.2.1" id="by-rp"><span class="secno">10.1.2.1. </span><span class="content">By the RP</span><a class="self-link" href="#by-rp"></a></h5>
-   <h6 class="heading settled" data-level="10.1.2.1.1" id="rp-correlation"><span class="secno">10.1.2.1.1. </span><span class="content">RP Correlation</span><a class="self-link" href="#rp-correlation"></a></h6>
+   <h6 class="heading settled" data-level="10.1.2.1.1" id="cross-site-correlation"><span class="secno">10.1.2.1.1. </span><span class="content">Cross-Site Correlation</span><a class="self-link" href="#cross-site-correlation"></a></h6>
+   <p>Related to:</p>
+   <ul>
+    <li data-md>
+     <p><a href="https://w3cping.github.io/privacy-threat-model/#hl-recognition-cross-site">Target Privacy Threat Model § hl-recognition-cross-site</a></p>
+    <li data-md>
+     <p><a href="https://w3c.github.io/privacy-considerations/#privacy-threats"> Privacy Considerations for Web Protocols: Correlation</a></p>
+    <li data-md>
+     <p><a href="https://datatracker.ietf.org/doc/html/rfc6973#section-5.2.1">RFC6973: Correlation</a></p>
+   </ul>
    <p>Correlation is the combination of various pieces of information related to an individual or that obtain that characteristic when combined.</p>
    <p>This attack happens when multiple <a data-link-type="dfn" href="#rp" id="ref-for-rp②①">RP</a>s correlate user information for tracking purposes.</p>
    <p>When a user willingly provides their full name, email address, phone number, etc,
@@ -1686,20 +1695,14 @@ profile of that user and their activity across collaborating sites. Sometimes th
       <p>User is surprised that RP2 knows that they are shopping for wedding rings.</p>
     </ol>
    </div>
-   <p>A generalization of <a href="#rp-correlation">§ 10.1.2.1.1 RP Correlation</a> is:</p>
+   <p>A generalization of <a href="#cross-site-correlation">§ 10.1.2.1.1 Cross-Site Correlation</a> is:</p>
    <p>(<dfn data-dfn-type="dfn" data-noexport id="rp-secondary-use">RP Secondary Use<a class="self-link" href="#rp-secondary-use"></a></dfn>) Relying Party uses user information for purposes not authorized by the user:</p>
    <p>When the user agrees to allow the IDP to provide information to the RP,
 the consent is specific to certain purposes, such as sign-in and personalization.
 The RP might use that data for other purposes that the user would not expect and
 did not authorize, such as selling email addresses to a spam list.</p>
    <p>Spamming risk can exist even when using <a data-link-type="dfn" href="#directed" id="ref-for-directed">directed</a> identifiers.</p>
-   <h6 class="heading settled" data-level="10.1.2.1.2" id="clickjacking"><span class="secno">10.1.2.1.2. </span><span class="content">Clickjacking</span><a class="self-link" href="#clickjacking"></a></h6>
-   <p>This attack scenario happens when the Relying Party tries to obtain personal user information from Identity Provider without user consent.</p>
-   <p>An RP might attempt to obtain user information from an IDP without the user
-having consented to the information being released, or being aware of it being released.</p>
-   <p>This can happen if user consent mechanisms are missing, inadequate, or susceptible to bypass.</p>
-   <div class="example" id="example-6854ce0d"><a class="self-link" href="#example-6854ce0d"></a> An RP can use clickjacking to trick the user into signing-into their site. </div>
-   <h6 class="heading settled" data-level="10.1.2.1.3" id="fingerprinting"><span class="secno">10.1.2.1.3. </span><span class="content">Identification by Fingerprinting</span><a class="self-link" href="#fingerprinting"></a></h6>
+   <h6 class="heading settled" data-level="10.1.2.1.2" id="same-site-identification"><span class="secno">10.1.2.1.2. </span><span class="content">Same-Site Identification</span><a class="self-link" href="#same-site-identification"></a></h6>
    <p>Identification is the linking of information to a particular individual
 to infer an individual’s identity or to allow the inference of an
 individual’s identity.</p>
@@ -1715,8 +1718,33 @@ adds directly (or indirectly) detectable client state.</p>
     <li data-md>
      <p><a data-link-type="biblio" href="https://w3c.github.io/fingerprinting-guidance/"><cite>Mitigating Browser Fingerprinting in Web Specifications</cite></a></p>
    </ol>
+   <h6 class="heading settled" data-level="10.1.2.1.3" id="intrusion"><span class="secno">10.1.2.1.3. </span><span class="content">Intrusion</span><a class="self-link" href="#intrusion"></a></h6>
+   <p>Intrusion consists of invasive acts that disturb or interrupt one’s
+life or activities.  Intrusion can thwart individuals' desires to be
+left alone, sap their time or attention, or interrupt their
+activities.</p>
+   <p>This attack scenario happens when the Relying Party tries to obtain
+personal user information from Identity Provider without user consent.</p>
+   <p>An RP might attempt to obtain user information from an IDP without
+the user having consented to the information being released, or being
+aware of it being released.</p>
+   <p>This can happen if user consent mechanisms are missing, inadequate,
+or susceptible to bypass.</p>
+   <div class="example" id="example-6854ce0d"><a class="self-link" href="#example-6854ce0d"></a> An RP can use clickjacking to trick the user into signing-into their site. </div>
+   <p>See also:</p>
+   <ol>
+    <li data-md>
+     <p><a href="https://w3cping.github.io/privacy-threat-model/#hl-intrusion">Target Privacy Threat Model § hl-intrusion</a></p>
+    <li data-md>
+     <p><a href="https://datatracker.ietf.org/doc/html/rfc6973#section-5.1.3">Privacy Considerations for Internet Protocols § section-5.1.3</a></p>
+   </ol>
    <h5 class="heading settled" data-level="10.1.2.2" id="by-idp"><span class="secno">10.1.2.2. </span><span class="content">By the IDP</span><a class="self-link" href="#by-idp"></a></h5>
-   <h6 class="heading settled" data-level="10.1.2.2.1" id="idp-secondary-use"><span class="secno">10.1.2.2.1. </span><span class="content">IDP Secondary Use</span><a class="self-link" href="#idp-secondary-use"></a></h6>
+   <h6 class="heading settled" data-level="10.1.2.2.1" id="idp-secondary-use"><span class="secno">10.1.2.2.1. </span><span class="content">Secondary Use</span><a class="self-link" href="#idp-secondary-use"></a></h6>
+   <p>Related to:</p>
+   <ul>
+    <li data-md>
+     <p><a href="https://www.w3.org/TR/security-privacy-questionnaire/#third-party-tracking">Self-Review Questionnaire: Security and Privacy § third-party-tracking</a></p>
+   </ul>
    <p>Secondary use is the use of collected information about an individual
 without the individual’s consent for a purpose different from that
 for which the information was collected.</p>
@@ -1746,7 +1774,7 @@ colluding with the IDP to enable tracking; expanded variants are described in <a
       <p>The user is surprised that their IDP is aware of their plans to get married.</p>
     </ol>
    </div>
-   <h6 class="heading settled" data-level="10.1.2.2.2" id="idp-impersonation"><span class="secno">10.1.2.2.2. </span><span class="content">IDP Impersonation</span><a class="self-link" href="#idp-impersonation"></a></h6>
+   <h6 class="heading settled" data-level="10.1.2.2.2" id="idp-impersonation"><span class="secno">10.1.2.2.2. </span><span class="content">Impersonation</span><a class="self-link" href="#idp-impersonation"></a></h6>
    <p>Since IDPs have unconstrained ability to issue ID tokens, they are capable
 of logging in to users’ federated accounts without user knowledge or action,
 impersonating the user and potentially gaining full access to the user’s account on the RP.</p>
@@ -1802,7 +1830,7 @@ invisible to the browser, in which case it could contain anything.</p>
     </ol>
    </div>
    <h6 class="heading settled" data-level="10.1.2.3.2" id="timing-attacks"><span class="secno">10.1.2.3.2. </span><span class="content">Timing Attacks</span><a class="self-link" href="#timing-attacks"></a></h6>
-   <p>The potential for IDPs profiling users based on their visits to RPs <a href="#idp-secondary-use">§ 10.1.2.2.1 IDP Secondary Use</a> can
+   <p>The potential for IDPs profiling users based on their visits to RPs <a href="#idp-secondary-use">§ 10.1.2.2.1 Secondary Use</a> can
 be partially mitigated by hiding the RP from the IDP until after the user has
 consented to that tracking risk.</p>
    <p>However, there is residual risk in cases where the RP and IDP are colluding.</p>
@@ -1842,7 +1870,7 @@ or was less visible to users.</p>
    <p>Mitigates:</p>
    <ul>
     <li data-md>
-     <p><a href="#rp-correlation">§ 10.1.2.1.1 RP Correlation</a></p>
+     <p><a href="#cross-site-correlation">§ 10.1.2.1.1 Cross-Site Correlation</a></p>
    </ul>
    <p>The problem of RPs joining user data via back-channels is inherent
 to the proliferation of identifying user data. This can be solved
@@ -1853,7 +1881,7 @@ that it is unidirectionally identifying, such as in a directed graph.</p>
    <p>In the past, there have been schemes to accomplish this using one-way
 hashes of, for example, the user’s name, the IDP and the RP.</p>
    <p class="note" role="note"><span>Note:</span> this mitigation is not robust against <a href="#idp-rp-collusion">§ 10.1.2.3.1 IDP RP Collusion</a>,
-or the <a href="#idp-secondary-use">§ 10.1.2.2.1 IDP Secondary Use</a>. Also, collaborating RPs might be able
+or the <a href="#idp-secondary-use">§ 10.1.2.2.1 Secondary Use</a>. Also, collaborating RPs might be able
 to defeat this mitigation by sharing the same CLIENT_ID, although
 possibly this could be detected and presumably would violate RP
 agreements with IDPs with <a href="#pre-registration">§ 10.2.5 Pre-registration</a>.</p>
@@ -1861,7 +1889,7 @@ agreements with IDPs with <a href="#pre-registration">§ 10.2.5 Pre-registrati
    <p>Mitigates:</p>
    <ul>
     <li data-md>
-     <p><a href="#idp-secondary-use">§ 10.1.2.2.1 IDP Secondary Use</a> and</p>
+     <p><a href="#idp-secondary-use">§ 10.1.2.2.1 Secondary Use</a> and</p>
     <li data-md>
      <p><a href="#timing-attacks">§ 10.1.2.3.2 Timing Attacks</a></p>
    </ul>
@@ -1870,14 +1898,14 @@ agreements with IDPs with <a href="#pre-registration">§ 10.2.5 Pre-registrati
    <p>Mitigates:</p>
    <ul>
     <li data-md>
-     <p><a href="#clickjacking">§ 10.1.2.1.2 Clickjacking</a>,</p>
+     <p><a href="#clickjacking"></a>,</p>
     <li data-md>
-     <p><a href="#idp-secondary-use">§ 10.1.2.2.1 IDP Secondary Use</a>,</p>
+     <p><a href="#idp-secondary-use">§ 10.1.2.2.1 Secondary Use</a>,</p>
     <li data-md>
      <p><a href="#timing-attacks">§ 10.1.2.3.2 Timing Attacks</a></p>
    </ul>
-   <p>IDPs, whom the user has entrusted with their personal data, are currently responsible for ensuring that the user consents to their information being shared. With browser mediation in place, the user agent might have to assume responsibility for ensuring the user understands what is being shared and that it is intentional. This is certainly the case if the browser is able to entirely intermediate the identity flow without showing any IDP web content, but also might be desirable if there are concerns that the IDP is not collecting consent in an adequate manner.
-Additionally, a consent prompt preceding the sharing of the RP’s request to the IDP can mitigate risks around IDP tracking of user visits to RPs.</p>
+   <p>IDPs, whom the user has entrusted with their personal data, are currently responsible for ensuring that the user consents to their information being shared. With browser mediation in place, the user agent might have to assume responsibility for ensuring the user understands what is being shared and that it is intentional. This is certainly the case if the browser is able to entirely intermediate the identity flow without showing any IDP web content, but also might be desirable if there are concerns that the IDP is not collecting consent in an adequate manner.</p>
+   <p>Additionally, a consent prompt preceding the sharing of the RP’s request to the IDP can mitigate risks around IDP tracking of user visits to RPs.</p>
    <p>See also:</p>
    <ol>
     <li data-md>
@@ -1897,7 +1925,7 @@ Additionally, a consent prompt preceding the sharing of the RP’s request to th
    <p>Mitigates:</p>
    <ul>
     <li data-md>
-     <p><a href="#idp-impersonation">§ 10.1.2.2.2 IDP Impersonation</a>,</p>
+     <p><a href="#idp-impersonation">§ 10.1.2.2.2 Impersonation</a>,</p>
     <li data-md>
      <p><a href="#idp-rp-collusion">§ 10.1.2.3.1 IDP RP Collusion</a></p>
    </ul>
@@ -1913,9 +1941,9 @@ Additionally, a consent prompt preceding the sharing of the RP’s request to th
    <p>Mitigates:</p>
    <ul>
     <li data-md>
-     <p><a href="#clickjacking">§ 10.1.2.1.2 Clickjacking</a>,</p>
+     <p><a href="#clickjacking"></a>,</p>
     <li data-md>
-     <p><a href="#rp-correlation">§ 10.1.2.1.1 RP Correlation</a></p>
+     <p><a href="#cross-site-correlation">§ 10.1.2.1.1 Cross-Site Correlation</a></p>
    </ul>
    <p>Currently, IDPs require that an RP pre-registers and agrees to specific terms before the IDP will issue an ID token to them. T
 his conflicts with <a href="#idp-blindness">the previous mitigation</a>, but can provide a measure of RP accountability.</p>
@@ -2367,7 +2395,7 @@ his conflicts with <a href="#idp-blindness">the previous mitigation</a>, but can
     <li><a href="#ref-for-rp①④">8. The Browser API</a> <a href="#ref-for-rp①⑤">(2)</a> <a href="#ref-for-rp①⑥">(3)</a> <a href="#ref-for-rp①⑦">(4)</a> <a href="#ref-for-rp①⑧">(5)</a>
     <li><a href="#ref-for-rp①⑨">8.1. The State Machine</a>
     <li><a href="#ref-for-rp②⓪">8.4.2. IDP Sign-out</a>
-    <li><a href="#ref-for-rp②①">10.1.2.1.1. RP Correlation</a>
+    <li><a href="#ref-for-rp②①">10.1.2.1.1. Cross-Site Correlation</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="identity-provider">
@@ -2482,13 +2510,13 @@ his conflicts with <a href="#idp-blindness">the previous mitigation</a>, but can
   <aside class="dfn-panel" data-for="joining">
    <b><a href="#joining">#joining</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-joining">10.1.2.1.1. RP Correlation</a>
+    <li><a href="#ref-for-joining">10.1.2.1.1. Cross-Site Correlation</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="directed">
    <b><a href="#directed">#directed</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-directed">10.1.2.1.1. RP Correlation</a>
+    <li><a href="#ref-for-directed">10.1.2.1.1. Cross-Site Correlation</a>
     <li><a href="#ref-for-directed①">10.1.2.3.1. IDP RP Collusion</a> <a href="#ref-for-directed②">(2)</a>
     <li><a href="#ref-for-directed③">10.2.1.1. Directed Identifiers</a> <a href="#ref-for-directed④">(2)</a>
    </ul>
