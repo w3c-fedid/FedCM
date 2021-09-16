@@ -6,7 +6,7 @@
   <link href="https://www.w3.org/StyleSheets/TR/2016/cg-draft" rel="stylesheet">
   <meta content="Bikeshed version 4f053d00e, updated Tue Aug 10 14:13:32 2021 -0700" name="generator">
   <link href="http://wicg.github.io/WebID" rel="canonical">
-  <meta content="77c2b1b8454ec88ab6cddece45536f52cd1f89c8" name="document-revision">
+  <meta content="6c1363674895f6f52938b87025635b694d6a4105" name="document-revision">
 <style>
 dl.domintro dt {
     font-family: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
@@ -718,12 +718,12 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
          <a href="#data-minimization"><span class="secno">10.2.1</span> <span class="content">Data Minimization</span></a>
          <ol class="toc">
           <li><a href="#directed-identifiers"><span class="secno">10.2.1.1</span> <span class="content">Directed Identifiers</span></a>
+          <li><a href="#idp-blindness"><span class="secno">10.2.1.2</span> <span class="content">IDP Blindness</span></a>
          </ol>
-        <li><a href="#explicit-user-mediation"><span class="secno">10.2.2</span> <span class="content">Explicit User Mediation</span></a>
+        <li><a href="#explicit-user-participation"><span class="secno">10.2.2</span> <span class="content">Explicit User Participation</span></a>
         <li><a href="#policy"><span class="secno">10.2.3</span> <span class="content">Policy</span></a>
         <li><a href="#denylists"><span class="secno">10.2.4</span> <span class="content">Denylists</span></a>
-        <li><a href="#idp-blindness"><span class="secno">10.2.5</span> <span class="content">IDP Blindness</span></a>
-        <li><a href="#pre-registration"><span class="secno">10.2.6</span> <span class="content">Pre-registration</span></a>
+        <li><a href="#pre-registration"><span class="secno">10.2.5</span> <span class="content">Pre-registration</span></a>
        </ol>
      </ol>
     <li><a href="#extensibility"><span class="secno">11</span> <span class="content">Extensibility</span></a>
@@ -1802,7 +1802,7 @@ invisible to the browser, in which case it could contain anything.</p>
     </ol>
    </div>
    <h6 class="heading settled" data-level="10.1.2.3.2" id="timing-attacks"><span class="secno">10.1.2.3.2. </span><span class="content">Timing Attacks</span><a class="self-link" href="#timing-attacks"></a></h6>
-   <p>The potential for IDPs profiling users based on their visits to RPs <a href="#idp-tracking"></a> can
+   <p>The potential for IDPs profiling users based on their visits to RPs <a href="#idp-secondary-use">§ 10.1.2.2.1 IDP Secondary Use</a> can
 be partially mitigated by hiding the RP from the IDP until after the user has
 consented to that tracking risk.</p>
    <p>However, there is residual risk in cases where the RP and IDP are colluding.</p>
@@ -1844,15 +1844,35 @@ or was less visible to users.</p>
     <li data-md>
      <p><a href="#rp-correlation">§ 10.1.2.1.1 RP Correlation</a></p>
    </ul>
-   <p>The problem of RPs joining user data via back-channels is inherent to the proliferation of identifying user data. This can be solved by issuing ‘directed’ identifiers that provide an effective handle to a user’s identity with a given IDP that is unique and therefore cannot be correlated with other RPs. The term ‘directed’ implies that it is unidirectionally identifying, such as in a directed graph. In the past, there have been schemes to accomplish this using one-way hashes of, for example, the user’s name, the IDP and the RP.</p>
-   <p class="note" role="note"><span>Note:</span> this mitigation is not robust against <a href="#idp-rp-collusion">§ 10.1.2.3.1 IDP RP Collusion</a>, or the <a href="#idp-tracking"></a>. Also, collaborating RPs might be able to defeat this mitigation by sharing the same CLIENT_ID, although possibly this could be detected and presumably would violate RP agreements with IDPs with <a href="#pre-registration">§ 10.2.6 Pre-registration</a>.</p>
-   <h4 class="heading settled" data-level="10.2.2" id="explicit-user-mediation"><span class="secno">10.2.2. </span><span class="content">Explicit User Mediation</span><a class="self-link" href="#explicit-user-mediation"></a></h4>
+   <p>The problem of RPs joining user data via back-channels is inherent
+to the proliferation of identifying user data. This can be solved
+by issuing <a data-link-type="dfn" href="#directed" id="ref-for-directed③">directed</a> identifiers that provide an effective handle
+to a user’s identity with a given IDP that is unique and therefore
+cannot be correlated with other RPs. The term <a data-link-type="dfn" href="#directed" id="ref-for-directed④">directed</a> implies
+that it is unidirectionally identifying, such as in a directed graph.</p>
+   <p>In the past, there have been schemes to accomplish this using one-way
+hashes of, for example, the user’s name, the IDP and the RP.</p>
+   <p class="note" role="note"><span>Note:</span> this mitigation is not robust against <a href="#idp-rp-collusion">§ 10.1.2.3.1 IDP RP Collusion</a>,
+or the <a href="#idp-secondary-use">§ 10.1.2.2.1 IDP Secondary Use</a>. Also, collaborating RPs might be able
+to defeat this mitigation by sharing the same CLIENT_ID, although
+possibly this could be detected and presumably would violate RP
+agreements with IDPs with <a href="#pre-registration">§ 10.2.5 Pre-registration</a>.</p>
+   <h5 class="heading settled" data-level="10.2.1.2" id="idp-blindness"><span class="secno">10.2.1.2. </span><span class="content">IDP Blindness</span><a class="self-link" href="#idp-blindness"></a></h5>
+   <p>Mitigates:</p>
+   <ul>
+    <li data-md>
+     <p><a href="#idp-secondary-use">§ 10.1.2.2.1 IDP Secondary Use</a> and</p>
+    <li data-md>
+     <p><a href="#timing-attacks">§ 10.1.2.3.2 Timing Attacks</a></p>
+   </ul>
+   <p>Preventing tracking of users by the IDP is difficult because the RP has to be coded into the identity token for security reasons, to prevent reuse of the token. There have been cryptographic schemes developed to blind the IDP to the RP while still preventing token reuse in that way (see Mozilla’s <a href="https://wiki.mozilla.org/Identity/Persona_AAR">personas</a>) but there are other valid uses that the IDP has for knowing the RP, such as fraud and abuse prevention.</p>
+   <h4 class="heading settled" data-level="10.2.2" id="explicit-user-participation"><span class="secno">10.2.2. </span><span class="content">Explicit User Participation</span><a class="self-link" href="#explicit-user-participation"></a></h4>
    <p>Mitigates:</p>
    <ul>
     <li data-md>
      <p><a href="#clickjacking">§ 10.1.2.1.2 Clickjacking</a>,</p>
     <li data-md>
-     <p><a href="#idp-tracking"></a>,</p>
+     <p><a href="#idp-secondary-use">§ 10.1.2.2.1 IDP Secondary Use</a>,</p>
     <li data-md>
      <p><a href="#timing-attacks">§ 10.1.2.3.2 Timing Attacks</a></p>
    </ul>
@@ -1864,6 +1884,8 @@ Additionally, a consent prompt preceding the sharing of the RP’s request to th
      <p><a href="https://www.w3.org/TR/design-principles/#consent">Web Platform Design Principles § consent</a></p>
     <li data-md>
      <p><a href="https://www.w3.org/TR/security-privacy-questionnaire/#user-mediation">Self-Review Questionnaire: Security and Privacy § user-mediation</a></p>
+    <li data-md>
+     <p><a href="https://datatracker.ietf.org/doc/html/rfc6973#page-23">Privacy Considerations for Internet Protocols § page-23</a></p>
     <li data-md>
      <p><a data-link-type="biblio" href="https://www.w3.org/2001/tag/doc/ethical-web-principles">Ethical Principles</a>: <a href="https://www.w3.org/2001/tag/doc/ethical-web-principles#verify">The web must make it possible for people to verify the information they see</a></p>
     <li data-md>
@@ -1887,16 +1909,7 @@ Additionally, a consent prompt preceding the sharing of the RP’s request to th
      <p>Potentially all threats, but is subject to the likelihood of bad behavior being detected, which for some might be difficult.</p>
    </ul>
    <p>Any RPs or IDPs observed to be using this API to compromise user privacy in a deceptive or abusive manner could be explicitly blocked from using it, or potentially added to the SafeBrowsing blocklist so that they cannot be loaded at all.</p>
-   <h4 class="heading settled" data-level="10.2.5" id="idp-blindness"><span class="secno">10.2.5. </span><span class="content">IDP Blindness</span><a class="self-link" href="#idp-blindness"></a></h4>
-   <p>Mitigates:</p>
-   <ul>
-    <li data-md>
-     <p><a href="#idp-tracking"></a>,</p>
-    <li data-md>
-     <p><a href="#timing-attacks">§ 10.1.2.3.2 Timing Attacks</a></p>
-   </ul>
-   <p>Preventing tracking of users by the IDP is difficult because the RP has to be coded into the identity token for security reasons, to prevent reuse of the token. There have been cryptographic schemes developed to blind the IDP to the RP while still preventing token reuse in that way (see Mozilla’s <a href="https://wiki.mozilla.org/Identity/Persona_AAR">personas</a>) but there are other valid uses that the IDP has for knowing the RP, such as fraud and abuse prevention. Also, it may conflict with <a href="#directed-identifiers">directed identifiers</a>, since the IDP has to have the ability to map RP+User → directed ID.</p>
-   <h4 class="heading settled" data-level="10.2.6" id="pre-registration"><span class="secno">10.2.6. </span><span class="content">Pre-registration</span><a class="self-link" href="#pre-registration"></a></h4>
+   <h4 class="heading settled" data-level="10.2.5" id="pre-registration"><span class="secno">10.2.5. </span><span class="content">Pre-registration</span><a class="self-link" href="#pre-registration"></a></h4>
    <p>Mitigates:</p>
    <ul>
     <li data-md>
@@ -2477,6 +2490,7 @@ his conflicts with <a href="#idp-blindness">the previous mitigation</a>, but can
    <ul>
     <li><a href="#ref-for-directed">10.1.2.1.1. RP Correlation</a>
     <li><a href="#ref-for-directed①">10.1.2.3.1. IDP RP Collusion</a> <a href="#ref-for-directed②">(2)</a>
+    <li><a href="#ref-for-directed③">10.2.1.1. Directed Identifiers</a> <a href="#ref-for-directed④">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="dom-wellknown-accounts_endpoint">

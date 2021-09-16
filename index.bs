@@ -1240,7 +1240,7 @@ invisible to the browser, in which case it could contain anything.
 ##### Timing Attacks ##### {#timing-attacks}
 <!-- ============================================================ -->
 
-The potential for IDPs profiling users based on their visits to RPs [[#idp-tracking]] can
+The potential for IDPs profiling users based on their visits to RPs [[#idp-secondary-use]] can
 be partially mitigated by hiding the RP from the IDP until after the user has
 consented to that tracking risk.
 
@@ -1280,25 +1280,48 @@ Mitigates:
 
     * [[#rp-correlation]]
 
-The problem of RPs joining user data via back-channels is inherent to the proliferation of identifying user data. This can be solved by issuing ‘directed’ identifiers that provide an effective handle to a user’s identity with a given IDP that is unique and therefore cannot be correlated with other RPs. The term ‘directed’ implies that it is unidirectionally identifying, such as in a directed graph. In the past, there have been schemes to accomplish this using one-way hashes of, for example, the user’s name, the IDP and the RP.
+The problem of RPs joining user data via back-channels is inherent
+to the proliferation of identifying user data. This can be solved
+by issuing [=directed=] identifiers that provide an effective handle
+to a user's identity with a given IDP that is unique and therefore
+cannot be correlated with other RPs. The term [=directed=] implies
+that it is unidirectionally identifying, such as in a directed graph.
 
-Note: this mitigation is not robust against [[#idp-rp-collusion]], or the [[#idp-tracking]]. Also, collaborating RPs might be able to defeat this mitigation by sharing the same CLIENT_ID, although possibly this could be detected and presumably would violate RP agreements with IDPs with [[#pre-registration]].
+In the past, there have been schemes to accomplish this using one-way
+hashes of, for example, the user’s name, the IDP and the RP.
 
-### Explicit User Mediation
+Note: this mitigation is not robust against [[#idp-rp-collusion]],
+or the [[#idp-secondary-use]]. Also, collaborating RPs might be able
+to defeat this mitigation by sharing the same CLIENT_ID, although
+possibly this could be detected and presumably would violate RP
+agreements with IDPs with [[#pre-registration]].
+
+#### IDP Blindness
+
+Mitigates:
+
+    * [[#idp-secondary-use]] and
+    * [[#timing-attacks]]
+
+Preventing tracking of users by the IDP is difficult because the RP has to be coded into the identity token for security reasons, to prevent reuse of the token. There have been cryptographic schemes developed to blind the IDP to the RP while still preventing token reuse in that way (see Mozilla’s [personas](https://wiki.mozilla.org/Identity/Persona_AAR)) but there are other valid uses that the IDP has for knowing the RP, such as fraud and abuse prevention.
+
+### Explicit User Participation
 
 Mitigates:
 
     * [[#clickjacking]],
-    * [[#idp-tracking]],
+    * [[#idp-secondary-use]],
     * [[#timing-attacks]]
 
 IDPs, whom the user has entrusted with their personal data, are currently responsible for ensuring that the user consents to their information being shared. With browser mediation in place, the user agent might have to assume responsibility for ensuring the user understands what is being shared and that it is intentional. This is certainly the case if the browser is able to entirely intermediate the identity flow without showing any IDP web content, but also might be desirable if there are concerns that the IDP is not collecting consent in an adequate manner.
+
 Additionally, a consent prompt preceding the sharing of the RP’s request to the IDP can mitigate risks around IDP tracking of user visits to RPs.
 
 See also:
 
   1. [[DESIGN-PRINCIPLES#consent]]
   1. [[SELF-REVIEW#user-mediation]]
+  1. [[RFC6973#page-23]]
   1. [[ETHICS|Ethical Principles]]: [[ETHICS#verify|The web must make it possible for people to verify the information they see]]
   1. [[ETHICS|Ethical Principles]]: [[ETHICS#control|The web must enhance individuals' control and power]]
   1. [[LEAST-POWER]]
@@ -1319,15 +1342,6 @@ Mitigates:
     * Potentially all threats, but is subject to the likelihood of bad behavior being detected, which for some might be difficult.
 
 Any RPs or IDPs observed to be using this API to compromise user privacy in a deceptive or abusive manner could be explicitly blocked from using it, or potentially added to the SafeBrowsing blocklist so that they cannot be loaded at all.
-
-### IDP Blindness
-
-Mitigates:
-
-    * [[#idp-tracking]],
-    * [[#timing-attacks]]
-
-Preventing tracking of users by the IDP is difficult because the RP has to be coded into the identity token for security reasons, to prevent reuse of the token. There have been cryptographic schemes developed to blind the IDP to the RP while still preventing token reuse in that way (see Mozilla’s [personas](https://wiki.mozilla.org/Identity/Persona_AAR)) but there are other valid uses that the IDP has for knowing the RP, such as fraud and abuse prevention. Also, it may conflict with [directed identifiers](#directed-identifiers), since the IDP has to have the ability to map RP+User → directed ID.
 
 ### Pre-registration
 
