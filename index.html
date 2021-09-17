@@ -6,7 +6,7 @@
   <link href="https://www.w3.org/StyleSheets/TR/2016/cg-draft" rel="stylesheet">
   <meta content="Bikeshed version 4f053d00e, updated Tue Aug 10 14:13:32 2021 -0700" name="generator">
   <link href="http://wicg.github.io/WebID" rel="canonical">
-  <meta content="28e96dbb6d37b8f24bb9649332452909f646b204" name="document-revision">
+  <meta content="a383a56f1f457516fbd5a49c9c909c977d8e63a4" name="document-revision">
 <style>
 dl.domintro dt {
     font-family: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
@@ -986,6 +986,33 @@ of identity between <a data-link-type="dfn" href="#idp" id="ref-for-idp">IDP</a>
 </pre>
    </div>
    <h2 class="heading settled" data-level="4" id="terminology"><span class="secno">4. </span><span class="content">Terminology</span><a class="self-link" href="#terminology"></a></h2>
+   <p><a data-link-type="biblio" href="https://html.spec.whatwg.org/multipage/"><cite>HTML Standard</cite></a> defines an <a data-link-type="dfn" href="https://dom.spec.whatwg.org/#concept-document-origin" id="ref-for-concept-document-origin">origin</a> as the tuple of a scheme, hostname, and port that
+provides the main security boundary on the web.</p>
+   <p>A <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="site">site</dfn> is a set of <a data-link-type="dfn" href="https://dom.spec.whatwg.org/#concept-document-origin" id="ref-for-concept-document-origin①">origins</a> that are all <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#same-site" id="ref-for-same-site">same site</a> with each
+other. Note that there are problems (<a data-link-type="biblio" href="https://github.com/sleevi/psl-problems"><cite>Public Suffix List Problems</cite></a>) with using <a data-link-type="dfn" href="https://url.spec.whatwg.org/#host-registrable-domain" id="ref-for-host-registrable-domain">registrable
+domains</a> as a logical boundary.</p>
+   <p>A <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="party">party</dfn> is defined by <a data-link-type="biblio" href="https://www.w3.org/TR/tracking-dnt/"><cite>Tracking Preference Expression (DNT)</cite></a> as "a natural person, a legal
+entity, or a set of legal entities that share common owner(s), common
+controller(s), and a group identity that is easily discoverable by a user."</p>
+   <p>The <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="first-party">first party</dfn> for a user action is the <a data-link-type="dfn" href="#party" id="ref-for-party">party</a> that controls the <a data-link-type="dfn" href="https://dom.spec.whatwg.org/#concept-document-origin" id="ref-for-concept-document-origin②">origin</a> of the <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#top-level-browsing-context" id="ref-for-top-level-browsing-context">top-level browsing context</a> under which the action
+happened. Intuitively, this is the owner of the domain in the browser’s URL bar.
+This differs from <a href="https://wiki.mozilla.org/Security/Anti_tracking_policy#Tracking_Definition">Mozilla’s
+definition</a> in that Mozilla defines other parties as first parties if the
+user can easily discover which party it is and intends to interact with that
+party, for example to allow sign-in widgets to be first-party.</p>
+   <p>A <dfn data-dfn-type="dfn" data-noexport id="third-party">third party<a class="self-link" href="#third-party"></a></dfn> for a user action is any party that isn’t the <a data-link-type="dfn" href="#first-party" id="ref-for-first-party">first
+party</a> or the user (the second party).</p>
+   <p>A <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="user">user</dfn> is a human or program that controls a user agent.</p>
+   <p>A <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="user-identifier">user identifier</dfn> is a pair of a <a data-link-type="dfn" href="#site" id="ref-for-site">site</a> and a (potentially-large) integer
+allocated by that site that is used to identify a <a data-link-type="dfn" href="#user" id="ref-for-user">user</a> on that site. A
+single user will generally have many user IDs that refer to them, and a single
+site may or may not know that multiple user identifiers refer to the same user.</p>
+   <p>A <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="global-identifier">global identifier</dfn> is a string that identifies a particular <a data-link-type="dfn" href="#user" id="ref-for-user①">user</a> independent of which site they’re visiting (e.g. email addresses and phone numbers).
+Users generally have relatively few global identifiers and can usually list and
+recognize them. A goal of anti-tracking policy is to prevent <a data-link-type="dfn" href="#user-identifier" id="ref-for-user-identifier">user identifiers</a> from
+becoming <a data-link-type="dfn" href="#global-identifier" id="ref-for-global-identifier">global identifiers</a>.</p>
+   <p>A <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="directed-identifier">directed identifier</dfn> is a <a data-link-type="dfn" href="#user-identifier" id="ref-for-user-identifier①">user identifier</a> that that is unique for each
+site they’re visiting. A goal of anti-tracking policy is to promote <a data-link-type="dfn" href="#user-identifier" id="ref-for-user-identifier②">user identifiers</a> to become <a data-link-type="dfn" href="#directed-identifier" id="ref-for-directed-identifier">directed identifiers</a>.</p>
    <dl>
     <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="relying-party">Relying Party</dfn>
     <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="rp">RP</dfn>
@@ -1031,10 +1058,6 @@ of identity between <a data-link-type="dfn" href="#idp" id="ref-for-idp">IDP</a>
     <dd data-md>
      <p>Outside of the user agent’s context.</p>
     <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="joining">joining</dfn>
-    <dd data-md>
-    <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="directed">directed</dfn>
-    <dd data-md>
-    <dt data-md><dfn data-dfn-type="dfn" data-noexport id="global">global<a class="self-link" href="#global"></a></dfn>
     <dd data-md>
    </dl>
    <h2 class="heading settled" data-level="5" id="lifecycle"><span class="secno">5. </span><span class="content">High Level Design</span><a class="self-link" href="#lifecycle"></a></h2>
@@ -1701,7 +1724,7 @@ profile of that user and their activity across collaborating sites. Sometimes th
 the consent is specific to certain purposes, such as sign-in and personalization.
 The RP might use that data for other purposes that the user would not expect and
 did not authorize, such as selling email addresses to a spam list.</p>
-   <p>Spamming risk can exist even when using <a data-link-type="dfn" href="#directed" id="ref-for-directed">directed</a> identifiers.</p>
+   <p>Spamming risk can exist even when using <a data-link-type="dfn" href="#directed-identifier" id="ref-for-directed-identifier①">directed identifiers</a>.</p>
    <h6 class="heading settled" data-level="10.1.2.1.2" id="same-site-identification"><span class="secno">10.1.2.1.2. </span><span class="content">Same-Site Identification</span><a class="self-link" href="#same-site-identification"></a></h6>
    <p>Identification is the linking of information to a particular individual
 to infer an individual’s identity or to allow the inference of an
@@ -1806,13 +1829,13 @@ advertisements on RP pages, which could be of value where the IDP has much
 more profiling information about the user.</p>
    <p>Another example is if identifying information is shared out-of-band,
 invisible to the browser, in which case it could contain anything.</p>
-   <div class="example" id="example-89066ee8">
-    <a class="self-link" href="#example-89066ee8"></a> 
+   <div class="example" id="example-8da8d6c2">
+    <a class="self-link" href="#example-8da8d6c2"></a> 
     <ol>
      <li data-md>
-      <p>User signs into RP1 (which sells jewelry) with an IDP, providing to RP1 their <a data-link-type="dfn" href="#directed" id="ref-for-directed①">directed</a> email address SHA256(user + RP1)@email.example</p>
+      <p>User signs into RP1 (which sells jewelry) with an IDP, providing to RP1 their <a data-link-type="dfn" href="#directed-identifier" id="ref-for-directed-identifier②">directed identifier</a> email address SHA256(user + RP1)@email.example</p>
      <li data-md>
-      <p>User signs into RP2 (which sells houses) with an IDP, providing to RP2 their <a data-link-type="dfn" href="#directed" id="ref-for-directed②">directed</a> email address SHA256(user + RP2)@email.example</p>
+      <p>User signs into RP2 (which sells houses) with an IDP, providing to RP2 their <a data-link-type="dfn" href="#directed-identifier" id="ref-for-directed-identifier③">directed identifier</a> email address SHA256(user + RP2)@email.example</p>
      <li data-md>
       <p>User browses the collection of wedding rings in RP1.</p>
      <li data-md>
@@ -1874,10 +1897,9 @@ or was less visible to users.</p>
    </ul>
    <p>The problem of RPs joining user data via back-channels is inherent
 to the proliferation of identifying user data. This can be solved
-by issuing <a data-link-type="dfn" href="#directed" id="ref-for-directed③">directed</a> identifiers that provide an effective handle
+by issuing <a data-link-type="dfn" href="#directed-identifier" id="ref-for-directed-identifier④">directed identifiers</a> that provide an effective handle
 to a user’s identity with a given IDP that is unique and therefore
-cannot be correlated with other RPs. The term <a data-link-type="dfn" href="#directed" id="ref-for-directed④">directed</a> implies
-that it is unidirectionally identifying, such as in a directed graph.</p>
+cannot be correlated with other RPs.</p>
    <p>In the past, there have been schemes to accomplish this using one-way
 hashes of, for example, the user’s name, the IDP and the RP.</p>
    <p class="note" role="note"><span>Note:</span> this mitigation is not robust against <a href="#idp-rp-collusion">§ 10.1.2.3.1 IDP RP Collusion</a>,
@@ -1929,7 +1951,7 @@ agreements with IDPs with <a href="#pre-registration">§ 10.2.5 Pre-registrati
     <li data-md>
      <p><a href="#idp-rp-collusion">§ 10.1.2.3.1 IDP RP Collusion</a></p>
    </ul>
-   <p>Beyond technical constraints, the browser can recognize explicit assertions by the IDP about the privacy characteristics it provides and rely on those assertions in order to guide the user appropriately. An example is a hypothetical case in which the IDP asserts it will only issue directed identifiers and will not provide identifying information to the RPs out of view of the browser. In that case the browser may not have to warn the user about sharing personalized information.</p>
+   <p>Beyond technical constraints, the browser can recognize explicit assertions by the IDP about the privacy characteristics it provides and rely on those assertions in order to guide the user appropriately. An example is a hypothetical case in which the IDP asserts it will only issue <a data-link-type="dfn" href="#directed-identifier" id="ref-for-directed-identifier⑤">directed identifiers</a> and will not provide identifying information to the RPs out of view of the browser. In that case the browser may not have to warn the user about sharing personalized information.</p>
    <h4 class="heading settled" data-level="10.2.4" id="denylists"><span class="secno">10.2.4. </span><span class="content">Denylists</span><a class="self-link" href="#denylists"></a></h4>
    <p>Mitigates:</p>
    <ul>
@@ -2004,7 +2026,7 @@ his conflicts with <a href="#idp-blindness">the previous mitigation</a>, but can
    <li><a href="#dom-federatedcredentialapprovedby-auto">"auto"</a><span>, in § 8.2</span>
    <li><a href="#auto-sign-in">auto sign-in</a><span>, in § 8.2</span>
    <li><a href="#dom-federatedidentityprovider-clientid">clientId</a><span>, in § 8.2</span>
-   <li><a href="#directed">directed</a><span>, in § 4</span>
+   <li><a href="#directed-identifier">directed identifier</a><span>, in § 4</span>
    <li><a href="#dom-federatedcredential-discoverfromexternalsource-slot">[[DiscoverFromExternalSource]]()</a><span>, in § 8.2</span>
    <li><a href="#dom-federatedcredential-discoverfromexternalsource-origin-options-sameoriginwithancestors-slot">[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</a><span>, in § 8.2</span>
    <li><a href="#dom-webidlogoutrequest-endpoint">endpoint</a><span>, in § 8.4.2</span>
@@ -2015,7 +2037,8 @@ his conflicts with <a href="#idp-blindness">the previous mitigation</a>, but can
    <li><a href="#fetch-the-accounts-list">fetch the accounts list</a><span>, in § 8.2</span>
    <li><a href="#fetch-the-client-id-metadata">fetch the client id metadata</a><span>, in § 8.2</span>
    <li><a href="#fetch-the-well-known">fetch the well-known</a><span>, in § 8.2</span>
-   <li><a href="#global">global</a><span>, in § 4</span>
+   <li><a href="#first-party">first party</a><span>, in § 4</span>
+   <li><a href="#global-identifier">global identifier</a><span>, in § 4</span>
    <li><a href="#high-level-api">high-level API</a><span>, in § 4</span>
    <li><a href="#identity-provider">Identity Provider</a><span>, in § 4</span>
    <li><a href="#idp">IDP</a><span>, in § 4</span>
@@ -2031,6 +2054,7 @@ his conflicts with <a href="#idp-blindness">the previous mitigation</a>, but can
    <li><a href="#dom-federatedidentityprovider-nonce">nonce</a><span>, in § 8.2</span>
    <li><a href="#out-of-band">out-of-band</a><span>, in § 4</span>
    <li><a href="#dom-federatedcredentialinterceptor-params">params</a><span>, in § 8.5.1</span>
+   <li><a href="#party">party</a><span>, in § 4</span>
    <li><a href="#privacy-policy">Privacy Policy</a><span>, in § 8.2</span>
    <li><a href="#dom-federatedcredentialrequestoptions-providers">providers</a><span>, in § 8.2</span>
    <li><a href="#registered">registered</a><span>, in § 4</span>
@@ -2045,7 +2069,9 @@ his conflicts with <a href="#idp-blindness">the previous mitigation</a>, but can
    <li><a href="#session">session</a><span>, in § 4</span>
    <li><a href="#sign-in①">sign-in</a><span>, in § 8.2</span>
    <li><a href="#sign-up">sign-up</a><span>, in § 8.2</span>
+   <li><a href="#site">site</a><span>, in § 4</span>
    <li><a href="#terms-of-service">Terms of Service</a><span>, in § 8.2</span>
+   <li><a href="#third-party">third party</a><span>, in § 4</span>
    <li><a href="#unregistered">unregistered</a><span>, in § 4</span>
    <li>
     url
@@ -2054,6 +2080,8 @@ his conflicts with <a href="#idp-blindness">the previous mitigation</a>, but can
      <li><a href="#dom-federatedidentityprovider-url">dict-member for FederatedIdentityProvider</a><span>, in § 8.2</span>
     </ul>
    <li><a href="#dom-federatedcredentialapprovedby-user">"user"</a><span>, in § 8.2</span>
+   <li><a href="#user">user</a><span>, in § 4</span>
+   <li><a href="#user-identifier">user identifier</a><span>, in § 4</span>
    <li><a href="#dictdef-webidlogoutrequest">WebIdLogoutRequest</a><span>, in § 8.4.2</span>
    <li><a href="#website">Website</a><span>, in § 4</span>
   </ul>
@@ -2130,6 +2158,12 @@ his conflicts with <a href="#idp-blindness">the previous mitigation</a>, but can
     <li><a href="#ref-for-same-origin-with-its-ancestors">8.2. The Sign-in API</a>
    </ul>
   </aside>
+  <aside class="dfn-panel" data-for="term-for-concept-document-origin">
+   <a href="https://dom.spec.whatwg.org/#concept-document-origin">https://dom.spec.whatwg.org/#concept-document-origin</a><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-concept-document-origin">4. Terminology</a> <a href="#ref-for-concept-document-origin①">(2)</a> <a href="#ref-for-concept-document-origin②">(3)</a>
+   </ul>
+  </aside>
   <aside class="dfn-panel" data-for="term-for-environment-settings-object">
    <a href="https://html.spec.whatwg.org/multipage/webappapis.html#environment-settings-object">https://html.spec.whatwg.org/multipage/webappapis.html#environment-settings-object</a><b>Referenced in:</b>
    <ul>
@@ -2148,6 +2182,18 @@ his conflicts with <a href="#idp-blindness">the previous mitigation</a>, but can
     <li><a href="#ref-for-relevant-settings-object">8.2. The Sign-in API</a>
    </ul>
   </aside>
+  <aside class="dfn-panel" data-for="term-for-same-site">
+   <a href="https://html.spec.whatwg.org/multipage/origin.html#same-site">https://html.spec.whatwg.org/multipage/origin.html#same-site</a><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-same-site">4. Terminology</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="term-for-top-level-browsing-context">
+   <a href="https://html.spec.whatwg.org/multipage/browsers.html#top-level-browsing-context">https://html.spec.whatwg.org/multipage/browsers.html#top-level-browsing-context</a><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-top-level-browsing-context">4. Terminology</a>
+   </ul>
+  </aside>
   <aside class="dfn-panel" data-for="term-for-map-exists">
    <a href="https://infra.spec.whatwg.org/#map-exists">https://infra.spec.whatwg.org/#map-exists</a><b>Referenced in:</b>
    <ul>
@@ -2164,6 +2210,12 @@ his conflicts with <a href="#idp-blindness">the previous mitigation</a>, but can
    <a href="https://infra.spec.whatwg.org/#user-agent">https://infra.spec.whatwg.org/#user-agent</a><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-user-agent">10.1.1. Principals</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="term-for-host-registrable-domain">
+   <a href="https://url.spec.whatwg.org/#host-registrable-domain">https://url.spec.whatwg.org/#host-registrable-domain</a><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-host-registrable-domain">4. Terminology</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-idl-DOMException">
@@ -2245,11 +2297,18 @@ his conflicts with <a href="#idp-blindness">the previous mitigation</a>, but can
      <li><span class="dfn-paneled" id="term-for-same-origin-with-its-ancestors">same-origin with its ancestors</span>
     </ul>
    <li>
+    <a data-link-type="biblio">[DOM]</a> defines the following terms:
+    <ul>
+     <li><span class="dfn-paneled" id="term-for-concept-document-origin">origin</span>
+    </ul>
+   <li>
     <a data-link-type="biblio">[HTML]</a> defines the following terms:
     <ul>
      <li><span class="dfn-paneled" id="term-for-environment-settings-object">environment settings object</span>
      <li><span class="dfn-paneled" id="term-for-concept-settings-object-origin">origin</span>
      <li><span class="dfn-paneled" id="term-for-relevant-settings-object">relevant settings object</span>
+     <li><span class="dfn-paneled" id="term-for-same-site">same site</span>
+     <li><span class="dfn-paneled" id="term-for-top-level-browsing-context">top-level browsing context</span>
     </ul>
    <li>
     <a data-link-type="biblio">[INFRA]</a> defines the following terms:
@@ -2257,6 +2316,11 @@ his conflicts with <a href="#idp-blindness">the previous mitigation</a>, but can
      <li><span class="dfn-paneled" id="term-for-map-exists">exist</span>
      <li><span class="dfn-paneled" id="term-for-list-size">size</span>
      <li><span class="dfn-paneled" id="term-for-user-agent">user agent</span>
+    </ul>
+   <li>
+    <a data-link-type="biblio">[URL]</a> defines the following terms:
+    <ul>
+     <li><span class="dfn-paneled" id="term-for-host-registrable-domain">registrable domain</span>
     </ul>
    <li>
     <a data-link-type="biblio">[WebIDL]</a> defines the following terms:
@@ -2276,12 +2340,16 @@ his conflicts with <a href="#idp-blindness">the previous mitigation</a>, but can
   <dl>
    <dt id="biblio-credential-management-1">[CREDENTIAL-MANAGEMENT-1]
    <dd>Mike West. <a href="https://www.w3.org/TR/credential-management-1/"><cite>Credential Management Level 1</cite></a>. 17 January 2019. WD. URL: <a href="https://www.w3.org/TR/credential-management-1/">https://www.w3.org/TR/credential-management-1/</a>
+   <dt id="biblio-dom">[DOM]
+   <dd>Anne van Kesteren. <a href="https://dom.spec.whatwg.org/"><cite>DOM Standard</cite></a>. Living Standard. URL: <a href="https://dom.spec.whatwg.org/">https://dom.spec.whatwg.org/</a>
    <dt id="biblio-html">[HTML]
    <dd>Anne van Kesteren; et al. <a href="https://html.spec.whatwg.org/multipage/"><cite>HTML Standard</cite></a>. Living Standard. URL: <a href="https://html.spec.whatwg.org/multipage/">https://html.spec.whatwg.org/multipage/</a>
    <dt id="biblio-infra">[INFRA]
    <dd>Anne van Kesteren; Domenic Denicola. <a href="https://infra.spec.whatwg.org/"><cite>Infra Standard</cite></a>. Living Standard. URL: <a href="https://infra.spec.whatwg.org/">https://infra.spec.whatwg.org/</a>
    <dt id="biblio-rfc2119">[RFC2119]
    <dd>S. Bradner. <a href="https://datatracker.ietf.org/doc/html/rfc2119"><cite>Key words for use in RFCs to Indicate Requirement Levels</cite></a>. March 1997. Best Current Practice. URL: <a href="https://datatracker.ietf.org/doc/html/rfc2119">https://datatracker.ietf.org/doc/html/rfc2119</a>
+   <dt id="biblio-url">[URL]
+   <dd>Anne van Kesteren. <a href="https://url.spec.whatwg.org/"><cite>URL Standard</cite></a>. Living Standard. URL: <a href="https://url.spec.whatwg.org/">https://url.spec.whatwg.org/</a>
    <dt id="biblio-webidl">[WebIDL]
    <dd>Boris Zbarsky. <a href="https://heycam.github.io/webidl/"><cite>Web IDL</cite></a>. 15 December 2016. ED. URL: <a href="https://heycam.github.io/webidl/">https://heycam.github.io/webidl/</a>
   </dl>
@@ -2305,12 +2373,16 @@ his conflicts with <a href="#idp-blindness">the previous mitigation</a>, but can
    <dd><a href="https://openid.net/developers/specs/"><cite>OpenID</cite></a>. URL: <a href="https://openid.net/developers/specs/">https://openid.net/developers/specs/</a>
    <dt id="biblio-principles">[PRINCIPLES]
    <dd><a href="https://w3ctag.github.io/design-principles"><cite>Web Platform Design Principles</cite></a>. URL: <a href="https://w3ctag.github.io/design-principles">https://w3ctag.github.io/design-principles</a>
+   <dt id="biblio-psl-problems">[PSL-PROBLEMS]
+   <dd>Ryan Sleevi. <a href="https://github.com/sleevi/psl-problems"><cite>Public Suffix List Problems</cite></a>. URL: <a href="https://github.com/sleevi/psl-problems">https://github.com/sleevi/psl-problems</a>
    <dt id="biblio-rfc7258">[RFC7258]
    <dd><a href="https://datatracker.ietf.org/doc/html/rfc7258"><cite>Pervasive Monitoring Is an Attack</cite></a>. URL: <a href="https://datatracker.ietf.org/doc/html/rfc7258">https://datatracker.ietf.org/doc/html/rfc7258</a>
    <dt id="biblio-saml">[SAML]
    <dd><a href="http://saml.xml.org/saml-specifications"><cite>SAML</cite></a>. URL: <a href="http://saml.xml.org/saml-specifications">http://saml.xml.org/saml-specifications</a>
    <dt id="biblio-security-origin-confusion">[Security-Origin-Confusion]
    <dd><a href="https://w3c.github.io/webappsec-credential-management/#security-origin-confusion"><cite>Security Origin Confusion</cite></a>. URL: <a href="https://w3c.github.io/webappsec-credential-management/#security-origin-confusion">https://w3c.github.io/webappsec-credential-management/#security-origin-confusion</a>
+   <dt id="biblio-tracking-dnt">[TRACKING-DNT]
+   <dd>Roy Fielding; David Singer. <a href="https://www.w3.org/TR/tracking-dnt/"><cite>Tracking Preference Expression (DNT)</cite></a>. 17 January 2019. NOTE. URL: <a href="https://www.w3.org/TR/tracking-dnt/">https://www.w3.org/TR/tracking-dnt/</a>
    <dt id="biblio-unsanctioned-tracking">[UNSANCTIONED-TRACKING]
    <dd>Mark Nottingham. <a href="http://www.w3.org/2001/tag/doc/unsanctioned-tracking/"><cite>Unsanctioned Web Tracking</cite></a>. 17 July 2015. TAG Finding. URL: <a href="http://www.w3.org/2001/tag/doc/unsanctioned-tracking/">http://www.w3.org/2001/tag/doc/unsanctioned-tracking/</a>
   </dl>
@@ -2362,6 +2434,52 @@ his conflicts with <a href="#idp-blindness">the previous mitigation</a>, but can
 };
 
 </pre>
+  <aside class="dfn-panel" data-for="site">
+   <b><a href="#site">#site</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-site">4. Terminology</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="party">
+   <b><a href="#party">#party</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-party">4. Terminology</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="first-party">
+   <b><a href="#first-party">#first-party</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-first-party">4. Terminology</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="user">
+   <b><a href="#user">#user</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-user">4. Terminology</a> <a href="#ref-for-user①">(2)</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="user-identifier">
+   <b><a href="#user-identifier">#user-identifier</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-user-identifier">4. Terminology</a> <a href="#ref-for-user-identifier①">(2)</a> <a href="#ref-for-user-identifier②">(3)</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="global-identifier">
+   <b><a href="#global-identifier">#global-identifier</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-global-identifier">4. Terminology</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="directed-identifier">
+   <b><a href="#directed-identifier">#directed-identifier</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-directed-identifier">4. Terminology</a>
+    <li><a href="#ref-for-directed-identifier①">10.1.2.1.1. Cross-Site Correlation</a>
+    <li><a href="#ref-for-directed-identifier②">10.1.2.3.1. IDP RP Collusion</a> <a href="#ref-for-directed-identifier③">(2)</a>
+    <li><a href="#ref-for-directed-identifier④">10.2.1.1. Directed Identifiers</a>
+    <li><a href="#ref-for-directed-identifier⑤">10.2.3. Policy</a>
+   </ul>
+  </aside>
   <aside class="dfn-panel" data-for="relying-party">
    <b><a href="#relying-party">#relying-party</a></b><b>Referenced in:</b>
    <ul>
@@ -2511,14 +2629,6 @@ his conflicts with <a href="#idp-blindness">the previous mitigation</a>, but can
    <b><a href="#joining">#joining</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-joining">10.1.2.1.1. Cross-Site Correlation</a>
-   </ul>
-  </aside>
-  <aside class="dfn-panel" data-for="directed">
-   <b><a href="#directed">#directed</a></b><b>Referenced in:</b>
-   <ul>
-    <li><a href="#ref-for-directed">10.1.2.1.1. Cross-Site Correlation</a>
-    <li><a href="#ref-for-directed①">10.1.2.3.1. IDP RP Collusion</a> <a href="#ref-for-directed②">(2)</a>
-    <li><a href="#ref-for-directed③">10.2.1.1. Directed Identifiers</a> <a href="#ref-for-directed④">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="dom-wellknown-accounts_endpoint">

@@ -292,6 +292,46 @@ which the [=RP=] can use to authenticate the user.
 # Terminology # {#terminology}
 <!-- ============================================================ -->
 
+[[HTML]] defines an [=origin=] as the tuple of a scheme, hostname, and port that
+provides the main security boundary on the web.
+
+A <dfn>site</dfn> is a set of [=origins=] that are all [=same site=] with each
+other. Note that there are problems ([[PSL-PROBLEMS]]) with using [=registrable
+domains=] as a logical boundary.
+
+A <dfn>party</dfn> is defined by [[tracking-dnt]] as "a natural person, a legal
+entity, or a set of legal entities that share common owner(s), common
+controller(s), and a group identity that is easily discoverable by a user."
+
+The <dfn>first party</dfn> for a user action is the [=party=] that controls the
+[=origin=] of the [=top-level browsing context=] under which the action
+happened. Intuitively, this is the owner of the domain in the browser's URL bar.
+This differs from <a
+href="https://wiki.mozilla.org/Security/Anti_tracking_policy#Tracking_Definition">Mozilla's
+definition</a> in that Mozilla defines other parties as first parties if the
+user can easily discover which party it is and intends to interact with that
+party, for example to allow sign-in widgets to be first-party.
+
+A <dfn>third party</dfn> for a user action is any party that isn't the [=first
+party=] or the user (the second party).
+
+A <dfn>user</dfn> is a human or program that controls a user agent.
+
+A <dfn>user identifier</dfn> is a pair of a [=site=] and a (potentially-large) integer
+allocated by that site that is used to identify a [=user=] on that site. A
+single user will generally have many user IDs that refer to them, and a single
+site may or may not know that multiple user identifiers refer to the same user.
+
+A <dfn>global identifier</dfn> is a string that identifies a particular [=user=]
+independent of which site they're visiting (e.g. email addresses and phone numbers).
+Users generally have relatively few global identifiers and can usually list and
+recognize them. A goal of anti-tracking policy is to prevent [=user identifiers=] from
+becoming [=global identifiers=].
+
+A <dfn>directed identifier</dfn> is a [=user identifier=] that that is unique for each
+site they're visiting. A goal of anti-tracking policy is to promote [=user identifiers=]
+to become [=directed identifiers=].
+
 : <dfn>Relying Party</dfn>
 : <dfn>RP</dfn>
 : <dfn>Website</dfn>
@@ -335,12 +375,6 @@ which the [=RP=] can use to authenticate the user.
 :: Outside of the user agent's context.
 
 : <dfn>joining</dfn>
-:: 
-
-: <dfn>directed</dfn>
-:: 
-
-: <dfn>global</dfn>
 :: 
 
 <!-- ============================================================ -->
@@ -1115,7 +1149,7 @@ the consent is specific to certain purposes, such as sign-in and personalization
 The RP might use that data for other purposes that the user would not expect and
 did not authorize, such as selling email addresses to a spam list.
 
-Spamming risk can exist even when using [=directed=] identifiers.
+Spamming risk can exist even when using [=directed identifiers=].
 
 <!-- ============================================================ -->
 ##### Same-Site Identification ##### {#same-site-identification}
@@ -1248,8 +1282,8 @@ Another example is if identifying information is shared out-of-band,
 invisible to the browser, in which case it could contain anything.
 
 <div class="example">
-    1. User signs into RP1 (which sells jewelry) with an IDP, providing to RP1 their [=directed=] email address SHA256(user + RP1)@email.example
-    1. User signs into RP2 (which sells houses) with an IDP, providing to RP2 their [=directed=] email address SHA256(user + RP2)@email.example
+    1. User signs into RP1 (which sells jewelry) with an IDP, providing to RP1 their [=directed identifier=] email address SHA256(user + RP1)@email.example
+    1. User signs into RP2 (which sells houses) with an IDP, providing to RP2 their [=directed identifier=] email address SHA256(user + RP2)@email.example
     1. User browses the collection of wedding rings in RP1.
     1. Out of band, RP1 colludes with the IDP and exchanges SHA256(user + RP1)@email.example to user@email.example.
     1. RP1 tells RP2 that user@email.example is shopping for wedding rings
@@ -1305,10 +1339,9 @@ Mitigates:
 
 The problem of RPs joining user data via back-channels is inherent
 to the proliferation of identifying user data. This can be solved
-by issuing [=directed=] identifiers that provide an effective handle
+by issuing [=directed identifiers=] that provide an effective handle
 to a user's identity with a given IDP that is unique and therefore
-cannot be correlated with other RPs. The term [=directed=] implies
-that it is unidirectionally identifying, such as in a directed graph.
+cannot be correlated with other RPs.
 
 In the past, there have been schemes to accomplish this using one-way
 hashes of, for example, the user’s name, the IDP and the RP.
@@ -1356,7 +1389,7 @@ Mitigates:
     * [[#idp-impersonation]],
     * [[#idp-rp-collusion]]
 
-Beyond technical constraints, the browser can recognize explicit assertions by the IDP about the privacy characteristics it provides and rely on those assertions in order to guide the user appropriately. An example is a hypothetical case in which the IDP asserts it will only issue directed identifiers and will not provide identifying information to the RPs out of view of the browser. In that case the browser may not have to warn the user about sharing personalized information.
+Beyond technical constraints, the browser can recognize explicit assertions by the IDP about the privacy characteristics it provides and rely on those assertions in order to guide the user appropriately. An example is a hypothetical case in which the IDP asserts it will only issue [=directed identifiers=] and will not provide identifying information to the RPs out of view of the browser. In that case the browser may not have to warn the user about sharing personalized information.
 
 ### Denylists
 
@@ -1470,6 +1503,11 @@ Note: write down the Acknowledgements section.
   "PRIVACY-THREAT-MODEL": {
     "href": "https://w3cping.github.io/privacy-threat-model/",
     "title": "Target Privacy Threat Model"
+  },
+  "PSL-PROBLEMS": {
+    "authors": ["Ryan Sleevi"],
+    "href": "https://github.com/sleevi/psl-problems",
+    "title": "Public Suffix List Problems"
   },
   "Identity-Use-Cases-in-Browser-Catalog": {
     "authors": [ "V. Bertocci", "G. Fletcher" ],
