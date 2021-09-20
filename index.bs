@@ -984,6 +984,8 @@ Each [=Relying Party=] endpoint is responsible for clearing its local state
 After the completion of this API, the user's session is cleared and will go
 through an [[#use-cases-explicit-sign-in]] upon return.
 
+<img src="static/mock31.svg">
+
 <div class=example>
 ```js
 async function logout() {
@@ -1130,6 +1132,8 @@ since it amounts to a join of user records between the account databases of mult
 
 This correlation and profile-building is outside the user’s control and entirely out of the user agent’s or IDP’s view.
 
+<img src="static/mock3.svg">
+
 <div class="example">
     1. User signs into RP1 (which sells jewelry) with an IDP, providing to RP1 their email address user@email.example
     1. User signs into RP2 (which sells houses) with an IDP, providing to RP2 their email address user@email.example
@@ -1168,6 +1172,8 @@ vector for fingerprinting or ‘supercookies’.
 This risk would be increased by any proposal for browser mediation that
 adds directly (or indirectly) detectable client state.
 
+<img src="static/mock5.svg">
+
 <div class="example">
 For example, an RP can use the browser state of the WebID to add bits of entropy and fingerprint the user.
 </div>
@@ -1177,16 +1183,11 @@ See also:
    1. [[FINGERPRINTING-GUIDANCE]]
 
 <!-- ============================================================ -->
-##### Intrusion ##### {#intrusion}
+##### By-Pass ##### {#by-pass}
 <!-- ============================================================ -->
 
-Intrusion consists of invasive acts that disturb or interrupt one's
-life or activities.  Intrusion can thwart individuals' desires to be
-left alone, sap their time or attention, or interrupt their
-activities. 
-
 This attack scenario happens when the Relying Party tries to obtain
-personal user information from Identity Provider without user consent.
+personal user information from the Identity Provider without user consent.
 
 An RP might attempt to obtain user information from an IDP without
 the user having consented to the information being released, or being
@@ -1199,10 +1200,23 @@ or susceptible to bypass.
 An RP can use clickjacking to trick the user into signing-into their site.
 </div>
 
+<div class="example">
+An RP can impersonate another RP to phish the user into signing-into their site.
+</div>
+
 See also:
 
     1. [[PRIVACY-THREAT-MODEL#hl-intrusion]]
     1. [[RFC6973#section-5.1.3]]
+
+<!-- ============================================================ -->
+##### Intrusion ##### {#intrusion}
+<!-- ============================================================ -->
+
+Intrusion consists of invasive acts that disturb or interrupt one's
+life or activities.  Intrusion can thwart individuals' desires to be
+left alone, sap their time or attention, or interrupt their
+activities. 
 
 <!-- ============================================================ -->
 #### By the IDP #### {#by-idp}
@@ -1235,6 +1249,8 @@ account information (for instance, if it is not a _bona fide_ IDP), because WebI
 requests sent to the IDP are credentialed. This is more likely to occur if the RP is
 colluding with the IDP to enable tracking; expanded variants are described in [[#timing-attacks]].
 
+<img src="static/mock23.svg">
+
 <div class="example">
     1. User signs into RP1 (which sells jewelry) with an IDP.
     1. User signs into RP2 (which sells houses) with the same IDP.
@@ -1264,7 +1280,7 @@ impersonating the user and potentially gaining full access to the user's account
 <!-- ============================================================ -->
 
 <!-- ============================================================ -->
-##### IDP RP Collusion ##### {#idp-rp-collusion}
+##### Back channel ##### {#back-channel}
 <!-- ============================================================ -->
 
 This attack scenario happens when IDP exceed the user’s information sharing permission.
@@ -1329,13 +1345,19 @@ See also:
 
 ## Mitigation Strategies
 
-### Data Minimization
+### Minimal Disclosure
 
-#### Directed Identifiers
+Note: minimal disclosure for a constrained use
+
+<img src="static/mock37.svg">
+
+#### Sharding
 
 Mitigates:
 
     * [[#cross-site-correlation]]
+
+Note: directed, sharding, partitioning
 
 The problem of RPs joining user data via back-channels is inherent
 to the proliferation of identifying user data. This can be solved
@@ -1346,32 +1368,44 @@ cannot be correlated with other RPs.
 In the past, there have been schemes to accomplish this using one-way
 hashes of, for example, the user’s name, the IDP and the RP.
 
-Note: this mitigation is not robust against [[#idp-rp-collusion]],
+<img src="static/mock13.svg">
+
+Note: this mitigation is not robust against [[#back-channel]],
 or the [[#idp-secondary-use]]. Also, collaborating RPs might be able
 to defeat this mitigation by sharing the same CLIENT_ID, although
 possibly this could be detected and presumably would violate RP
 agreements with IDPs with [[#pre-registration]].
 
-#### IDP Blindness
+#### Progress Disclosure
+
+<img src="static/mock33.svg">
+
+#### Self-issue
 
 Mitigates:
 
     * [[#idp-secondary-use]] and
     * [[#timing-attacks]]
 
+Note: unbundling issuing from presentation
+
 Preventing tracking of users by the IDP is difficult because the RP has to be coded into the identity token for security reasons, to prevent reuse of the token. There have been cryptographic schemes developed to blind the IDP to the RP while still preventing token reuse in that way (see Mozilla’s [personas](https://wiki.mozilla.org/Identity/Persona_AAR)) but there are other valid uses that the IDP has for knowing the RP, such as fraud and abuse prevention.
 
-### Explicit User Participation
+<img src="static/mock34.svg">
+
+### User Control
 
 Mitigates:
 
-    * [[#clickjacking]],
+    * [[#by-pass]],
     * [[#idp-secondary-use]],
     * [[#timing-attacks]]
 
 IDPs, whom the user has entrusted with their personal data, are currently responsible for ensuring that the user consents to their information being shared. With browser mediation in place, the user agent might have to assume responsibility for ensuring the user understands what is being shared and that it is intentional. This is certainly the case if the browser is able to entirely intermediate the identity flow without showing any IDP web content, but also might be desirable if there are concerns that the IDP is not collecting consent in an adequate manner.
 
 Additionally, a consent prompt preceding the sharing of the RP’s request to the IDP can mitigate risks around IDP tracking of user visits to RPs.
+
+<img src="static/mock15.svg">
 
 See also:
 
@@ -1387,7 +1421,7 @@ See also:
 Mitigates:
 
     * [[#idp-impersonation]],
-    * [[#idp-rp-collusion]]
+    * [[#back-channel]]
 
 Beyond technical constraints, the browser can recognize explicit assertions by the IDP about the privacy characteristics it provides and rely on those assertions in order to guide the user appropriately. An example is a hypothetical case in which the IDP asserts it will only issue [=directed identifiers=] and will not provide identifying information to the RPs out of view of the browser. In that case the browser may not have to warn the user about sharing personalized information.
 
@@ -1403,11 +1437,11 @@ Any RPs or IDPs observed to be using this API to compromise user privacy in a de
 
 Mitigates:
 
-    * [[#clickjacking]],
+    * [[#by-pass]],
     * [[#cross-site-correlation]]
 
 Currently, IDPs require that an RP pre-registers and agrees to specific terms before the IDP will issue an ID token to them. T
-his conflicts with [the previous mitigation](#idp-blindness), but can provide a measure of RP accountability.
+his conflicts with [the previous mitigation](#self-issue), but can provide a measure of RP accountability.
 
 <!-- ====================================================================== -->
 # Extensibility # {#extensibility}
