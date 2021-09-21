@@ -47,12 +47,21 @@ module.exports = function(eleventyConfig) {
     return value;
   });
 
+  // console.log(eleventyConfig.getFilter("url")("/static/foo.js"));
+
+  //eleventyConfig.addFilter("url", function(value) {
+    // console.log(value);
+  //  return value;
+  //});
+
   return {
     dir: {
+      templateFormats: ["html", "liquid", "njk"],
       input: ".",
       output: "docs",
       includes: ".includes",
       data: ".data",
+      pathprefix: "/WebID/"
     }
   }
 };
