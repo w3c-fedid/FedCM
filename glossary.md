@@ -76,7 +76,7 @@ References: [OIDC terminology](https://openid.net/specs/openid-connect-core-1_0.
 ## IDP tracking
 * _A privacy threat in which an [Identity Provider](#identity-provider-idp) is able to surveil or correlate user activity across the web._
 
-References: [WebID Threat Model](privacy_threat_model.md#identity-provider-collecting-information)
+References: [WebID Threat Model](https://wicg.github.io/WebID/#by-idp)
 
 ## Relying Party (RP)
 * _A service that requests user information from an [Identity Provider](#identity-provider-idp) for user account [sign-in](#federated-sign-in) or for other purposes._
@@ -92,7 +92,7 @@ References: [OIDC terminology](https://openid.net/specs/openid-connect-core-1_0.
 ## RP tracking
 * _A privacy threat in which a [Relying Party](#relying-party-rp) is able to surveil or correlate user activity across the web._
 
-References: [WebID Threat Model](privacy_threat_model.md#relying-party-collecting-information)
+References: [WebID Threat Model](https://wicg.github.io/WebID/#by-rp)
 
 ## Standard claims
 * _A predefined set of [claims](#claim) that are included in a standard OIDC request for the purpose of user identification._

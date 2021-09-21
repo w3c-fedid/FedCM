@@ -320,7 +320,7 @@ The following should give you a deeper understanding of the problem, related pro
 - [Related Problems](problems.md) and desirable side effects
 - The [deployment](activation.md) topology
 - [Glossary](glossary.md)
-- [The Threat Model](privacy_threat_model.md): a formalization of the problem
+- [The Threat Model](https://wicg.github.io/WebID/#privacy-threat-model): a formalization of the problem
 - Alternatives [considered](alternatives_considered.md)
 - The WebID [devtrial](HOWTO.md)
 

@@ -5,7 +5,7 @@ created: 03/02/2021
 updated: 22/07/2021
 ---
 
-This is a **proposal** for a high level API to support identity federation under this [threat model](privacy_threat_model.md).
+This is a **proposal** for a high level API to support identity federation under this [threat model](https://wicg.github.io/WebID/#privacy-threat-model).
 
 It is widely known that browsers are either **already** blocking third party cookies or are planning to.
 
@@ -23,7 +23,7 @@ This is a proposal to preserve these operations in the absence of third party co
 
 Cross-site communication is used throughout the entire lifecycle of the user signing in to a RP with an IDP, beginning at signing-up a new user all the way through managing the sessions (e.g. signing in, signing out or renewing refresh tokens).
 
-From a [privacy threat model](privacy_threat_model.md) perspective, the design of this proposal is anchored on the observation that the most critical moment is the precise moment in which the identities between the RP and the IDP are joined for the very first time, namely when the user creates a new account in the RP using the identifiers from the IDP or when a user signs-in to an RP with an IDP for the first time in the browser: once the identities are joined, any arbitrary/uncontrolled cross-side communication can happen (with or without the browser's permission, e.g. via backchannel or cookie-less requests).
+From a [privacy threat model](https://wicg.github.io/WebID/#privacy-threat-model) perspective, the design of this proposal is anchored on the observation that the most critical moment is the precise moment in which the identities between the RP and the IDP are joined for the very first time, namely when the user creates a new account in the RP using the identifiers from the IDP or when a user signs-in to an RP with an IDP for the first time in the browser: once the identities are joined, any arbitrary/uncontrolled cross-side communication can happen (with or without the browser's permission, e.g. via backchannel or cookie-less requests).
 
 So, under this observation, in this proposal the browser:
 
