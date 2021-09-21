@@ -14,7 +14,7 @@ module.exports = function(eleventyConfig) {
       input: ".",
       output: "docs",
       includes: ".includes",
-      // data: ".data",
+      data: ".data",
     }
   }
 };
