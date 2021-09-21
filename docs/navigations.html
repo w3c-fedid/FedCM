@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="webmention" href="https://webmention.io/code.sgo.to/webmention" />
+  <link rel="pingback" href="https://webmention.io/code.sgo.to/xmlrpc" />
+  <link rel="alternate" href="arfeed.jsonld" type="application/ld+json">
+  <link rel="authorization_endpoint" href="https://indieauth.com/auth">
+  <link rel="token_endpoint" href="https://tokens.indieauth.com/token">
+  <link rel="me" href="https://github.com/samuelgoto">
+  <link rel="me" href="mailto:samuelgoto@gmail.com">
+  <link rel="microsub" href="https://aperture.p3k.io/microsub/109">
+  <link rel="mailpub" href="goto@chromium.org">
+  
+  <title>
+    
+       &middot; WebID
+    
+  </title>
+
+  <!-- CSS -->
+  <link href="/static/droid.css" media="screen" rel="stylesheet" type="text/css">
+  <link href="/static/index.css" media="screen" rel="stylesheet" type="text/css">
+  <link href="/static/google-sans.css" media="screen" rel="stylesheet" type="text/css">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/static/favicon.ico">
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/atom+xml" title="sgo.to" href="/rss.xml" />
+  <link rel="alternate" type="application/atom+jsonld" title="sgo.to" href="/feed.jsonld" />
+
+  <!-- anchors -->
+  <script src="/static/anchor-js.min.js"></script>
+
+  <script>
+  // Add anchors on DOMContentLoaded
+  document.addEventListener("DOMContentLoaded", function(event) {
+    anchors.add();
+  });
+  </script>
+
+  <!-- RFC -->
+  <!--
+  <link href="https://docs.sgo.to/droid.css" media="screen" rel="stylesheet" type="text/css">
+  <link href="https://docs.sgo.to/index.css" rel="stylesheet" type="text/css">
+  <link href="https://docs.sgo.to/favicon.ico" rel="icon">
+  <script src="https://docs.sgo.to/rfc.js"></script>
+  -->
+
+  <!-- CSS -->
+  <link href="/static/droid.css" media="screen" rel="stylesheet" type="text/css">
+  <link href="/static/index.css" media="screen" rel="stylesheet" type="text/css">
+
+  <!-- highlight -->
+  <link href="/static/rouge.css" media="screen" rel="stylesheet" type="text/css">
+
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-152817205-1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-152817205-1');
+  </script>
+
+</head>
+
+  <body>
+    <div class="header">
+      <div class="container">
+        <span class="title"><a href="/">WebID</a></span>
+        <span class="navigation">
+          <span><a href="https://github.com/WICG/WebID/issues/new">feedback</a></span>
+        </span>
+      </div>
+    </div>
+
+    <main>
+      <div class="doc">
+	<p>This is an <strong>early exploration</strong> of the design alternatives to address <a href="README.md#stage-2-bounce-tracking">this</a> under <a href="https://wicg.github.io/WebID/#privacy-threat-model">this threat model</a>.</p>
+<p>This section goes over the <strong>what</strong> and the <strong>how</strong>. It presuposes that you have read and started from:</p>
+<ul>
+<li>The <strong>why</strong>: the <a href="README.html">problem</a> statement and the <a href="https://wicg.github.io/WebID/#privacy-threat-model">motivations</a> and the <a href="activation.html">topology</a> of the parties involved.</li>
+<li>The <strong>why not</strong>: the <a href="alternatives_considered.html">alternatives</a> considered (e.g. the <a href="prior.html">prior art</a>, the <a href="alternatives_considered.md#the-status-quo">status quo</a> and the <a href="alternatives_considered.md#the-request-storage-access-api">requestStorageAccess API</a>).</li>
+</ul>
+<p>We'll then go over the <a href="#high-level-design">high-level overview</a> and a breakdown into two smaller problems:</p>
+<ul>
+<li><a href="#the-consumer-api">The Consumer API</a> (i.e. the interface between the RP and the Browser) and</li>
+<li><a href="#the-provider-api">The Provider API</a> (i.e. the interaction between the Browser and the IDP).</li>
+</ul>
+<p>In the first part of the last section will go over the (slightly less controversial) <a href="#the-consumer-api">Consumer API</a> and the useful separation between:</p>
+<ul>
+<li>The <a href="#the-sign-in-api">Sign-in API</a> and</li>
+<li>The <a href="#the-authorization-api">Authorization API</a>.</li>
+</ul>
+<p>Finally, we'll then enumerate a series of alternatives for the (much more contentious) <a href="#the-provider-api">Provider API</a>:</p>
+<ul>
+<li>The <a href="#the-permission-oriented-variation">Permission-oriented</a> Variation</li>
+<li>The <a href="#the-mediation-oriented-variation">Mediation-oriented</a> Variation</li>
+<li>The <a href="#the-delegation-oriented-variation">Delegation-oriented</a> Variation</li>
+</ul>
+<h1>High Level Design</h1>
+<p>From a high level perspective, the browser acts as an mediator between two parties: the relying party and the identity provider.</p>
+<p><img src="static/mock14.svg" alt=""><br>
+The browser exposes two distinct interfaces for the intermediation:</p>
+<ul>
+<li><a href="#the-consumer-api">The Consumer API</a> to allow a relying party to request and receive an identity token and</li>
+<li><a href="#the-provider-api">The Provider API</a> to allow an identity provider to provide an identity token</li>
+</ul>
+<p>We'll go over each of these separately next.</p>
+<h1>The Consumer API</h1>
+<p>The consumer API is the Web Platform privacy-oriented API that relying parties call to request information from a specific identity provider, to be used in replacement of the current redirect/popup affordances that are currently used.</p>
+<p>From the perspective of <a href="https://wicg.github.io/WebID/#privacy-threat-model">The Privacy Threat Model</a>, there are two notably distinct uses of federation:</p>
+<ul>
+<li><a href="glossary.md#federated-sign-in">signing-in</a> and</li>
+<li><a href="glossary.md#authorization">authorization</a></li>
+</ul>
+<p>While both are implemented on top of OAuth as different scopes, the former (typically deployed with the <code>openid</code> oauth scope) captures a meaningful volume of usage (we estimate it be around 80% of the use) at a much more controlled surface area (including transactions done at the front channel with idtokens as opposed to access tokens), whereas the latter is much more powerful and used less frequently (as well as done primarily on the back channel).</p>
+<p>Lets first turn to the former use, and then go over authorization following that.</p>
+<h2>The Sign-In API</h2>
+<p>Simply put, the Sign-In API is a Web Platform affordance that takes an identity provider as input and returns a <a href="directed_basic_profile.html">directed basic profile</a> as output. It substitutes the navigational/popup affordances currently used.</p>
+<p>We don't know yet exactly what it should look like, but here is an example that can serve as a starting point:</p>
+<pre><code class="language-javascript">// This is just a possible starting point, largely TBD.
+let {idToken} = await navigator.credentials.get({
+  provider: &quot;https://accounts.example.com&quot;,
+  // other OpenId connect parameters
+});
+</code></pre>
+<p>Another notable alternative worth considering is a declarative API that would allow embedding the user experience inline in the content area while still keeping the cross-origin separation before user consent. For example:</p>
+<pre><code class="language-html">&lt;input type=”idtoken” provider=”https://accounts.example.com”&gt;
+</code></pre>
+<p>Upon invocation, the browser makes an assessment of the user's intention, for example making sure that the API was used as a result of a user gesture.</p>
+<p>From there, the browser proceeds to mediate the data exchange with the chose identity provider via <a href="#the-provider-api">The Provider API</a>.</p>
+<p>Upon success, the consumer API results into a <a href="directed_basic_profile.html">directed basic profile</a>. For example:</p>
+<pre><code class="language-json">{
+ &quot;iss&quot;: &quot;https://accounts.idp.com&quot;,
+ &quot;sub&quot;: &quot;110169484474386276334&quot;,
+ &quot;aud&quot;: &quot;https://example.com&quot;,
+ &quot;iat&quot;: &quot;2342342&quot;,
+ &quot;name&quot;: &quot;Sam G&quot;,
+ &quot;email&quot;: &quot;sjkld2093@gmail.com&quot;,
+ &quot;email_verified&quot;: &quot;true&quot;,
+ &quot;profile&quot;: &quot;https://accounts.google.com/default-avatar.png&quot;,
+}
+</code></pre>
+<p>The <a href="directed_basic_profile.html">directed basic profile</a> is signed into a JWT and then returned back to the relying party which can effectively get the user logged in. Here is <a href="https://jwt.io/#debugger-io?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmlkcC5jb20iLCJzdWIiOiIxMTAxNjk0ODQ0NzQzODYyNzYzMzQiLCJhdWQiOiJodHRwczovL2V4YW1wbGUuY29tIiwiaWF0IjoiMjM0MjM0MiIsIm5hbWUiOiJTYW0gRyIsImVtYWlsIjoic2prbGQyMDkzQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjoidHJ1ZSIsInByb2ZpbGUiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20vZGVmYXVsdC1hdmF0YXIucG5nIn0.3fGpHH5IeL2fDxbToBLE2DWDf6hfHU5YfiSdfqRGlIA">an example</a> of what a signed JWT looks like for the payload above.</p>
+<p>Another notable form of deployment of federation is over top level navigations.</p>
+<p>Because a significant part of federation is deployed over well-established protocols (e.g. OpenID, SAML), their HTTP profile is somewhat easy to spot. For example, for OpenID Connect requests/responses we could look at HTTP requests that have:</p>
+<ul>
+<li>a <strong>client_id</strong> parameter</li>
+<li>a <strong>redirect_uri</strong> parameter</li>
+<li>a <strong>scope</strong> parameter</li>
+<li>an accompanying <strong>.well-known/openid-configuration</strong> configuration</li>
+</ul>
+<p>Responses can be matched when they match:</p>
+<ul>
+<li>a redirect to the previously used <strong>redirect_uri</strong></li>
+<li>an <strong>id_token</strong> parameter</li>
+</ul>
+<p>It is an active area of investigation to determine:</p>
+<ol>
+<li>which and how many of these patterns we would want to use (too few and you over-classify, too many and you under-classify),</li>
+<li>whether the same approach would work for other protocols (e.g. SAML).</li>
+<li>whether we need an opt-in / explicit API and if so which (e.g. perhaps a special URL marker, like a reserved URL parameter or a scheme)</li>
+</ol>
+<h2>The Authorization API</h2>
+<p>Relying Parties often rely on more services from IDPs which are gathered via subsequent flows to get the user's authorization to release access to broader scopes. Notably, there is a long tail of these scopes, with little to no commonalities between them (say, access to calendar, photos, social graphs, etc).</p>
+<p>To allow users to continue accessing broader scopes, we expose a new API to mediate that flow. For example:</p>
+<pre><code class="language-javascript">navigator.credentials.requestAuthorization({
+  scope: &quot;https://idp.com/auth/calendar.readonly&quot;,
+  provider: &quot;https://idp.com&quot;,
+});
+</code></pre>
+<p>Now that we looked at the surface area introduced for relying parties, lets turn into <a href="#the-provider-api">The Provider API</a> and see what are the options under consideration for the intermediation between the user agent and the identity provider.</p>
+<h1>The Provider API</h1>
+<p>The purpose of the Provider API is to fulfill the invocation of <a href="#the-Consumer-api">The Consumer API</a> by coordinating with the identity provider.</p>
+<p>From the perspective of <a href="https://wicg.github.io/WebID/#privacy-threat-model">The Privacy Threat Model</a>, the Provider API has a much wider set of choices and trade-offs:</p>
+<ol>
+<li>Because of the <a href="README.md#the-classification-problem">classification problem</a>, we want to prevent a tracker from abusing this API by impersonating an IDP to track users.</li>
+<li>Because of the <a href="README.md#the-rp-tracking-problem">RP tracking problem</a>, we want to promote directed identifiers as much as we can.</li>
+<li>Because of the <a href="README.md#the-idp-tracking-problem">IDP tracking problem</a>, we want to keep IDPs involved only to the extent that they justifiably need to.</li>
+</ol>
+<p>We also want to make sure that:</p>
+<ul>
+<li>There is a credible path towards eventual browser interoperability (e.g. firefox, safari, edge)</li>
+<li>The scheme reaches an economically viable equilibrium for all parties involved, from a design of incentives perspective</li>
+<li>The scheme handles gracefully federation on non-web platforms (e.g. Android, iOS, PlayStation, etc)</li>
+<li>We minimize the deployment and activation windows (e.g. server-side / client-side and user-behavior backwards compatibility) for relying parties and identity providers</li>
+<li>The scheme has a deliberate and well informed extensibility and ossification model, i.e. make extensible where innovation is constructive and ossify where there is less rapid iteration going on and there a direct value in terms of privacy/security.</li>
+</ul>
+<p>We believe we all still have a lot to learn from each other (browser vendors, identity providers, relying parties, etc) in choosing the mean between the extremes of excess and deficiency with regards to the trade-offs of privacy, usability and economic viability.</p>
+<p>Having said that, in the following section we'll enumerate some of the most prominent variations under consideration and their trade-offs.</p>
+<p>We'll try to go over the thought process and the biggest considerations to be made starting from the most basic thing that we could do to some of the most involved.</p>
+<p>The approaches are categorized into three general approaches:</p>
+<ol>
+<li>The <a href="#the-permission-oriented-variation">Permission-oriented</a> Variation</li>
+<li>The <a href="#the-mediation-oriented-variation">Mediation-oriented</a> Variation</li>
+<li>The <a href="#the-delegation-oriented-variation">Delegation-oriented</a> Variation</li>
+</ol>
+<h2>The Permission-oriented Variation</h2>
+<p>The simplest approach is to have WebID offer APIs that allow cross-origin data sharing for sign-in and authorization use cases that works much as they do today, but with the user agents providing warnings and consent moments to the user when new tracking risks appear.</p>
+<p><img src="static/mock19.svg" alt=""></p>
+<p>An expanded exploration of this approach with its benefits and drawbacks can be seen <a href="permission_oriented_api.html">here</a>.</p>
+<p>Naturally, the next set of formulations try to address these two shortcomings at the cost of the autonomy of the IDP and the ossification of parts of the flow.</p>
+<h2>The Mediation-oriented Variation</h2>
+<p>In this formulation, the browser pulls the responsibility for itself to drive the profile exchange, enabling it to (a) bundle the consent moments described in the formulation above and (b) steer users to safer defaults.</p>
+<p><img src="static/mock15.svg" alt=""></p>
+<p>An expanded exploration of this approach with its benefits and drawbacks can be seen <a href="mediation_oriented_api.html">here</a>.</p>
+<h2>The Delegation-oriented Variation</h2>
+<p>The last alternative under consideration enables the user agent to finally address the <a href="README.md#the-idp-tracking-problem">The IDP Tracking Problem</a> mechanically.</p>
+<p>In this formulation, the IDP delegates the presentation of identity assertions to the Browser. It accomplishes that by making the browser generate a public/private key pair and have the IDP sign a certificate attesting that the browser's private key can issue certificates for a certain JWT.</p>
+<p>The biggest benefits of this variation are:</p>
+<ul>
+<li>The delegation mechanically solves the <a href="README.md#the-idp-tracking-problem">The IDP Tracking Problem</a>: it keeps the IDP unaware of where the user is signing-into while still enabling the user to recover its account while moving around.</li>
+<li>Because there aren't any <a href="README.md#the-idp-tracking-problem">IDP Tracking Problem</a> nor any <a href="README.md#the-rp-tracking-problem">RP Tracking Problem</a>, this can possibly be a zero-prompt, consequence-free UX.</li>
+</ul>
+<p>The biggest drawback of this variation is that it leads to a JWT that is not backwards compatible with the existing server-side deployment of relying parties (which are expecting the IDP to sign JTWs, not the Browser), which is O(K) hard to change.</p>
+<p>An expanded exploration of this approach with its benefits and drawbacks can be seen <a href="https://docs.google.com/presentation/d/1Sym0k84omyL5Ls1lO6w4aGQ-s4EHrDzo8ZlheyzFOlw/edit#slide=id.ga40b1e6d4f_0_77">here</a>.</p>
+<h2>The Provider Authorization API</h2>
+<p>The Provider Authorization API fulfills the request from the <a href="#the-authorization-api">Consumer Authorization API</a>.</p>
+<p>It is clearly not possible to enumerate all the various scopes that are in use, so it is clearer that:</p>
+<ul>
+<li>the IDP needs to be involved in the authorization flow</li>
+<li>the browser needs to apply the lowest common denominator policy (e.g. assume that the flow implies both the <a href="README.md#the-idp-tracking-problem">IDP Tracking Problem</a> as well as the <a href="README.md#the-rp-tracking-problem">RP Tracking Problem</a>)</li>
+</ul>
+<p><img src="static/mock20.svg" alt=""></p>
+<h2>The Enterprise-oriented Variation</h2>
+<p>To the best of our knowledge, we believe that business users (employees of a corporation) have a different set of privacy expectations compared to consumers, in that the accounts issued to employees are owned by the businesses (as opposed to the relationship a consumer has with social login providers). It is also clear to us too that the current deployment of businesses makes a non-trivial use of personal machines owned by employees, rather than machines that are issued by the business (which have a much easier ability to control enterprise policies).</p>
+<p>We believe that the controls should take that distinction into consideration, and that the biggest challenge is adversarial impersonation.</p>
+<p><img src="static/mock24.svg" alt=""></p>
+<p>This is still an active area of exploration, but to give a sense of direction, we are actively exploring making an abrupt separation between personal profiles and work profiles. The intuition here is that browser profiles are the closest delineation that can make a separation between personal use of your browser versus work use of your browser, along with the privacy expectations in each mode.</p>
+<p><img src="static/mock25.svg" alt=""></p>
+<p>In addition to the separation, and with the user's permission/control/understanding, it seems like it would be beneficial for business admins to have the ability to set work policies on a per-profile basis.</p>
+
+      </div>
+      <div style="clear: both;"></div>
+      <footer></footer>      
+    </main>
+
+  </body>
+</html>
+
