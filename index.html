@@ -6,7 +6,7 @@
   <link href="https://www.w3.org/StyleSheets/TR/2016/cg-draft" rel="stylesheet">
   <meta content="Bikeshed version 4f053d00e, updated Tue Aug 10 14:13:32 2021 -0700" name="generator">
   <link href="http://wicg.github.io/WebID" rel="canonical">
-  <meta content="0b3b851113495f0fbec9f3888dffe940ea7e68e7" name="document-revision">
+  <meta content="f2ace1856ce64173808a7102d26c27ee5ddf8bee" name="document-revision">
 <style>
 dl.domintro dt {
     font-family: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
@@ -687,28 +687,28 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
        <a href="#privacy-threat-model"><span class="secno">10.1</span> <span class="content">Privacy Threat Model</span></a>
        <ol class="toc">
         <li><a href="#principals"><span class="secno">10.1.1</span> <span class="content">Principals</span></a>
+        <li><a href="#high-level-threats"><span class="secno">10.1.2</span> <span class="content">High-level threats</span></a>
         <li>
-         <a href="#attack-scenarios"><span class="secno">10.1.2</span> <span class="content">Attack Scenarios</span></a>
+         <a href="#attack-scenarios"><span class="secno">10.1.3</span> <span class="content">Attack Scenarios</span></a>
          <ol class="toc">
           <li>
-           <a href="#by-rp"><span class="secno">10.1.2.1</span> <span class="content">By the RP</span></a>
+           <a href="#by-rp"><span class="secno">10.1.3.1</span> <span class="content">By the RP</span></a>
            <ol class="toc">
-            <li><a href="#cross-site-correlation"><span class="secno">10.1.2.1.1</span> <span class="content">Cross-Site Correlation</span></a>
-            <li><a href="#same-site-identification"><span class="secno">10.1.2.1.2</span> <span class="content">Same-Site Identification</span></a>
-            <li><a href="#by-pass"><span class="secno">10.1.2.1.3</span> <span class="content">By-Pass</span></a>
-            <li><a href="#intrusion"><span class="secno">10.1.2.1.4</span> <span class="content">Intrusion</span></a>
+            <li><a href="#cross-site-correlation"><span class="secno">10.1.3.1.1</span> <span class="content">Cross-Site Correlation</span></a>
+            <li><a href="#same-site-identification"><span class="secno">10.1.3.1.2</span> <span class="content">Same-Site Identification</span></a>
+            <li><a href="#data-compromise"><span class="secno">10.1.3.1.3</span> <span class="content">Data Compromise</span></a>
            </ol>
           <li>
-           <a href="#by-idp"><span class="secno">10.1.2.2</span> <span class="content">By the IDP</span></a>
+           <a href="#by-idp"><span class="secno">10.1.3.2</span> <span class="content">By the IDP</span></a>
            <ol class="toc">
-            <li><a href="#idp-secondary-use"><span class="secno">10.1.2.2.1</span> <span class="content">Secondary Use</span></a>
-            <li><a href="#idp-impersonation"><span class="secno">10.1.2.2.2</span> <span class="content">Impersonation</span></a>
+            <li><a href="#idp-secondary-use"><span class="secno">10.1.3.2.1</span> <span class="content">Secondary Use</span></a>
+            <li><a href="#impersonation"><span class="secno">10.1.3.2.2</span> <span class="content">Impersonation</span></a>
            </ol>
           <li>
-           <a href="#by-collusion"><span class="secno">10.1.2.3</span> <span class="content">By Collusion</span></a>
+           <a href="#by-collusion"><span class="secno">10.1.3.3</span> <span class="content">By Collusion</span></a>
            <ol class="toc">
-            <li><a href="#back-channel"><span class="secno">10.1.2.3.1</span> <span class="content">Back channel</span></a>
-            <li><a href="#timing-attacks"><span class="secno">10.1.2.3.2</span> <span class="content">Timing Attacks</span></a>
+            <li><a href="#back-channel"><span class="secno">10.1.3.3.1</span> <span class="content">Back channel</span></a>
+            <li><a href="#timing-attacks"><span class="secno">10.1.3.3.2</span> <span class="content">Timing Attacks</span></a>
            </ol>
          </ol>
        </ol>
@@ -718,7 +718,7 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
         <li>
          <a href="#minimal-disclosure"><span class="secno">10.2.1</span> <span class="content">Minimal Disclosure</span></a>
          <ol class="toc">
-          <li><a href="#sharding"><span class="secno">10.2.1.1</span> <span class="content">Sharding</span></a>
+          <li><a href="#sharding-and-constrained-use"><span class="secno">10.2.1.1</span> <span class="content">Sharding and Constrained Use</span></a>
           <li><a href="#progress-disclosure"><span class="secno">10.2.1.2</span> <span class="content">Progress Disclosure</span></a>
           <li><a href="#self-issue"><span class="secno">10.2.1.3</span> <span class="content">Self-issue</span></a>
          </ol>
@@ -726,6 +726,7 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
         <li><a href="#policy"><span class="secno">10.2.3</span> <span class="content">Policy</span></a>
         <li><a href="#denylists"><span class="secno">10.2.4</span> <span class="content">Denylists</span></a>
         <li><a href="#pre-registration"><span class="secno">10.2.5</span> <span class="content">Pre-registration</span></a>
+        <li><a href="#2fa"><span class="secno">10.2.6</span> <span class="content">2FA</span></a>
        </ol>
      </ol>
     <li><a href="#extensibility"><span class="secno">11</span> <span class="content">Extensibility</span></a>
@@ -1002,7 +1003,7 @@ This differs from <a href="https://wiki.mozilla.org/Security/Anti_tracking_polic
 definition</a> in that Mozilla defines other parties as first parties if the
 user can easily discover which party it is and intends to interact with that
 party, for example to allow sign-in widgets to be first-party.</p>
-   <p>A <dfn data-dfn-type="dfn" data-noexport id="third-party">third party<a class="self-link" href="#third-party"></a></dfn> for a user action is any party that isn’t the <a data-link-type="dfn" href="#first-party" id="ref-for-first-party">first
+   <p>A <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="third-party">third party</dfn> for a user action is any party that isn’t the <a data-link-type="dfn" href="#first-party" id="ref-for-first-party">first
 party</a> or the user (the second party).</p>
    <p>A <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="user">user</dfn> is a human or program that controls a user agent.</p>
    <p>A <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="user-identifier">user identifier</dfn> is a pair of a <a data-link-type="dfn" href="#site" id="ref-for-site">site</a> and a (potentially-large) integer
@@ -1661,13 +1662,58 @@ through an <a href="#use-cases-explicit-sign-in">§ 2.2.2 Explicit Sign-in</a>
    <p>This section describes the three principals that would participate in an invocation of the API and expectations around their behavior.</p>
    <ol>
     <li data-md>
-     <p>The <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent">User Agent</a> implements the API and controls the execution contexts for the RP and IDP content. The user agent is assumed to be trusted by the user, and transitively trusted by the RP and IDP.</p>
+     <p>The <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent">User Agent</a> (<a data-link-type="dfn">UA</a>s) implements <a href="#API">§ 8 The Browser API</a> and controls the execution contexts for the <a data-link-type="dfn" href="#rp" id="ref-for-rp②①">RP</a> and <a data-link-type="dfn" href="#idp" id="ref-for-idp①⑦">IDP</a> content. The user agent is assumed to be trusted by the user, and transitively trusted by the RP and IDP.</p>
     <li data-md>
-     <p><a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party⑤⓪">Relying Party</a>s are first party websites that invoke the WebID API for the purpose of authenticating a user to their account or for requesting information about that user. A well-behaving RP would only invoke the API following a clear user signal -- typically, clicking a sign-in button. Since any site can invoke the API, RPs cannot necessarily be trusted to limit the user information it collects or use that information in an acceptable way.</p>
+     <p><a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party⑤⓪">Relying Party</a>s (<a data-link-type="dfn" href="#rp" id="ref-for-rp②②">RP</a>s) are <a data-link-type="dfn" href="#first-party" id="ref-for-first-party①">first party</a> websites that invoke the WebID API for the purpose of authenticating a user to their account or for requesting information about that user. A well-behaving RP would only invoke the API following a clear user signal -- typically, clicking a sign-in button. Since any site can invoke the API, RPs cannot necessarily be trusted to limit the user information it collects or use that information in an acceptable way.</p>
     <li data-md>
-     <p><a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider③②">Identity Provider</a>s are third party websites that are the target of a WebID call to attempt to fetch an ID token. Usually the IDP has a higher level of trust than the RP since it already has the user’s personal information, but it is possible that the IDP might use the user’s information in non-approved ways. It is possible that the IDP specified in the API call may not be an IDP the user knows about, or may not be a bona fide IDP at all, in which case it likely does not have personal user information in advance, but also might be less accountable for its behavior.</p>
+     <p><a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider③②">Identity Provider</a>s (<a data-link-type="dfn" href="#idp" id="ref-for-idp①⑧">IDP</a>s) are <a data-link-type="dfn" href="#third-party" id="ref-for-third-party">third party</a> websites that are the target of a WebID call to attempt to fetch an ID token. Usually the IDP has a higher level of trust than the RP since it already has the user’s personal information, but it is possible that the IDP might use the user’s information in non-approved ways. It is possible that the IDP specified in the API call may not be an IDP the user knows about, or may not be a bona fide IDP at all, in which case it likely does not have personal user information in advance, but also might be less accountable for its behavior.</p>
    </ol>
-   <h4 class="heading settled" data-level="10.1.2" id="attack-scenarios"><span class="secno">10.1.2. </span><span class="content">Attack Scenarios</span><a class="self-link" href="#attack-scenarios"></a></h4>
+   <h4 class="heading settled" data-level="10.1.2" id="high-level-threats"><span class="secno">10.1.2. </span><span class="content">High-level threats</span><a class="self-link" href="#high-level-threats"></a></h4>
+   <p><a data-link-type="biblio" href="https://datatracker.ietf.org/doc/html/rfc6973"><cite>Privacy Considerations for Internet Protocols</cite></a> describes the following high-level privacy threats, which the TAG
+has adopted into <a href="https://www.w3.org/TR/security-privacy-questionnaire/#threats">Self-Review Questionnaire: Security and Privacy § threats</a>:</p>
+   <dl>
+    <dt data-md><dfn data-dfn-type="dfn" data-noexport id="surveillance">Surveillance<a class="self-link" href="#surveillance"></a></dfn>
+    <dd data-md>
+     <p>Surveillance is the observation or monitoring of an individual’s
+communications or activities.</p>
+    <dt data-md><dfn data-dfn-type="dfn" data-noexport id="stored-data-compromise">Stored Data Compromise<a class="self-link" href="#stored-data-compromise"></a></dfn>
+    <dd data-md>
+     <p>End systems that do not take adequate measures to secure stored data from
+unauthorized or inappropriate access.</p>
+    <dt data-md><dfn data-dfn-type="dfn" data-noexport id="intrusion">Intrusion<a class="self-link" href="#intrusion"></a></dfn>
+    <dd data-md>
+     <p>Intrusion consists of invasive acts that disturb or interrupt one’s life or
+activities.</p>
+    <dt data-md><dfn data-dfn-type="dfn" data-noexport id="misattribution">Misattribution<a class="self-link" href="#misattribution"></a></dfn>
+    <dd data-md>
+     <p>Misattribution occurs when data or communications related to one individual
+are attributed to another.</p>
+    <dt data-md><dfn data-dfn-type="dfn" data-noexport id="correlation">Correlation<a class="self-link" href="#correlation"></a></dfn>
+    <dd data-md>
+     <p>Correlation is the combination of various pieces of information related to an
+individual or that obtain that characteristic when combined.</p>
+    <dt data-md><dfn data-dfn-type="dfn" data-noexport id="identification">Identification<a class="self-link" href="#identification"></a></dfn>
+    <dd data-md>
+     <p>Identification is the linking of information to a particular individual to
+infer an individual’s identity or to allow the inference of an individual’s
+    identity.</p>
+    <dt data-md><dfn data-dfn-type="dfn" data-noexport id="secondary-use">Secondary Use<a class="self-link" href="#secondary-use"></a></dfn>
+    <dd data-md>
+     <p>Secondary use is the use of collected information about an individual without
+the individual’s consent for a purpose different from that for which the
+    information was collected.</p>
+    <dt data-md><dfn data-dfn-type="dfn" data-noexport id="disclosure">Disclosure<a class="self-link" href="#disclosure"></a></dfn>
+    <dd data-md>
+     <p>Disclosure is the revelation of information about an individual that affects
+the way others judge the individual.</p>
+    <dt data-md><dfn data-dfn-type="dfn" data-noexport id="exclusion">Exclusion<a class="self-link" href="#exclusion"></a></dfn>
+    <dd data-md>
+     <p>Exclusion is the failure to allow individuals to know about the data that
+others have about them and to participate in its handling and use.</p>
+   </dl>
+   <p>These threats combine into the particular concrete threats we want web
+specifications to defend against, described in subsections here:</p>
+   <h4 class="heading settled" data-level="10.1.3" id="attack-scenarios"><span class="secno">10.1.3. </span><span class="content">Attack Scenarios</span><a class="self-link" href="#attack-scenarios"></a></h4>
    <p>This section describes the scenarios in which various agents might attempt to gain user information. It considers the possibilities when:</p>
    <ul>
     <li data-md>
@@ -1685,8 +1731,8 @@ through an <a href="#use-cases-explicit-sign-in">§ 2.2.2 Explicit Sign-in</a>
     <li data-md>
      <p><a data-link-type="biblio" href="https://datatracker.ietf.org/doc/html/rfc7258"><cite>Pervasive Monitoring Is an Attack</cite></a></p>
    </ol>
-   <h5 class="heading settled" data-level="10.1.2.1" id="by-rp"><span class="secno">10.1.2.1. </span><span class="content">By the RP</span><a class="self-link" href="#by-rp"></a></h5>
-   <h6 class="heading settled" data-level="10.1.2.1.1" id="cross-site-correlation"><span class="secno">10.1.2.1.1. </span><span class="content">Cross-Site Correlation</span><a class="self-link" href="#cross-site-correlation"></a></h6>
+   <h5 class="heading settled" data-level="10.1.3.1" id="by-rp"><span class="secno">10.1.3.1. </span><span class="content">By the RP</span><a class="self-link" href="#by-rp"></a></h5>
+   <h6 class="heading settled" data-level="10.1.3.1.1" id="cross-site-correlation"><span class="secno">10.1.3.1.1. </span><span class="content">Cross-Site Correlation</span><a class="self-link" href="#cross-site-correlation"></a></h6>
    <p>Related to:</p>
    <ul>
     <li data-md>
@@ -1697,7 +1743,7 @@ through an <a href="#use-cases-explicit-sign-in">§ 2.2.2 Explicit Sign-in</a>
      <p><a href="https://datatracker.ietf.org/doc/html/rfc6973#section-5.2.1">RFC6973: Correlation</a></p>
    </ul>
    <p>Correlation is the combination of various pieces of information related to an individual or that obtain that characteristic when combined.</p>
-   <p>This attack happens when multiple <a data-link-type="dfn" href="#rp" id="ref-for-rp②①">RP</a>s correlate user information for tracking purposes.</p>
+   <p>This attack happens when multiple <a data-link-type="dfn" href="#rp" id="ref-for-rp②③">RP</a>s correlate user information for tracking purposes.</p>
    <p>When a user willingly provides their full name, email address, phone number, etc,
 to multiple relying parties, those relying parties can collaborate to build a
 profile of that user and their activity across collaborating sites. Sometimes this is referred to as <a data-link-type="dfn" href="#joining" id="ref-for-joining">joining</a> since it amounts to a join of user records between the account databases of multiple RPs.</p>
@@ -1722,14 +1768,14 @@ profile of that user and their activity across collaborating sites. Sometimes th
       <p>User is surprised that RP2 knows that they are shopping for wedding rings.</p>
     </ol>
    </div>
-   <p>A generalization of <a href="#cross-site-correlation">§ 10.1.2.1.1 Cross-Site Correlation</a> is:</p>
+   <p>A generalization of <a href="#cross-site-correlation">§ 10.1.3.1.1 Cross-Site Correlation</a> is:</p>
    <p>(<dfn data-dfn-type="dfn" data-noexport id="rp-secondary-use">RP Secondary Use<a class="self-link" href="#rp-secondary-use"></a></dfn>) Relying Party uses user information for purposes not authorized by the user:</p>
    <p>When the user agrees to allow the IDP to provide information to the RP,
 the consent is specific to certain purposes, such as sign-in and personalization.
 The RP might use that data for other purposes that the user would not expect and
 did not authorize, such as selling email addresses to a spam list.</p>
    <p>Spamming risk can exist even when using <a data-link-type="dfn" href="#directed-identifier" id="ref-for-directed-identifier①">directed identifiers</a>.</p>
-   <h6 class="heading settled" data-level="10.1.2.1.2" id="same-site-identification"><span class="secno">10.1.2.1.2. </span><span class="content">Same-Site Identification</span><a class="self-link" href="#same-site-identification"></a></h6>
+   <h6 class="heading settled" data-level="10.1.3.1.2" id="same-site-identification"><span class="secno">10.1.3.1.2. </span><span class="content">Same-Site Identification</span><a class="self-link" href="#same-site-identification"></a></h6>
    <p>Identification is the linking of information to a particular individual
 to infer an individual’s identity or to allow the inference of an
 individual’s identity.</p>
@@ -1746,12 +1792,10 @@ adds directly (or indirectly) detectable client state.</p>
     <li data-md>
      <p><a data-link-type="biblio" href="https://w3c.github.io/fingerprinting-guidance/"><cite>Mitigating Browser Fingerprinting in Web Specifications</cite></a></p>
    </ol>
-   <h6 class="heading settled" data-level="10.1.2.1.3" id="by-pass"><span class="secno">10.1.2.1.3. </span><span class="content">By-Pass</span><a class="self-link" href="#by-pass"></a></h6>
-   <p>This attack scenario happens when the Relying Party tries to obtain
-personal user information from the Identity Provider without user consent.</p>
-   <p>An RP might attempt to obtain user information from an IDP without
-the user having consented to the information being released, or being
-aware of it being released.</p>
+   <h6 class="heading settled" data-level="10.1.3.1.3" id="data-compromise"><span class="secno">10.1.3.1.3. </span><span class="content">Data Compromise</span><a class="self-link" href="#data-compromise"></a></h6>
+   <p>This attack scenario happens when the <a data-link-type="dfn" href="#rp" id="ref-for-rp②④">RP</a> takes advantage of
+inadequate measures (by the <a data-link-type="dfn" href="#idp" id="ref-for-idp①⑨">IDP</a> or the <a data-link-type="dfn">UA</a>) to secure stored data to
+obtain personal user information without their consent.</p>
    <p>This can happen if user consent mechanisms are missing, inadequate,
 or susceptible to bypass.</p>
    <div class="example" id="example-6854ce0d"><a class="self-link" href="#example-6854ce0d"></a> An RP can use clickjacking to trick the user into signing-into their site. </div>
@@ -1759,17 +1803,12 @@ or susceptible to bypass.</p>
    <p>See also:</p>
    <ol>
     <li data-md>
-     <p><a href="https://w3cping.github.io/privacy-threat-model/#hl-intrusion">Target Privacy Threat Model § hl-intrusion</a></p>
+     <p><a href="https://w3cping.github.io/privacy-threat-model/#stored-data-compromise">Target Privacy Threat Model § stored-data-compromise</a></p>
     <li data-md>
-     <p><a href="https://datatracker.ietf.org/doc/html/rfc6973#section-5.1.3">Privacy Considerations for Internet Protocols § section-5.1.3</a></p>
+     <p><a href="https://datatracker.ietf.org/doc/html/rfc6973#section-5.1.2">Privacy Considerations for Internet Protocols § section-5.1.2</a></p>
    </ol>
-   <h6 class="heading settled" data-level="10.1.2.1.4" id="intrusion"><span class="secno">10.1.2.1.4. </span><span class="content">Intrusion</span><a class="self-link" href="#intrusion"></a></h6>
-   <p>Intrusion consists of invasive acts that disturb or interrupt one’s
-life or activities.  Intrusion can thwart individuals' desires to be
-left alone, sap their time or attention, or interrupt their
-activities.</p>
-   <h5 class="heading settled" data-level="10.1.2.2" id="by-idp"><span class="secno">10.1.2.2. </span><span class="content">By the IDP</span><a class="self-link" href="#by-idp"></a></h5>
-   <h6 class="heading settled" data-level="10.1.2.2.1" id="idp-secondary-use"><span class="secno">10.1.2.2.1. </span><span class="content">Secondary Use</span><a class="self-link" href="#idp-secondary-use"></a></h6>
+   <h5 class="heading settled" data-level="10.1.3.2" id="by-idp"><span class="secno">10.1.3.2. </span><span class="content">By the IDP</span><a class="self-link" href="#by-idp"></a></h5>
+   <h6 class="heading settled" data-level="10.1.3.2.1" id="idp-secondary-use"><span class="secno">10.1.3.2.1. </span><span class="content">Secondary Use</span><a class="self-link" href="#idp-secondary-use"></a></h6>
    <p>Related to:</p>
    <ul>
     <li data-md>
@@ -1788,7 +1827,7 @@ to serve targeted advertisements to those users browsing on sites that the IDP c
    <p>This risk can exist even in the case where the IDP does not having pre-existing user
 account information (for instance, if it is not a _bona fide_ IDP), because WebID
 requests sent to the IDP are credentialed. This is more likely to occur if the RP is
-colluding with the IDP to enable tracking; expanded variants are described in <a href="#timing-attacks">§ 10.1.2.3.2 Timing Attacks</a>.</p>
+colluding with the IDP to enable tracking; expanded variants are described in <a href="#timing-attacks">§ 10.1.3.3.2 Timing Attacks</a>.</p>
    <p><img src="static/mock23.svg"></p>
    <div class="example" id="example-ee3423e4">
     <a class="self-link" href="#example-ee3423e4"></a> 
@@ -1805,7 +1844,7 @@ colluding with the IDP to enable tracking; expanded variants are described in <a
       <p>The user is surprised that their IDP is aware of their plans to get married.</p>
     </ol>
    </div>
-   <h6 class="heading settled" data-level="10.1.2.2.2" id="idp-impersonation"><span class="secno">10.1.2.2.2. </span><span class="content">Impersonation</span><a class="self-link" href="#idp-impersonation"></a></h6>
+   <h6 class="heading settled" data-level="10.1.3.2.2" id="impersonation"><span class="secno">10.1.3.2.2. </span><span class="content">Impersonation</span><a class="self-link" href="#impersonation"></a></h6>
    <p>Since IDPs have unconstrained ability to issue ID tokens, they are capable
 of logging in to users’ federated accounts without user knowledge or action,
 impersonating the user and potentially gaining full access to the user’s account on the RP.</p>
@@ -1824,8 +1863,8 @@ impersonating the user and potentially gaining full access to the user’s accou
       <p>The user is surprised by their ex-spouse’s knowledge of their recent dating affairs.</p>
     </ol>
    </div>
-   <h5 class="heading settled" data-level="10.1.2.3" id="by-collusion"><span class="secno">10.1.2.3. </span><span class="content">By Collusion</span><a class="self-link" href="#by-collusion"></a></h5>
-   <h6 class="heading settled" data-level="10.1.2.3.1" id="back-channel"><span class="secno">10.1.2.3.1. </span><span class="content">Back channel</span><a class="self-link" href="#back-channel"></a></h6>
+   <h5 class="heading settled" data-level="10.1.3.3" id="by-collusion"><span class="secno">10.1.3.3. </span><span class="content">By Collusion</span><a class="self-link" href="#by-collusion"></a></h5>
+   <h6 class="heading settled" data-level="10.1.3.3.1" id="back-channel"><span class="secno">10.1.3.3.1. </span><span class="content">Back channel</span><a class="self-link" href="#back-channel"></a></h6>
    <p>This attack scenario happens when IDP exceed the user’s information sharing permission.</p>
    <p>Existing federated identity protocols are clear on what information an RP
 is requesting, which the IDP can provide. While the browser can inspect
@@ -1860,8 +1899,8 @@ invisible to the browser, in which case it could contain anything.</p>
       <p>User is surprised that RP2 knows that they are shopping for wedding rings.</p>
     </ol>
    </div>
-   <h6 class="heading settled" data-level="10.1.2.3.2" id="timing-attacks"><span class="secno">10.1.2.3.2. </span><span class="content">Timing Attacks</span><a class="self-link" href="#timing-attacks"></a></h6>
-   <p>The potential for IDPs profiling users based on their visits to RPs <a href="#idp-secondary-use">§ 10.1.2.2.1 Secondary Use</a> can
+   <h6 class="heading settled" data-level="10.1.3.3.2" id="timing-attacks"><span class="secno">10.1.3.3.2. </span><span class="content">Timing Attacks</span><a class="self-link" href="#timing-attacks"></a></h6>
+   <p>The potential for IDPs profiling users based on their visits to RPs <a href="#idp-secondary-use">§ 10.1.3.2.1 Secondary Use</a> can
 be partially mitigated by hiding the RP from the IDP until after the user has
 consented to that tracking risk.</p>
    <p>However, there is residual risk in cases where the RP and IDP are colluding.</p>
@@ -1897,13 +1936,12 @@ or was less visible to users.</p>
    </ol>
    <h3 class="heading settled" data-level="10.2" id="mitigation-strategies"><span class="secno">10.2. </span><span class="content">Mitigation Strategies</span><a class="self-link" href="#mitigation-strategies"></a></h3>
    <h4 class="heading settled" data-level="10.2.1" id="minimal-disclosure"><span class="secno">10.2.1. </span><span class="content">Minimal Disclosure</span><a class="self-link" href="#minimal-disclosure"></a></h4>
-   <p class="note" role="note"><span>Note:</span> minimal disclosure for a constrained use</p>
    <p><img src="static/mock37.svg"></p>
-   <h5 class="heading settled" data-level="10.2.1.1" id="sharding"><span class="secno">10.2.1.1. </span><span class="content">Sharding</span><a class="self-link" href="#sharding"></a></h5>
+   <h5 class="heading settled" data-level="10.2.1.1" id="sharding-and-constrained-use"><span class="secno">10.2.1.1. </span><span class="content">Sharding and Constrained Use</span><a class="self-link" href="#sharding-and-constrained-use"></a></h5>
    <p>Mitigates:</p>
    <ul>
     <li data-md>
-     <p><a href="#cross-site-correlation">§ 10.1.2.1.1 Cross-Site Correlation</a></p>
+     <p><a href="#cross-site-correlation">§ 10.1.3.1.1 Cross-Site Correlation</a></p>
    </ul>
    <p class="note" role="note"><span>Note:</span> directed, sharding, partitioning</p>
    <p>The problem of RPs joining user data via back-channels is inherent
@@ -1914,8 +1952,8 @@ cannot be correlated with other RPs.</p>
    <p>In the past, there have been schemes to accomplish this using one-way
 hashes of, for example, the user’s name, the IDP and the RP.</p>
    <p><img src="static/mock13.svg"></p>
-   <p class="note" role="note"><span>Note:</span> this mitigation is not robust against <a href="#back-channel">§ 10.1.2.3.1 Back channel</a>,
-or the <a href="#idp-secondary-use">§ 10.1.2.2.1 Secondary Use</a>. Also, collaborating RPs might be able
+   <p class="note" role="note"><span>Note:</span> this mitigation is not robust against <a href="#back-channel">§ 10.1.3.3.1 Back channel</a>,
+or the <a href="#idp-secondary-use">§ 10.1.3.2.1 Secondary Use</a>. Also, collaborating RPs might be able
 to defeat this mitigation by sharing the same CLIENT_ID, although
 possibly this could be detected and presumably would violate RP
 agreements with IDPs with <a href="#pre-registration">§ 10.2.5 Pre-registration</a>.</p>
@@ -1925,9 +1963,9 @@ agreements with IDPs with <a href="#pre-registration">§ 10.2.5 Pre-registrati
    <p>Mitigates:</p>
    <ul>
     <li data-md>
-     <p><a href="#idp-secondary-use">§ 10.1.2.2.1 Secondary Use</a> and</p>
+     <p><a href="#idp-secondary-use">§ 10.1.3.2.1 Secondary Use</a> and</p>
     <li data-md>
-     <p><a href="#timing-attacks">§ 10.1.2.3.2 Timing Attacks</a></p>
+     <p><a href="#timing-attacks">§ 10.1.3.3.2 Timing Attacks</a></p>
    </ul>
    <p class="note" role="note"><span>Note:</span> unbundling issuing from presentation</p>
    <p>Preventing tracking of users by the IDP is difficult because the RP has to be coded into the identity token for security reasons, to prevent reuse of the token. There have been cryptographic schemes developed to blind the IDP to the RP while still preventing token reuse in that way (see Mozilla’s <a href="https://wiki.mozilla.org/Identity/Persona_AAR">personas</a>) but there are other valid uses that the IDP has for knowing the RP, such as fraud and abuse prevention.</p>
@@ -1936,11 +1974,11 @@ agreements with IDPs with <a href="#pre-registration">§ 10.2.5 Pre-registrati
    <p>Mitigates:</p>
    <ul>
     <li data-md>
-     <p><a href="#by-pass">§ 10.1.2.1.3 By-Pass</a>,</p>
+     <p><a href="#data-compromise">§ 10.1.3.1.3 Data Compromise</a>,</p>
     <li data-md>
-     <p><a href="#idp-secondary-use">§ 10.1.2.2.1 Secondary Use</a>,</p>
+     <p><a href="#idp-secondary-use">§ 10.1.3.2.1 Secondary Use</a>,</p>
     <li data-md>
-     <p><a href="#timing-attacks">§ 10.1.2.3.2 Timing Attacks</a></p>
+     <p><a href="#timing-attacks">§ 10.1.3.3.2 Timing Attacks</a></p>
    </ul>
    <p>IDPs, whom the user has entrusted with their personal data, are currently responsible for ensuring that the user consents to their information being shared. With browser mediation in place, the user agent might have to assume responsibility for ensuring the user understands what is being shared and that it is intentional. This is certainly the case if the browser is able to entirely intermediate the identity flow without showing any IDP web content, but also might be desirable if there are concerns that the IDP is not collecting consent in an adequate manner.</p>
    <p>Additionally, a consent prompt preceding the sharing of the RP’s request to the IDP can mitigate risks around IDP tracking of user visits to RPs.</p>
@@ -1964,9 +2002,9 @@ agreements with IDPs with <a href="#pre-registration">§ 10.2.5 Pre-registrati
    <p>Mitigates:</p>
    <ul>
     <li data-md>
-     <p><a href="#idp-impersonation">§ 10.1.2.2.2 Impersonation</a>,</p>
+     <p><a href="#impersonation">§ 10.1.3.2.2 Impersonation</a>,</p>
     <li data-md>
-     <p><a href="#back-channel">§ 10.1.2.3.1 Back channel</a></p>
+     <p><a href="#back-channel">§ 10.1.3.3.1 Back channel</a></p>
    </ul>
    <p>Beyond technical constraints, the browser can recognize explicit assertions by the IDP about the privacy characteristics it provides and rely on those assertions in order to guide the user appropriately. An example is a hypothetical case in which the IDP asserts it will only issue <a data-link-type="dfn" href="#directed-identifier" id="ref-for-directed-identifier⑤">directed identifiers</a> and will not provide identifying information to the RPs out of view of the browser. In that case the browser may not have to warn the user about sharing personalized information.</p>
    <h4 class="heading settled" data-level="10.2.4" id="denylists"><span class="secno">10.2.4. </span><span class="content">Denylists</span><a class="self-link" href="#denylists"></a></h4>
@@ -1980,12 +2018,18 @@ agreements with IDPs with <a href="#pre-registration">§ 10.2.5 Pre-registrati
    <p>Mitigates:</p>
    <ul>
     <li data-md>
-     <p><a href="#by-pass">§ 10.1.2.1.3 By-Pass</a>,</p>
+     <p><a href="#data-compromise">§ 10.1.3.1.3 Data Compromise</a>,</p>
     <li data-md>
-     <p><a href="#cross-site-correlation">§ 10.1.2.1.1 Cross-Site Correlation</a></p>
+     <p><a href="#cross-site-correlation">§ 10.1.3.1.1 Cross-Site Correlation</a></p>
    </ul>
    <p>Currently, IDPs require that an RP pre-registers and agrees to specific terms before the IDP will issue an ID token to them. T
 his conflicts with <a href="#self-issue">the previous mitigation</a>, but can provide a measure of RP accountability.</p>
+   <h4 class="heading settled" data-level="10.2.6" id="2fa"><span class="secno">10.2.6. </span><span class="content">2FA</span><a class="self-link" href="#2fa"></a></h4>
+   <p>Mitigates:</p>
+   <ul>
+    <li data-md>
+     <p><a href="#impersonation">§ 10.1.3.2.2 Impersonation</a>,</p>
+   </ul>
    <h2 class="heading settled" data-level="11" id="extensibility"><span class="secno">11. </span><span class="content">Extensibility</span><a class="self-link" href="#extensibility"></a></h2>
    <p class="note" role="note"><span>Note:</span> go over the extensibility mechanisms.</p>
    <h2 class="heading settled" data-level="12" id="acknowledgements"><span class="secno">12. </span><span class="content">Acknowledgements</span><a class="self-link" href="#acknowledgements"></a></h2>
@@ -2043,10 +2087,13 @@ his conflicts with <a href="#self-issue">the previous mitigation</a>, but can pr
    <li><a href="#dom-federatedcredentialapprovedby-auto">"auto"</a><span>, in § 8.2</span>
    <li><a href="#auto-sign-in">auto sign-in</a><span>, in § 8.2</span>
    <li><a href="#dom-federatedidentityprovider-clientid">clientId</a><span>, in § 8.2</span>
+   <li><a href="#correlation">Correlation</a><span>, in § 10.1.2</span>
    <li><a href="#directed-identifier">directed identifier</a><span>, in § 4</span>
+   <li><a href="#disclosure">Disclosure</a><span>, in § 10.1.2</span>
    <li><a href="#dom-federatedcredential-discoverfromexternalsource-slot">[[DiscoverFromExternalSource]]()</a><span>, in § 8.2</span>
    <li><a href="#dom-federatedcredential-discoverfromexternalsource-origin-options-sameoriginwithancestors-slot">[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</a><span>, in § 8.2</span>
    <li><a href="#dom-webidlogoutrequest-endpoint">endpoint</a><span>, in § 8.4.2</span>
+   <li><a href="#exclusion">Exclusion</a><span>, in § 10.1.2</span>
    <li><a href="#explicit-sign-in">explicit sign-in</a><span>, in § 8.2</span>
    <li><a href="#enumdef-federatedcredentialapprovedby">FederatedCredentialApprovedBy</a><span>, in § 8.2</span>
    <li><a href="#dictdef-federatedcredentialinterceptor">FederatedCredentialInterceptor</a><span>, in § 8.5.1</span>
@@ -2057,10 +2104,12 @@ his conflicts with <a href="#self-issue">the previous mitigation</a>, but can pr
    <li><a href="#first-party">first party</a><span>, in § 4</span>
    <li><a href="#global-identifier">global identifier</a><span>, in § 4</span>
    <li><a href="#high-level-api">high-level API</a><span>, in § 4</span>
+   <li><a href="#identification">Identification</a><span>, in § 10.1.2</span>
    <li><a href="#identity-provider">Identity Provider</a><span>, in § 4</span>
    <li><a href="#idp">IDP</a><span>, in § 4</span>
    <li><a href="#id-token">id token</a><span>, in § 4</span>
    <li><a href="#dom-federatedcredential-idtoken">idToken</a><span>, in § 8.2</span>
+   <li><a href="#intrusion">Intrusion</a><span>, in § 10.1.2</span>
    <li><a href="#joining">joining</a><span>, in § 4</span>
    <li><a href="#logged-in">logged in</a><span>, in § 4</span>
    <li><a href="#logged-out">logged out</a><span>, in § 4</span>
@@ -2068,6 +2117,7 @@ his conflicts with <a href="#self-issue">the previous mitigation</a>, but can pr
    <li><a href="#dom-federatedcredential-logout">logout(logout_requests)</a><span>, in § 8.4.2</span>
    <li><a href="#low-level-api">low-level API</a><span>, in § 4</span>
    <li><a href="#mint-a-new-id-token">mint a new id token</a><span>, in § 8.2</span>
+   <li><a href="#misattribution">Misattribution</a><span>, in § 10.1.2</span>
    <li><a href="#dom-federatedidentityprovider-nonce">nonce</a><span>, in § 8.2</span>
    <li><a href="#out-of-band">out-of-band</a><span>, in § 4</span>
    <li><a href="#dom-federatedcredentialinterceptor-params">params</a><span>, in § 8.5.1</span>
@@ -2080,13 +2130,16 @@ his conflicts with <a href="#self-issue">the previous mitigation</a>, but can pr
    <li><a href="#dom-federatedcredential-revoke">revoke(accountId)</a><span>, in § 8.3</span>
    <li><a href="#rp">RP</a><span>, in § 4</span>
    <li><a href="#rp-request">RP request</a><span>, in § 6.4</span>
-   <li><a href="#rp-secondary-use">RP Secondary Use</a><span>, in § 10.1.2.1.1</span>
+   <li><a href="#rp-secondary-use">RP Secondary Use</a><span>, in § 10.1.3.1.1</span>
+   <li><a href="#secondary-use">Secondary Use</a><span>, in § 10.1.2</span>
    <li><a href="#sec-webid-csr">Sec-WebID-CSR</a><span>, in § 6.6</span>
    <li><a href="#select-an-account">select an account</a><span>, in § 8.2</span>
    <li><a href="#session">session</a><span>, in § 4</span>
    <li><a href="#sign-in①">sign-in</a><span>, in § 8.2</span>
    <li><a href="#sign-up">sign-up</a><span>, in § 8.2</span>
    <li><a href="#site">site</a><span>, in § 4</span>
+   <li><a href="#stored-data-compromise">Stored Data Compromise</a><span>, in § 10.1.2</span>
+   <li><a href="#surveillance">Surveillance</a><span>, in § 10.1.2</span>
    <li><a href="#terms-of-service">Terms of Service</a><span>, in § 8.2</span>
    <li><a href="#third-party">third party</a><span>, in § 4</span>
    <li><a href="#unregistered">unregistered</a><span>, in § 4</span>
@@ -2392,6 +2445,8 @@ his conflicts with <a href="#self-issue">the previous mitigation</a>, but can pr
    <dd><a href="https://w3ctag.github.io/design-principles"><cite>Web Platform Design Principles</cite></a>. URL: <a href="https://w3ctag.github.io/design-principles">https://w3ctag.github.io/design-principles</a>
    <dt id="biblio-psl-problems">[PSL-PROBLEMS]
    <dd>Ryan Sleevi. <a href="https://github.com/sleevi/psl-problems"><cite>Public Suffix List Problems</cite></a>. URL: <a href="https://github.com/sleevi/psl-problems">https://github.com/sleevi/psl-problems</a>
+   <dt id="biblio-rfc6973">[RFC6973]
+   <dd><a href="https://datatracker.ietf.org/doc/html/rfc6973"><cite>Privacy Considerations for Internet Protocols</cite></a>. URL: <a href="https://datatracker.ietf.org/doc/html/rfc6973">https://datatracker.ietf.org/doc/html/rfc6973</a>
    <dt id="biblio-rfc7258">[RFC7258]
    <dd><a href="https://datatracker.ietf.org/doc/html/rfc7258"><cite>Pervasive Monitoring Is an Attack</cite></a>. URL: <a href="https://datatracker.ietf.org/doc/html/rfc7258">https://datatracker.ietf.org/doc/html/rfc7258</a>
    <dt id="biblio-saml">[SAML]
@@ -2467,6 +2522,13 @@ his conflicts with <a href="#self-issue">the previous mitigation</a>, but can pr
    <b><a href="#first-party">#first-party</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-first-party">4. Terminology</a>
+    <li><a href="#ref-for-first-party①">10.1.1. Principals</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="third-party">
+   <b><a href="#third-party">#third-party</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-third-party">10.1.1. Principals</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="user">
@@ -2491,9 +2553,9 @@ his conflicts with <a href="#self-issue">the previous mitigation</a>, but can pr
    <b><a href="#directed-identifier">#directed-identifier</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-directed-identifier">4. Terminology</a>
-    <li><a href="#ref-for-directed-identifier①">10.1.2.1.1. Cross-Site Correlation</a>
-    <li><a href="#ref-for-directed-identifier②">10.1.2.3.1. Back channel</a> <a href="#ref-for-directed-identifier③">(2)</a>
-    <li><a href="#ref-for-directed-identifier④">10.2.1.1. Sharding</a>
+    <li><a href="#ref-for-directed-identifier①">10.1.3.1.1. Cross-Site Correlation</a>
+    <li><a href="#ref-for-directed-identifier②">10.1.3.3.1. Back channel</a> <a href="#ref-for-directed-identifier③">(2)</a>
+    <li><a href="#ref-for-directed-identifier④">10.2.1.1. Sharding and Constrained Use</a>
     <li><a href="#ref-for-directed-identifier⑤">10.2.3. Policy</a>
    </ul>
   </aside>
@@ -2530,7 +2592,9 @@ his conflicts with <a href="#self-issue">the previous mitigation</a>, but can pr
     <li><a href="#ref-for-rp①④">8. The Browser API</a> <a href="#ref-for-rp①⑤">(2)</a> <a href="#ref-for-rp①⑥">(3)</a> <a href="#ref-for-rp①⑦">(4)</a> <a href="#ref-for-rp①⑧">(5)</a>
     <li><a href="#ref-for-rp①⑨">8.1. The State Machine</a>
     <li><a href="#ref-for-rp②⓪">8.4.2. IDP Sign-out</a>
-    <li><a href="#ref-for-rp②①">10.1.2.1.1. Cross-Site Correlation</a>
+    <li><a href="#ref-for-rp②①">10.1.1. Principals</a> <a href="#ref-for-rp②②">(2)</a>
+    <li><a href="#ref-for-rp②③">10.1.3.1.1. Cross-Site Correlation</a>
+    <li><a href="#ref-for-rp②④">10.1.3.1.3. Data Compromise</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="identity-provider">
@@ -2561,6 +2625,8 @@ his conflicts with <a href="#self-issue">the previous mitigation</a>, but can pr
     <li><a href="#ref-for-idp①②">8. The Browser API</a> <a href="#ref-for-idp①③">(2)</a> <a href="#ref-for-idp①④">(3)</a>
     <li><a href="#ref-for-idp①⑤">8.1. The State Machine</a>
     <li><a href="#ref-for-idp①⑥">8.4.2. IDP Sign-out</a>
+    <li><a href="#ref-for-idp①⑦">10.1.1. Principals</a> <a href="#ref-for-idp①⑧">(2)</a>
+    <li><a href="#ref-for-idp①⑨">10.1.3.1.3. Data Compromise</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="session">
@@ -2645,7 +2711,7 @@ his conflicts with <a href="#self-issue">the previous mitigation</a>, but can pr
   <aside class="dfn-panel" data-for="joining">
    <b><a href="#joining">#joining</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-joining">10.1.2.1.1. Cross-Site Correlation</a>
+    <li><a href="#ref-for-joining">10.1.3.1.1. Cross-Site Correlation</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="dom-wellknown-accounts_endpoint">

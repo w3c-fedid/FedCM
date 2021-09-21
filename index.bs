@@ -1083,9 +1083,66 @@ See also:
 
 This section describes the three principals that would participate in an invocation of the API and expectations around their behavior.
 
-1. The [=User Agent=] implements the API and controls the execution contexts for the RP and IDP content. The user agent is assumed to be trusted by the user, and transitively trusted by the RP and IDP.
-1. [=Relying Party=]s are first party websites that invoke the WebID API for the purpose of authenticating a user to their account or for requesting information about that user. A well-behaving RP would only invoke the API following a clear user signal -- typically, clicking a sign-in button. Since any site can invoke the API, RPs cannot necessarily be trusted to limit the user information it collects or use that information in an acceptable way.
-1. [=Identity Provider=]s are third party websites that are the target of a WebID call to attempt to fetch an ID token. Usually the IDP has a higher level of trust than the RP since it already has the user’s personal information, but it is possible that the IDP might use the user’s information in non-approved ways. It is possible that the IDP specified in the API call may not be an IDP the user knows about, or may not be a bona fide IDP at all, in which case it likely does not have personal user information in advance, but also might be less accountable for its behavior.
+1. The [=User Agent=] ([=UA=]s) implements [[#API]] and controls the execution contexts for the [=RP=] and [=IDP=] content. The user agent is assumed to be trusted by the user, and transitively trusted by the RP and IDP.
+1. [=Relying Party=]s ([=RP=]s) are [=first party=] websites that invoke the WebID API for the purpose of authenticating a user to their account or for requesting information about that user. A well-behaving RP would only invoke the API following a clear user signal -- typically, clicking a sign-in button. Since any site can invoke the API, RPs cannot necessarily be trusted to limit the user information it collects or use that information in an acceptable way.
+1. [=Identity Provider=]s ([=IDP=]s) are [=third party=] websites that are the target of a WebID call to attempt to fetch an ID token. Usually the IDP has a higher level of trust than the RP since it already has the user’s personal information, but it is possible that the IDP might use the user’s information in non-approved ways. It is possible that the IDP specified in the API call may not be an IDP the user knows about, or may not be a bona fide IDP at all, in which case it likely does not have personal user information in advance, but also might be less accountable for its behavior.
+
+<!-- ============================================================ -->
+### High-level threats ### {#high-level-threats}
+<!-- ============================================================ -->
+
+[[RFC6973]] describes the following high-level privacy threats, which the TAG
+has adopted into [[security-privacy-questionnaire#threats]]:
+
+: <dfn>Surveillance</dfn>
+
+:: Surveillance is the observation or monitoring of an individual’s
+    communications or activities.
+
+: <dfn noexport>Stored Data Compromise</dfn>
+
+:: End systems that do not take adequate measures to secure stored data from
+    unauthorized or inappropriate access.
+
+: <dfn>Intrusion</dfn>
+
+:: Intrusion consists of invasive acts that disturb or interrupt one’s life or
+    activities.
+
+: <dfn>Misattribution</dfn>
+
+:: Misattribution occurs when data or communications related to one individual
+    are attributed to another.
+
+: <dfn>Correlation</dfn>
+
+:: Correlation is the combination of various pieces of information related to an
+    individual or that obtain that characteristic when combined.
+
+: <dfn>Identification</dfn>
+
+:: Identification is the linking of information to a particular individual to
+    infer an individual’s identity or to allow the inference of an individual’s
+        identity.
+
+: <dfn>Secondary Use</dfn>
+
+:: Secondary use is the use of collected information about an individual without
+    the individual’s consent for a purpose different from that for which the
+        information was collected.
+
+: <dfn>Disclosure</dfn>
+
+:: Disclosure is the revelation of information about an individual that affects
+    the way others judge the individual.
+
+: <dfn noexport>Exclusion</dfn>
+
+:: Exclusion is the failure to allow individuals to know about the data that
+    others have about them and to participate in its handling and use.
+
+These threats combine into the particular concrete threats we want web
+specifications to defend against, described in subsections here:
 
 <!-- ============================================================ -->
 ### Attack Scenarios ### {#attack-scenarios}
@@ -1183,15 +1240,12 @@ See also:
    1. [[FINGERPRINTING-GUIDANCE]]
 
 <!-- ============================================================ -->
-##### By-Pass ##### {#by-pass}
+##### Data Compromise ##### {#data-compromise}
 <!-- ============================================================ -->
 
-This attack scenario happens when the Relying Party tries to obtain
-personal user information from the Identity Provider without user consent.
-
-An RP might attempt to obtain user information from an IDP without
-the user having consented to the information being released, or being
-aware of it being released.
+This attack scenario happens when the [=RP=] takes advantage of
+inadequate measures (by the [=IDP=] or the [=UA=]) to secure stored data to
+obtain personal user information without their consent.
 
 This can happen if user consent mechanisms are missing, inadequate,
 or susceptible to bypass.
@@ -1206,17 +1260,8 @@ An RP can impersonate another RP to phish the user into signing-into their site.
 
 See also:
 
-    1. [[PRIVACY-THREAT-MODEL#hl-intrusion]]
-    1. [[RFC6973#section-5.1.3]]
-
-<!-- ============================================================ -->
-##### Intrusion ##### {#intrusion}
-<!-- ============================================================ -->
-
-Intrusion consists of invasive acts that disturb or interrupt one's
-life or activities.  Intrusion can thwart individuals' desires to be
-left alone, sap their time or attention, or interrupt their
-activities. 
+    1. [[PRIVACY-THREAT-MODEL#stored-data-compromise]]
+    1. [[RFC6973#section-5.1.2]]
 
 <!-- ============================================================ -->
 #### By the IDP #### {#by-idp}
@@ -1260,7 +1305,7 @@ colluding with the IDP to enable tracking; expanded variants are described in [[
 </div>
 
 <!-- ============================================================ -->
-##### Impersonation ##### {#idp-impersonation}
+##### Impersonation ##### {#impersonation}
 <!-- ============================================================ -->
 
 Since IDPs have unconstrained ability to issue ID tokens, they are capable
@@ -1347,11 +1392,9 @@ See also:
 
 ### Minimal Disclosure
 
-Note: minimal disclosure for a constrained use
-
 <img src="static/mock37.svg">
 
-#### Sharding
+#### Sharding and Constrained Use
 
 Mitigates:
 
@@ -1397,7 +1440,7 @@ Preventing tracking of users by the IDP is difficult because the RP has to be co
 
 Mitigates:
 
-    * [[#by-pass]],
+    * [[#data-compromise]],
     * [[#idp-secondary-use]],
     * [[#timing-attacks]]
 
@@ -1420,7 +1463,7 @@ See also:
 
 Mitigates:
 
-    * [[#idp-impersonation]],
+    * [[#impersonation]],
     * [[#back-channel]]
 
 Beyond technical constraints, the browser can recognize explicit assertions by the IDP about the privacy characteristics it provides and rely on those assertions in order to guide the user appropriately. An example is a hypothetical case in which the IDP asserts it will only issue [=directed identifiers=] and will not provide identifying information to the RPs out of view of the browser. In that case the browser may not have to warn the user about sharing personalized information.
@@ -1437,11 +1480,17 @@ Any RPs or IDPs observed to be using this API to compromise user privacy in a de
 
 Mitigates:
 
-    * [[#by-pass]],
+    * [[#data-compromise]],
     * [[#cross-site-correlation]]
 
 Currently, IDPs require that an RP pre-registers and agrees to specific terms before the IDP will issue an ID token to them. T
 his conflicts with [the previous mitigation](#self-issue), but can provide a measure of RP accountability.
+
+### 2FA
+
+Mitigates:
+
+    * [[#impersonation]],
 
 <!-- ====================================================================== -->
 # Extensibility # {#extensibility}
