@@ -1,6 +1,7 @@
 ---
 title: WebID Glossary
 description: A list of terms and their usage in this project.
+layout: "default"
 ---
 Maintained by @kenrb
 

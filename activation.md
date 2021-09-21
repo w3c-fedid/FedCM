@@ -1,3 +1,5 @@
+
+
 # Topology
 
 Currently, for **consumers**, sign-in flows on websites begin with a login screen that provides the user options to use federated identity, as illustrated in the mock below. Today, clicking the button for an IDP relies on general purpose primitives (typically [redirects or popups](#low-level)) to an IDP sign-in flow. 

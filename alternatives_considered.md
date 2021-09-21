@@ -1,3 +1,7 @@
+---
+layout: "default"
+---
+
 # Alternatives Considered
 
 Now that we have a deep understanding of (a) the [problem](README.md) and (b) the [motivations](https://wicg.github.io/WebID/#privacy-threat-model) and [topology](activation.md) of the parties involved, lets look at some **why not**s.

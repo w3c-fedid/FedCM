@@ -1,3 +1,7 @@
+---
+layout: "default"
+---
+
 # Related Problems
 
 These are related problems with federation that browsers may be able to help with.

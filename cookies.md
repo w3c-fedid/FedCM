@@ -3,6 +3,7 @@ title: "The Account and Session Management API"
 maintainer: "samuelgoto"
 created: 03/02/2021
 updated: 22/07/2021
+layout: "default"
 ---
 
 This is a **proposal** for a high level API to support identity federation under this [threat model](https://wicg.github.io/WebID/#privacy-threat-model).

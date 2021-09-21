@@ -3,6 +3,7 @@ title: "Navigations"
 maintainer: "samuelgoto"
 created: 01/01/2020
 updated: 09/10/2020
+layout: "default"
 ---
 
 This is an **early exploration** of the design alternatives to address [this](README.md#stage-2-bounce-tracking) under [this threat model](https://wicg.github.io/WebID/#privacy-threat-model).

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="webmention" href="https://webmention.io/code.sgo.to/webmention" />
+  <link rel="pingback" href="https://webmention.io/code.sgo.to/xmlrpc" />
+  <link rel="alternate" href="arfeed.jsonld" type="application/ld+json">
+  <link rel="authorization_endpoint" href="https://indieauth.com/auth">
+  <link rel="token_endpoint" href="https://tokens.indieauth.com/token">
+  <link rel="me" href="https://github.com/samuelgoto">
+  <link rel="me" href="mailto:samuelgoto@gmail.com">
+  <link rel="microsub" href="https://aperture.p3k.io/microsub/109">
+  <link rel="mailpub" href="goto@chromium.org">
+  
+  <title>
+    
+       &middot; 
+    
+  </title>
+
+  <!-- CSS -->
+  <link href="/static/droid.css" media="screen" rel="stylesheet" type="text/css">
+  <link href="/static/index.css" media="screen" rel="stylesheet" type="text/css">
+  <link href="/static/google-sans.css" media="screen" rel="stylesheet" type="text/css">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/static/favicon.ico">
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/atom+xml" title="sgo.to" href="/rss.xml" />
+  <link rel="alternate" type="application/atom+jsonld" title="sgo.to" href="/feed.jsonld" />
+
+  <!-- anchors -->
+  <script src="/static/anchor-js.min.js"></script>
+
+  <script>
+  // Add anchors on DOMContentLoaded
+  document.addEventListener("DOMContentLoaded", function(event) {
+    anchors.add();
+  });
+  </script>
+
+  <!-- RFC -->
+  <!--
+  <link href="https://docs.sgo.to/droid.css" media="screen" rel="stylesheet" type="text/css">
+  <link href="https://docs.sgo.to/index.css" rel="stylesheet" type="text/css">
+  <link href="https://docs.sgo.to/favicon.ico" rel="icon">
+  <script src="https://docs.sgo.to/rfc.js"></script>
+  -->
+
+  <!-- CSS -->
+  <link href="/static/droid.css" media="screen" rel="stylesheet" type="text/css">
+  <link href="/static/index.css" media="screen" rel="stylesheet" type="text/css">
+
+  <!-- highlight -->
+  <link href="/static/rouge.css" media="screen" rel="stylesheet" type="text/css">
+
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-152817205-1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-152817205-1');
+  </script>
+
+</head>
+
+  <body>
+    <div class="header">
+      <div class="container">
+        <span class="title"><a href="/"></a></span>
+        <span class="navigation">
+          <span><a href="">feedback</a></span>
+        </span>
+      </div>
+    </div>
+
+    <main>
+      <div class="doc">
+	<ul>
+<li><a href="#directed_identifiers">Directed identifiers</a></li>
+<li><a href="#general-implementation-approaches">General implementation approaches</a></li>
+<li><a href="#directed-identifiers-in-webid">Directed identifiers in WebID</a>
+<ul>
+<li><a href="#essential-fields">Essential fields</a></li>
+<li><a href="#other-fields">Other fields</a></li>
+<li><a href="#directed-basic-profile">Directed basic profile</a></li>
+</ul>
+</li>
+<li><a href="#user-agent-behavior">User agent behavior</a>
+<ul>
+<li><a href="#policy-based-approach">Policy-based approach</a></li>
+<li><a href="#verifiably-directed-identifiers">Verifiably directed identifiers</a>
+<ul>
+<li><a href="#caveats-of-verifiably-directed-identifiers">Caveats of verifiably directed identifiers</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#challenges">Challenges</a>
+<ul>
+<li><a href="#idp-concerns">IdP concerns</a></li>
+<li><a href="#rp-concerns">RP concerns</a>
+<ul>
+<li><a href="#customer-support">Customer support</a></li>
+<li><a href="#duplicate-accounts">Duplicate accounts</a></li>
+<li><a href="#collaboration">Collaboration</a></li>
+<li><a href="#regulatory-compliance">Regulatory compliance</a></li>
+</ul>
+</li>
+<li><a href="#enterprise-use-cases">Enterprise use cases</a></li>
+</ul>
+</li>
+<li><a href="#prior-art-considered">Prior art considered</a></li>
+</ul>
+<h1>Directed identifiers</h1>
+<p>This document explores the ideas of <a href="glossary.md#directed-identifier">directed identifiers</a> and <a href="glossary.md#verifiably-directed-identifier">verifiably directed identifiers</a> in WebID.</p>
+<p>Directed identifiers are included in the WebID proposal as an attempt to mitigate <a href="README.md#the-rp-tracking-problem">Relying Party tracking</a> of users by means of <a href="https://wicg.github.io/WebID/#cross-site-correlation">identifier correlation</a>. As traditional tracking mechanisms have become less accessible, a fallback method for following user activity across the web has been for web sites with account systems to correlate personal identifiers associated with each account. For example, all sites that require users to use email addresses as login identifiers can collude to uniquely identify a given user across all of those sites, and profile that user's full activity across them.</p>
+<p>Conceptually, a directed identifer is a limited-scope identifier that has a one-way mapping from a user identifier that is known to an Identity Provider. The original identifier cannot practically be derived from the directed identifier by anyone other than the IdP or possibly the user.</p>
+<p>Directed identifiers are equivalent to <em>persistent identifiers</em> in the SAML 2.0 Core specification.</p>
+<p>OpenID Connect has the notion of <em>pairwise subject identifiers</em> which also correspond to directed identifiers.</p>
+<h1>General implementation approaches</h1>
+<p>There are two straightforward ways of implementing directed identifiers for an IdP:</p>
+<ol>
+<li>Generate a random string, and store it in a table keyed by the real identifier, or</li>
+<li>Use a cryptographic hash function to make it one-way derivable from the original identifier.</li>
+</ol>
+<p>The latter is used by <a href="https://wiki.shibboleth.net/confluence/display/IDP30/PersistentNameIDGenerationConfiguration">Shibboleth in its peristent identifier implementation</a>, and also described in <a href="https://openid.net/specs/openid-connect-core-1_0.html#PairwiseAlg">OpenID Connect for generating pairwise Subject Identifiers</a>.</p>
+<h1>Directed identifiers in WebID</h1>
+<p>While there exist examples of directed identifiers being used in closed identity systems, there are challenges to adapting them in a broad way to federated sign-in. The privacy goals of this project require that the entire ID token be directed, not just a single identifier field. For instance, the set of <a href="https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims">OIDC standard Claims</a> mostly contains fields that cannot exist in a token containing only directed identifiers, or else would have to contain random or obfuscated data.</p>
+<h2>Essential fields</h2>
+<p>A minimal directed identifier token that could be suitable for most federated sign-in cases would contain a stable identifier (<em>sub</em>) and an email address (<em>email</em>). The <em>verified_email</em> boolean would likely also be a part. The <em>sub</em> can be trivially directed using either of the methods mentioned above. Providing a non-correlatable email address, however, requires an email aliasing or proxying system, and has constraints on its form due to the limitations of a valid email address.</p>
+<p>Unfortunately the phone number field can be used in much of the world as a primary communication channel for RPs to users (via SMS), and does not lend itself to any kind of directedness due to the difficulty in imagining a proxying system. This is an open problem.</p>
+<h2>Other fields</h2>
+<p>The remaining OIDC standard Claims have varying levels of value and usefulness in a directed scenario. Some, such as <em>website</em> or <em>picture</em> would have to be omitted or provide a generic non-identifying value. Others, such as <em>birthdate</em>, could conceivably be included even though it provides a degree of correlation. It is possible to imagine an entropy budget that WebID could allow within a single token, outside of which the identifier is no longer considered directed.</p>
+<p>There are also non-standard Claims sometimes included in some federated sign-in scenarios, which do not necessarily violate the directedness requirements. An example is an IdP with multiple subscriber levels, in a case where it is useful for an RP to know which subscriber level is associated with that user. Adding a few bits of information should be possible, though it is an open question how the user agent can know that this does not pose a tracking risk requiring additional user consent, especially if there are other non-essential fields present that might cumulatively create undirected entropy.</p>
+<h2>Directed basic profile</h2>
+<p>This proposal defines the concept of a <a href="https://github.com/WICG/WebID/blob/master/design.md#directed-basic-profile">directed basic profile</a> which attempts to provide a set of directed fields that, when populated in a conforming way, can allow federated sign-in without risk of user tracking by identifier correlation. The precise definition of a directed basic profile is still a topic for dicussion.</p>
+<h1>User agent behavior</h1>
+<p>The value of a directed identifier is that a user agent can cooperate with it being passed from an IdP to an RP without having to attempt to acquire user consent for the tracking risk that is associated with correlatable identifiers. The precise shape of the user consent flow is discussed elsewhere in the WebID proposal.</p>
+<p>An important question, however, is how the user agent can be <strong>confident</strong> that the identifier that is being passed in not correlatable. It is an open question as to whether this should require technical enforcement on the part of the user agent.</p>
+<h2>Policy-based approach</h2>
+<p>The simplest way for the user agent to obtain a degree of confidence in the directedness of the identifier is for the IdP to assert that all identifiers within the token are directed, via a mechanism defined by WebID. Since the user has entrusted some amount of identifying data to the IdP, it might be reasonable to expect that the IdP acts in good faith with respect to that data and not falsely assert the identifier is directed. IdPs discovered to be acting in bad faith could be exposed to penalties, possibly including being added to a denylist by user agents which would prohibit them from using these APIs in future.</p>
+<h2>Verifiably directed identifiers</h2>
+<p>A stricter approach is for WebID to be prescriptive about the format of directed identifiers and require that they be verifiable by user agents in order to avoid tracking consent requirements. This could be done with a hashing scheme similar to what is used in Shibboleth or OpenID pairwise subject identifiers, where the IdP gives the user agent the inputs to a hash function and the output of the hash is included in the signed token. The user agent can then verify that the claim values in the token match the hashes, and therefore are not global identifiers.</p>
+<p>The following is an example structure of such a scheme:</p>
+<pre><code>IDP_USER_ID = (general-purpose global identifier for a specific user within an IDP, possibly secret)
+IDP_DIRECTED_ID_KEY = (secret IDP key for creating a set of special purpose IDs for directed identifiers; not per-user)
+USER_DIRECTED_ID_SEED = SHA256( IDP_USER_ID + IDP_DIRECTED_ID_KEY )
+
+CLIENT_ID = (value to identify a specific RP to which a token will be granted)
+IDP_HOST_NAME = (host name associated with the Identity Provider service)
+USER_DIRECTED_IDENTIFIER = `vdi://` + HEX2STRING( SHA256( USER_DIRECTED_ID_SEED + IDP_HOST_NAME + CLIENT_ID ) )
+</code></pre>
+<p>In the above example, <code>IDP_DIRECTED_ID_KEY</code> is a secret IDP key used to generate special purpose user IDs (<code>USER_DIRECTED_ID_SEED</code>) from general purpose user IDs (<code>IDP_USER_ID</code>). When an ID token is produced and given to the user agent, <code>USER_DIRECTED_ID_SEED</code> is also provided to the user agent. The user agent can verify that <code>USER_DIRECTED_IDENTIFIER</code> is correctly constructed has a hash of the three values.</p>
+<p>For simplicity, <code>HEX2STRING</code> is assumed to return a string representation of the binary hash value. Other encodings might be appropriate.</p>
+<p>The <code>vdi://</code> scheme establishes a namespace.</p>
+<p>Verifiability of direected email addresses can be done in a similar fashion, where the email address is constructed as:</p>
+<pre><code>USER_DIRECTED_IDENTIFIER + '@idp.example.com'
+</code></pre>
+<p>Notably, colons are not legal characters in email addresses, so an encoding would need to be specified to make the address compliant with <a href="https://tools.ietf.org/html/rfc5322">RFC 5322</a>.</p>
+<h3>Caveats of verifiably directed identifiers</h3>
+<p>One issue with this approach is that the inputs to the hash function have to be sufficiently <strong>secret</strong> and <strong>high-entropy</strong>. One problematic approach would be using the user's email address as an input to the hash, eg. <code>DirectedID = SHA256('abc@example.com' + 'idp.example.com' + 'rp.com')</code>. In that case, the RP could possibly acquire a large set of known email addresses (spam lists, for instance) and hash them forward to find any matches, effectively defeating the scheme. It is hard to for user agents to be confident that the underlying inputs to these hashes are satisfactory. This potential issue could be mitigated by adding a high-entropy salt as a hash input, although it then adds a requirement for the IdP to have to manage those.</p>
+<p>A second problem is that verifiably directed identifiers are not compatible with the OIDC <a href="https://openid.net/specs/openid-connect-core-1_0.html#CodeFlowAuth">authorization code flow</a> and <a href="https://openid.net/specs/openid-connect-core-1_0.html#HybridFlowAuth">hybrid flow</a> because in those cases there is server-to-server communication between the RP and the IdP, invisible to the user agent.</p>
+<h1>Challenges</h1>
+<h2>IdP concerns</h2>
+<p>The primary concern for IdPs is development and deployment costs. Few commercial IdPs currently have any directed identifier implementations. Also this requires an email aliasing system (where IdPs are also email providers) or email proxying system that allowed emails sent to directed email addresses to be forwarded to users' real email addresses. This is expected to require substantial resource investments to deploy.</p>
+<h2>RP concerns</h2>
+<p>The following is a list of concerns that we are aware of from RPs with being given directed identifiers during account sign-up and sign-in.</p>
+<h3>Customer support</h3>
+<p>The majority of support flows require the support agent to validate the user identity and look up data related to that user in order to resolve the user’s issue. Users likely do not know any directed identifier values with RPs, though they could probably access them. Customer support flows could be adapted, but this would raise costs.</p>
+<h3>Duplicate accounts</h3>
+<p>Duplicate accounts can be a significant source of user friction (e.g., missing history, missing features / access due to entitlements being account specific). This issue boils down to users not consistently using the IdP who minted the directed identifier for authentication. This can happen under a number of scenarios:</p>
+<ul>
+<li>User is signed out of IdP on the same browser instance and uses a login form or different IdP to authenticate on a return visit.</li>
+<li>User returns to a RP on a new browser instance and uses a login form or different IdP than what they used previously.</li>
+<li>User returns to the RP on a platform that does not support the IdP.</li>
+</ul>
+<p>Note that these scenarios are possible in today’s world but are made worse by directed identifiers because email addresses cannot be used as a join key to prevent account duplication.</p>
+<h3>Collaboration</h3>
+<p>Collaborative products rely on the ability for users to reference other users via an email address (e.g., adding a significant other as a collaborator to a list. E.g., AnyList).  A breaking scenario with directed identifiers is:</p>
+<ol>
+<li>User A uses a directed email to sign up to the service.</li>
+<li>User B tries to add User A as a collaborator on content X using their undirected email.</li>
+<li>User A does not see content X in their account and potentially gets a confusing communication asking them to create an account (if the service provider has not seen that email in the past).</li>
+</ol>
+<p>Another common example of this is social networks that help users connect to friends and colleagues using address books.</p>
+<h3>Regulatory compliance</h3>
+<p>The claim has been made that relay emails may not be a reliable enough bar for contacting users for a variety of regulatory use-cases, including:</p>
+<ul>
+<li>Data breach laws that require data controllers to notify individuals in a timely manner (30-45 days) in the event of a data breach.</li>
+<li>Data access / deletion laws which require the RP to identify the user upon request for data access / deletion followed by timely execution (e.g., within 30 days).</li>
+<li>Laws requiring notices for Terms of Service / Privacy Policy changes.</li>
+<li>Notification to users related to copyright / trademark infringements (e.g., DMCA).</li>
+</ul>
+<p>More investigation is needed, as it is unclear exactly what properties of relay emails create issues and whether these issues are meaningful from a regulator perspective.</p>
+<h2>Enterprise use cases</h2>
+<p>This document is focused on consumer IdPs, and it is unclear whether an API that takes a prescriptive approach around directed identifiers would have any usefulness for enterprise identity systems.</p>
+<h1>Prior art considered</h1>
+<ul>
+<li><a href="https://wiki.shibboleth.net/confluence/display/IDP30/PersistentNameIDGenerationConfiguration">Shibboleth</a></li>
+<li><a href="https://openid.net/specs/openid-connect-core-1_0.html#SubjectIDTypes">OpenID Connect Pairwise Subject Identifiers</a></li>
+<li>Apple's <a href="https://support.apple.com/en-us/HT210425">Hide My Email</a></li>
+<li>Province of British Columbia <a href="https://www2.gov.bc.ca/gov/content/governments/services-for-government/information-management-technology/identity-and-authentication-services/bc-services-card-authentication-service/design-develop-test/solution-design/identity-attributes">BCeID</a></li>
+</ul>
+
+      </div>
+      <div style="clear: both;"></div>
+      <footer></footer>      
+    </main>
+
+  </body>
+</html>
+

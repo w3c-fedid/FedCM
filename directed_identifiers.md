@@ -1,6 +1,7 @@
 ---
 title: Directed Identifiers
 description: An exploration of Directed Identifiers and Verifiably Directed Identifiers.
+layout: "default"
 ---
 
 * [Directed identifiers](#directed_identifiers)

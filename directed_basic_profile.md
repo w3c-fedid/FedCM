@@ -1,3 +1,7 @@
+---
+layout: "default"
+---
+
 # Directed Basic Profile
 
 The data that is exchanged is designed to be consequence-free: minimize as much as possible the disclosure of information between IDPs and RPs while keeping it (a) viable for signing-in/signing-up and (b) backwards compatible.

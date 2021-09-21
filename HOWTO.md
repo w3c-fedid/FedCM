@@ -3,6 +3,7 @@ title: "How to experiment with WebID in Chrome"
 maintainer: "kenrb"
 created: 10/12/2020
 updated: 10/12/2020
+layout: "default"
 ---
 
 
@@ -205,3 +206,14 @@ navigator.id.logout(['https://rp1.example/logout', 'https://rp2.example/logout']
 For security reasons, the IDP does not learn whether any of the network requests succeeded or failed.
 
 The shape of this API, its behavior, its effectiveness for addressing current problems, and its privacy properties are topics of discussion.
+
+# How can I help?
+
+At the moment, we are actively working with the browser and the identity ecosystem to help us determine product requirements (contribute [here](https://github.com/IDBrowserUseCases/docs) with the list of use cases), ergonomics and deployment strategies that minimize change and maximize control, for example via testing our APIs ([instructions](HOWTO.md)) and giving us feedback.
+
+Much of this explainer is evolving as a result of this field experimentation.
+The most constructive/objective way you can help is to:
+
+1. get a good understanding of the **why**: understand the ongoing privacy-oriented changes in browsers ([example](https://blog.chromium.org/2020/01/building-more-private-web-path-towards.html)) and their [principles](https://github.com/michaelkleber/privacy-model)
+1. help us understand **what**: contribute [here](https://github.com/IDBrowserUseCases/docs) with a use case that you believe can be impacted
+1. help us understand **how**: help us discover options (for [cookies](cookies.md) and [navigations](navigations.md)) and evaluate their trade-offs. [Try](https://github.com/WICG/WebID/blob/main/HOWTO.md) the APIs under development and help us understand what works / doesn't work.

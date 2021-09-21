@@ -3,7 +3,7 @@ title: "Permission-oriented API"
 maintainer: "kenrb"
 created: 08/10/2020
 updated: 09/10/2020
-
+layout: "default"
 ---
 
 # Permission-oriented API
