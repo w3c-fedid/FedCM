@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="webmention" href="https://webmention.io/code.sgo.to/webmention" />
+  <link rel="pingback" href="https://webmention.io/code.sgo.to/xmlrpc" />
+  <link rel="alternate" href="arfeed.jsonld" type="application/ld+json">
+  <link rel="authorization_endpoint" href="https://indieauth.com/auth">
+  <link rel="token_endpoint" href="https://tokens.indieauth.com/token">
+  <link rel="me" href="https://github.com/samuelgoto">
+  <link rel="me" href="mailto:samuelgoto@gmail.com">
+  <link rel="microsub" href="https://aperture.p3k.io/microsub/109">
+  <link rel="mailpub" href="goto@chromium.org">
+  
+  <title>
+    
+       &middot; WebID
+    
+  </title>
+
+  <!-- CSS -->
+  <link href="/WebID/static/droid.css" media="screen" rel="stylesheet" type="text/css">
+  <link href="/WebID/static/index.css" media="screen" rel="stylesheet" type="text/css">
+  <link href="/WebID/static/google-sans.css" media="screen" rel="stylesheet" type="text/css">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/WebID/static/favicon.ico">
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/atom+xml" title="sgo.to" href="/rss.xml" />
+  <link rel="alternate" type="application/atom+jsonld" title="sgo.to" href="/feed.jsonld" />
+
+  <!-- anchors -->
+  <script src="/WebID/static/anchor-js.min.js"></script>
+
+  <script>
+  // Add anchors on DOMContentLoaded
+  document.addEventListener("DOMContentLoaded", function(event) {
+    anchors.add();
+  });
+  </script>
+
+  <!-- RFC -->
+  <!--
+  <link href="https://docs.sgo.to/droid.css" media="screen" rel="stylesheet" type="text/css">
+  <link href="https://docs.sgo.to/index.css" rel="stylesheet" type="text/css">
+  <link href="https://docs.sgo.to/favicon.ico" rel="icon">
+  <script src="https://docs.sgo.to/rfc.js"></script>
+  -->
+
+  <!-- CSS -->
+  <link href="/static/droid.css" media="screen" rel="stylesheet" type="text/css">
+  <link href="/static/index.css" media="screen" rel="stylesheet" type="text/css">
+
+  <!-- highlight -->
+  <link href="/static/rouge.css" media="screen" rel="stylesheet" type="text/css">
+
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-152817205-1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-152817205-1');
+  </script>
+
+</head>
+
+  <body>
+    <div class="header">
+      <div class="container">
+        <span class="title"><a href="/">WebID</a></span>
+        <span class="navigation">
+          <span><a href="https://github.com/WICG/WebID/issues/new">feedback</a></span>
+        </span>
+      </div>
+    </div>
+
+    <main>
+      <div class="doc">
+	<p>This a proposal for the problem described <a href="README.html">here</a>.</p>
+<h1>Proposal</h1>
+<p>Clearly, this is a massive, multi-agent, multi-year problem across the board.</p>
+<p>There aren't any easy solutions and most of the answers come in the form of alternatives with trade-offs.</p>
+<p>There are billions of users that depend on federation on the web, millions/thousands of relying parties and thousands/hundreds of identity providers. There are also tens of browsers and operating systems, all moving independently. None of that changes overnight and we don't expect it to.</p>
+<p>The specs that define how federation works (e.g. OpenID, SAML, etc) are intrincate and long (e.g. session management, authorization, etc).</p>
+<p>Having said that, failing to be proactive about affecting change and making federation forward compatible with a more private Web can steer users to less secure patterns, like usernames/passwords or native apps.</p>
+<p>The approach we have taken so far has been a combination of two strategies:</p>
+<ul>
+<li>a <strong>firm</strong> and <strong>principled</strong> understanding of where we want to get</li>
+<li>a well <strong>informed</strong>, <strong>deliberate</strong> and <strong>pragmatic</strong> choice of what steps to take us there</li>
+</ul>
+<p>We believe a convincing path needs to have a clearly defined end state but also a plausible sequencing strategy.</p>
+<ol>
+<li>Let's start with <a href="#the-end-state">where we want to be</a>, and then later</li>
+<li>Go over <a href="#sequencing">how we get there</a>.</li>
+</ol>
+<h2>The End State</h2>
+<p>In the future, we believe that identity federation on the Web needs to be supported by a foundation that is in equal parts <strong>opinionated</strong> and <strong>extensible</strong>.</p>
+<p>In the future, we believe that identity federation on the Web needs to be <strong>free of unintended tracking consequences</strong>.</p>
+<p>By that we mean that, in the future:</p>
+<ul>
+<li><strong>The RP Tracking Problem</strong>: Websites shouldn't be able to join your identities by default and without your control</li>
+<li><strong>The IDP Tracking Problem</strong>: Identity Providers shouldn't be able to be involved without justification by default and without your control</li>
+</ul>
+<p><img src="static/mock36.svg" alt=""></p>
+<p>In the future, we'll have two fundamentally different things: consequence-free defaults and control. Identity federation on the a Web that is narrowly private by default and broadly identifying by choice.</p>
+<blockquote>
+<p>We don't believe these to be much different from the properties that Kim Cameron identified in the <a href="https://www.identityblog.com/stories/2005/05/13/TheLawsOfIdentity.pdf">7 laws of identity</a>, namely the &quot;User Control and Consent&quot;, &quot;Minimal Discosure for a Constrained Use&quot;, &quot;Justifiable Parties&quot; and the &quot;Directed Identity&quot; laws.</p>
+</blockquote>
+<p>The principle that we'll use as a foundation to affect change on the defaults and controls is that cross-origin communication is a priviledged operation and needs to be intermediated by your user agent.</p>
+<blockquote>
+<p>When there is a conflict in interests of the parties involved, we think the following is the right order of constituencies: <a href="https://www.w3.org/TR/html-design-principles/#priority-of-constituencies">users first</a>, developers second (relying parties and identity providers, in that order), browser engines third and technical purity fourth.</p>
+</blockquote>
+<p>In the future, your user agent will intermediate and assist in the cross-origin exchange of identification by picking better defaults in two ways:</p>
+<ol>
+<li><strong>The RP Tracking Mitigation</strong>: Unbundling your <strong>global</strong> identity into multiple <strong>directed</strong> identities per-site.</li>
+<li><strong>The IDP Tracking Mitigation</strong>: Unbundling the <strong>issuing</strong> of credentials with their <strong>presentation</strong>.</li>
+</ol>
+<p><img src="static/mock37.svg" alt=""></p>
+<p>The first principle can be solved by the user agent insisting on a progressive disclosure of identification, starting with the minimal disclosure for the most constrained use (e.g. a directed identifier that is recoverable between devices) towards progressively and contextually exposing yourself (e.g. giving access to your calendar):</p>
+<p><img src="static/mock33.svg" alt=""></p>
+<p>The second principle (unbundling the issuer from the holder of credentials) is more technically involved, but has a real world analog: driver's licenses.</p>
+<p>When you present your driver's license as a form of identification to, say, a store that needs to check your age, the government issuer of the driver's license isn't involved (and its involvement doesn't seem to be justified): the <strong>presentation</strong> of your driver's license is decoupled from the <strong>issuing</strong> of your driver's license.</p>
+<p>We believe that if we unbundle these operations, users can use their credentials without <strong>necessarily</strong> phone-homing to their issuers:</p>
+<p><img src="static/mock34.svg" alt=""></p>
+<h3>The Delegation-oriented API</h3>
+<p>So far, none of these are original ideas. Proxying email addresses and directing identifiers is a norm for some identity providers and self-issuing credentials has been proposed by <a href="prior.html">BrowserID</a> for example.</p>
+<p>However, while these ideas exist in isolation, we are finding that a system that combines them is hard.</p>
+<p>We call the active investigation for a protocol that can solve both of these problems (as well as recovery) the <strong>Delegation-oriented Model</strong>. Without much explanation (full details <a href="https://docs.google.com/document/d/1ZymcC2ABSzwJloXje5R_KFLi0-Vaz03iLR9DjwQl9u0/edit">here</a>), here is a glimpse of what that may look like:</p>
+<p><img src="static/mock38.svg" alt=""></p>
+<p>The <strong>delegation-oriented model</strong> is very compelling as an end-state for WebID because it solves both tracking problems. Because it does, it doesn't have any unintended tracking consequence.</p>
+<p>Because it is <strong>consequence-free</strong>, we expect it to be <strong>permission-less</strong> (the best permission is that one that isn't needed) and comparably better for users with formulations that impose on the user to make a determination on the consequences of being tracked.</p>
+<p>The <strong>delegation-oriented model</strong> isn't free of challenges though. Its weakest point is that it is (a) not backwards compatible with the current deployment of federation on the Web and (b) not perfectly clear to us if the incentives are well aligned to establish an economic equilibrium.</p>
+<p>While not all of the pieces are quite put together, we think the delegation-oriented model represents well the northstar that we are aspiring to.</p>
+<p>The problems we mentioned, as well as others, are being explored more in-depth <a href="https://docs.google.com/document/d/1ZymcC2ABSzwJloXje5R_KFLi0-Vaz03iLR9DjwQl9u0/edit">here</a>.</p>
+<h2>The Intermediate States</h2>
+<p>There are a large number of mid-game states between the opening and the endgame for WebID.</p>
+<p>It is unclear to us how many of these are sustainable / desirable long term and how they will evolve, but their existance for a non-trivial amount of time is non-neglectable.</p>
+<p>For the most part, they are a trade-off between backwards compatibility (for users, relying parties and identity providers, in that order) and effective controls (ignorable permission prompts, mediation and removing the tracking risks altogether, in that order).</p>
+<p>Our best guess at the moment is that each of these three variations (delegation, mediation and permission) have different trade-offs that don't put them at mutually exclusive positions, meaning that we could imagine an state where all of these three variations co-exist.</p>
+<p>So, having said that, lets start from that order: from most backwards compatible to least.</p>
+<ul>
+<li><a href="#the-permission-oriented-api">The Permission-oriented API</a></li>
+<li><a href="#the-mediation-oriented-api">The Mediation-oriented API</a></li>
+</ul>
+<h3>The Permission-oriented API</h3>
+<p>It is clearly highly desirable to minimize the deployment costs: the less we ask developers to change (while keeping/raising the privacy bar), the better.</p>
+<p>That's what the HTTP API is all about: backwards compatibility.</p>
+<p>We are still exploring this space, but we are trying to understand if it would be possible to classify federation with zero changes in the ecosystem.</p>
+<p>Because a significant part of federation is deployed over well-established protocols (e.g. OpenID, SAML), their HTTP profile is somewhat easy to spot. For example, for OpenID Connect requests/responses we could look at HTTP requests that have:</p>
+<ul>
+<li>a <strong>client_id</strong> parameter</li>
+<li>a <strong>redirect_uri</strong> parameter</li>
+<li>a <strong>scope</strong> parameter</li>
+<li>an accompanying <strong>.well-known/openid-configuration</strong> configuration</li>
+</ul>
+<p>In this formulation, a user engine would intercept HTTP requests made in this fashion and provide permission prompts to gather the user's intent to sign-in and hence, for example, allow the request to be made credentialed with cookies:</p>
+<p><img src="static/mock39.gif" alt=""></p>
+<p>The way back from the IDP to the RP is also highly structured, so responses can be classified (and made credentialed) when they match:</p>
+<ul>
+<li>a redirect to the previously used <strong>redirect_uri</strong></li>
+<li>an <strong>id_token</strong> parameter</li>
+</ul>
+<p>Notably, for cases where the IDP controls the deployment of the JavaScript running on the RP page (typically opening a popup window), we are also exploring offering a more explicit API, such as:</p>
+<pre><code class="language-javascript">// This is just a possible starting point, largely TBD.
+let {idToken} = await navigator.credentials.get({
+  provider: &quot;https://accounts.example.com&quot;,
+  &quot;ux_mode&quot;: &quot;permission&quot;,
+  // other OpenId connect parameters
+});
+</code></pre>
+<p>So, to sum up:</p>
+<ul>
+<li><strong>pros</strong>: most backward compatible approach</li>
+<li><strong>cons</strong>: we don't expect permissions to be the most effective way to offer privacy controls</li>
+</ul>
+<h3>The Mediated-oriented API</h3>
+<p>Another intermediate formulation that is somewhere in between in the spectrum of backwards compatibility and privacy control effectiveness, is what we've been calling the mediated-oriented API.</p>
+<p>In this formulation, the triggering of the API works similarly as before, but the execution is done in an intermediated fashion:</p>
+<pre><code class="language-javascript">// This is just a possible starting point, largely TBD.
+let {idToken} = await navigator.credentials.get({
+  provider: &quot;https://accounts.example.com&quot;,
+  &quot;ux_mode&quot;: &quot;mediation&quot;,
+  // other OpenId connect parameters
+});
+</code></pre>
+<p>This is accomplished via an HTTP protocol between the IDP and the User-Agent (under exploration <a href="HOWTO.md#identity-provider-implementation">here</a>):</p>
+<p><img src="static/mock40.gif" alt=""></p>
+<p>The mediated-oriented API offers a balance between the trade-offs:</p>
+<ul>
+<li><strong>pros</strong>: backwards compatible with relying parties (which are many), requires work from the IDP (which are few). largely backwards compatible from a user experience / behavior / norm perspective. privacy controls are offered contextually.</li>
+<li><strong>cons</strong>: pulls some of the responsibility for the user agent (e.g. account chooser), which affects the autonomy of IDPs and RPs.</li>
+</ul>
+
+      </div>
+      <div style="clear: both;"></div>
+      <footer></footer>      
+    </main>
+
+  </body>
+</html>
+

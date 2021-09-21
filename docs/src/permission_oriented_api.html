@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="webmention" href="https://webmention.io/code.sgo.to/webmention" />
+  <link rel="pingback" href="https://webmention.io/code.sgo.to/xmlrpc" />
+  <link rel="alternate" href="arfeed.jsonld" type="application/ld+json">
+  <link rel="authorization_endpoint" href="https://indieauth.com/auth">
+  <link rel="token_endpoint" href="https://tokens.indieauth.com/token">
+  <link rel="me" href="https://github.com/samuelgoto">
+  <link rel="me" href="mailto:samuelgoto@gmail.com">
+  <link rel="microsub" href="https://aperture.p3k.io/microsub/109">
+  <link rel="mailpub" href="goto@chromium.org">
+  
+  <title>
+    
+       &middot; WebID
+    
+  </title>
+
+  <!-- CSS -->
+  <link href="/WebID/static/droid.css" media="screen" rel="stylesheet" type="text/css">
+  <link href="/WebID/static/index.css" media="screen" rel="stylesheet" type="text/css">
+  <link href="/WebID/static/google-sans.css" media="screen" rel="stylesheet" type="text/css">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/WebID/static/favicon.ico">
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/atom+xml" title="sgo.to" href="/rss.xml" />
+  <link rel="alternate" type="application/atom+jsonld" title="sgo.to" href="/feed.jsonld" />
+
+  <!-- anchors -->
+  <script src="/WebID/static/anchor-js.min.js"></script>
+
+  <script>
+  // Add anchors on DOMContentLoaded
+  document.addEventListener("DOMContentLoaded", function(event) {
+    anchors.add();
+  });
+  </script>
+
+  <!-- RFC -->
+  <!--
+  <link href="https://docs.sgo.to/droid.css" media="screen" rel="stylesheet" type="text/css">
+  <link href="https://docs.sgo.to/index.css" rel="stylesheet" type="text/css">
+  <link href="https://docs.sgo.to/favicon.ico" rel="icon">
+  <script src="https://docs.sgo.to/rfc.js"></script>
+  -->
+
+  <!-- CSS -->
+  <link href="/static/droid.css" media="screen" rel="stylesheet" type="text/css">
+  <link href="/static/index.css" media="screen" rel="stylesheet" type="text/css">
+
+  <!-- highlight -->
+  <link href="/static/rouge.css" media="screen" rel="stylesheet" type="text/css">
+
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-152817205-1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-152817205-1');
+  </script>
+
+</head>
+
+  <body>
+    <div class="header">
+      <div class="container">
+        <span class="title"><a href="/">WebID</a></span>
+        <span class="navigation">
+          <span><a href="https://github.com/WICG/WebID/issues/new">feedback</a></span>
+        </span>
+      </div>
+    </div>
+
+    <main>
+      <div class="doc">
+	<h1>Permission-oriented API</h1>
+<p>The philosophy underlying this approach is that browsers should be responsible for ensuring user awareness and permission for cross-site interactions that create tracking risk, and outside of that Relying Parties and Identity Providers should have maximal control of the user experience.</p>
+<h1>Permission flow properties</h1>
+<h2>Preventing IDP tracking</h2>
+<p>The intention is to prevent <a href="glossary.md#idp-tracking">IDP tracking</a> by requiring a user gesture on the RP's page before the API can be invoked, and by displaying an appropriate dialog to the user before any identifying user information can be passed from the RP to the IDP. Both of these restrictions can be relaxed if the user agent knows that the user has successfully completed a sign-in with this RP and IDP before.</p>
+<p>This flow contains an implicit assumption that 'global' information (including the RP’s origin) can be shared with the IDP based on a user gesture on the RP page. Here 'global' means information that cannot be used to identify a specific user.</p>
+<h2>Preventing RP tracking</h2>
+<p>In this flow the user agent attempts to mitigate <a href="glossary.md#rp-tracking">RP tracking</a> by displaying a warning if the IDP is going to provide correlatable user identifiers to the RP. The warning is not shown if all identifiers in the profile are <a href="directed_identifiers.md#verifiably-directed-identifiers">verifiably directed</a>.</p>
+<h2>User flow illustration</h2>
+<figure>
+  <img src="./static/permission_based_flow.svg"/>
+  <figcaption><em>Simplified illustration of the permission-oriented user flow</em></figcaption>
+</figure>
+<h2>Benefits</h2>
+<ul>
+<li>This should work well across a variety of protocols and use cases without user agents having to accommodate them specifically.</li>
+<li>For those reasons, IDPs and RPs can have control over sign-in experiences to improve user experiences as they see fit.</li>
+<li>In cases where browser state is missing, the only experience downgrade is to have to agree to a cross-origin data sharing permission prompt again.</li>
+</ul>
+<h2>Challenges</h2>
+<ul>
+<li>The user agent cannot differentiate cases where the IDP gave users the option to use directed identifiers but the user chose not to use them from cases where the user did not have the option to choose directed identifiers at all. In both cases, the data shared back via the browser isn’t verifiably directed and so the browser would require a RP tracking consent step for both.
+<ul>
+<li>From a UX perspective and ecosystem incentives perspective, we may want to differentiate the experience for each case.</li>
+<li>This downside is not shared by <a href="#rely-on-policy-based-enforcement-instead-of-directed-identifiers">pure policy-based approaches</a> or approaches with <a href="mediation_oriented_api.html">browser mediation</a>.</li>
+</ul>
+</li>
+<li>Revealing the RP to the IDP becomes a problem if, in the future, privacy restrictions are added on things like referrer on full page navigation.</li>
+<li>If permission prompts are too frequent, users may become trained to click through them without thinking (viz. 'warning fatigue').</li>
+</ul>
+<h2>Mocks</h2>
+<figure>
+  <img src="./static/mock19.svg"/>
+  <figcaption><em>Permission-oriented user flow mocks</em></figcaption>
+</figure>
+<h2>Other design options</h2>
+<p>Below are possible variations on the permission-oriented API approach that can change the trade-offs.</p>
+<h3>Rely on policy-based enforcement instead of directed identifiers</h3>
+<p>This flow would change minimally if the user agent could accept an IDP's assertion on whether identifiers are directed without them conforming to a verifiable format (i.e. <a href="directed_identifiers.md#policy-based-approach">policy-based enforcement</a>). This has the benefit of avoiding the <a href="directed_identifiers.md#caveats-of-verifiably-directed-identifiers">compatibility problems with verifiably directed identifiers</a> but at the drawback of increasing tracking risk from a bad-faith IDP.</p>
+<p>There is always going to be some level of policy-based requirements, since a bad-faith IDP could collude with an RP outside of the defined flows to unmask directed identifiers, but verifiably directed identifiers might make it harder to do that at scale.</p>
+<h3>IDP tracking gated on explicit user consent</h3>
+<p>Another variation is to add a second 'consent moment' where the user grants permission up front for the RP to send a request to the IDP, and at that point IDP tracking becomes possible. The benefit of this approach is that it might be more resilient to future privacy enhancements that make it hard for an RP to initiate a flow where the IDP can learn the RP's origin (or in OIDC terms, client ID). The drawback is that the prompt needs to be shown before the user is shown IDP UI, necessitating two user agent prompts in some cases, since the RP tracking warning for non-directed identifiers has to come after the IDP UI.</p>
+<p>If this permission prompt is added, there is a further question of whether it should apply to an IDP universally (suggesting that the user trusts a given IDP to learn about any sites that offer federated sign-in) or whether the prompt should appear for every IDP+RP pair. The latter case would result in users only rarely seeing such a prompt: only once per IDP, as long as the user agent is able to persist that permission. The downside is that it increases user risk if a tracking site can convince the user to grant the permission.</p>
+
+      </div>
+      <div style="clear: both;"></div>
+      <footer></footer>      
+    </main>
+
+  </body>
+</html>
+
