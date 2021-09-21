@@ -26,13 +26,32 @@ module.exports = function(eleventyConfig) {
 
     return defaultRender(tokens, idx, options, env, self);
   };
+
+  var defaultImageRender = md.renderer.rules.image;
+
+  md.renderer.rules.image = function (tokens, idx, options, env, self) {
+    var token = tokens[idx];
+    const src = token.attrIndex("src");
+
+    const url = tokens[idx].attrs[src][1];
+    // console.log(url);
+    // console.log(eleventyConfig.getFilter("url")(url));
+    //if (url.endsWith(".md")) {
+    const result = `/WebID/src/${url}`;
+    tokens[idx].attrs[src][1] = result;
+    console.log(result);
+    //}
+
+    // pass token to default renderer.
+    return defaultImageRender(tokens, idx, options, env, self);
+  };
   
   // var defaultRender = md.renderer.rules.image;
   
   eleventyConfig.setLibrary("md", md);
   
   // Copy the `assets` directory to the compiled site folder
-  eleventyConfig.addPassthroughCopy("static");
+  eleventyConfig.addPassthroughCopy("src/static");
   //eleventyConfig.addPassthroughCopy("tmp");
 
   // eleventyConfig.addPlugin(syntaxHighlight);

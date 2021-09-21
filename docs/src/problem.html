@@ -104,10 +104,10 @@
 <p>The problem starts with what we have been calling the classification problem.</p>
 <p>When federation was first designed, it was rightfully designed <strong>around</strong> the existing capabilities of the web, rather than <strong>changing</strong> them. Specifically, federation worked with callbacks on top of <strong>cookies</strong>, <strong>redirects</strong>, <strong>iframes</strong> or <strong>popup windows</strong>, which didn't require any redesign, redeployment or negotiation with browser vendors.</p>
 <p>One example of a low level primitive that federation depends on are <strong>iframes</strong> and <strong>third party cookies</strong>. For example, credentialed iframes are used while <a href="https://openid.net/specs/openid-connect-rpinitiated-1_0.html">logging out</a> and social <a href="https://developers.facebook.com/docs/facebook-login/userexperience/">button</a> and <a href="https://developers.google.com/identity/one-tap/web">widget</a> personalization.</p>
-<p><img src="static/mock27.svg" alt=""></p>
+<p><img src="/WebID/src/static/mock27.svg" alt=""></p>
 <p>Unfortunately, that's virtually indistinguishable from trackers that can track your browsing history across relying parties, just by having users visit links (e.g. loading credentialed iframes on page load).</p>
 <p>We call this <strong>the classification problem</strong> because it is hard for a browser to programatically distinguish between these two different cases: identity federation helping a user versus users being tracked without any control.</p>
-<p><img src="static/mock26.svg" alt=""></p>
+<p><img src="/WebID/src/static/mock26.svg" alt=""></p>
 <p>Third party cookies are <strong>already</strong> blocked in <a href="https://webkit.org/blog/10218/full-third-party-cookie-blocking-and-more/">Safari</a> and <a href="https://blog.mozilla.org/blog/2019/09/03/todays-firefox-blocks-third-party-tracking-cookies-and-cryptomining-by-default/">Firefox</a> <strong>by default</strong> (and <a href="https://blog.google/products/chrome/privacy-sustainability-and-the-importance-of-and/">Chrome</a> intends to block that soon too) which make these use cases inviable.</p>
 <p>The problems then are:</p>
 <ol>
@@ -117,12 +117,12 @@
 <h2>Navigational Tracking</h2>
 <p>Before we prematuraly jump into solutions for the first (and more <strong>urgent</strong>) problem, we think there is something more fundamental changing. Lets take a step back and a closer look at the <strong>second</strong> problem: in which direction browsers are going that could more fundamentally impact federation?</p>
 <p>While third party cookies in iframes are used in federation, a more fundamental low level primitive that federation uses is the use of top level navigations (e.g. redirects or form POSTs) to navigate the user to identity providers (with callbacks, e.g. <code>redirect_uri</code>) and back to relying parties with a result (e.g. an <code>id_token</code>):</p>
-<p><img src="static/mock21.svg" alt=""></p>
+<p><img src="/WebID/src/static/mock21.svg" alt=""></p>
 <p>However, unfortunately, this <strong>low level</strong> primitive also enable cross-site communication, namely via <a href="https://www.chromium.org/Home/chromium-privacy/privacy-sandbox">decorating links</a>, which can be abused to track users without their control in what's called <strong>bounce tracking</strong>:</p>
-<p><img src="static/mock22.svg" alt=""></p>
+<p><img src="/WebID/src/static/mock22.svg" alt=""></p>
 <p>In this formulation of <strong>bounce tracking</strong>, websites redirect the user to cross-origin websites that automatically and invisibly redirect the user back to the caller, but passing enough information in URL parameters that allows the tracker to join that visit (e.g. when you visit rings.com) with visits in other websites (e.g. when you visit shoes.com).</p>
 <p>In federation, that's less invisible/automatic, but it is still there. Cross-site tracking is enabled via federation when relying parties that the user signs in to <strong>collude</strong> with each other (and other entities) to deterministically (or probabilistically) <strong>link</strong> their user's accounts to build and get access to a richer user profile (e.g. one site selling data on browsing history for ads targeting to another service). While this could be enabled without federation per se (user could manually provide a joinable email address or phone number), federated identity providers have an opportunity to address this problem at scale by providing their users with site-specific/directed identifiers.</p>
-<p><img src="static/mock3.svg" alt=""></p>
+<p><img src="/WebID/src/static/mock3.svg" alt=""></p>
 <p>Because of these tracking risks, browsers are starting to disable third party cookies in iframes and more generally provide tighter control over cross-site communication (e.g. a <a href="https://github.com/michaelkleber/privacy-model">privacy model</a> for the web).</p>
 <p>Because these cross-site communication takes place in a general purpose medium, it is hard for browsers to distinguish between cross-site communication that is used for exchanging identity data deliberately (e.g. federation) or unintentionally (e.g. tracking).</p>
 <p>Browsers can't <strong>classify</strong> federation, hence the name.</p>
