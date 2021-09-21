@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="webmention" href="https://webmention.io/code.sgo.to/webmention" />
+  <link rel="pingback" href="https://webmention.io/code.sgo.to/xmlrpc" />
+  <link rel="alternate" href="arfeed.jsonld" type="application/ld+json">
+  <link rel="authorization_endpoint" href="https://indieauth.com/auth">
+  <link rel="token_endpoint" href="https://tokens.indieauth.com/token">
+  <link rel="me" href="https://github.com/samuelgoto">
+  <link rel="me" href="mailto:samuelgoto@gmail.com">
+  <link rel="microsub" href="https://aperture.p3k.io/microsub/109">
+  <link rel="mailpub" href="goto@chromium.org">
+  
+  <title>
+    
+       &middot; WebID
+    
+  </title>
+
+  <!-- CSS -->
+  <link href="/static/droid.css" media="screen" rel="stylesheet" type="text/css">
+  <link href="/static/index.css" media="screen" rel="stylesheet" type="text/css">
+  <link href="/static/google-sans.css" media="screen" rel="stylesheet" type="text/css">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/static/favicon.ico">
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/atom+xml" title="sgo.to" href="/rss.xml" />
+  <link rel="alternate" type="application/atom+jsonld" title="sgo.to" href="/feed.jsonld" />
+
+  <!-- anchors -->
+  <script src="/static/anchor-js.min.js"></script>
+
+  <script>
+  // Add anchors on DOMContentLoaded
+  document.addEventListener("DOMContentLoaded", function(event) {
+    anchors.add();
+  });
+  </script>
+
+  <!-- RFC -->
+  <!--
+  <link href="https://docs.sgo.to/droid.css" media="screen" rel="stylesheet" type="text/css">
+  <link href="https://docs.sgo.to/index.css" rel="stylesheet" type="text/css">
+  <link href="https://docs.sgo.to/favicon.ico" rel="icon">
+  <script src="https://docs.sgo.to/rfc.js"></script>
+  -->
+
+  <!-- CSS -->
+  <link href="/static/droid.css" media="screen" rel="stylesheet" type="text/css">
+  <link href="/static/index.css" media="screen" rel="stylesheet" type="text/css">
+
+  <!-- highlight -->
+  <link href="/static/rouge.css" media="screen" rel="stylesheet" type="text/css">
+
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-152817205-1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-152817205-1');
+  </script>
+
+</head>
+
+  <body>
+    <div class="header">
+      <div class="container">
+        <span class="title"><a href="/">WebID</a></span>
+        <span class="navigation">
+          <span><a href="https://github.com/WICG/WebID/issues/new">feedback</a></span>
+        </span>
+      </div>
+    </div>
+
+    <main>
+      <div class="doc">
+	<h1>The Problem</h1>
+<p>Over the last decade, identity federation has unquestionably played a central role in raising the bar for authentication on the web, in terms of ease-of-use (e.g. passwordless single sign-on), security (e.g. improved resistance to phishing and credential stuffing attacks) and trustworthiness compared to its preceding pattern: per-site usernames and passwords.</p>
+<p>The standards that define how identity federation works today on the Web were built independently of the Web Platform (namely, <a href="https://en.wikipedia.org/wiki/Security_Assertion_Markup_Language">SAML</a>, <a href="https://en.wikipedia.org/wiki/OpenID">OpenID</a> and <a href="https://en.wikipedia.org/wiki/OAuth">OAuth</a>), and their designers had to (rightfully so) work <strong>around</strong> its limitations rather than extend them.</p>
+<p>Because of that, existing user authentication flows were designed on top of general-purpose web platform capabilities such as top-level navigations/redirects with parameters, window popups, iframes and cookies.</p>
+<p>However, because these general purpose primitives can be used for an open ended number of use cases (again, notably, by design), browsers have to apply policies that capture the <strong>lowest common denominator</strong> of abuse, at best applying cumbersome permissions (e.g. popup blockers) and at worst entirely blocking them (e.g. <a href="https://webkit.org/blog/10218/full-third-party-cookie-blocking-and-more/">blocking</a> third party cookies).</p>
+<p>Over the years, as these low level primitives get abused, browsers intervene and federation adjusts itself. For example, popup blockers became common and federation had to adjust itself to work in a world where popups blockers were widely deployed.</p>
+<p>The challenge, now more than ever, is that some of these low level primitives are getting increasingly abused to allow users on the web to be tracked. So, as a result, browsers are applying stricter and stricter policies around them.</p>
+<blockquote>
+<p>Publicly announced browser positions on third party cookies:</p>
+<ol>
+<li><a href="https://webkit.org/blog/10218/full-third-party-cookie-blocking-and-more/">Safari</a>: third party cookies are <strong>already</strong> blocked by <strong>default</strong></li>
+<li><a href="https://blog.mozilla.org/blog/2019/09/03/todays-firefox-blocks-third-party-tracking-cookies-and-cryptomining-by-default/">Firefox</a>: third party cookies are <strong>already</strong> blocked <strong>by a blocklist</strong>, and</li>
+<li><a href="https://blog.google/products/chrome/privacy-sustainability-and-the-importance-of-and/">Chrome</a>: on iOS <strong>already</strong> blocked <strong>by default</strong> and intends to offer <strong>alternatives</strong> to make them <strong>obsolete</strong> in the <a href="https://www.blog.google/products/chrome/building-a-more-private-web/">near term</a> in other platforms.</li>
+</ol>
+</blockquote>
+<p>Blocking third party cookies broke important parts of the protocols in those browsers (e.g. <a href="https://www.identityserver.com/articles/the-challenge-of-building-saml-single-logout">logouts</a>) and made some user experiences inviable (e.g. social <a href="https://developers.facebook.com/docs/facebook-login/userexperience/">button</a> and <a href="https://developers.google.com/identity/gsi/web">widget</a> personalization).</p>
+<p>While it is clearer to see the <strong>current</strong> impact of third party cookies, it is equally important to understand the ways in which the low level primitives that identity federation depends on (e.g. redirects) are being abused and the <a href="https://github.com/michaelkleber/privacy-model">principles</a> browsers are using to control them, so that we don't corner ourselves into another dead end.</p>
+<p>If browsers are applying stricter policies around the low level primitives that federation depends on, and under the assumption that federation is significantly better than usernames/passwords, how do we keep identity federation around?</p>
+<h2>Third Party Cookies</h2>
+<p>The problem starts with what we have been calling the classification problem.</p>
+<p>When federation was first designed, it was rightfully designed <strong>around</strong> the existing capabilities of the web, rather than <strong>changing</strong> them. Specifically, federation worked with callbacks on top of <strong>cookies</strong>, <strong>redirects</strong>, <strong>iframes</strong> or <strong>popup windows</strong>, which didn't require any redesign, redeployment or negotiation with browser vendors.</p>
+<p>One example of a low level primitive that federation depends on are <strong>iframes</strong> and <strong>third party cookies</strong>. For example, credentialed iframes are used while <a href="https://openid.net/specs/openid-connect-rpinitiated-1_0.html">logging out</a> and social <a href="https://developers.facebook.com/docs/facebook-login/userexperience/">button</a> and <a href="https://developers.google.com/identity/one-tap/web">widget</a> personalization.</p>
+<p><img src="static/mock27.svg" alt=""></p>
+<p>Unfortunately, that's virtually indistinguishable from trackers that can track your browsing history across relying parties, just by having users visit links (e.g. loading credentialed iframes on page load).</p>
+<p>We call this <strong>the classification problem</strong> because it is hard for a browser to programatically distinguish between these two different cases: identity federation helping a user versus users being tracked without any control.</p>
+<p><img src="static/mock26.svg" alt=""></p>
+<p>Third party cookies are <strong>already</strong> blocked in <a href="https://webkit.org/blog/10218/full-third-party-cookie-blocking-and-more/">Safari</a> and <a href="https://blog.mozilla.org/blog/2019/09/03/todays-firefox-blocks-third-party-tracking-cookies-and-cryptomining-by-default/">Firefox</a> <strong>by default</strong> (and <a href="https://blog.google/products/chrome/privacy-sustainability-and-the-importance-of-and/">Chrome</a> intends to block that soon too) which make these use cases inviable.</p>
+<p>The problems then are:</p>
+<ol>
+<li><strong>First</strong> and foremost, what Web Platform features need to be exposed to (re) enable these features of federation to co-exist with the absence of third party cookies in browsers going forward?</li>
+<li><strong>Secondarily</strong>, in which direction browsers are going that could potentially impact federation?</li>
+</ol>
+<h2>Navigational Tracking</h2>
+<p>Before we prematuraly jump into solutions for the first (and more <strong>urgent</strong>) problem, we think there is something more fundamental changing. Lets take a step back and a closer look at the <strong>second</strong> problem: in which direction browsers are going that could more fundamentally impact federation?</p>
+<p>While third party cookies in iframes are used in federation, a more fundamental low level primitive that federation uses is the use of top level navigations (e.g. redirects or form POSTs) to navigate the user to identity providers (with callbacks, e.g. <code>redirect_uri</code>) and back to relying parties with a result (e.g. an <code>id_token</code>):</p>
+<p><img src="static/mock21.svg" alt=""></p>
+<p>However, unfortunately, this <strong>low level</strong> primitive also enable cross-site communication, namely via <a href="https://www.chromium.org/Home/chromium-privacy/privacy-sandbox">decorating links</a>, which can be abused to track users without their control in what's called <strong>bounce tracking</strong>:</p>
+<p><img src="static/mock22.svg" alt=""></p>
+<p>In this formulation of <strong>bounce tracking</strong>, websites redirect the user to cross-origin websites that automatically and invisibly redirect the user back to the caller, but passing enough information in URL parameters that allows the tracker to join that visit (e.g. when you visit rings.com) with visits in other websites (e.g. when you visit shoes.com).</p>
+<p>In federation, that's less invisible/automatic, but it is still there. Cross-site tracking is enabled via federation when relying parties that the user signs in to <strong>collude</strong> with each other (and other entities) to deterministically (or probabilistically) <strong>link</strong> their user's accounts to build and get access to a richer user profile (e.g. one site selling data on browsing history for ads targeting to another service). While this could be enabled without federation per se (user could manually provide a joinable email address or phone number), federated identity providers have an opportunity to address this problem at scale by providing their users with site-specific/directed identifiers.</p>
+<p><img src="static/mock3.svg" alt=""></p>
+<p>Because of these tracking risks, browsers are starting to disable third party cookies in iframes and more generally provide tighter control over cross-site communication (e.g. a <a href="https://github.com/michaelkleber/privacy-model">privacy model</a> for the web).</p>
+<p>Because these cross-site communication takes place in a general purpose medium, it is hard for browsers to distinguish between cross-site communication that is used for exchanging identity data deliberately (e.g. federation) or unintentionally (e.g. tracking).</p>
+<p>Browsers can't <strong>classify</strong> federation, hence the name.</p>
+<p>The classification problem is notably hard because it has to deal with <strong>adversarial impersonation</strong>: agents who have the interest in being classified as federation to get access to browser affordances.</p>
+<p>While the timeline for link decoration is much farther in time, it much more fundamentally threatens federation.</p>
+<blockquote>
+<p>Publicly announced positions by browsers on bounce tracking:</p>
+<ul>
+<li>Safari's existing deployed <a href="https://webkit.org/blog/11338/cname-cloaking-and-bounce-tracking-defense/">strategies</a> and <a href="https://github.com/privacycg/proposals/issues/6">principles</a></li>
+<li>Firefox's protection against <a href="https://blog.mozilla.org/security/2020/08/04/firefox-79-includes-protections-against-redirect-tracking/">redirect tracking</a></li>
+<li>Chrome's stated <a href="https://github.com/michaelkleber/privacy-model">Privacy Model</a> for the Web</li>
+</ul>
+</blockquote>
+<p>So, how do we <strong>distinguish</strong> federation from tracking and elevate the level of <strong>control</strong> while <strong>assuming</strong> adversarial impersonation?</p>
+
+      </div>
+      <div style="clear: both;"></div>
+      <footer></footer>      
+    </main>
+
+  </body>
+</html>
+

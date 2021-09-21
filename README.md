@@ -12,7 +12,7 @@ This is an **active** exploration to react to the **ongoing** privacy-oriented c
 
 This explainer is divided in three (big) sections:
 
-1. What's the [problem](problem.md)?
+1. What's the [problem](src/problem.md)?
 1. Where we [ought](proposal.md) to be?
 1. Where do we [start](https://wicg.github.io/WebID)?
 1. [How](roadmap.md) do we get there?
