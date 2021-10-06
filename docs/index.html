@@ -6,7 +6,7 @@
   <link href="https://www.w3.org/StyleSheets/TR/2016/cg-draft" rel="stylesheet">
   <meta content="Bikeshed version 4f053d00e, updated Tue Aug 10 14:13:32 2021 -0700" name="generator">
   <link href="http://wicg.github.io/WebID" rel="canonical">
-  <meta content="e8fc22ae0049451f02be9a9e1a6b23912c2eb128" name="document-revision">
+  <meta content="703429b063b4e0bdcb694a9097311ffe0a1a36f2" name="document-revision">
 <style>
 dl.domintro dt {
     font-family: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
@@ -703,8 +703,9 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
           <li>
            <a href="#by-collusion"><span class="secno">10.1.3.3</span> <span class="content">By Collusion</span></a>
            <ol class="toc">
-            <li><a href="#back-channel"><span class="secno">10.1.3.3.1</span> <span class="content">Back channel</span></a>
-            <li><a href="#timing-attacks"><span class="secno">10.1.3.3.2</span> <span class="content">Timing Attacks</span></a>
+            <li><a href="#intrusion①"><span class="secno">10.1.3.3.1</span> <span class="content">Intrusion</span></a>
+            <li><a href="#back-channel"><span class="secno">10.1.3.3.2</span> <span class="content">Back channel</span></a>
+            <li><a href="#timing-attacks"><span class="secno">10.1.3.3.3</span> <span class="content">Timing Attacks</span></a>
            </ol>
          </ol>
        </ol>
@@ -1803,7 +1804,7 @@ to serve targeted advertisements to those users browsing on sites that the IDP c
    <p>This risk can exist even in the case where the IDP does not having pre-existing user
 account information (for instance, if it is not a _bona fide_ IDP), because WebID
 requests sent to the IDP are credentialed. This is more likely to occur if the RP is
-colluding with the IDP to enable tracking; expanded variants are described in <a href="#timing-attacks">§ 10.1.3.3.2 Timing Attacks</a>.</p>
+colluding with the IDP to enable tracking; expanded variants are described in <a href="#timing-attacks">§ 10.1.3.3.3 Timing Attacks</a>.</p>
    <div class="example" id="example-ee3423e4">
     <a class="self-link" href="#example-ee3423e4"></a> <img src="static/mock23.svg"> 
     <ol>
@@ -1839,7 +1840,23 @@ impersonating the user and potentially gaining full access to the user’s accou
     </ol>
    </div>
    <h5 class="heading settled" data-level="10.1.3.3" id="by-collusion"><span class="secno">10.1.3.3. </span><span class="content">By Collusion</span><a class="self-link" href="#by-collusion"></a></h5>
-   <h6 class="heading settled" data-level="10.1.3.3.1" id="back-channel"><span class="secno">10.1.3.3.1. </span><span class="content">Back channel</span><a class="self-link" href="#back-channel"></a></h6>
+   <h6 class="heading settled" data-level="10.1.3.3.1" id="intrusion①"><span class="secno">10.1.3.3.1. </span><span class="content">Intrusion</span><a class="self-link" href="#intrusion①"></a></h6>
+   <blockquote>
+    <p>From <a href="https://w3cping.github.io/privacy-threat-model/#hl-intrusion">Target Privacy Threat Model § hl-intrusion</a></p>
+    <p>Privacy harms don’t always come from a site learning things.</p>
+   </blockquote>
+   <blockquote>
+    <p>From <a href="https://datatracker.ietf.org/doc/html/rfc6973#section-5.1.3">RFC6973: Intrusion</a></p>
+    <p>Intrusion consists of invasive acts that disturb or interrupt one’s
+life or activities.  Intrusion can thwart individuals' desires to be
+left alone, sap their time or attention, or interrupt their
+activities.</p>
+   </blockquote>
+   <p>In the context of federation, intrusion happens when an RP and an IDP
+are colluding to invasively and aggressively recommend the user to
+login disproportionally to the their intent.</p>
+   <p>Much like unsolicited notifications, an <a data-link-type="dfn" href="#rp" id="ref-for-rp②⑤">RP</a> can collude with an <a data-link-type="dfn" href="#idp" id="ref-for-idp②①">IDP</a> to aggressively log users in.</p>
+   <h6 class="heading settled" data-level="10.1.3.3.2" id="back-channel"><span class="secno">10.1.3.3.2. </span><span class="content">Back channel</span><a class="self-link" href="#back-channel"></a></h6>
    <p>This attack scenario happens when IDP exceed the user’s information sharing permission.</p>
    <p>Existing federated identity protocols are clear on what information an RP
 is requesting, which the IDP can provide. While the browser can inspect
@@ -1874,7 +1891,7 @@ invisible to the browser, in which case it could contain anything.</p>
       <p>User is surprised that RP2 knows that they are shopping for wedding rings.</p>
     </ol>
    </div>
-   <h6 class="heading settled" data-level="10.1.3.3.2" id="timing-attacks"><span class="secno">10.1.3.3.2. </span><span class="content">Timing Attacks</span><a class="self-link" href="#timing-attacks"></a></h6>
+   <h6 class="heading settled" data-level="10.1.3.3.3" id="timing-attacks"><span class="secno">10.1.3.3.3. </span><span class="content">Timing Attacks</span><a class="self-link" href="#timing-attacks"></a></h6>
    <p>The potential for IDPs profiling users based on their visits to RPs <a href="#idp-secondary-use">§ 10.1.3.2.1 Secondary Use</a> can
 be partially mitigated by hiding the RP from the IDP until after the user has
 consented to that tracking risk.</p>
@@ -1927,7 +1944,7 @@ cannot be correlated with other RPs.</p>
    <p>In the past, there have been schemes to accomplish this using one-way
 hashes of, for example, the user’s name, the IDP and the RP.</p>
    <div class="example" id="example-d41d8cd9①"><a class="self-link" href="#example-d41d8cd9①"></a> <img src="static/mock13.svg"> </div>
-   <p class="note" role="note"><span>Note:</span> this mitigation is not robust against <a href="#back-channel">§ 10.1.3.3.1 Back channel</a>,
+   <p class="note" role="note"><span>Note:</span> this mitigation is not robust against <a href="#back-channel">§ 10.1.3.3.2 Back channel</a>,
 or the <a href="#idp-secondary-use">§ 10.1.3.2.1 Secondary Use</a>. Also, collaborating RPs might be able
 to defeat this mitigation by sharing the same CLIENT_ID, although
 possibly this could be detected and presumably would violate RP
@@ -1940,7 +1957,7 @@ agreements with IDPs with <a href="#pre-registration">§ 10.2.5 Pre-registrati
     <li data-md>
      <p><a href="#idp-secondary-use">§ 10.1.3.2.1 Secondary Use</a> and</p>
     <li data-md>
-     <p><a href="#timing-attacks">§ 10.1.3.3.2 Timing Attacks</a></p>
+     <p><a href="#timing-attacks">§ 10.1.3.3.3 Timing Attacks</a></p>
    </ul>
    <p class="note" role="note"><span>Note:</span> unbundling issuing from presentation</p>
    <p>Preventing tracking of users by the IDP is difficult because the RP has to be coded into the identity token for security reasons, to prevent reuse of the token. There have been cryptographic schemes developed to blind the IDP to the RP while still preventing token reuse in that way (see Mozilla’s <a href="https://wiki.mozilla.org/Identity/Persona_AAR">personas</a>) but there are other valid uses that the IDP has for knowing the RP, such as fraud and abuse prevention.</p>
@@ -1953,7 +1970,7 @@ agreements with IDPs with <a href="#pre-registration">§ 10.2.5 Pre-registrati
     <li data-md>
      <p><a href="#idp-secondary-use">§ 10.1.3.2.1 Secondary Use</a>,</p>
     <li data-md>
-     <p><a href="#timing-attacks">§ 10.1.3.3.2 Timing Attacks</a></p>
+     <p><a href="#timing-attacks">§ 10.1.3.3.3 Timing Attacks</a></p>
    </ul>
    <p>IDPs, whom the user has entrusted with their personal data, are currently responsible for ensuring that the user consents to their information being shared. With browser mediation in place, the user agent might have to assume responsibility for ensuring the user understands what is being shared and that it is intentional. This is certainly the case if the browser is able to entirely intermediate the identity flow without showing any IDP web content, but also might be desirable if there are concerns that the IDP is not collecting consent in an adequate manner.</p>
    <p>Additionally, a consent prompt preceding the sharing of the RP’s request to the IDP can mitigate risks around IDP tracking of user visits to RPs.</p>
@@ -1979,7 +1996,7 @@ agreements with IDPs with <a href="#pre-registration">§ 10.2.5 Pre-registrati
     <li data-md>
      <p><a href="#impersonation">§ 10.1.3.2.2 Impersonation</a>,</p>
     <li data-md>
-     <p><a href="#back-channel">§ 10.1.3.3.1 Back channel</a></p>
+     <p><a href="#back-channel">§ 10.1.3.3.2 Back channel</a></p>
    </ul>
    <p>Beyond technical constraints, the browser can recognize explicit assertions by the IDP about the privacy characteristics it provides and rely on those assertions in order to guide the user appropriately. An example is a hypothetical case in which the IDP asserts it will only issue <a data-link-type="dfn" href="#directed-identifier" id="ref-for-directed-identifier⑤">directed identifiers</a> and will not provide identifying information to the RPs out of view of the browser. In that case the browser may not have to warn the user about sharing personalized information.</p>
    <h4 class="heading settled" data-level="10.2.4" id="denylists"><span class="secno">10.2.4. </span><span class="content">Denylists</span><a class="self-link" href="#denylists"></a></h4>
@@ -2505,7 +2522,7 @@ his conflicts with <a href="#self-issue">the previous mitigation</a>, but can pr
    <ul>
     <li><a href="#ref-for-directed-identifier">4. Terminology</a>
     <li><a href="#ref-for-directed-identifier①">10.1.3.1.1. Cross-Site Correlation</a>
-    <li><a href="#ref-for-directed-identifier②">10.1.3.3.1. Back channel</a> <a href="#ref-for-directed-identifier③">(2)</a>
+    <li><a href="#ref-for-directed-identifier②">10.1.3.3.2. Back channel</a> <a href="#ref-for-directed-identifier③">(2)</a>
     <li><a href="#ref-for-directed-identifier④">10.2.1.1. Directed Identity</a>
     <li><a href="#ref-for-directed-identifier⑤">10.2.3. Policy</a>
    </ul>
@@ -2546,6 +2563,7 @@ his conflicts with <a href="#self-issue">the previous mitigation</a>, but can pr
     <li><a href="#ref-for-rp②①">10.1.1. Principals</a> <a href="#ref-for-rp②②">(2)</a>
     <li><a href="#ref-for-rp②③">10.1.3.1.1. Cross-Site Correlation</a>
     <li><a href="#ref-for-rp②④">10.1.3.1.3. Data Compromise</a>
+    <li><a href="#ref-for-rp②⑤">10.1.3.3.1. Intrusion</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="identity-provider">
@@ -2579,6 +2597,7 @@ his conflicts with <a href="#self-issue">the previous mitigation</a>, but can pr
     <li><a href="#ref-for-idp①⑦">10.1.1. Principals</a> <a href="#ref-for-idp①⑧">(2)</a>
     <li><a href="#ref-for-idp①⑨">10.1.3.1.1. Cross-Site Correlation</a>
     <li><a href="#ref-for-idp②⓪">10.1.3.1.3. Data Compromise</a>
+    <li><a href="#ref-for-idp②①">10.1.3.3.1. Intrusion</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="session">
