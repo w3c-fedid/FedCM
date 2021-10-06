@@ -1055,7 +1055,7 @@ See also:
 
 This section describes the three principals that would participate in an invocation of the API and expectations around their behavior.
 
-1. The [=User Agent=] ([=UA=]s) implements [[#API]] and controls the execution contexts for the [=RP=] and [=IDP=] content. The user agent is assumed to be trusted by the user, and transitively trusted by the RP and IDP.
+1. The [=User Agent=] implements [[#API]] and controls the execution contexts for the [=RP=] and [=IDP=] content. The user agent is assumed to be trusted by the user, and transitively trusted by the RP and IDP.
 1. [=Relying Party=]s ([=RP=]s) are [=first party=] websites that invoke the WebID API for the purpose of authenticating a user to their account or for requesting information about that user. A well-behaving RP would only invoke the API following a clear user signal -- typically, clicking a sign-in button. Since any site can invoke the API, RPs cannot necessarily be trusted to limit the user information it collects or use that information in an acceptable way.
 1. [=Identity Provider=]s ([=IDP=]s) are [=third party=] websites that are the target of a WebID call to attempt to fetch an ID token. Usually the IDP has a higher level of trust than the RP since it already has the user’s personal information, but it is possible that the IDP might use the user’s information in non-approved ways. It is possible that the IDP specified in the API call may not be an IDP the user knows about, or may not be a bona fide IDP at all, in which case it likely does not have personal user information in advance, but also might be less accountable for its behavior.
 
@@ -1152,18 +1152,19 @@ Related to:
 
 Correlation is the combination of various pieces of information related to an individual or that obtain that characteristic when combined.
 
-This attack happens when multiple [=RP=]s correlate user information for tracking purposes.
+This attack happens when multiple [=RP=]s collude to use their user's data to correlate them and build a richer profile.
 
 When a user willingly provides their full name, email address, phone number, etc,
 to multiple relying parties, those relying parties can collaborate to build a
-profile of that user and their activity across collaborating sites. Sometimes this is referred to as [=joining=]
-since it amounts to a join of user records between the account databases of multiple RPs.
+profile of that user and their activity across collaborating sites.
 
-This correlation and profile-building is outside the user’s control and entirely out of the user agent’s or IDP’s view.
+Sometimes this is referred to as [=joining=] since it amounts to a join of user records between the account databases of multiple RPs.
 
-<img src="static/mock3.svg">
+This correlation and profile-building is outside the user’s control and entirely out of the [=User Agent=]’s or [=IDP=]’s view.
 
 <div class="example">
+   <img src="static/mock3.svg">
+
     1. User signs into RP1 (which sells jewelry) with an IDP, providing to RP1 their email address user@email.example
     1. User signs into RP2 (which sells houses) with an IDP, providing to RP2 their email address user@email.example
     1. User browses the collection of wedding rings in RP1.
@@ -1201,9 +1202,9 @@ vector for fingerprinting or ‘supercookies’.
 This risk would be increased by any proposal for browser mediation that
 adds directly (or indirectly) detectable client state.
 
+<div class="example">
 <img src="static/mock5.svg">
 
-<div class="example">
 For example, an RP can use the browser state of the WebID to add bits of entropy and fingerprint the user.
 </div>
 
@@ -1266,9 +1267,9 @@ account information (for instance, if it is not a _bona fide_ IDP), because WebI
 requests sent to the IDP are credentialed. This is more likely to occur if the RP is
 colluding with the IDP to enable tracking; expanded variants are described in [[#timing-attacks]].
 
-<img src="static/mock23.svg">
-
 <div class="example">
+    <img src="static/mock23.svg">
+
     1. User signs into RP1 (which sells jewelry) with an IDP.
     1. User signs into RP2 (which sells houses) with the same IDP.
     1. User navigates to the IDP.
@@ -1364,7 +1365,9 @@ See also:
 
 ### Minimal Disclosure
 
-<img src="static/mock37.svg">
+<div class="example">
+  <img src="static/mock37.svg">
+</div>
 
 #### Directed Identity
 
@@ -1383,7 +1386,9 @@ cannot be correlated with other RPs.
 In the past, there have been schemes to accomplish this using one-way
 hashes of, for example, the user’s name, the IDP and the RP.
 
-<img src="static/mock13.svg">
+<div class="example">
+  <img src="static/mock13.svg">
+</div>
 
 Note: this mitigation is not robust against [[#back-channel]],
 or the [[#idp-secondary-use]]. Also, collaborating RPs might be able
@@ -1393,7 +1398,9 @@ agreements with IDPs with [[#pre-registration]].
 
 #### Progress Disclosure
 
-<img src="static/mock33.svg">
+<div class="example">
+  <img src="static/mock33.svg">
+</div>
 
 #### Self-issue
 
@@ -1406,7 +1413,9 @@ Note: unbundling issuing from presentation
 
 Preventing tracking of users by the IDP is difficult because the RP has to be coded into the identity token for security reasons, to prevent reuse of the token. There have been cryptographic schemes developed to blind the IDP to the RP while still preventing token reuse in that way (see Mozilla’s [personas](https://wiki.mozilla.org/Identity/Persona_AAR)) but there are other valid uses that the IDP has for knowing the RP, such as fraud and abuse prevention.
 
-<img src="static/mock34.svg">
+<div class="example">
+  <img src="static/mock34.svg">
+</div>
 
 ### User Control
 
@@ -1420,7 +1429,9 @@ IDPs, whom the user has entrusted with their personal data, are currently respon
 
 Additionally, a consent prompt preceding the sharing of the RP’s request to the IDP can mitigate risks around IDP tracking of user visits to RPs.
 
-<img src="static/mock15.svg">
+<div class="example">
+  <img src="static/mock15.svg">
+</div>
 
 See also:
 
