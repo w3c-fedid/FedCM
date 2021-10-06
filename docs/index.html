@@ -6,7 +6,7 @@
   <link href="https://www.w3.org/StyleSheets/TR/2016/cg-draft" rel="stylesheet">
   <meta content="Bikeshed version 4f053d00e, updated Tue Aug 10 14:13:32 2021 -0700" name="generator">
   <link href="http://wicg.github.io/WebID" rel="canonical">
-  <meta content="703429b063b4e0bdcb694a9097311ffe0a1a36f2" name="document-revision">
+  <meta content="9afdb256ef01e0493b927134f43d516f4d9c6045" name="document-revision">
 <style>
 dl.domintro dt {
     font-family: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
@@ -719,7 +719,11 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
           <li><a href="#progress-disclosure"><span class="secno">10.2.1.2</span> <span class="content">Progress Disclosure</span></a>
           <li><a href="#self-issue"><span class="secno">10.2.1.3</span> <span class="content">Self-issue</span></a>
          </ol>
-        <li><a href="#user-control"><span class="secno">10.2.2</span> <span class="content">User Control</span></a>
+        <li>
+         <a href="#mediation"><span class="secno">10.2.2</span> <span class="content">Mediation</span></a>
+         <ol class="toc">
+          <li><a href="#activation"><span class="secno">10.2.2.1</span> <span class="content">Activation</span></a>
+         </ol>
         <li><a href="#policy"><span class="secno">10.2.3</span> <span class="content">Policy</span></a>
         <li><a href="#denylists"><span class="secno">10.2.4</span> <span class="content">Denylists</span></a>
         <li><a href="#pre-registration"><span class="secno">10.2.5</span> <span class="content">Pre-registration</span></a>
@@ -1856,6 +1860,11 @@ activities.</p>
 are colluding to invasively and aggressively recommend the user to
 login disproportionally to the their intent.</p>
    <p>Much like unsolicited notifications, an <a data-link-type="dfn" href="#rp" id="ref-for-rp②⑤">RP</a> can collude with an <a data-link-type="dfn" href="#idp" id="ref-for-idp②①">IDP</a> to aggressively log users in.</p>
+   <p>See also:</p>
+   <ol>
+    <li data-md>
+     <p><a href="https://www.w3.org/TR/design-principles/#safe-to-browse">Web Platform Design Principles § safe-to-browse</a></p>
+   </ol>
    <h6 class="heading settled" data-level="10.1.3.3.2" id="back-channel"><span class="secno">10.1.3.3.2. </span><span class="content">Back channel</span><a class="self-link" href="#back-channel"></a></h6>
    <p>This attack scenario happens when IDP exceed the user’s information sharing permission.</p>
    <p>Existing federated identity protocols are clear on what information an RP
@@ -1962,7 +1971,7 @@ agreements with IDPs with <a href="#pre-registration">§ 10.2.5 Pre-registrati
    <p class="note" role="note"><span>Note:</span> unbundling issuing from presentation</p>
    <p>Preventing tracking of users by the IDP is difficult because the RP has to be coded into the identity token for security reasons, to prevent reuse of the token. There have been cryptographic schemes developed to blind the IDP to the RP while still preventing token reuse in that way (see Mozilla’s <a href="https://wiki.mozilla.org/Identity/Persona_AAR">personas</a>) but there are other valid uses that the IDP has for knowing the RP, such as fraud and abuse prevention.</p>
    <div class="example" id="example-d41d8cd9③"><a class="self-link" href="#example-d41d8cd9③"></a> <img src="static/mock34.svg"> </div>
-   <h4 class="heading settled" data-level="10.2.2" id="user-control"><span class="secno">10.2.2. </span><span class="content">User Control</span><a class="self-link" href="#user-control"></a></h4>
+   <h4 class="heading settled" data-level="10.2.2" id="mediation"><span class="secno">10.2.2. </span><span class="content">Mediation</span><a class="self-link" href="#mediation"></a></h4>
    <p>Mitigates:</p>
    <ul>
     <li data-md>
@@ -1971,6 +1980,8 @@ agreements with IDPs with <a href="#pre-registration">§ 10.2.5 Pre-registrati
      <p><a href="#idp-secondary-use">§ 10.1.3.2.1 Secondary Use</a>,</p>
     <li data-md>
      <p><a href="#timing-attacks">§ 10.1.3.3.3 Timing Attacks</a></p>
+    <li data-md>
+     <p><a href="#intrusion①">§ 10.1.3.3.1 Intrusion</a></p>
    </ul>
    <p>IDPs, whom the user has entrusted with their personal data, are currently responsible for ensuring that the user consents to their information being shared. With browser mediation in place, the user agent might have to assume responsibility for ensuring the user understands what is being shared and that it is intentional. This is certainly the case if the browser is able to entirely intermediate the identity flow without showing any IDP web content, but also might be desirable if there are concerns that the IDP is not collecting consent in an adequate manner.</p>
    <p>Additionally, a consent prompt preceding the sharing of the RP’s request to the IDP can mitigate risks around IDP tracking of user visits to RPs.</p>
@@ -1990,6 +2001,29 @@ agreements with IDPs with <a href="#pre-registration">§ 10.2.5 Pre-registrati
     <li data-md>
      <p><a data-link-type="biblio" href="https://www.w3.org/2001/tag/doc/leastPower"><cite>The Rule of Least Power</cite></a></p>
    </ol>
+   <h5 class="heading settled" data-level="10.2.2.1" id="activation"><span class="secno">10.2.2.1. </span><span class="content">Activation</span><a class="self-link" href="#activation"></a></h5>
+   <p>The <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent②">User Agent</a> can mitigate <a href="#intrusion①">§ 10.1.3.3.1 Intrusion</a> by mediating the user controls
+and offering them proportionally to the intent of the user or the privacy risks involved.</p>
+   <p>For example, a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent③">User Agent</a> can choose to show a loud / disruptive modal mediated dialog
+when it has enough confidence of the user’s intent or show a quiet / conservative UI hint
+when it doesn’t.</p>
+   <p>A <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent④">User Agent</a> could also choose to control disruption of the user’s experience based
+on the risks involved.</p>
+   <p>For example, when a [#directed-identity] is being exchanged it can be more confident
+of the unintended consequeces and offer a more aggressive user experience, whereas when
+global identifiers are exchanged a more conservative user experience.</p>
+   <div class="example" id="example-d41d8cd9⑤"><a class="self-link" href="#example-d41d8cd9⑤"></a> <img src="src/static/mock45.svg"> </div>
+   <p>See also:</p>
+   <ul>
+    <li data-md>
+     <p><a href="https://github.com/w3c/webauthn/issues/1293">Requiring user gesture to call WebAuthn API</a></p>
+    <li data-md>
+     <p><a href="https://github.com/wicg/interventions/issues/49">Require user gesture to request notification permissions</a></p>
+    <li data-md>
+     <p><a href="https://html.spec.whatwg.org/multipage/interaction.html#tracking-user-activation">WHATWG User Activation</a></p>
+    <li data-md>
+     <p><a href="https://github.com/dtapuska/useractivation">Querying User Activation</a></p>
+   </ul>
    <h4 class="heading settled" data-level="10.2.3" id="policy"><span class="secno">10.2.3. </span><span class="content">Policy</span><a class="self-link" href="#policy"></a></h4>
    <p>Mitigates:</p>
    <ul>
@@ -2263,6 +2297,7 @@ his conflicts with <a href="#self-issue">the previous mitigation</a>, but can pr
    <ul>
     <li><a href="#ref-for-user-agent">10.1.1. Principals</a>
     <li><a href="#ref-for-user-agent①">10.1.3.1.1. Cross-Site Correlation</a>
+    <li><a href="#ref-for-user-agent②">10.2.2.1. Activation</a> <a href="#ref-for-user-agent③">(2)</a> <a href="#ref-for-user-agent④">(3)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-host-registrable-domain">

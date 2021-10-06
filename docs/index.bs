@@ -1319,6 +1319,10 @@ login disproportionally to the their intent.
 Much like unsolicited notifications, an [=RP=] can collude with an [=IDP=]
 to aggressively log users in.
 
+See also:
+
+    1. [[DESIGN-PRINCIPLES#safe-to-browse]]
+
 <!-- ============================================================ -->
 ##### Back channel ##### {#back-channel}
 <!-- ============================================================ -->
@@ -1439,13 +1443,14 @@ Preventing tracking of users by the IDP is difficult because the RP has to be co
   <img src="static/mock34.svg">
 </div>
 
-### User Control
+### Mediation
 
 Mitigates:
 
     * [[#data-compromise]],
     * [[#idp-secondary-use]],
     * [[#timing-attacks]]
+    * [[#intrusion①]]
 
 IDPs, whom the user has entrusted with their personal data, are currently responsible for ensuring that the user consents to their information being shared. With browser mediation in place, the user agent might have to assume responsibility for ensuring the user understands what is being shared and that it is intentional. This is certainly the case if the browser is able to entirely intermediate the identity flow without showing any IDP web content, but also might be desirable if there are concerns that the IDP is not collecting consent in an adequate manner.
 
@@ -1463,6 +1468,33 @@ See also:
   1. [[ETHICS|Ethical Principles]]: [[ETHICS#verify|The web must make it possible for people to verify the information they see]]
   1. [[ETHICS|Ethical Principles]]: [[ETHICS#control|The web must enhance individuals' control and power]]
   1. [[LEAST-POWER]]
+
+#### Activation
+
+The [=User Agent=] can mitigate [[#intrusion①]] by mediating the user controls
+and offering them proportionally to the intent of the user or the privacy risks involved.
+
+For example, a [=User Agent=] can choose to show a loud / disruptive modal mediated dialog
+when it has enough confidence of the user's intent or show a quiet / conservative UI hint
+when it doesn't.
+
+A [=User Agent=] could also choose to control disruption of the user's experience based
+on the risks involved.
+
+For example, when a [#directed-identity] is being exchanged it can be more confident
+of the unintended consequeces and offer a more aggressive user experience, whereas when
+global identifiers are exchanged a more conservative user experience.
+
+<div class="example">
+  <img src="src/static/mock45.svg">
+</div>
+
+See also:
+
+    * [Requiring user gesture to call WebAuthn API](https://github.com/w3c/webauthn/issues/1293)
+    * [Require user gesture to request notification permissions](https://github.com/wicg/interventions/issues/49)
+    * [WHATWG User Activation](https://html.spec.whatwg.org/multipage/interaction.html#tracking-user-activation)
+    * [Querying User Activation](https://github.com/dtapuska/useractivation)
 
 ### Policy
 
