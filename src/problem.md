@@ -34,11 +34,11 @@ The problem starts with what we have been calling the classification problem.
 
 When federation was first designed, it was rightfully designed **around** the existing capabilities of the web, rather than **changing** them. Specifically, federation worked with callbacks on top of **cookies**, **redirects**, **iframes** or **popup windows**, which didn't require any redesign, redeployment or negotiation with browser vendors.
 
-One example of a low level primitive that federation depends on are **iframes** and **third-party cookies**. For example, credentialed iframes are used while [logging out](https://openid.net/specs/openid-connect-rpinitiated-1_0.html), and for social [button](https://developers.facebook.com/docs/facebook-login/userexperience/) and [widget](https://developers.google.com/identity/one-tap/web) personalization.
+One example of a low level primitive that federation depends on is **iframes** and **third-party cookies**. For example, credentialed iframes are used while [logging out](https://openid.net/specs/openid-connect-rpinitiated-1_0.html), for [social buttons](https://developers.facebook.com/docs/facebook-login/userexperience/), and for [widget personalization](https://developers.google.com/identity/one-tap/web).
 
 ![](static/mock27.svg)
 
-Unfortunately, that's virtually indistinguishable from trackers that can track your browsing history across relying parties, just by having users visit links (e.g. loading credentialed iframes on page load).
+Unfortunately, this is virtually indistinguishable from trackers that can track browsing history across relying parties, just by having users visit links (e.g. loading credentialed iframes on page load).
 
 We call this **the classification problem** because it is hard for a browser to programmatically distinguish between these two different cases: identity federation helping a user versus users being tracked without any control.
 
@@ -53,7 +53,7 @@ The problems then are:
 
 ## Navigational Tracking
 
-Before we prematurely jump into solutions for the first (and more **urgent**) problem, we think there is something more fundamental changing. Let's take a step back and a closer look at the **second** problem: in which direction are browsers going that could more fundamentally impact federation?
+Before we prematurely jump into solutions for the first (and more **urgent**) problem, we think there is something more fundamental changing. Let's take a step back and a take closer look at the **second** problem: in which direction are browsers going that could more fundamentally impact federation?
 
 While third-party cookies in iframes are used in federation, a more fundamental low level primitive that federation uses is the use of top level navigations (e.g. redirects or form POSTs) to navigate the user to identity providers (with callbacks, e.g. `redirect_uri`) and back to relying parties with a result (e.g. an `id_token`):
 

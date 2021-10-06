@@ -14,7 +14,7 @@ There are billions of users that depend on federation on the web, millions/thous
 
 The specs that define how federation works (e.g. OpenID, SAML, etc) are intricate and long (e.g. session management, authorization, etc).
 
-Having said that, failing to be proactive about effecting change—and making federation forward-compatible with a more private Web—can steer users to native apps, or less secure patterns like usernames/passwords.
+Having said that, failing to be proactive about effecting change—and making federation forward-compatible with a more private Web—can steer users to native apps or less secure patterns like usernames/passwords.
 
 The approach we have taken so far has been a combination of two strategies:
 
