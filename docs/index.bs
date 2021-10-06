@@ -692,6 +692,10 @@ Internally, the account management and session management APIs allows the user t
 ## The Sign-in API ## {#sign-in}
 <!-- ============================================================ -->
 
+<!-- ============================================================ -->
+### RP Sign-in API ### {#rp-sign-in}
+<!-- ============================================================ -->
+
 The Sign-up and Sign-in APIs are APIs used by the [=Relying Party=]s to ask the browser to intermediate the relationship with the [=Identity Provider=] and the provisioning of an [=id token=].
 
 The [=Relying Party=] makes no delineation between Sign-up and Sign-in, but rather call the same API indistinguishably. The most important parameter to the API call is the set of [=Identity Provider=]s that the [=Relying Party=] supports and has pre-registered with (i.e. it has a `clientId`).
@@ -911,6 +915,33 @@ To <dfn>mint a new id token</dfn>, run the following algorithm:
     * {{FederatedCredential/id}} with |account|["{{accounts_endpoint_response_accounts/account_id}}"]
     * {{FederatedCredential/idToken}} with |token|
     * {{FederatedCredential/provider}} with |provider|["{{FederatedIdentityProvider/url}}"]
+
+<!-- ============================================================ -->
+### IDP Sign-in API ### {#idp-sign-in}
+<!-- ============================================================ -->
+
+The IDP Sign-in API allows an [=IDP=] to sign the user into a [=RP=] by
+storing a [=FederatedCredential=] that can later be retrieved by a [=RP=].
+
+Its effect is equivalent to the [[#rp-sign-in]] in its effect, except that
+it is designed to be called while the user is at the [=IDP=] rather than
+at the [=RP=].
+
+<div class=example>
+```js
+async function login({id, name, iconURL}) {
+  const credential = new FederatedCredential({
+    id: id,
+    provider: 'https://idp.example',
+    name: name,
+    iconURL: iconUrl,
+    client_id: "1234",
+  });
+
+  return await navigator.credentials.store(credential);
+}
+```
+</div>
 
 <!-- ============================================================ -->
 ## The Revocation API ## {#revocation}
