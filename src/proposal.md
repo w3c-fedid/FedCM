@@ -2,7 +2,7 @@
 layout: "default"
 ---
 
-This a proposal for the problem described [here](README.md).
+This is a proposal to solve the problems described [here](problem.md).
 
 # Proposal
 
@@ -12,19 +12,19 @@ There aren't any easy solutions and most of the answers come in the form of alte
 
 There are billions of users that depend on federation on the web, millions/thousands of relying parties and thousands/hundreds of identity providers. There are also tens of browsers and operating systems, all moving independently. None of that changes overnight and we don't expect it to.
 
-The specs that define how federation works (e.g. OpenID, SAML, etc) are intrincate and long (e.g. session management, authorization, etc).
+The specs that define how federation works (e.g. OpenID, SAML, etc) are intricate and long (e.g. session management, authorization, etc).
 
-Having said that, failing to be proactive about affecting change and making federation forward compatible with a more private Web can steer users to less secure patterns, like usernames/passwords or native apps.
+Having said that, failing to be proactive about effecting change—and making federation forward-compatible with a more private Web—can steer users to native apps or less secure patterns like usernames/passwords.
 
 The approach we have taken so far has been a combination of two strategies:
 
-- a **firm** and **principled** understanding of where we want to get
-- a well **informed**, **deliberate** and **pragmatic** choice of what steps to take us there
+- a **firm** and **principled** understanding of where we want to get to
+- a **well-informed**, **deliberate** and **pragmatic** choice of what steps to take us there
 
 We believe a convincing path needs to have a clearly defined end state but also a plausible sequencing strategy.
 
 1. Let's start with [where we want to be](#the-end-state), and then later
-1. Go over [how we get there](#sequencing).
+1. Go over [how we get there](#the-intermediate-states).
 
 ## The End State
 
@@ -34,18 +34,18 @@ In the future, we believe that identity federation on the Web needs to be **free
 
 By that we mean that, in the future:
 
-* **The RP Tracking Problem**: Websites shouldn't be able to join your identities by default and without your control
-* **The IDP Tracking Problem**: Identity Providers shouldn't be able to be involved without justification by default and without your control
+* **The RP Tracking Problem**: Websites shouldn't be able to join your identities by default and without your control.
+* **The IDP Tracking Problem**: Identity Providers shouldn't be able to be involved without justification by default and without your control.
 
 ![](static/mock36.svg)
 
-In the future, we'll have two fundamentally different things: consequence-free defaults and control. Identity federation on the a Web that is narrowly private by default and broadly identifying by choice.
+In the future, we'll have two fundamentally different things: consequence-free defaults and control. Identity federation on a Web that is narrowly private by default and broadly identifying by choice.
 
-> We don't believe these to be much different from the properties that Kim Cameron identified in the [7 laws of identity](https://www.identityblog.com/stories/2005/05/13/TheLawsOfIdentity.pdf), namely the "User Control and Consent", "Minimal Discosure for a Constrained Use", "Justifiable Parties" and the "Directed Identity" laws.
+> We don't believe these to be much different from the properties that Kim Cameron identified in the [7 laws of identity](https://www.identityblog.com/stories/2005/05/13/TheLawsOfIdentity.pdf), namely the "User Control and Consent", "Minimal Disclosure for a Constrained Use", "Justifiable Parties" and the "Directed Identity" laws.
 
-The principle that we'll use as a foundation to affect change on the defaults and controls is that cross-origin communication is a priviledged operation and needs to be intermediated by your user agent.
+The principle that we'll use as a foundation to effect change on the defaults and controls is that cross-origin communication is a privileged operation and needs to be intermediated by your user agent.
 
-> When there is a conflict in interests of the parties involved, we think the following is the right order of constituencies: [users first](https://www.w3.org/TR/html-design-principles/#priority-of-constituencies), developers second (relying parties and identity providers, in that order), browser engines third and technical purity fourth.
+> When there is a conflict of interests for the parties involved, we think the following is the right order of constituencies: [users first](https://www.w3.org/TR/html-design-principles/#priority-of-constituencies), developers second (relying parties and identity providers, in that order), browser engines third, and technical purity fourth.
 
 In the future, your user agent will intermediate and assist in the cross-origin exchange of identification by picking better defaults in two ways:
 
@@ -72,17 +72,17 @@ So far, none of these are original ideas. Proxying email addresses and directing
 
 However, while these ideas exist in isolation, we are finding that a system that combines them is hard.
 
-We call the active investigation for a protocol that can solve both of these problems (as well as recovery) the **Delegation-oriented Model**. Without much explanation (full details [here](https://docs.google.com/document/d/1ZymcC2ABSzwJloXje5R_KFLi0-Vaz03iLR9DjwQl9u0/edit)), here is a glimpse of what that may look like:
+We call the active investigation of a protocol that can solve both of these problems (as well as recovery) the **Delegation-oriented Model**. Without much explanation (full details [here](https://docs.google.com/document/d/1ZymcC2ABSzwJloXje5R_KFLi0-Vaz03iLR9DjwQl9u0/edit)), here is a glimpse of what that may look like:
 
 ![](static/mock38.svg)
 
-The **delegation-oriented model** is very compelling as an end-state for WebID because it solves both tracking problems. Because it does, it doesn't have any unintended tracking consequence.
+The Delegation-oriented Model is very compelling as an end-state for WebID because it solves both tracking problems. Because it does, it doesn't have any unintended tracking consequence.
 
-Because it is **consequence-free**, we expect it to be **permission-less** (the best permission is that one that isn't needed) and comparably better for users with formulations that impose on the user to make a determination on the consequences of being tracked.
+Because it is **consequence-free**, we expect it to be **permission-less** (the best permission is the one that isn't needed) and comparably better for users with formulations that impose on the user to make a determination on the consequences of being tracked.
 
-The **delegation-oriented model** isn't free of challenges though. Its weakest point is that it is (a) not backwards compatible with the current deployment of federation on the Web and (b) not perfectly clear to us if the incentives are well aligned to establish an economic equilibrium.
+The Delegation-oriented Model isn't free of challenges though. Its weakest point is that it is (a) not backwards compatible with the current deployment of federation on the Web and (b) not perfectly clear to us if the incentives are well aligned to establish an economic equilibrium.
 
-While not all of the pieces are quite put together, we think the delegation-oriented model represents well the northstar that we are aspiring to.
+While not all of the pieces are quite put together, we think the Delegation-oriented model represents well the northstar that we are aspiring to.
 
 The problems we mentioned, as well as others, are being explored more in-depth [here](https://docs.google.com/document/d/1ZymcC2ABSzwJloXje5R_KFLi0-Vaz03iLR9DjwQl9u0/edit).
 
@@ -90,16 +90,16 @@ The problems we mentioned, as well as others, are being explored more in-depth [
 
 There are a large number of mid-game states between the opening and the endgame for WebID.
 
-It is unclear to us how many of these are sustainable / desirable long term and how they will evolve, but their existance for a non-trivial amount of time is non-neglectable.
+It is unclear to us how many of these are sustainable/desirable long-term, and how they will evolve, but their existence for a non-trivial amount of time is non-neglectable.
 
-For the most part, they are a trade-off between backwards compatibility (for users, relying parties and identity providers, in that order) and effective controls (ignorable permission prompts, mediation and removing the tracking risks altogether, in that order).
+For the most part, these states are a trade-off between backwards compatibility (for users, relying parties and identity providers, in that order) and effective controls (ignorable permission prompts, mediation, and removing the tracking risks altogether, in that order).
 
-Our best guess at the moment is that each of these three variations (delegation, mediation and permission) have different trade-offs that don't put them at mutually exclusive positions, meaning that we could imagine an state where all of these three variations co-exist.
+Our best guess at the moment is that each of these three variations (delegation, mediation and permission) have different trade-offs that don't put them at mutually exclusive positions, meaning that we could imagine a state where all of these three variations co-exist.
 
-So, having said that, lets start from that order: from most backwards compatible to least.
+So, having said that, let's start from that order: from most backwards compatible to least.
 
 * [The Permission-oriented API](#the-permission-oriented-api)
-* [The Mediation-oriented API](#the-mediation-oriented-api)
+* [The Mediated-oriented API](#the-mediated-oriented-api)
 
 ### The Permission-oriented API
 
@@ -116,7 +116,7 @@ Because a significant part of federation is deployed over well-established proto
 - a **scope** parameter
 - an accompanying **.well-known/openid-configuration** configuration
 
-In this formulation, a user engine would intercept HTTP requests made in this fashion and provide permission prompts to gather the user's intent to sign-in and hence, for example, allow the request to be made credentialed with cookies:
+In this formulation, a user agent would intercept HTTP requests made in this fashion and provide permission prompts to gather the user's intent to sign in and hence, for example, allow the request to be made credentialed with cookies:
 
 ![](static/mock39.gif)
 
@@ -130,28 +130,28 @@ Notably, for cases where the IDP controls the deployment of the JavaScript runni
 ```javascript
 // This is just a possible starting point, largely TBD.
 let {idToken} = await navigator.credentials.get({
-  provider: "https://accounts.example.com",
-  "ux_mode": "permission",
+  provider: 'https://accounts.example.com',
+  'ux_mode': 'permission',
   // other OpenId connect parameters
 });
 ```
 
 So, to sum up:
 
-* **pros**: most backward compatible approach
-* **cons**: we don't expect permissions to be the most effective way to offer privacy controls
+* **Pros**: most backward-compatible approach.
+* **Cons**: we don't expect permissions to be the most effective way to offer privacy controls.
 
 ### The Mediated-oriented API
 
-Another intermediate formulation that is somewhere in between in the spectrum of backwards compatibility and privacy control effectiveness, is what we've been calling the mediated-oriented API.
+Another intermediate formulation that is somewhere in the middle of the spectrum between backwards compatibility and privacy control effectiveness, is what we've been calling the Mediated-oriented API.
 
 In this formulation, the triggering of the API works similarly as before, but the execution is done in an intermediated fashion:
 
 ```javascript
 // This is just a possible starting point, largely TBD.
 let {idToken} = await navigator.credentials.get({
-  provider: "https://accounts.example.com",
-  "ux_mode": "mediation",
+  provider: 'https://accounts.example.com',
+  'ux_mode': 'mediation',
   // other OpenId connect parameters
 });
 ```
@@ -160,7 +160,7 @@ This is accomplished via an HTTP protocol between the IDP and the User-Agent (un
 
 ![](static/mock40.gif)
 
-The mediated-oriented API offers a balance between the trade-offs:
+The mediated-oriented API offers a balance between trade-offs:
 
-* **pros**: backwards compatible with relying parties (which are many), requires work from the IDP (which are few). largely backwards compatible from a user experience / behavior / norm perspective. privacy controls are offered contextually.
-* **cons**: pulls some of the responsibility for the user agent (e.g. account chooser), which affects the autonomy of IDPs and RPs.
+* **Pros**: backwards compatible with relying parties (which are many), requires work from the IDP (which are few). Largely backwards compatible from a user experience/behavior/ norm perspective. Privacy controls are offered contextually.
+* **Cons**: takes on some of the responsibility for the user agent (e.g. account chooser), which affects the autonomy of IDPs and RPs.
