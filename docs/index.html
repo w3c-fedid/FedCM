@@ -5,8 +5,8 @@
   <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport">
   <link href="https://www.w3.org/StyleSheets/TR/2016/cg-draft" rel="stylesheet">
   <meta content="Bikeshed version 4f053d00e, updated Tue Aug 10 14:13:32 2021 -0700" name="generator">
-  <link href="http://wicg.github.io/WebID" rel="canonical">
-  <meta content="8b8b95bcb27942d0b603b659b8885c48e8c9f1a0" name="document-revision">
+  <link href="http://wicg.github.io/FedCM" rel="canonical">
+  <meta content="d29d6f60b252e9057097c85b8b6ae2aba4e6ab57" name="document-revision">
 <style>
 dl.domintro dt {
     font-family: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
@@ -581,15 +581,15 @@ c-[il] { color: #000000 } /* Literal.Number.Integer.Long */
   <div class="head">
    <p data-fill-with="logo"><a class="logo" href="https://www.w3.org/"> <img alt="W3C" height="48" src="https://www.w3.org/StyleSheets/TR/2016/logos/W3C" width="72"> </a> </p>
    <h1 class="p-name no-ref" id="title">Federated Credential Management API</h1>
-   <h2 class="no-num no-toc no-ref heading settled" id="profile-and-date"><span class="content">Draft Community Group Report, <time class="dt-updated" datetime="2021-10-06">6 October 2021</time></span></h2>
+   <h2 class="no-num no-toc no-ref heading settled" id="profile-and-date"><span class="content">Draft Community Group Report, <time class="dt-updated" datetime="2021-10-13">13 October 2021</time></span></h2>
    <div data-fill-with="spec-metadata">
     <dl>
      <dt>This version:
-     <dd><a class="u-url" href="http://wicg.github.io/WebID">http://wicg.github.io/WebID</a>
+     <dd><a class="u-url" href="http://wicg.github.io/FedCM">http://wicg.github.io/FedCM</a>
      <dt>Test Suite:
      <dd><a href="https://github.com/web-platform-tests/wpt/blob/master/credential-management/webid.https.html">https://github.com/web-platform-tests/wpt/blob/master/credential-management/webid.https.html</a>
      <dt>Issue Tracking:
-     <dd><a href="https://github.com/WICG/WebID/issues/">GitHub</a>
+     <dd><a href="https://github.com/WICG/FedCM/issues/">GitHub</a>
      <dt class="editor">Editor:
      <dd class="editor p-author h-card vcard"><a class="p-name fn u-email email" href="mailto:goto@google.com">Sam Goto</a> (<a class="p-org org" href="https://google.com">Google Inc.</a>)
     </dl>
@@ -654,7 +654,7 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
       <li><a href="#client_id_metadata_endpoint"><span class="secno">6.3</span> <span class="content">Client Metadata</span></a>
       <li><a href="#idtoken_endpoint"><span class="secno">6.4</span> <span class="content">ID Token</span></a>
       <li><a href="#revocation_endpoint"><span class="secno">6.5</span> <span class="content">Revocation</span></a>
-      <li><a href="#Sec-WebID-CSR"><span class="secno">6.6</span> <span class="content"><code><span><code>Sec-WebID-CSR</code></span></code></span></a>
+      <li><a href="#Sec-FedCM-CSR"><span class="secno">6.6</span> <span class="content"><code><span><code>Sec-FedCM-CSR</code></span></code></span></a>
      </ol>
     <li>
      <a href="#rp-api"><span class="secno">7</span> <span class="content">The Relying Party API</span></a>
@@ -1098,14 +1098,14 @@ site they’re visiting. A goal of anti-tracking policy is to promote <a data-li
    </ol>
    <h3 class="heading settled" data-level="6.1" id="well-known"><span class="secno">6.1. </span><span class="content">Manifest</span><a class="self-link" href="#well-known"></a></h3>
    <p>The well-known discovery endpoint is an endpoint located at the <a data-link-type="dfn" href="#idp" id="ref-for-idp⑤">IDP</a>'s <code>.well-known/webid</code> and serves as a discovery device to other endpoints provided by the <a data-link-type="dfn" href="#idp" id="ref-for-idp⑥">IDP</a>.</p>
-   <p>The well-known discovery endpoint is fetched (a) <strong>without</strong> cookies and (b) <strong>with</strong> a special <a href="#Sec-WebID-CSR">§ 6.6 Sec-WebID-CSR</a> header.</p>
+   <p>The well-known discovery endpoint is fetched (a) <strong>without</strong> cookies and (b) <strong>with</strong> a special <a href="#Sec-FedCM-CSR">§ 6.6 Sec-FedCM-CSR</a> header.</p>
    <p>For example:</p>
-   <div class="example" id="example-a09e9d26">
-    <a class="self-link" href="#example-a09e9d26"></a> 
+   <div class="example" id="example-71b0eec8">
+    <a class="self-link" href="#example-71b0eec8"></a> 
 <pre class="language-http highlight">GET /.well-known/webid HTTPS/1.1
 Host: idp.example
 Accept: application/json
-Sec-WebID-CSRF: random_value
+Sec-FedCM-CSRF: random_value
 </pre>
    </div>
    <p>The file is parsed expecting the following properties:</p>
@@ -1132,15 +1132,15 @@ Sec-WebID-CSRF: random_value
    </div>
    <h3 class="heading settled" data-level="6.2" id="accounts_endpoint"><span class="secno">6.2. </span><span class="content">Accounts List</span><a class="self-link" href="#accounts_endpoint"></a></h3>
    <p>The accounts list endpoint provides the list of accounts the user has at the <a data-link-type="dfn" href="#idp" id="ref-for-idp⑦">IDP</a>.</p>
-   <p>The accounts list endpoint is fetched (a) <strong>with</strong> any cookies and (b) <strong>with</strong> a special <a href="#Sec-WebID-CSR">§ 6.6 Sec-WebID-CSR</a> header.</p>
+   <p>The accounts list endpoint is fetched (a) <strong>with</strong> any cookies and (b) <strong>with</strong> a special <a href="#Sec-FedCM-CSR">§ 6.6 Sec-FedCM-CSR</a> header.</p>
    <p>For example:</p>
-   <div class="example" id="example-c9999663">
-    <a class="self-link" href="#example-c9999663"></a> 
+   <div class="example" id="example-b9c74a47">
+    <a class="self-link" href="#example-b9c74a47"></a> 
 <pre class="language-http highlight">GET /accounts_list.php HTTPS/1.1
 Host: idp.example
 Accept: application/json
 Cookie: 0x23223
-Sec-WebID-CSRF: random_value
+Sec-FedCM-CSRF: random_value
 </pre>
    </div>
    <p>The response is expected to have the following properties:</p>
@@ -1189,15 +1189,15 @@ Sec-WebID-CSRF: random_value
    </div>
    <h3 class="heading settled" data-level="6.3" id="client_id_metadata_endpoint"><span class="secno">6.3. </span><span class="content">Client Metadata</span><a class="self-link" href="#client_id_metadata_endpoint"></a></h3>
    <p>The client metadata endpoint provides metadata about <a data-link-type="dfn" href="#rp" id="ref-for-rp④">RP</a>s.</p>
-   <p>The client medata endpoint is fetched (a) <strong>without</strong> cookies and (b) <strong>with</strong> a special <a href="#Sec-WebID-CSR">§ 6.6 Sec-WebID-CSR</a> header.</p>
+   <p>The client medata endpoint is fetched (a) <strong>without</strong> cookies and (b) <strong>with</strong> a special <a href="#Sec-FedCM-CSR">§ 6.6 Sec-FedCM-CSR</a> header.</p>
    <p>The user agent also passes the <strong>client_id</strong>.</p>
    <p>For example:</p>
-   <div class="example" id="example-1b1d8d8e">
-    <a class="self-link" href="#example-1b1d8d8e"></a> 
+   <div class="example" id="example-1e90928d">
+    <a class="self-link" href="#example-1e90928d"></a> 
 <pre class="language-http highlight">GET /client_medata.php?client_id=1234 HTTPS/1.1
 Host: idp.example
 Accept: application/json
-Sec-WebID-CSRF: random_value
+Sec-FedCM-CSRF: random_value
 </pre>
    </div>
    <p>The file is parsed expecting the following properties:</p>
@@ -1220,7 +1220,7 @@ Sec-WebID-CSRF: random_value
    </div>
    <h3 class="heading settled" data-level="6.4" id="idtoken_endpoint"><span class="secno">6.4. </span><span class="content">ID Token</span><a class="self-link" href="#idtoken_endpoint"></a></h3>
    <p>The ID Token endpoint is responsible for minting a new <a data-link-type="dfn" href="#id-token" id="ref-for-id-token①">id token</a> for the user.</p>
-   <p>The ID Token endpoint is fetched (a) as a <strong>POST</strong> request, (b) <strong>with</strong> cookies and (c) <strong>with</strong> a special <a href="#Sec-WebID-CSR">§ 6.6 Sec-WebID-CSR</a> header.</p>
+   <p>The ID Token endpoint is fetched (a) as a <strong>POST</strong> request, (b) <strong>with</strong> cookies and (c) <strong>with</strong> a special <a href="#Sec-FedCM-CSR">§ 6.6 Sec-FedCM-CSR</a> header.</p>
    <p>It will also contain the following parameters passed as a JSON object:</p>
    <dl>
     <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="idtoken_endpoint_request" data-dfn-type="argument" data-export id="dom-idtoken_endpoint_request-account_id"><code>account_id</code></dfn>
@@ -1240,14 +1240,14 @@ Sec-WebID-CSRF: random_value
      <p>A random number of the choice of the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑧">RP</a></p>
    </dl>
    <p>For example:</p>
-   <div class="example" id="example-afad4478">
-    <a class="self-link" href="#example-afad4478"></a> 
+   <div class="example" id="example-00f580cd">
+    <a class="self-link" href="#example-00f580cd"></a> 
 <pre class="language-http highlight">POST /webid_token_endpoint HTTPS/1.1
 Host: idp.example
 Referrer: rp.example
 Content-Type: application/json
 Cookie: 0x23223
-Sec-WebID-CSRF: random_value
+Sec-FedCM-CSRF: random_value
 {
   "account_id": "123",
   "request": {
@@ -1273,7 +1273,7 @@ Sec-WebID-CSRF: random_value
    </div>
    <h3 class="heading settled" data-level="6.5" id="revocation_endpoint"><span class="secno">6.5. </span><span class="content">Revocation</span><a class="self-link" href="#revocation_endpoint"></a></h3>
    <p class="note" role="note"><span>Note:</span> support revocation.</p>
-   <h3 class="heading settled" data-level="6.6" id="Sec-WebID-CSR"><span class="secno">6.6. </span><span class="content"><code><dfn data-dfn-type="dfn" data-export id="sec-webid-csr"><code>Sec-WebID-CSR</code><a class="self-link" href="#sec-webid-csr"></a></dfn></code></span><a class="self-link" href="#Sec-WebID-CSR"></a></h3>
+   <h3 class="heading settled" data-level="6.6" id="Sec-FedCM-CSR"><span class="secno">6.6. </span><span class="content"><code><dfn data-dfn-type="dfn" data-export id="sec-fedcm-csr"><code>Sec-FedCM-CSR</code><a class="self-link" href="#sec-fedcm-csr"></a></dfn></code></span><a class="self-link" href="#Sec-FedCM-CSR"></a></h3>
    <h2 class="heading settled" data-level="7" id="rp-api"><span class="secno">7. </span><span class="content">The Relying Party API</span><a class="self-link" href="#rp-api"></a></h2>
    <p><a data-link-type="dfn" href="#rp" id="ref-for-rp⑨">RP</a>'s expose a <a href="#logout_endpoint">§ 7.1 Logout</a> to facilitate with <a href="#use-cases-idp-sign-out">§ 2.3.2 IDP Sign-out</a>.</p>
    <h3 class="heading settled" data-level="7.1" id="logout_endpoint"><span class="secno">7.1. </span><span class="content">Logout</span><a class="self-link" href="#logout_endpoint"></a></h3>
@@ -1498,7 +1498,7 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
     <li data-md>
      <p>Let the <var>wellknown url</var> be the relative url ".well-known/webid" of <var>provider</var>["<code class="idl"><a data-link-type="idl" href="#dom-federatedidentityprovider-url" id="ref-for-dom-federatedidentityprovider-url①">url</a></code>"]</p>
     <li data-md>
-     <p>Return the result of fetching the <var>wellknown url</var> with the <a href="#Sec-WebID-CSR">Sec-WebID-CSR</a> header but without the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②⑥">Identity Provider</a>'s cookies.</p>
+     <p>Return the result of fetching the <var>wellknown url</var> with the <a href="#Sec-FedCM-CSR">Sec-FedCM-CSR</a> header but without the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②⑥">Identity Provider</a>'s cookies.</p>
    </ol>
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="fetch-the-accounts-list">fetch the accounts list</dfn> run this algorithm:</p>
    <ol>
@@ -1514,7 +1514,7 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
     <li data-md>
      <p>Let the <var>client_id_metadata_endpoint</var> url be the relative url <var>wellknown</var>["<code class="idl"><a data-link-type="idl" href="#dom-wellknown-client_id_metadata_endpoint" id="ref-for-dom-wellknown-client_id_metadata_endpoint">client_id_metadata_endpoint</a></code>"] of <var>provider</var>["<code class="idl"><a data-link-type="idl" href="#dom-federatedidentityprovider-url" id="ref-for-dom-federatedidentityprovider-url③">url</a></code>"]</p>
     <li data-md>
-     <p>Let the <var>policies</var> be the result of fetching the <var>client_id_metadata_endpoint</var> with the <a href="#Sec-WebID-CSR">Sec-WebID-CSR</a> header but without the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②⑧">Identity Provider</a>'s cookies.</p>
+     <p>Let the <var>policies</var> be the result of fetching the <var>client_id_metadata_endpoint</var> with the <a href="#Sec-FedCM-CSR">Sec-FedCM-CSR</a> header but without the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②⑧">Identity Provider</a>'s cookies.</p>
     <li data-md>
      <p>Return <var>policies</var></p>
    </ol>
@@ -1671,9 +1671,9 @@ through an <a href="#use-cases-explicit-sign-in">§ 2.2.2 Explicit Sign-in</a>
     <li data-md>
      <p>The <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent">User Agent</a> implements <a href="#API">§ 8 The Browser API</a> and controls the execution contexts for the <a data-link-type="dfn" href="#rp" id="ref-for-rp②④">RP</a> and <a data-link-type="dfn" href="#idp" id="ref-for-idp①⑨">IDP</a> content. The user agent is assumed to be trusted by the user, and transitively trusted by the RP and IDP.</p>
     <li data-md>
-     <p><a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party⑤⓪">Relying Party</a>s (<a data-link-type="dfn" href="#rp" id="ref-for-rp②⑤">RP</a>s) are <a data-link-type="dfn" href="#first-party" id="ref-for-first-party①">first party</a> websites that invoke the WebID API for the purpose of authenticating a user to their account or for requesting information about that user. A well-behaving RP would only invoke the API following a clear user signal -- typically, clicking a sign-in button. Since any site can invoke the API, RPs cannot necessarily be trusted to limit the user information it collects or use that information in an acceptable way.</p>
+     <p><a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party⑤⓪">Relying Party</a>s (<a data-link-type="dfn" href="#rp" id="ref-for-rp②⑤">RP</a>s) are <a data-link-type="dfn" href="#first-party" id="ref-for-first-party①">first party</a> websites that invoke the FedCM API for the purpose of authenticating a user to their account or for requesting information about that user. A well-behaving RP would only invoke the API following a clear user signal -- typically, clicking a sign-in button. Since any site can invoke the API, RPs cannot necessarily be trusted to limit the user information it collects or use that information in an acceptable way.</p>
     <li data-md>
-     <p><a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider③②">Identity Provider</a>s (<a data-link-type="dfn" href="#idp" id="ref-for-idp②⓪">IDP</a>s) are <a data-link-type="dfn" href="#third-party" id="ref-for-third-party">third party</a> websites that are the target of a WebID call to attempt to fetch an ID token. Usually the IDP has a higher level of trust than the RP since it already has the user’s personal information, but it is possible that the IDP might use the user’s information in non-approved ways. It is possible that the IDP specified in the API call may not be an IDP the user knows about, or may not be a bona fide IDP at all, in which case it likely does not have personal user information in advance, but also might be less accountable for its behavior.</p>
+     <p><a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider③②">Identity Provider</a>s (<a data-link-type="dfn" href="#idp" id="ref-for-idp②⓪">IDP</a>s) are <a data-link-type="dfn" href="#third-party" id="ref-for-third-party">third party</a> websites that are the target of a FedCM call to attempt to fetch an ID token. Usually the IDP has a higher level of trust than the RP since it already has the user’s personal information, but it is possible that the IDP might use the user’s information in non-approved ways. It is possible that the IDP specified in the API call may not be an IDP the user knows about, or may not be a bona fide IDP at all, in which case it likely does not have personal user information in advance, but also might be less accountable for its behavior.</p>
    </ol>
    <h4 class="heading settled" data-level="10.1.2" id="high-level-threats"><span class="secno">10.1.2. </span><span class="content">High-level threats</span><a class="self-link" href="#high-level-threats"></a></h4>
    <p><a data-link-type="biblio" href="https://datatracker.ietf.org/doc/html/rfc6973"><cite>Privacy Considerations for Internet Protocols</cite></a> describes the following high-level privacy threats, which the TAG
@@ -1792,9 +1792,9 @@ tracking to identify user.</p>
 vector for fingerprinting or ‘supercookies’.</p>
    <p>This risk would be increased by any proposal for browser mediation that
 adds directly (or indirectly) detectable client state.</p>
-   <div class="example" id="example-94235b55">
-    <a class="self-link" href="#example-94235b55"></a> <img src="static/mock5.svg"> 
-    <p>For example, an RP can use the browser state of the WebID to add bits of entropy and fingerprint the user.</p>
+   <div class="example" id="example-a6503bef">
+    <a class="self-link" href="#example-a6503bef"></a> <img src="static/mock5.svg"> 
+    <p>For example, an RP can use the browser state of the FedCM to add bits of entropy and fingerprint the user.</p>
    </div>
    <p>See also:</p>
    <ol>
@@ -1834,7 +1834,7 @@ requesting an ID token in order to allow identity federation (e.g. the IDP must 
 has decided to use federation with the same account. This profile could be used, for example,
 to serve targeted advertisements to those users browsing on sites that the IDP controls.</p>
    <p>This risk can exist even in the case where the IDP does not having pre-existing user
-account information (for instance, if it is not a _bona fide_ IDP), because WebID
+account information (for instance, if it is not a _bona fide_ IDP), because FedCM
 requests sent to the IDP are credentialed. This is more likely to occur if the RP is
 colluding with the IDP to enable tracking; expanded variants are described in <a href="#timing-attacks">§ 10.1.3.3.3 Timing Attacks</a>.</p>
    <div class="example" id="example-ee3423e4">
@@ -1951,12 +1951,12 @@ the request to the IDP out of band.</p>
     <li data-md>
      <p>The RP logs the time at which it invoked the API, and</p>
     <li data-md>
-     <p>The IDP logs the time at which it received a credentialed WebID request from the user, and later</p>
+     <p>The IDP logs the time at which it received a credentialed FedCM request from the user, and later</p>
     <li data-md>
      <p>They attempt to link the invocation and the request together using that information.</p>
    </ol>
-   <p>Notably, this is possible without WebID using simple cross-origin top-level navigations,
-but using WebID for this purpose would worsen the problem if it improved timing resolution
+   <p>Notably, this is possible without FedCM using simple cross-origin top-level navigations,
+but using FedCM for this purpose would worsen the problem if it improved timing resolution
 or was less visible to users.</p>
    <p>See also:</p>
    <ol>
@@ -2191,8 +2191,8 @@ his conflicts with <a href="#self-presentation">the previous mitigation</a>, but
    <li><a href="#rp">RP</a><span>, in § 4</span>
    <li><a href="#rp-request">RP request</a><span>, in § 6.4</span>
    <li><a href="#rp-secondary-use">RP Secondary Use</a><span>, in § 10.1.3.1.1</span>
+   <li><a href="#sec-fedcm-csr">Sec-FedCM-CSR</a><span>, in § 6.6</span>
    <li><a href="#secondary-use">Secondary Use</a><span>, in § 10.1.2</span>
-   <li><a href="#sec-webid-csr">Sec-WebID-CSR</a><span>, in § 6.6</span>
    <li><a href="#select-an-account">select an account</a><span>, in § 8.2.1</span>
    <li><a href="#session">session</a><span>, in § 4</span>
    <li><a href="#sign-in①">sign-in</a><span>, in § 8.2.1</span>

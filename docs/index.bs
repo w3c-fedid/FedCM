@@ -4,8 +4,8 @@ Shortname: webid
 Level: 1
 Status: CG-DRAFT
 Group: WICG
-ED: http://wicg.github.io/WebID
-Repository: WICG/WebID
+ED: http://wicg.github.io/FedCM
+Repository: WICG/FedCM
 Editor: Sam Goto, Google Inc. https://google.com, goto@google.com
 Markup Shorthands: markdown yes, css no, biblio yes
 Default Biblio Display: inline
@@ -416,7 +416,7 @@ The [=IDP=] proactively and cooperatively exposes itself as a comformant agent b
 
 The well-known discovery endpoint is an endpoint located at the [=IDP=]'s `.well-known/webid` and serves as a discovery device to other endpoints provided by the [=IDP=]. 
 
-The well-known discovery endpoint is fetched (a) **without** cookies and (b) **with** a special [[#Sec-WebID-CSR]] header.
+The well-known discovery endpoint is fetched (a) **without** cookies and (b) **with** a special [[#Sec-FedCM-CSR]] header.
 
 For example:
 
@@ -425,7 +425,7 @@ For example:
 GET /.well-known/webid HTTPS/1.1
 Host: idp.example
 Accept: application/json
-Sec-WebID-CSRF: random_value
+Sec-FedCM-CSRF: random_value
 ```
 </div>
 
@@ -458,7 +458,7 @@ For example:
 
 The accounts list endpoint provides the list of accounts the user has at the [=IDP=].
 
-The accounts list endpoint is fetched (a) **with** any cookies and (b) **with** a special [[#Sec-WebID-CSR]] header.
+The accounts list endpoint is fetched (a) **with** any cookies and (b) **with** a special [[#Sec-FedCM-CSR]] header.
 
 For example:
 
@@ -468,7 +468,7 @@ GET /accounts_list.php HTTPS/1.1
 Host: idp.example
 Accept: application/json
 Cookie: 0x23223
-Sec-WebID-CSRF: random_value
+Sec-FedCM-CSRF: random_value
 ```
 </div>
 
@@ -522,7 +522,7 @@ For example:
 
 The client metadata endpoint provides metadata about [=RP=]s.
 
-The client medata endpoint is fetched (a) **without** cookies and (b) **with** a special [[#Sec-WebID-CSR]] header.
+The client medata endpoint is fetched (a) **without** cookies and (b) **with** a special [[#Sec-FedCM-CSR]] header.
 
 The user agent also passes the **client_id**.
 
@@ -533,7 +533,7 @@ For example:
 GET /client_medata.php?client_id=1234 HTTPS/1.1
 Host: idp.example
 Accept: application/json
-Sec-WebID-CSRF: random_value
+Sec-FedCM-CSRF: random_value
 ```
 </div>
 
@@ -563,7 +563,7 @@ For example:
 
 The ID Token endpoint is responsible for minting a new [=id token=] for the user.
 
-The ID Token endpoint is fetched (a) as a **POST** request, (b)  **with** cookies and (c) **with** a special [[#Sec-WebID-CSR]] header.
+The ID Token endpoint is fetched (a) as a **POST** request, (b)  **with** cookies and (c) **with** a special [[#Sec-FedCM-CSR]] header.
 
 It will also contain the following parameters passed as a JSON object:
 
@@ -592,7 +592,7 @@ Host: idp.example
 Referrer: rp.example
 Content-Type: application/json
 Cookie: 0x23223
-Sec-WebID-CSRF: random_value
+Sec-FedCM-CSRF: random_value
 {
   "account_id": "123",
   "request": {
@@ -627,7 +627,7 @@ For example:
 Note: support revocation.
 
 <!-- ============================================================ -->
-## <code><dfn data-export="">`Sec-WebID-CSR`</dfn></code> ## {#Sec-WebID-CSR}
+## <code><dfn data-export="">`Sec-FedCM-CSR`</dfn></code> ## {#Sec-FedCM-CSR}
 <!-- ============================================================ -->
 
 <!-- ============================================================ -->
@@ -884,7 +884,7 @@ To <dfn>fetch the well-known</dfn> configuration file, run this algorithm:
 
 1. Let the |wellknown url| be the relative url ".well-known/webid" of |provider|["{{FederatedIdentityProvider/url}}"]
 
-1. Return the result of fetching the |wellknown url| with the [[#Sec-WebID-CSR|Sec-WebID-CSR]] header but without the [=Identity Provider=]'s cookies.
+1. Return the result of fetching the |wellknown url| with the [[#Sec-FedCM-CSR|Sec-FedCM-CSR]] header but without the [=Identity Provider=]'s cookies.
 
 To <dfn>fetch the accounts list</dfn> run this algorithm:
 
@@ -897,7 +897,7 @@ To <dfn>fetch the accounts list</dfn> run this algorithm:
 To <dfn>fetch the client id metadata</dfn> run this algorithm:
 
 1. Let the |client_id_metadata_endpoint| url be the relative url |wellknown|["{{WellKnown/client_id_metadata_endpoint}}"] of |provider|["{{FederatedIdentityProvider/url}}"]
-1. Let the |policies| be the result of fetching the |client_id_metadata_endpoint| with the [[#Sec-WebID-CSR|Sec-WebID-CSR]] header but without the [=Identity Provider=]'s cookies.
+1. Let the |policies| be the result of fetching the |client_id_metadata_endpoint| with the [[#Sec-FedCM-CSR|Sec-FedCM-CSR]] header but without the [=Identity Provider=]'s cookies.
 1. Return |policies|
 
 The <dfn>Privacy Policy</dfn> are the policies described at {{client_id_metadata_endpont_response/privacy_policy_url}}.
@@ -1091,8 +1091,8 @@ See also:
 This section describes the three principals that would participate in an invocation of the API and expectations around their behavior.
 
 1. The [=User Agent=] implements [[#API]] and controls the execution contexts for the [=RP=] and [=IDP=] content. The user agent is assumed to be trusted by the user, and transitively trusted by the RP and IDP.
-1. [=Relying Party=]s ([=RP=]s) are [=first party=] websites that invoke the WebID API for the purpose of authenticating a user to their account or for requesting information about that user. A well-behaving RP would only invoke the API following a clear user signal -- typically, clicking a sign-in button. Since any site can invoke the API, RPs cannot necessarily be trusted to limit the user information it collects or use that information in an acceptable way.
-1. [=Identity Provider=]s ([=IDP=]s) are [=third party=] websites that are the target of a WebID call to attempt to fetch an ID token. Usually the IDP has a higher level of trust than the RP since it already has the user’s personal information, but it is possible that the IDP might use the user’s information in non-approved ways. It is possible that the IDP specified in the API call may not be an IDP the user knows about, or may not be a bona fide IDP at all, in which case it likely does not have personal user information in advance, but also might be less accountable for its behavior.
+1. [=Relying Party=]s ([=RP=]s) are [=first party=] websites that invoke the FedCM API for the purpose of authenticating a user to their account or for requesting information about that user. A well-behaving RP would only invoke the API following a clear user signal -- typically, clicking a sign-in button. Since any site can invoke the API, RPs cannot necessarily be trusted to limit the user information it collects or use that information in an acceptable way.
+1. [=Identity Provider=]s ([=IDP=]s) are [=third party=] websites that are the target of a FedCM call to attempt to fetch an ID token. Usually the IDP has a higher level of trust than the RP since it already has the user’s personal information, but it is possible that the IDP might use the user’s information in non-approved ways. It is possible that the IDP specified in the API call may not be an IDP the user knows about, or may not be a bona fide IDP at all, in which case it likely does not have personal user information in advance, but also might be less accountable for its behavior.
 
 <!-- ============================================================ -->
 ### High-level threats ### {#high-level-threats}
@@ -1240,7 +1240,7 @@ adds directly (or indirectly) detectable client state.
 <div class="example">
 <img src="static/mock5.svg">
 
-For example, an RP can use the browser state of the WebID to add bits of entropy and fingerprint the user.
+For example, an RP can use the browser state of the FedCM to add bits of entropy and fingerprint the user.
 </div>
 
 See also:
@@ -1298,7 +1298,7 @@ has decided to use federation with the same account. This profile could be used,
 to serve targeted advertisements to those users browsing on sites that the IDP controls.
 
 This risk can exist even in the case where the IDP does not having pre-existing user
-account information (for instance, if it is not a _bona fide_ IDP), because WebID
+account information (for instance, if it is not a _bona fide_ IDP), because FedCM
 requests sent to the IDP are credentialed. This is more likely to occur if the RP is
 colluding with the IDP to enable tracking; expanded variants are described in [[#timing-attacks]].
 
@@ -1411,11 +1411,11 @@ possibly not a _bona fide_ IDP that has existing knowledge of the user):
 The timing information can enable tracking in the following way:
 
     1. The RP logs the time at which it invoked the API, and
-    1. The IDP logs the time at which it received a credentialed WebID request from the user, and later
+    1. The IDP logs the time at which it received a credentialed FedCM request from the user, and later
     1. They attempt to link the invocation and the request together using that information.
 
-Notably, this is possible without WebID using simple cross-origin top-level navigations,
-but using WebID for this purpose would worsen the problem if it improved timing resolution
+Notably, this is possible without FedCM using simple cross-origin top-level navigations,
+but using FedCM for this purpose would worsen the problem if it improved timing resolution
 or was less visible to users.
 
 See also:
@@ -1617,9 +1617,9 @@ Note: write down the Acknowledgements section.
     "href": "https://github.com/mozilla/id-specs/blob/prod/browserid/index.md",
     "title": "BrowserID"
   },
-  "WebID": {
+  "FedCM": {
     "href": "https://www.w3.org/2005/Incubator/webid/spec/identity/",
-    "title": "WebID"
+    "title": "FedCM"
   },
   "CM": {
     "href": "https://w3c.github.io/webappsec-credential-management/",
