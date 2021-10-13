@@ -25,7 +25,7 @@ The more urgent problem that clearly has **already** affected federation (or is 
 - **Why**, **What** and **When**? Today, third-party cookies are blocked on [Safari](https://webkit.org/blog/10218/full-third-party-cookie-blocking-and-more/) and [Firefox](https://blog.mozilla.org/blog/2019/09/03/todays-firefox-blocks-third-party-tracking-cookies-and-cryptomining-by-default/). They are in the process of becoming **obsolete** in [Chrome](https://blog.google/products/chrome/privacy-sustainability-and-the-importance-of-and/) in the foreseeable future.
 - So **What**? [Logging out](https://openid.net/specs/openid-connect-rpinitiated-1_0.html), [social buttons](https://developers.facebook.com/docs/facebook-login/userexperience/) and [widget personalization](https://developers.google.com/identity/one-tap/web) breaks. (Anything else? Add your use-case [here](#how-can-i-help).)
 - Ok ... Now **What**? [Here](cookies.md) are some early proposals on how to preserve these use cases.
-- **Who** and **Where**?: Browser vendors, identity providers, relying parties and standard bodies are involved. The discussions so far have happened at the [WICG](https://github.com/WICG/WebID/issues) and at the [OpenID foundation](https://github.com/IDBrowserUseCases/docs).
+- **Who** and **Where**?: Browser vendors, identity providers, relying parties and standard bodies are involved. The discussions so far have happened at the [WICG](https://github.com/WICG/FedCM/issues) and at the [OpenID foundation](https://github.com/IDBrowserUseCases/docs).
 
 ### Stage 2: Bounce Tracking
 
@@ -34,7 +34,7 @@ Bounce tracking comes next. It is a more evolving situation, but has much more p
 - **Why**, **What** and **When**? Safari's [periodic storage purging](https://webkit.org/blog/11338/cname-cloaking-and-bounce-tracking-defense/) and [SameSite=Strict jail](https://github.com/privacycg/proposals/issues/6), Firefox's [periodic storage purging](https://blog.mozilla.org/security/2020/08/04/firefox-79-includes-protections-against-redirect-tracking/) and Chrome's stated [privacy model](https://github.com/michaelkleber/privacy-model) for the Web.
 - So **What**? Purging or partitioning storage across redirects/posts forces users to re-authenticate at each transition of federation flows, at best defeating the convenience that federation provides and at worst making it less secure (Anything else? Add your use-case [here](#how-can-i-help).)
 - OK ... Now **What**? [Here](navigations.md) are some early proposals on how to preserve these use cases.
-- **Who** and **Where**?: Browser vendors, identity providers, relying parties and standards bodies are involved. The discussions so far have happened at the [WICG](https://github.com/WICG/WebID/issues) and at the [OpenID Foundation](https://github.com/IDBrowserUseCases/docs).
+- **Who** and **Where**?: Browser vendors, identity providers, relying parties and standards bodies are involved. The discussions so far have happened at the [WICG](https://github.com/WICG/FedCM/issues) and at the [OpenID Foundation](https://github.com/IDBrowserUseCases/docs).
 
 ### Stage 3: Future Work
 

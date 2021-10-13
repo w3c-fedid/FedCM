@@ -36,5 +36,5 @@ The postmortem analysis [here](https://wiki.mozilla.org/Identity/Persona_AAR) is
 - [Personas](https://wiki.mozilla.org/Identity/Persona_AAR) and [navigator.id](https://developer.mozilla.org/en-US/docs/Archive/Mozilla/Persona/The_navigator.id_API)
 - [WebOTP](https://github.com/WICG/WebOTP)
 - [Credential Manager](https://w3c.github.io/webappsec-credential-management/#federated)
-- Add your work [here](https://github.com/samuelgoto/WebID/issues/new)
+- Add your work [here](https://github.com/samuelgoto/FedCM/issues/new)
 

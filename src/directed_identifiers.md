@@ -6,7 +6,7 @@ layout: "default"
 
 * [Directed identifiers](#directed_identifiers)
 * [General implementation approaches](#general-implementation-approaches)
-* [Directed identifiers in WebID](#directed-identifiers-in-webid)
+* [Directed identifiers in FedCM](#directed-identifiers-in-webid)
   * [Essential fields](#essential-fields)
   * [Other fields](#other-fields)
   * [Directed basic profile](#directed-basic-profile)
@@ -25,9 +25,9 @@ layout: "default"
 * [Prior art considered](#prior-art-considered)
 
 # Directed identifiers
-This document explores the ideas of [directed identifiers](glossary.md#directed-identifier) and [verifiably directed identifiers](glossary.md#verifiably-directed-identifier) in WebID.
+This document explores the ideas of [directed identifiers](glossary.md#directed-identifier) and [verifiably directed identifiers](glossary.md#verifiably-directed-identifier) in FedCM.
 
-Directed identifiers are included in the WebID proposal as an attempt to mitigate [Relying Party tracking](README.md#the-rp-tracking-problem) of users by means of [identifier correlation](https://wicg.github.io/WebID/#cross-site-correlation). As traditional tracking mechanisms have become less accessible, a fallback method for following user activity across the web has been for web sites with account systems to correlate personal identifiers associated with each account. For example, all sites that require users to use email addresses as login identifiers can collude to uniquely identify a given user across all of those sites, and profile that user's full activity across them.
+Directed identifiers are included in the FedCM proposal as an attempt to mitigate [Relying Party tracking](README.md#the-rp-tracking-problem) of users by means of [identifier correlation](https://wicg.github.io/FedCM/#cross-site-correlation). As traditional tracking mechanisms have become less accessible, a fallback method for following user activity across the web has been for web sites with account systems to correlate personal identifiers associated with each account. For example, all sites that require users to use email addresses as login identifiers can collude to uniquely identify a given user across all of those sites, and profile that user's full activity across them.
 
 Conceptually, a directed identifer is a limited-scope identifier that has a one-way mapping from a user identifier that is known to an Identity Provider. The original identifier cannot practically be derived from the directed identifier by anyone other than the IdP or possibly the user.
 
@@ -42,7 +42,7 @@ There are two straightforward ways of implementing directed identifiers for an I
 
 The latter is used by [Shibboleth in its peristent identifier implementation](https://wiki.shibboleth.net/confluence/display/IDP30/PersistentNameIDGenerationConfiguration), and also described in [OpenID Connect for generating pairwise Subject Identifiers](https://openid.net/specs/openid-connect-core-1_0.html#PairwiseAlg).
 
-# Directed identifiers in WebID
+# Directed identifiers in FedCM
 While there exist examples of directed identifiers being used in closed identity systems, there are challenges to adapting them in a broad way to federated sign-in. The privacy goals of this project require that the entire ID token be directed, not just a single identifier field. For instance, the set of [OIDC standard Claims](https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims) mostly contains fields that cannot exist in a token containing only directed identifiers, or else would have to contain random or obfuscated data.
 
 ## Essential fields
@@ -51,23 +51,23 @@ A minimal directed identifier token that could be suitable for most federated si
 Unfortunately the phone number field can be used in much of the world as a primary communication channel for RPs to users (via SMS), and does not lend itself to any kind of directedness due to the difficulty in imagining a proxying system. This is an open problem.
 
 ## Other fields
-The remaining OIDC standard Claims have varying levels of value and usefulness in a directed scenario. Some, such as _website_ or _picture_ would have to be omitted or provide a generic non-identifying value. Others, such as _birthdate_, could conceivably be included even though it provides a degree of correlation. It is possible to imagine an entropy budget that WebID could allow within a single token, outside of which the identifier is no longer considered directed.
+The remaining OIDC standard Claims have varying levels of value and usefulness in a directed scenario. Some, such as _website_ or _picture_ would have to be omitted or provide a generic non-identifying value. Others, such as _birthdate_, could conceivably be included even though it provides a degree of correlation. It is possible to imagine an entropy budget that FedCM could allow within a single token, outside of which the identifier is no longer considered directed.
 
 There are also non-standard Claims sometimes included in some federated sign-in scenarios, which do not necessarily violate the directedness requirements. An example is an IdP with multiple subscriber levels, in a case where it is useful for an RP to know which subscriber level is associated with that user. Adding a few bits of information should be possible, though it is an open question how the user agent can know that this does not pose a tracking risk requiring additional user consent, especially if there are other non-essential fields present that might cumulatively create undirected entropy.
 
 ## Directed basic profile
-This proposal defines the concept of a [directed basic profile](https://github.com/WICG/WebID/blob/master/design.md#directed-basic-profile) which attempts to provide a set of directed fields that, when populated in a conforming way, can allow federated sign-in without risk of user tracking by identifier correlation. The precise definition of a directed basic profile is still a topic for dicussion.
+This proposal defines the concept of a [directed basic profile](https://github.com/WICG/FedCM/blob/master/design.md#directed-basic-profile) which attempts to provide a set of directed fields that, when populated in a conforming way, can allow federated sign-in without risk of user tracking by identifier correlation. The precise definition of a directed basic profile is still a topic for dicussion.
 
 # User agent behavior
-The value of a directed identifier is that a user agent can cooperate with it being passed from an IdP to an RP without having to attempt to acquire user consent for the tracking risk that is associated with correlatable identifiers. The precise shape of the user consent flow is discussed elsewhere in the WebID proposal.
+The value of a directed identifier is that a user agent can cooperate with it being passed from an IdP to an RP without having to attempt to acquire user consent for the tracking risk that is associated with correlatable identifiers. The precise shape of the user consent flow is discussed elsewhere in the FedCM proposal.
 
 An important question, however, is how the user agent can be **confident** that the identifier that is being passed in not correlatable. It is an open question as to whether this should require technical enforcement on the part of the user agent.
 
 ## Policy-based approach
-The simplest way for the user agent to obtain a degree of confidence in the directedness of the identifier is for the IdP to assert that all identifiers within the token are directed, via a mechanism defined by WebID. Since the user has entrusted some amount of identifying data to the IdP, it might be reasonable to expect that the IdP acts in good faith with respect to that data and not falsely assert the identifier is directed. IdPs discovered to be acting in bad faith could be exposed to penalties, possibly including being added to a denylist by user agents which would prohibit them from using these APIs in future.
+The simplest way for the user agent to obtain a degree of confidence in the directedness of the identifier is for the IdP to assert that all identifiers within the token are directed, via a mechanism defined by FedCM. Since the user has entrusted some amount of identifying data to the IdP, it might be reasonable to expect that the IdP acts in good faith with respect to that data and not falsely assert the identifier is directed. IdPs discovered to be acting in bad faith could be exposed to penalties, possibly including being added to a denylist by user agents which would prohibit them from using these APIs in future.
 
 ## Verifiably directed identifiers
-A stricter approach is for WebID to be prescriptive about the format of directed identifiers and require that they be verifiable by user agents in order to avoid tracking consent requirements. This could be done with a hashing scheme similar to what is used in Shibboleth or OpenID pairwise subject identifiers, where the IdP gives the user agent the inputs to a hash function and the output of the hash is included in the signed token. The user agent can then verify that the claim values in the token match the hashes, and therefore are not global identifiers.
+A stricter approach is for FedCM to be prescriptive about the format of directed identifiers and require that they be verifiable by user agents in order to avoid tracking consent requirements. This could be done with a hashing scheme similar to what is used in Shibboleth or OpenID pairwise subject identifiers, where the IdP gives the user agent the inputs to a hash function and the output of the hash is included in the signed token. The user agent can then verify that the claim values in the token match the hashes, and therefore are not global identifiers.
 
 The following is an example structure of such a scheme:
 ```

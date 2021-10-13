@@ -76,7 +76,7 @@ We call the active investigation of a protocol that can solve both of these prob
 
 ![](static/mock38.svg)
 
-The Delegation-oriented Model is very compelling as an end-state for WebID because it solves both tracking problems. Because it does, it doesn't have any unintended tracking consequence.
+The Delegation-oriented Model is very compelling as an end-state for FedCM because it solves both tracking problems. Because it does, it doesn't have any unintended tracking consequence.
 
 Because it is **consequence-free**, we expect it to be **permission-less** (the best permission is the one that isn't needed) and comparably better for users with formulations that impose on the user to make a determination on the consequences of being tracked.
 
@@ -88,7 +88,7 @@ The problems we mentioned, as well as others, are being explored more in-depth [
 
 ## The Intermediate States
 
-There are a large number of mid-game states between the opening and the endgame for WebID.
+There are a large number of mid-game states between the opening and the endgame for FedCM.
 
 It is unclear to us how many of these are sustainable/desirable long-term, and how they will evolve, but their existence for a non-trivial amount of time is non-neglectable.
 

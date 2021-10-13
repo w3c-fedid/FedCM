@@ -1,12 +1,12 @@
 ---
-title: WebID Glossary
+title: FedCM Glossary
 description: A list of terms and their usage in this project.
 layout: "default"
 ---
 Maintained by @kenrb
 
 # Purpose
-Below is a list of definitions for important terms in common use related to WebID. Many of the definitions are intended to match existing terms in identity standards, in some cases adapted and constrained for relevance in the context of WebID.
+Below is a list of definitions for important terms in common use related to FedCM. Many of the definitions are intended to match existing terms in identity standards, in some cases adapted and constrained for relevance in the context of FedCM.
 
 This document is continually evolving. Feedback is welcome.
 
@@ -45,7 +45,7 @@ References: [OIDC terminology](https://openid.net/specs/openid-connect-core-1_0.
 ## Directed basic profile
 * _A set of [claims](#claim) that is a restricted subset of [OpenID standard claims](#standard-claims) that satisifes the restriction to be a [directed identifier](#directed-identifier)._
 
-This term is novel in WebID and its details could be subject to change.
+This term is novel in FedCM and its details could be subject to change.
 
 ## Directed identifier
 * _A [claim](#claim) granted to a [Relying Party](#relying-party-rp) by an [Identity Provider](#identity-provider-idp) that constitutes an [identifier](#identifier) for the user but cannot be correlated with other identifiers granted to different Relying Parties._
@@ -77,7 +77,7 @@ References: [OIDC terminology](https://openid.net/specs/openid-connect-core-1_0.
 ## IDP tracking
 * _A privacy threat in which an [Identity Provider](#identity-provider-idp) is able to surveil or correlate user activity across the web._
 
-References: [WebID Threat Model](https://wicg.github.io/WebID/#by-idp)
+References: [FedCM Threat Model](https://wicg.github.io/FedCM/#by-idp)
 
 ## Relying Party (RP)
 * _A service that requests user information from an [Identity Provider](#identity-provider-idp) for user account [sign-in](#federated-sign-in) or for other purposes._
@@ -93,12 +93,12 @@ References: [OIDC terminology](https://openid.net/specs/openid-connect-core-1_0.
 ## RP tracking
 * _A privacy threat in which a [Relying Party](#relying-party-rp) is able to surveil or correlate user activity across the web._
 
-References: [WebID Threat Model](https://wicg.github.io/WebID/#by-rp)
+References: [FedCM Threat Model](https://wicg.github.io/FedCM/#by-rp)
 
 ## Standard claims
 * _A predefined set of [claims](#claim) that are included in a standard OIDC request for the purpose of user identification._
 
-This term is defined as a part of the OpenID Connect specification. The use of this term in WebID refers to the OIDC definition.
+This term is defined as a part of the OpenID Connect specification. The use of this term in FedCM refers to the OIDC definition.
 
 References: [OIDC](https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims)
 
@@ -106,4 +106,4 @@ References: [OIDC](https://openid.net/specs/openid-connect-core-1_0.html#Standar
 * _A [directed identifier](#directed-identifier) that has the property that the [user agent](#user-agent) is able to validate that it is directed._
 
 ## User agent
-* _Client software such as a web browser that renders web content and can implement WebID._
+* _Client software such as a web browser that renders web content and can implement FedCM._

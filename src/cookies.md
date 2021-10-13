@@ -6,7 +6,7 @@ updated: 22/07/2021
 layout: "default"
 ---
 
-This is a **proposal** for a high level API to support identity federation under this [threat model](https://wicg.github.io/WebID/#privacy-threat-model).
+This is a **proposal** for a high level API to support identity federation under this [threat model](https://wicg.github.io/FedCM/#privacy-threat-model).
 
 It is widely known that browsers are either **already** blocking third party cookies or are planning to.
 
@@ -24,7 +24,7 @@ This is a proposal to preserve these operations in the absence of third party co
 
 Cross-site communication is used throughout the entire lifecycle of the user signing in to a RP with an IDP, beginning at signing-up a new user all the way through managing the sessions (e.g. signing in, signing out or renewing refresh tokens).
 
-From a [privacy threat model](https://wicg.github.io/WebID/#privacy-threat-model) perspective, the design of this proposal is anchored on the observation that the most critical moment is the precise moment in which the identities between the RP and the IDP are joined for the very first time, namely when the user creates a new account in the RP using the identifiers from the IDP or when a user signs-in to an RP with an IDP for the first time in the browser: once the identities are joined, any arbitrary/uncontrolled cross-side communication can happen (with or without the browser's permission, e.g. via backchannel or cookie-less requests).
+From a [privacy threat model](https://wicg.github.io/FedCM/#privacy-threat-model) perspective, the design of this proposal is anchored on the observation that the most critical moment is the precise moment in which the identities between the RP and the IDP are joined for the very first time, namely when the user creates a new account in the RP using the identifiers from the IDP or when a user signs-in to an RP with an IDP for the first time in the browser: once the identities are joined, any arbitrary/uncontrolled cross-side communication can happen (with or without the browser's permission, e.g. via backchannel or cookie-less requests).
 
 So, under this observation, in this proposal the browser:
 
@@ -109,7 +109,7 @@ The configuration file is expected to have the following format:
 
 The `accounts_endpoint` in the configuration that the browser gathered while fetching the [.well-known](#fetch-well-known) file is used to fetch a list of user's accounts. The fetch contains two important headers:
 
-1. A `Sec-WebID-CSRF` which can be used by the server to know that it is an HTTP request originated from the browser 
+1. A `Sec-FedCM-CSRF` which can be used by the server to know that it is an HTTP request originated from the browser 
 1. The `Cookie` header which allows the server to restore the user's session
 
 The browser expects the response to have the following format:
@@ -135,7 +135,7 @@ GET /accounts.php HTTPS/1.1
 Host: idp.example
 Content-Type: application/json
 Cookie: 0x23223
-Sec-WebID-CSRF: random_value
+Sec-FedCM-CSRF: random_value
 ```
 
 And here is an example of a typical response:
@@ -282,7 +282,7 @@ The logout endpoints are configured out-of-band in the process relying parties r
 
 ## Implicit invocation
 
-The implicit invocation flow is largely designed to support the deployment of WebID without requiring relying parties to change. 
+The implicit invocation flow is largely designed to support the deployment of FedCM without requiring relying parties to change. 
 
 ## Sign-up
 

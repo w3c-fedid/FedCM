@@ -38,8 +38,8 @@ importance of recovery code and salt are discussed in the next section.
 
 
 <figure>
-  <img src="./static/delegation-api-signup-flow.svg" alt="Sign-Up Flow for a WebID enabled browser" />
-  <figcaption>Sign-Up Flow for a WebID enabled browser</figcaption>
+  <img src="./static/delegation-api-signup-flow.svg" alt="Sign-Up Flow for a FedCM enabled browser" />
+  <figcaption>Sign-Up Flow for a FedCM enabled browser</figcaption>
 </figure>
 
 Description of the steps involved in this flow:
@@ -85,7 +85,7 @@ Description of the steps involved in this flow:
       public key. Additional details are available in the
       [RP backend verification section](#rp-backend-verification).
     - RP stores the recovery code in addition to the user directed identifier.
-      The recovery code allows RP to sign in the user even in absence of WebID.
+      The recovery code allows RP to sign in the user even in absence of FedCM.
       See [recovery flow](#recovery-flow) for more details.
 
 ## Benefits
@@ -110,13 +110,13 @@ This approach requires changes in the RP backends:
   earlier explored flows only require IDP sdk and backend updates.
 - The RP needs to maintain a recovery token for each account. This is necessary
   to enable the ability for users to sign-in to their account on platforms that
-  don't have WebID or after they switch browsers.
+  don't have FedCM or after they switch browsers.
 
 ### UX Complication
 
 With this proposal the sign-in user experience on RP would remain the same in
 particular a) users can sign in to RP by selecting an IDP and b) users can sign
-in to their existing account with RP even on platforms that do not support WebID
+in to their existing account with RP even on platforms that do not support FedCM
 by falling back to OpenID and removing IDP blindness restriction.
 
 However the user experience on IDP side changes. In particular users are no
@@ -162,7 +162,7 @@ mix.
   can be used to mint new tokens on IDP's behalf.
 - This enforced IDP blindness may be reverted when it becomes necessary. We
   belive one such necessary use case is to allow a user to sign in to their
-  account on platforms that do not support WebID.
+  account on platforms that do not support FedCM.
 - the RP is always blind as it receives directed id and directed email.
 
 ### Databases
@@ -228,10 +228,10 @@ user if they directly or indirectly (e.g., browser mediation) collaborate. This
 enables the recovery mechanism for a user to sign in to their existing account
 on RP in a few important situations:
 
- 1. A browser that implements WebID but does not have access to the original
+ 1. A browser that implements FedCM but does not have access to the original
     certificate database (e.g., a fresh install). This mediated recovery
     maintains IDP blindness.
- 2. A browser or agent (e.g., a mobile app) that does not implement WebID
+ 2. A browser or agent (e.g., a mobile app) that does not implement FedCM
     protocol and OAuth flows are needed. Here the recovery code may be passed by
     the RP to the IDP which can authenticate the user and generate a regular JWT
     token. Notice that here **IDP gets unblinded** as it learns about the user
@@ -242,15 +242,15 @@ simply by enumerating all possible values.
 
 
 <figure>
-  <img src="./static/delegation-api-recovery-signin-flow.svg" alt="Sign-In (Recovery) Flow for a fresh WebID enabled browser" />
-  <figcaption>Sign-In (Recovery) Flow for a fresh WebID enabled browser</figcaption>
+  <img src="./static/delegation-api-recovery-signin-flow.svg" alt="Sign-In (Recovery) Flow for a fresh FedCM enabled browser" />
+  <figcaption>Sign-In (Recovery) Flow for a fresh FedCM enabled browser</figcaption>
 </figure>
 
 
 
 <figure>
-  <img src="./static/delegation-api-recovery-legacy-flow.svg" alt="Sign-In (Recovery) Flow for legacy non-WebID enabled browser/apps" />
-  <figcaption>Sign-In (Recovery) Flow for legacy non-WebID enabled browser/apps</figcaption>
+  <img src="./static/delegation-api-recovery-legacy-flow.svg" alt="Sign-In (Recovery) Flow for legacy non-FedCM enabled browser/apps" />
+  <figcaption>Sign-In (Recovery) Flow for legacy non-FedCM enabled browser/apps</figcaption>
 </figure>
 
 [JWT]: https://tools.ietf.org/html/rfc7519

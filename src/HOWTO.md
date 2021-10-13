@@ -1,5 +1,5 @@
 ---
-title: "How to experiment with WebID in Chrome"
+title: "How to experiment with FedCM in Chrome"
 maintainer: "kenrb"
 created: 10/12/2020
 updated: 10/12/2020
@@ -7,7 +7,7 @@ layout: "default"
 ---
 
 
-# How to experiment with WebID in Chrome
+# How to experiment with FedCM in Chrome
 
 A prototype of the API approaches described in the [solutions page](navigations.md) is present in Chrome 89 and later. **This is intended for experimentation purposes and is subject to change as a specification takes shape and develops.**
 
@@ -15,14 +15,14 @@ We will do our best to keep these instructions up to date as protocol and API ch
 
 It will subsequently roll into downstream channels, but with lag in functionality and bug fixes since this is under development.
 
-## Enabling WebID in Chrome
+## Enabling FedCM in Chrome
 1. Download [Chrome Canary](https://www.google.com/chrome/). Since this is a prototype with ongoing development, the implementation in other channels will be out of date with respect to functionality and bug fixes.
-2. Enable WebID. As of Chrome 91 this can be done directly from chrome://flags.
+2. Enable FedCM. As of Chrome 91 this can be done directly from chrome://flags.
 
 ## Available functionality
 * Automatic permission prompts on [top-level Open ID Connect protocol navigations](navigations.md#the-sign-in-api)
 * `navigator.id.get()` API call under [the permission-oriented flow](navigations.md#the-permission-oriented-variation)
-https://github.com/WICG/WebID/blob/main/cookies.md#logout
+https://github.com/WICG/FedCM/blob/main/cookies.md#logout
 * `navigator.id.get()` API call under [the mediation-oriented flow](navigations.md#the-mediation-oriented-variation)
 * A potential [Logout API](cookies.md#logout)
 
@@ -34,7 +34,7 @@ In the flows where permission prompts are shown and the user accepts them, their
 At the moment the only way to reset these permissions is to clear browsing data on the profile. This can be done from Settings, and requires manually selecting the `Site Settings` checkbox from the `Advanced` tab of the Clear Browsing Data dialog. Also be sure the time range of data being cleared includes the time when the permission was set. Testing can be done in Guest mode or with single-use profiles if permission persistence is not desired.
 
 ## Automatic permission prompts
-When WebID is enabled and a user attempts a federated sign-in using the OpenID Connect protocol over a top-level cross-origin navigation, the navigation request can be blocked by WebID and a permission prompt shown to the user. The same happens with a different prompt when an OIDC response is returned to the relying party. There is [a rough heuristic](README.md#the-permission-oriented-api) to identify these navigations, so it is possible some requests might be missed.
+When FedCM is enabled and a user attempts a federated sign-in using the OpenID Connect protocol over a top-level cross-origin navigation, the navigation request can be blocked by FedCM and a permission prompt shown to the user. The same happens with a different prompt when an OIDC response is returned to the relying party. There is [a rough heuristic](README.md#the-permission-oriented-api) to identify these navigations, so it is possible some requests might be missed.
 
 This is intended to illustrate a simple backward-compatible relaxation of web privacy restrictions for identity flows. It has some known limitations, such as behaving poorly in the presence of redirects on the request to the IDP.
 
@@ -42,7 +42,7 @@ This is intended to illustrate a simple backward-compatible relaxation of web pr
 
 ### Relying Party implementation
 
-The RP interacts with the WebID API to obtain an ID token for a user. The API method returns a promise that either resolves successfully and provides the token, or else is rejected with an error. The page must be served over HTTPS.
+The RP interacts with the FedCM API to obtain an ID token for a user. The API method returns a promise that either resolves successfully and provides the token, or else is rejected with an error. The page must be served over HTTPS.
 
 The `mode` parameter to the API specifies whether the permission or mediation-oriented flow is beings tested. Omitting the argument defaults to permission-oriented flow. Using `mode: "mediated"` triggers the mediation-oriented flow. 
 
@@ -50,7 +50,7 @@ The `mode` parameter to the API specifies whether the permission or mediation-or
 async function login() {
   // Feature detection.
   if (!navigator.id) {
-    console.log("WebID is not available.");
+    console.log("FedCM is not available.");
     return;
   }
   
@@ -74,23 +74,23 @@ async function login() {
 The Chrome prototype implements two protocols between the browser and the IDP, one for each supported variation of the API.
 
 In the permission-oriented variation, the IdP must respond to three different HTTP requests:
-1. A request for the WebID Well-Known configuration.
+1. A request for the FedCM Well-Known configuration.
 2. A request to fetch an ID token.
 3. A request for a sign-in web page if the IdP requires user interaction before providing the token.
 
 The mediation-oriented variation also has three different HTTP requests:
-1. A request for the WebID Well-Known configuration.
+1. A request for the FedCM Well-Known configuration.
 2. A request for a list of accounts that the user can use for federated sign-in.
 3. A request for an ID token associated with a specified the accounts.
 
-All of these must be served over HTTPS. These requests are tagged with a forbidden header `Sec-WebID-CSRF` to identify them as browser-generated WebID requests. The `Sec-` prefix prevents web content being able to set this header on other kinds of traffic such as via `XMLHttpRequest`, which makes it useful to prevent CSRF attacks. The header currently has an empty value.
+All of these must be served over HTTPS. These requests are tagged with a forbidden header `Sec-FedCM-CSRF` to identify them as browser-generated FedCM requests. The `Sec-` prefix prevents web content being able to set this header on other kinds of traffic such as via `XMLHttpRequest`, which makes it useful to prevent CSRF attacks. The header currently has an empty value.
 
 _Note that the UI for the mediation-oriented variation is still in development, but the protocol can be tested on Canary. This note is current as of 2021-05-20._
 
 ### Permission-oriented variation protocol details
 
 #### Well-Known configuration request
-After the RP initiates a sign-in flow by calling the API, the browser learns about the IdP's WebID support with a fetch to `https://idp.example/.well-known/webid`, where `https://idp.example` was specified as the provider by the RP.
+After the RP initiates a sign-in flow by calling the API, the browser learns about the IdP's FedCM support with a fetch to `https://idp.example/.well-known/webid`, where `https://idp.example` was specified as the provider by the RP.
 
 The browser expects a response with MIME type `application/json`, currently containing only one field:<br>
 ```json
@@ -133,7 +133,7 @@ The string should contain a [JWT](https://jwt.io/).
 ### Mediation-oriented variation protocol details
 
 #### Well-Known configuration request
-After the RP initiates a sign-in flow by calling the API, the browser learns about the IdP's WebID support with a fetch to `https://idp.example/.well-known/webid`, where `https://idp.example` was specified as the provider by the RP.
+After the RP initiates a sign-in flow by calling the API, the browser learns about the IdP's FedCM support with a fetch to `https://idp.example/.well-known/webid`, where `https://idp.example` was specified as the provider by the RP.
 
 The browser expects a response with MIME type `application/json`, currently containing two fields:<br>
 ```json
@@ -216,4 +216,4 @@ The most constructive/objective way you can help is to:
 
 1. get a good understanding of the **why**: understand the ongoing privacy-oriented changes in browsers ([example](https://blog.chromium.org/2020/01/building-more-private-web-path-towards.html)) and their [principles](https://github.com/michaelkleber/privacy-model)
 1. help us understand **what**: contribute [here](https://github.com/IDBrowserUseCases/docs) with a use case that you believe can be impacted
-1. help us understand **how**: help us discover options (for [cookies](cookies.md) and [navigations](navigations.md)) and evaluate their trade-offs. [Try](https://github.com/WICG/WebID/blob/main/HOWTO.md) the APIs under development and help us understand what works / doesn't work.
+1. help us understand **how**: help us discover options (for [cookies](cookies.md) and [navigations](navigations.md)) and evaluate their trade-offs. [Try](https://github.com/WICG/FedCM/blob/main/HOWTO.md) the APIs under development and help us understand what works / doesn't work.
