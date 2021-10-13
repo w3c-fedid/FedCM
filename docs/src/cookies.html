@@ -82,7 +82,7 @@
 
     <main>
       <div class="doc">
-	<p>This is a <strong>proposal</strong> for a high level API to support identity federation under this <a href="https://wicg.github.io/WebID/#privacy-threat-model">threat model</a>.</p>
+	<p>This is a <strong>proposal</strong> for a high level API to support identity federation under this <a href="https://wicg.github.io/FedCM/#privacy-threat-model">threat model</a>.</p>
 <p>It is widely known that browsers are either <strong>already</strong> blocking third party cookies or are planning to.</p>
 <blockquote>
 <p>Publicly announced browser positions on third party cookies:</p>
@@ -96,7 +96,7 @@
 <p>This is a proposal to preserve these operations in the absence of third party cookies.</p>
 <h1>The lifecycle</h1>
 <p>Cross-site communication is used throughout the entire lifecycle of the user signing in to a RP with an IDP, beginning at signing-up a new user all the way through managing the sessions (e.g. signing in, signing out or renewing refresh tokens).</p>
-<p>From a <a href="https://wicg.github.io/WebID/#privacy-threat-model">privacy threat model</a> perspective, the design of this proposal is anchored on the observation that the most critical moment is the precise moment in which the identities between the RP and the IDP are joined for the very first time, namely when the user creates a new account in the RP using the identifiers from the IDP or when a user signs-in to an RP with an IDP for the first time in the browser: once the identities are joined, any arbitrary/uncontrolled cross-side communication can happen (with or without the browser's permission, e.g. via backchannel or cookie-less requests).</p>
+<p>From a <a href="https://wicg.github.io/FedCM/#privacy-threat-model">privacy threat model</a> perspective, the design of this proposal is anchored on the observation that the most critical moment is the precise moment in which the identities between the RP and the IDP are joined for the very first time, namely when the user creates a new account in the RP using the identifiers from the IDP or when a user signs-in to an RP with an IDP for the first time in the browser: once the identities are joined, any arbitrary/uncontrolled cross-side communication can happen (with or without the browser's permission, e.g. via backchannel or cookie-less requests).</p>
 <p>So, under this observation, in this proposal the browser:</p>
 <ol>
 <li>Intermediates (e.g. gathers the user consent / intent) to observe the moment in which the identies get joined for the very first time between RPs and IDPs (a sign-up or a sign-in)</li>
@@ -179,7 +179,7 @@ interface FederatedCredential : Credential {
 <h3>Fetch Accounts</h3>
 <p>The <code>accounts_endpoint</code> in the configuration that the browser gathered while fetching the <a href="#fetch-well-known">.well-known</a> file is used to fetch a list of user's accounts. The fetch contains two important headers:</p>
 <ol>
-<li>A <code>Sec-WebID-CSRF</code> which can be used by the server to know that it is an HTTP request originated from the browser</li>
+<li>A <code>Sec-FedCM-CSRF</code> which can be used by the server to know that it is an HTTP request originated from the browser</li>
 <li>The <code>Cookie</code> header which allows the server to restore the user's session</li>
 </ol>
 <p>The browser expects the response to have the following format:</p>
@@ -241,7 +241,7 @@ interface FederatedCredential : Credential {
 Host: idp.example
 Content-Type: application/json
 Cookie: 0x23223
-Sec-WebID-CSRF: random_value
+Sec-FedCM-CSRF: random_value
 </code></pre>
 <p>And here is an example of a typical response:</p>
 <pre><code class="language-http">HTTP/2.0 200 OK
@@ -401,7 +401,7 @@ There are three formulations here (not mutually exclusive):</p>
 <p><img src="/WebID/src/static/mock31.svg" alt=""></p>
 <h1>Alternatives under consideration</h1>
 <h2>Implicit invocation</h2>
-<p>The implicit invocation flow is largely designed to support the deployment of WebID without requiring relying parties to change.</p>
+<p>The implicit invocation flow is largely designed to support the deployment of FedCM without requiring relying parties to change.</p>
 <h2>Sign-up</h2>
 <pre><code class="language-javascript">enum FederatedCredentialRequestOptionsMode {
   &quot;mediated&quot;,
