@@ -1,12 +1,3 @@
----
-title: "How to experiment with FedCM in Chrome"
-maintainer: "kenrb"
-created: 10/12/2020
-updated: 10/12/2020
-layout: "default"
----
-
-
 # How to experiment with FedCM in Chrome
 
 A prototype of the API approaches described in the [solutions page](navigations.md) is present in Chrome 89 and later. **This is intended for experimentation purposes and is subject to change as a specification takes shape and develops.**

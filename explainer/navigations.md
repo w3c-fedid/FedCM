@@ -1,11 +1,3 @@
----
-title: "Navigations"
-maintainer: "samuelgoto"
-created: 01/01/2020
-updated: 09/10/2020
-layout: "default"
----
-
 This is an **early exploration** of the design alternatives to address [this](README.md#stage-2-bounce-tracking) under [this threat model](https://wicg.github.io/FedCM/#privacy-threat-model).
 
 This section goes over the **what** and the **how**. It presuposes that you have read and started from:
@@ -53,7 +45,7 @@ From the perspective of [The Privacy Threat Model](https://wicg.github.io/FedCM/
 While both are implemented on top of OAuth as different scopes, the former (typically deployed with the `openid` oauth scope) captures a meaningful volume of usage (we estimate it be around 80% of the use) at a much more controlled surface area (including transactions done at the front channel with idtokens as opposed to access tokens), whereas the latter is much more powerful and used less frequently (as well as done primarily on the back channel).
 
 Lets first turn to the former use, and then go over authorization following that.
-  
+
 ## The Sign-In API
 
 Simply put, the Sign-In API is a Web Platform affordance that takes an identity provider as input and returns a [directed basic profile](directed_basic_profile.md) as output. It substitutes the navigational/popup affordances currently used.
@@ -146,8 +138,8 @@ We also want to make sure that:
 - The scheme reaches an economically viable equilibrium for all parties involved, from a design of incentives perspective
 - The scheme handles gracefully federation on non-web platforms (e.g. Android, iOS, PlayStation, etc)
 - We minimize the deployment and activation windows (e.g. server-side / client-side and user-behavior backwards compatibility) for relying parties and identity providers
-- The scheme has a deliberate and well informed extensibility and ossification model, i.e. make extensible where innovation is constructive and ossify where there is less rapid iteration going on and there a direct value in terms of privacy/security. 
-  
+- The scheme has a deliberate and well informed extensibility and ossification model, i.e. make extensible where innovation is constructive and ossify where there is less rapid iteration going on and there a direct value in terms of privacy/security.
+
 We believe we all still have a lot to learn from each other (browser vendors, identity providers, relying parties, etc) in choosing the mean between the extremes of excess and deficiency with regards to the trade-offs of privacy, usability and economic viability.
 
 Having said that, in the following section we'll enumerate some of the most prominent variations under consideration and their trade-offs.
@@ -159,7 +151,7 @@ The approaches are categorized into three general approaches:
 1. The [Permission-oriented](#the-permission-oriented-variation) Variation
 1. The [Mediation-oriented](#the-mediation-oriented-variation) Variation
 1. The [Delegation-oriented](#the-delegation-oriented-variation) Variation
-  
+
 ## The Permission-oriented Variation
 
 The simplest approach is to have FedCM offer APIs that allow cross-origin data sharing for sign-in and authorization use cases that works much as they do today, but with the user agents providing warnings and consent moments to the user when new tracking risks appear.
@@ -173,11 +165,11 @@ Naturally, the next set of formulations try to address these two shortcomings at
 ## The Mediation-oriented Variation
 
 In this formulation, the browser pulls the responsibility for itself to drive the profile exchange, enabling it to (a) bundle the consent moments described in the formulation above and (b) steer users to safer defaults.
-  
+
 ![](static/mock15.svg)
 
 An expanded exploration of this approach with its benefits and drawbacks can be seen [here](mediation_oriented_api.md).
-  
+
 ## The Delegation-oriented Variation
 
 The last alternative under consideration enables the user agent to finally address the [The IDP Tracking Problem](README.md#the-idp-tracking-problem) mechanically.
@@ -187,8 +179,8 @@ In this formulation, the IDP delegates the presentation of identity assertions t
 The biggest benefits of this variation are:
 
 - The delegation mechanically solves the [The IDP Tracking Problem](README.md#the-idp-tracking-problem): it keeps the IDP unaware of where the user is signing-into while still enabling the user to recover its account while moving around.
-- Because there aren't any [IDP Tracking Problem](README.md#the-idp-tracking-problem) nor any [RP Tracking Problem](README.md#the-rp-tracking-problem), this can possibly be a zero-prompt, consequence-free UX.  
-  
+- Because there aren't any [IDP Tracking Problem](README.md#the-idp-tracking-problem) nor any [RP Tracking Problem](README.md#the-rp-tracking-problem), this can possibly be a zero-prompt, consequence-free UX.
+
 The biggest drawback of this variation is that it leads to a JWT that is not backwards compatible with the existing server-side deployment of relying parties (which are expecting the IDP to sign JTWs, not the Browser), which is O(K) hard to change.
 
 An expanded exploration of this approach with its benefits and drawbacks can be seen [here](https://docs.google.com/presentation/d/1Sym0k84omyL5Ls1lO6w4aGQ-s4EHrDzo8ZlheyzFOlw/edit#slide=id.ga40b1e6d4f_0_77).

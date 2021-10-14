@@ -1,15 +1,9 @@
----
-title: "Mediation-oriented API"
-created: 08/10/2020
-updated: 08/10/2020
----
-
 In this variation of the [Provider API](consumers.md#the-provider-api), we modify the [Permission-oriented](consumers.md#the-permission-oriented-variation) variation to:
 
 - Bundle the prompts to unify the case where the users opt-into using an undirected profile.
 - Allow the user agent to pick defaults (e.g opt-out vs opt-in) and control the use of [directed profiles](directed_basic_profile.md).
 
-The fundamental modification to achieve these goals is allow the browser to mediate the sign-in flow:  
+The fundamental modification to achieve these goals is allow the browser to mediate the sign-in flow:
 
 ![](static/mock15.svg)
 

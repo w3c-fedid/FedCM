@@ -1,11 +1,3 @@
----
-title: "The Account and Session Management API"
-maintainer: "samuelgoto"
-created: 03/02/2021
-updated: 22/07/2021
-layout: "default"
----
-
 This is a **proposal** for a high level API to support identity federation under this [threat model](https://wicg.github.io/FedCM/#privacy-threat-model).
 
 It is widely known that browsers are either **already** blocking third party cookies or are planning to.
@@ -109,7 +101,7 @@ The configuration file is expected to have the following format:
 
 The `accounts_endpoint` in the configuration that the browser gathered while fetching the [.well-known](#fetch-well-known) file is used to fetch a list of user's accounts. The fetch contains two important headers:
 
-1. A `Sec-FedCM-CSRF` which can be used by the server to know that it is an HTTP request originated from the browser 
+1. A `Sec-FedCM-CSRF` which can be used by the server to know that it is an HTTP request originated from the browser
 1. The `Cookie` header which allows the server to restore the user's session
 
 The browser expects the response to have the following format:
@@ -145,7 +137,7 @@ HTTP/2.0 200 OK
 Content-Type: application/json
 {
   "accounts": [{
-    "sub": 1234, 
+    "sub": 1234,
     "name": "Sam Goto",
     "given_name": "Sam",
     "email": "samuelgoto@gmail.com",
@@ -282,7 +274,7 @@ The logout endpoints are configured out-of-band in the process relying parties r
 
 ## Implicit invocation
 
-The implicit invocation flow is largely designed to support the deployment of FedCM without requiring relying parties to change. 
+The implicit invocation flow is largely designed to support the deployment of FedCM without requiring relying parties to change.
 
 ## Sign-up
 
@@ -318,7 +310,7 @@ For example, we are looking into ways we could replace the `<iframe>` tag with t
 
 In this formulation, the web bundle is a static (yet personalized) bundle that can be displayed on page load but can't have any uncontrolled communication outwards (e.g. over the network or over in-browser features, like postMessage).
 
-The IDP-controlled fenced frame can communicates back with the RP with a high-level API (in replacement of the low-level `postMessage`) too (which isn't allowed in a fenced frame): 
+The IDP-controlled fenced frame can communicates back with the RP with a high-level API (in replacement of the low-level `postMessage`) too (which isn't allowed in a fenced frame):
 
 ```javascript
 // This is just a possible starting point, largely TBD.
