@@ -6,7 +6,7 @@
   <link href="https://www.w3.org/StyleSheets/TR/2016/cg-draft" rel="stylesheet">
   <meta content="Bikeshed version d7036035b, updated Fri Oct 8 17:07:11 2021 -0700" name="generator">
   <link href="http://wicg.github.io/FedCM" rel="canonical">
-  <meta content="6f273b83bb2915018fd56449c3b53a6111d256af" name="document-revision">
+  <meta content="41ad1e4118149a5206a887d55821524b3409d7b2" name="document-revision">
 <style>
 dl.domintro dt {
     font-family: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
@@ -1105,6 +1105,8 @@ site they’re visiting. A goal of anti-tracking policy is to promote <a data-li
      <p>A <a href="#client_id_metadata_endpoint">§ 6.3 Client Metadata</a> endpoint</p>
     <li data-md>
      <p>An <a href="#idtoken_endpoint">§ 6.4 ID Token</a> endpoint</p>
+    <li data-md>
+     <p>A <a href="#revocation_endpoint">§ 6.5 Revocation</a> endpoint</p>
    </ol>
    <h3 class="heading settled" data-level="6.1" id="well-known"><span class="secno">6.1. </span><span class="content">Manifest</span><a class="self-link" href="#well-known"></a></h3>
    <p>The well-known discovery endpoint is an endpoint located at the <a data-link-type="dfn" href="#idp" id="ref-for-idp⑤">IDP</a>'s <code>.well-known/webid</code> and serves as a discovery device to other endpoints provided by the <a data-link-type="dfn" href="#idp" id="ref-for-idp⑥">IDP</a>.</p>
@@ -1129,14 +1131,18 @@ site they’re visiting. A goal of anti-tracking policy is to promote <a data-li
     <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="WellKnown" data-dfn-type="argument" data-export id="dom-wellknown-idtoken_endpoint"><code>idtoken_endpoint</code></dfn>
     <dd data-md>
      <p>A URL that points to an HTTP API that complies with the <a href="#idtoken_endpoint">§ 6.4 ID Token</a> API.</p>
+    <dt data-md><dfn class="idl-code" data-dfn-for="WellKnown" data-dfn-type="argument" data-export id="dom-wellknown-revocation_endpoint"><code>revocation_endpoint</code><a class="self-link" href="#dom-wellknown-revocation_endpoint"></a></dfn>
+    <dd data-md>
+     <p>A URL that points to an HTTP API that complies with the <a href="#revocation_endpoint">§ 6.5 Revocation</a> API.</p>
    </dl>
    <p>For example:</p>
-   <div class="example" id="example-8076d186">
-    <a class="self-link" href="#example-8076d186"></a> 
+   <div class="example" id="example-4ef847d3">
+    <a class="self-link" href="#example-4ef847d3"></a> 
 <pre class="language-json highlight"><c- p>{</c->
   <c- f>"accounts_endpoint"</c-><c- p>:</c-> <c- u>"/accounts.php"</c-><c- p>,</c->
   <c- f>"client_id_metadata_endpoint"</c-><c- p>:</c-> <c- u>"/metadata.php"</c-><c- p>,</c->
   <c- f>"idtoken_endpoint"</c-><c- p>:</c-> <c- u>"/idtokens.php"</c-><c- p>,</c->
+  <c- f>"revocation_endpoint"</c-><c- p>:</c-> <c- u>"/revocation.php"</c->
 <c- p>}</c->
 </pre>
    </div>
@@ -1282,31 +1288,67 @@ site they’re visiting. A goal of anti-tracking policy is to promote <a data-li
 </pre>
    </div>
    <h3 class="heading settled" data-level="6.5" id="revocation_endpoint"><span class="secno">6.5. </span><span class="content">Revocation</span><a class="self-link" href="#revocation_endpoint"></a></h3>
-   <p class="note" role="note"><span>Note:</span> support revocation.</p>
+   <p>The revocation endpoint is responsible for revoking all <a data-link-type="dfn" href="#id-token" id="ref-for-id-token③">id token</a>s for the
+specified client ID for the user.</p>
+   <p>The revocation endpoint is fetched (a) as a <strong>POST</strong> request, (b) <strong>with</strong> cookies, (c) <strong>with</strong> a special <a href="#Sec-FedCM-CSR">§ 6.6 Sec-FedCM-CSR</a> header, and (d) <strong>with</strong> a Referer header indicating the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑨">RP</a> URL.</p>
+   <p>It will also contain the following parameters passed as a JSON object:</p>
+   <dl>
+    <dt data-md><dfn class="idl-code" data-dfn-for="revocation_endpoint_request" data-dfn-type="argument" data-export id="dom-revocation_endpoint_request-account_id"><code>account_id</code><a class="self-link" href="#dom-revocation_endpoint_request-account_id"></a></dfn>
+    <dd data-md>
+     <p>The account identifier for the user (e.g. email).</p>
+    <dt data-md><dfn class="idl-code" data-dfn-for="revocation_endpoint_request" data-dfn-type="argument" data-export id="dom-revocation_endpoint_request-request"><code>request</code><a class="self-link" href="#dom-revocation_endpoint_request-request"></a></dfn>
+    <dd data-md>
+     <p>The <a data-link-type="dfn" href="#revocation-request" id="ref-for-revocation-request">revocation request</a></p>
+   </dl>
+   <p>The <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="revocation-request">revocation request</dfn> has the following properties:</p>
+   <dl>
+    <dt data-md><dfn class="idl-code" data-dfn-for="revocation_endpoint_request_request" data-dfn-type="argument" data-export id="dom-revocation_endpoint_request_request-client_id"><code>client_id</code><a class="self-link" href="#dom-revocation_endpoint_request_request-client_id"></a></dfn>
+    <dd data-md>
+     <p>The <a data-link-type="dfn" href="#rp" id="ref-for-rp①⓪">RP</a>'s client id</p>
+   </dl>
+   <p>For example:</p>
+   <div class="example" id="example-607e57ed">
+    <a class="self-link" href="#example-607e57ed"></a> 
+<pre class="language-http highlight"><c- nf>POST</c-> <c- nn>/webid_revocation_endpoint</c-> <c- kr>HTTP</c-><c- o>/</c-><c- m>1.1</c->
+<c- e>Host</c-><c- o>:</c-> <c- l>idp.example</c->
+<c- e>Referer</c-><c- o>:</c-> <c- l>rp.example</c->
+<c- e>Content-Type</c-><c- o>:</c-> <c- l>application/json</c->
+<c- e>Cookie</c-><c- o>:</c-> <c- l>0x23223</c->
+<c- e>Sec-FedCM-CSRF</c-><c- o>:</c-> <c- l>random_value</c->
+{
+  <c- f>"account_id"</c-><c- p>:</c-> <c- u>"123"</c-><c- p>,</c->
+  <c- f>"request"</c-><c- p>:</c-> <c- p>{</c->
+    <c- f>"client_id"</c-><c- p>:</c-> <c- u>"client1234"</c->
+  <c- p>}</c->
+<c- p>}</c->
+</pre>
+   </div>
+   <p>If successful, the response is an empty response with an HTTP 204 code,
+otherwise an HTTP error code.</p>
    <h3 class="heading settled" data-level="6.6" id="Sec-FedCM-CSR"><span class="secno">6.6. </span><span class="content"><code><dfn data-dfn-type="dfn" data-export id="sec-fedcm-csr"><code>Sec-FedCM-CSR</code><a class="self-link" href="#sec-fedcm-csr"></a></dfn></code></span><a class="self-link" href="#Sec-FedCM-CSR"></a></h3>
    <h2 class="heading settled" data-level="7" id="rp-api"><span class="secno">7. </span><span class="content">The Relying Party API</span><a class="self-link" href="#rp-api"></a></h2>
-   <p><a data-link-type="dfn" href="#rp" id="ref-for-rp⑨">RP</a>'s expose a <a href="#logout_endpoint">§ 7.1 Logout</a> to facilitate with <a href="#use-cases-idp-sign-out">§ 2.3.2 IDP Sign-out</a>.</p>
+   <p><a data-link-type="dfn" href="#rp" id="ref-for-rp①①">RP</a>'s expose a <a href="#logout_endpoint">§ 7.1 Logout</a> to facilitate with <a href="#use-cases-idp-sign-out">§ 2.3.2 IDP Sign-out</a>.</p>
    <h3 class="heading settled" data-level="7.1" id="logout_endpoint"><span class="secno">7.1. </span><span class="content">Logout</span><a class="self-link" href="#logout_endpoint"></a></h3>
-   <p>When <a data-link-type="dfn" href="#idp" id="ref-for-idp⑧">IDP</a>s call the <a href="#idp-sign-out">§ 8.4.2 IDP Sign-out</a> API, every <a data-link-type="dfn" href="#rp" id="ref-for-rp①⓪">RP</a> gets a
+   <p>When <a data-link-type="dfn" href="#idp" id="ref-for-idp⑧">IDP</a>s call the <a href="#idp-sign-out">§ 8.4.2 IDP Sign-out</a> API, every <a data-link-type="dfn" href="#rp" id="ref-for-rp①②">RP</a> gets a
 chance to log the user out (e.g. clear cookies, clear local storage)
 via the logout endpoint.</p>
    <p>The logout endpoint is an endpoint that is registered with the <a data-link-type="dfn" href="#idp" id="ref-for-idp⑨">IDP</a> <a data-link-type="dfn" href="#out-of-band" id="ref-for-out-of-band">out-of-band</a>.</p>
-   <p>The logout endpoint is called (a) with a <strong>GET</strong> and (b) with the <a data-link-type="dfn" href="#rp" id="ref-for-rp①①">RP</a>'s cookies.</p>
+   <p>The logout endpoint is called (a) with a <strong>GET</strong> and (b) with the <a data-link-type="dfn" href="#rp" id="ref-for-rp①③">RP</a>'s cookies.</p>
    <p class="note" role="note"><span>Note:</span> the logout API introduces a credentialed request from the <a data-link-type="dfn" href="#idp" id="ref-for-idp①⓪">IDP</a> to
-the <a data-link-type="dfn" href="#rp" id="ref-for-rp①②">RP</a>s, so it exposes a potential tracking surface area. It is a fairly
+the <a data-link-type="dfn" href="#rp" id="ref-for-rp①④">RP</a>s, so it exposes a potential tracking surface area. It is a fairly
 limited and controlled tracking area because the logout API is only available
 when accounts <strong>and</strong> sessions are already established between the <a data-link-type="dfn" href="#idp" id="ref-for-idp①①">IDP</a> and
-the <a data-link-type="dfn" href="#rp" id="ref-for-rp①③">RP</a>.</p>
+the <a data-link-type="dfn" href="#rp" id="ref-for-rp①⑤">RP</a>.</p>
    <h2 class="heading settled" data-level="8" id="API"><span class="secno">8. </span><span class="content">The Browser API</span><a class="self-link" href="#API"></a></h2>
-   <p>The Browser API exposes APIs to <a data-link-type="dfn" href="#rp" id="ref-for-rp①④">RP</a>s and <a data-link-type="dfn" href="#idp" id="ref-for-idp①②">IDP</a>s to call and intermediates the exchange of the user’s identity.</p>
-   <p>For <a data-link-type="dfn" href="#rp" id="ref-for-rp①⑤">RP</a>s, it allows them to:</p>
+   <p>The Browser API exposes APIs to <a data-link-type="dfn" href="#rp" id="ref-for-rp①⑥">RP</a>s and <a data-link-type="dfn" href="#idp" id="ref-for-idp①②">IDP</a>s to call and intermediates the exchange of the user’s identity.</p>
+   <p>For <a data-link-type="dfn" href="#rp" id="ref-for-rp①⑦">RP</a>s, it allows them to:</p>
    <ol>
     <li data-md>
-     <p>The <a href="#sign-in">§ 8.2 The Sign-in API</a> allows <a data-link-type="dfn" href="#rp" id="ref-for-rp①⑥">RP</a>'s users to <a href="#use-cases-sign-up">§ 2.1 Sign-up</a> and <a href="#use-cases-sign-up">§ 2.1 Sign-up</a></p>
+     <p>The <a href="#sign-in">§ 8.2 The Sign-in API</a> allows <a data-link-type="dfn" href="#rp" id="ref-for-rp①⑧">RP</a>'s users to <a href="#use-cases-sign-up">§ 2.1 Sign-up</a> and <a href="#use-cases-sign-up">§ 2.1 Sign-up</a></p>
     <li data-md>
-     <p>The <a href="#revocation">§ 8.3 The Revocation API</a> allows <a data-link-type="dfn" href="#rp" id="ref-for-rp①⑦">RP</a>'s users to go through <a href="#use-cases-rp-revocation">§ 2.4.2 RP Revocation</a> of their accounts</p>
+     <p>The <a href="#revocation">§ 8.3 The Revocation API</a> allows <a data-link-type="dfn" href="#rp" id="ref-for-rp①⑨">RP</a>'s users to go through <a href="#use-cases-rp-revocation">§ 2.4.2 RP Revocation</a> of their accounts</p>
     <li data-md>
-     <p>The <a href="#rp-sign-out">§ 8.4.1 RP Sign-out</a> API allows <a data-link-type="dfn" href="#rp" id="ref-for-rp①⑧">RP</a>s to <a href="#use-cases-rp-sign-out">§ 2.3.1 RP Sign-out</a> of their accounts.</p>
+     <p>The <a href="#rp-sign-out">§ 8.4.1 RP Sign-out</a> API allows <a data-link-type="dfn" href="#rp" id="ref-for-rp②⓪">RP</a>s to <a href="#use-cases-rp-sign-out">§ 2.3.1 RP Sign-out</a> of their accounts.</p>
    </ol>
    <p>For <a data-link-type="dfn" href="#idp" id="ref-for-idp①③">IDP</a>s, it allows them to:</p>
    <ol>
@@ -1315,7 +1357,7 @@ the <a data-link-type="dfn" href="#rp" id="ref-for-rp①③">RP</a>.</p>
    </ol>
    <p>The Browser API manages the lifecycle of the user’s accounts and sessions with an internal <a href="#state-machine">§ 8.1 The State Machine</a>.</p>
    <h3 class="heading settled" data-level="8.1" id="state-machine"><span class="secno">8.1. </span><span class="content">The State Machine</span><a class="self-link" href="#state-machine"></a></h3>
-   <p>Internally, the account management and session management APIs allows the user to explicitly move through the different stages of their accounts. At each stage, the state machine manages the <a data-link-type="dfn" href="#rp" id="ref-for-rp①⑨">RP</a>'s and the <a data-link-type="dfn" href="#idp" id="ref-for-idp①⑤">IDP</a>'s access to the appropriate browser capabilities.</p>
+   <p>Internally, the account management and session management APIs allows the user to explicitly move through the different stages of their accounts. At each stage, the state machine manages the <a data-link-type="dfn" href="#rp" id="ref-for-rp②①">RP</a>'s and the <a data-link-type="dfn" href="#idp" id="ref-for-idp①⑤">IDP</a>'s access to the appropriate browser capabilities.</p>
    <p><img src="static/mock42.svg"></p>
    <dl>
     <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="StateMachine" data-dfn-type="argument" data-export id="dom-statemachine-account-state"><code>Account State</code></dfn>
@@ -1327,10 +1369,10 @@ the <a data-link-type="dfn" href="#rp" id="ref-for-rp①③">RP</a>.</p>
    </dl>
    <h3 class="heading settled" data-level="8.2" id="sign-in"><span class="secno">8.2. </span><span class="content">The Sign-in API</span><a class="self-link" href="#sign-in"></a></h3>
    <h4 class="heading settled" data-level="8.2.1" id="rp-sign-in"><span class="secno">8.2.1. </span><span class="content">RP Sign-in API</span><a class="self-link" href="#rp-sign-in"></a></h4>
-   <p>The Sign-up and Sign-in APIs are APIs used by the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party③⑥">Relying Party</a>s to ask the browser to intermediate the relationship with the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②①">Identity Provider</a> and the provisioning of an <a data-link-type="dfn" href="#id-token" id="ref-for-id-token③">id token</a>.</p>
+   <p>The Sign-up and Sign-in APIs are APIs used by the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party③⑥">Relying Party</a>s to ask the browser to intermediate the relationship with the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②①">Identity Provider</a> and the provisioning of an <a data-link-type="dfn" href="#id-token" id="ref-for-id-token④">id token</a>.</p>
    <p>The <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party③⑦">Relying Party</a> makes no delineation between Sign-up and Sign-in, but rather call the same API indistinguishably. The most important parameter to the API call is the set of <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②②">Identity Provider</a>s that the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party③⑧">Relying Party</a> supports and has pre-registered with (i.e. it has a <code>clientId</code>).</p>
    <p>Additionally, the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party③⑨">Relying Party</a> can control a variety of UX knobs. For example, whether to allow an <a href="#use-cases-auto-sign-in">§ 2.2.1 Auto Sign-in</a> flow and an AbortSignal in case it needs to abort the flow.</p>
-   <p>If all goes well, the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④⓪">Relying Party</a> receives back an <a data-link-type="dfn" href="#id-token" id="ref-for-id-token④">id token</a> in the form of a signed <a data-link-type="biblio" href="https://datatracker.ietf.org/doc/html/rfc7519"><cite>JWT</cite></a> which it can use to authenticate the user.</p>
+   <p>If all goes well, the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④⓪">Relying Party</a> receives back an <a data-link-type="dfn" href="#id-token" id="ref-for-id-token⑤">id token</a> in the form of a signed <a data-link-type="biblio" href="https://datatracker.ietf.org/doc/html/rfc7519"><cite>JWT</cite></a> which it can use to authenticate the user.</p>
    <div class="example" id="example-4b8efa39">
     <a class="self-link" href="#example-4b8efa39"></a> 
 <pre class="language-js highlight"><c- k>async</c-> <c- a>function</c-> login<c- p>(</c->signal<c- p>)</c-> <c- p>{</c->
@@ -1380,7 +1422,7 @@ the <a data-link-type="dfn" href="#rp" id="ref-for-rp①③">RP</a>.</p>
    <dl>
     <dt data-md><code class="idl"><a data-link-type="idl" href="#dom-federatedcredential-idtoken" id="ref-for-dom-federatedcredential-idtoken">idToken</a></code>
     <dd data-md>
-     <p>The <a data-link-type="dfn" href="#id-token" id="ref-for-id-token⑤">id token</a>.</p>
+     <p>The <a data-link-type="dfn" href="#id-token" id="ref-for-id-token⑥">id token</a>.</p>
     <dt data-md><code class="idl"><a data-link-type="idl" href="#dom-federatedcredential-approvedby" id="ref-for-dom-federatedcredential-approvedby">approvedBy</a></code>
     <dd data-md>
      <p>When used in conjunction with <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dom-credentialrequestoptions-mediation" id="ref-for-dom-credentialrequestoptions-mediation">mediation</a></code>, it indicates whether the credential was provided via a <a href="#use-cases-auto-sign-in">§ 2.2.1 Auto Sign-in</a> or an <a href="#use-cases-explicit-sign-in">§ 2.2.2 Explicit Sign-in</a>.</p>
@@ -1463,7 +1505,7 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
     <li data-md>
      <p>Set the account’s <code class="idl"><a data-link-type="idl" href="#dom-statemachine-session-state" id="ref-for-dom-statemachine-session-state①">Session State</a></code> from <a data-link-type="dfn" href="#logged-out" id="ref-for-logged-out②">logged out</a> to <a data-link-type="dfn" href="#logged-in" id="ref-for-logged-in①">logged in</a>.</p>
     <li data-md>
-     <p>Return the result of <a data-link-type="dfn">minting</a> a new <a data-link-type="dfn" href="#id-token" id="ref-for-id-token⑥">id token</a>.</p>
+     <p>Return the result of <a data-link-type="dfn">minting</a> a new <a data-link-type="dfn" href="#id-token" id="ref-for-id-token⑦">id token</a>.</p>
    </ol>
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="select-an-account">select an account</dfn> from the accounts list run this algorithm:</p>
    <ol>
@@ -1489,7 +1531,7 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
     <li data-md>
      <p>Set the account’s <code class="idl"><a data-link-type="idl" href="#dom-statemachine-session-state" id="ref-for-dom-statemachine-session-state②">Session State</a></code> from <a data-link-type="dfn" href="#logged-out" id="ref-for-logged-out③">logged out</a> to <a data-link-type="dfn" href="#logged-in" id="ref-for-logged-in②">logged in</a>.</p>
     <li data-md>
-     <p>Return the result of <a data-link-type="dfn">minting</a> a new <a data-link-type="dfn" href="#id-token" id="ref-for-id-token⑦">id token</a>.</p>
+     <p>Return the result of <a data-link-type="dfn">minting</a> a new <a data-link-type="dfn" href="#id-token" id="ref-for-id-token⑧">id token</a>.</p>
    </ol>
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="auto-sign-in">auto sign-in</dfn> the user run this algorithm:</p>
    <ol>
@@ -1558,11 +1600,11 @@ calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/we
      </ul>
    </ol>
    <h4 class="heading settled" data-level="8.2.2" id="idp-sign-in"><span class="secno">8.2.2. </span><span class="content">IDP Sign-in API</span><a class="self-link" href="#idp-sign-in"></a></h4>
-   <p>The IDP Sign-in API allows an <a data-link-type="dfn" href="#idp" id="ref-for-idp①⑥">IDP</a> to sign the user into a <a data-link-type="dfn" href="#rp" id="ref-for-rp②⓪">RP</a> by
-storing a <a data-link-type="dfn">FederatedCredential</a> that can later be retrieved by a <a data-link-type="dfn" href="#rp" id="ref-for-rp②①">RP</a>.</p>
+   <p>The IDP Sign-in API allows an <a data-link-type="dfn" href="#idp" id="ref-for-idp①⑥">IDP</a> to sign the user into a <a data-link-type="dfn" href="#rp" id="ref-for-rp②②">RP</a> by
+storing a <a data-link-type="dfn">FederatedCredential</a> that can later be retrieved by a <a data-link-type="dfn" href="#rp" id="ref-for-rp②③">RP</a>.</p>
    <p>Its effect is equivalent to the <a href="#rp-sign-in">§ 8.2.1 RP Sign-in API</a> in its effect, except that
 it is designed to be called while the user is at the <a data-link-type="dfn" href="#idp" id="ref-for-idp①⑦">IDP</a> rather than
-at the <a data-link-type="dfn" href="#rp" id="ref-for-rp②②">RP</a>.</p>
+at the <a data-link-type="dfn" href="#rp" id="ref-for-rp②④">RP</a>.</p>
    <div class="example" id="example-360d3994">
     <a class="self-link" href="#example-360d3994"></a> 
 <pre class="language-js highlight"><c- k>async</c-> <c- a>function</c-> login<c- p>({</c->id<c- p>,</c-> name<c- p>,</c-> iconURL<c- p>})</c-> <c- p>{</c->
@@ -1637,7 +1679,7 @@ through an <a href="#use-cases-explicit-sign-in">§ 2.2.2 Explicit Sign-in</a>
 <c- p>}</c->
 </pre>
    </div>
-   <p><a data-link-type="dfn" href="#idp" id="ref-for-idp①⑧">IDP</a>s can call <code><a data-link-type="idl">FederatedCredential.logout(...)</a></code> to log the user out of the <a data-link-type="dfn" href="#rp" id="ref-for-rp②③">RP</a>s they are signed into.</p>
+   <p><a data-link-type="dfn" href="#idp" id="ref-for-idp①⑧">IDP</a>s can call <code><a data-link-type="idl">FederatedCredential.logout(...)</a></code> to log the user out of the <a data-link-type="dfn" href="#rp" id="ref-for-rp②⑤">RP</a>s they are signed into.</p>
 <pre class="idl highlight def"><c- b>dictionary</c-> <dfn class="dfn-paneled idl-code" data-dfn-type="dictionary" data-export id="dictdef-webidlogoutrequest"><code><c- g>WebIdLogoutRequest</c-></code></dfn> {
     <c- b>required</c-> <a class="idl-code" data-link-type="interface" href="https://webidl.spec.whatwg.org/#idl-USVString" id="ref-for-idl-USVString⑤"><c- b>USVString</c-></a> <dfn class="idl-code" data-dfn-for="WebIdLogoutRequest" data-dfn-type="dict-member" data-export data-type="USVString " id="dom-webidlogoutrequest-endpoint"><code><c- g>endpoint</c-></code><a class="self-link" href="#dom-webidlogoutrequest-endpoint"></a></dfn>;
     <c- b>required</c-> <a class="idl-code" data-link-type="interface" href="https://webidl.spec.whatwg.org/#idl-USVString" id="ref-for-idl-USVString⑥"><c- b>USVString</c-></a> <dfn class="idl-code" data-dfn-for="WebIdLogoutRequest" data-dfn-type="dict-member" data-export data-type="USVString " id="dom-webidlogoutrequest-accountid"><code><c- g>accountId</c-></code><a class="self-link" href="#dom-webidlogoutrequest-accountid"></a></dfn>;
@@ -1679,9 +1721,9 @@ through an <a href="#use-cases-explicit-sign-in">§ 2.2.2 Explicit Sign-in</a>
    <p>This section describes the three principals that would participate in an invocation of the API and expectations around their behavior.</p>
    <ol>
     <li data-md>
-     <p>The <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent">User Agent</a> implements <a href="#API">§ 8 The Browser API</a> and controls the execution contexts for the <a data-link-type="dfn" href="#rp" id="ref-for-rp②④">RP</a> and <a data-link-type="dfn" href="#idp" id="ref-for-idp①⑨">IDP</a> content. The user agent is assumed to be trusted by the user, and transitively trusted by the RP and IDP.</p>
+     <p>The <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent">User Agent</a> implements <a href="#API">§ 8 The Browser API</a> and controls the execution contexts for the <a data-link-type="dfn" href="#rp" id="ref-for-rp②⑥">RP</a> and <a data-link-type="dfn" href="#idp" id="ref-for-idp①⑨">IDP</a> content. The user agent is assumed to be trusted by the user, and transitively trusted by the RP and IDP.</p>
     <li data-md>
-     <p><a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party⑤⓪">Relying Party</a>s (<a data-link-type="dfn" href="#rp" id="ref-for-rp②⑤">RP</a>s) are <a data-link-type="dfn" href="#first-party" id="ref-for-first-party①">first party</a> websites that invoke the FedCM API for the purpose of authenticating a user to their account or for requesting information about that user. A well-behaving RP would only invoke the API following a clear user signal -- typically, clicking a sign-in button. Since any site can invoke the API, RPs cannot necessarily be trusted to limit the user information it collects or use that information in an acceptable way.</p>
+     <p><a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party⑤⓪">Relying Party</a>s (<a data-link-type="dfn" href="#rp" id="ref-for-rp②⑦">RP</a>s) are <a data-link-type="dfn" href="#first-party" id="ref-for-first-party①">first party</a> websites that invoke the FedCM API for the purpose of authenticating a user to their account or for requesting information about that user. A well-behaving RP would only invoke the API following a clear user signal -- typically, clicking a sign-in button. Since any site can invoke the API, RPs cannot necessarily be trusted to limit the user information it collects or use that information in an acceptable way.</p>
     <li data-md>
      <p><a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider③②">Identity Provider</a>s (<a data-link-type="dfn" href="#idp" id="ref-for-idp②⓪">IDP</a>s) are <a data-link-type="dfn" href="#third-party" id="ref-for-third-party">third party</a> websites that are the target of a FedCM call to attempt to fetch an ID token. Usually the IDP has a higher level of trust than the RP since it already has the user’s personal information, but it is possible that the IDP might use the user’s information in non-approved ways. It is possible that the IDP specified in the API call may not be an IDP the user knows about, or may not be a bona fide IDP at all, in which case it likely does not have personal user information in advance, but also might be less accountable for its behavior.</p>
    </ol>
@@ -1760,7 +1802,7 @@ specifications to defend against, described in subsections here:</p>
      <p><a href="https://datatracker.ietf.org/doc/html/rfc6973#section-5.2.1">RFC6973: Correlation</a></p>
    </ul>
    <p>Correlation is the combination of various pieces of information related to an individual or that obtain that characteristic when combined.</p>
-   <p>This attack happens when multiple <a data-link-type="dfn" href="#rp" id="ref-for-rp②⑥">RP</a>s collude to use their user’s data to correlate them and build a richer profile.</p>
+   <p>This attack happens when multiple <a data-link-type="dfn" href="#rp" id="ref-for-rp②⑧">RP</a>s collude to use their user’s data to correlate them and build a richer profile.</p>
    <p>When a user willingly provides their full name, email address, phone number, etc,
 to multiple relying parties, those relying parties can collaborate to build a
 profile of that user and their activity across collaborating sites.</p>
@@ -1812,7 +1854,7 @@ adds directly (or indirectly) detectable client state.</p>
      <p><a data-link-type="biblio" href="https://w3c.github.io/fingerprinting-guidance/"><cite>Mitigating Browser Fingerprinting in Web Specifications</cite></a></p>
    </ol>
    <h6 class="heading settled" data-level="10.1.3.1.3" id="data-compromise"><span class="secno">10.1.3.1.3. </span><span class="content">Data Compromise</span><a class="self-link" href="#data-compromise"></a></h6>
-   <p>This attack scenario happens when the <a data-link-type="dfn" href="#rp" id="ref-for-rp②⑦">RP</a> takes advantage of
+   <p>This attack scenario happens when the <a data-link-type="dfn" href="#rp" id="ref-for-rp②⑨">RP</a> takes advantage of
 inadequate measures (by the <a data-link-type="dfn" href="#idp" id="ref-for-idp②②">IDP</a> or the <a data-link-type="dfn">UA</a>) to secure stored data to
 obtain personal user information without their consent.</p>
    <p>This can happen if user consent mechanisms are missing, inadequate,
@@ -1897,7 +1939,7 @@ activities.</p>
    <p>In the context of federation, intrusion happens when an RP and an IDP
 are colluding to invasively and aggressively recommend the user to
 login disproportionally to the their intent.</p>
-   <p>Much like unsolicited notifications, an <a data-link-type="dfn" href="#rp" id="ref-for-rp②⑧">RP</a> can collude with an <a data-link-type="dfn" href="#idp" id="ref-for-idp②③">IDP</a> to aggressively log users in.</p>
+   <p>Much like unsolicited notifications, an <a data-link-type="dfn" href="#rp" id="ref-for-rp③⓪">RP</a> can collude with an <a data-link-type="dfn" href="#idp" id="ref-for-idp②③">IDP</a> to aggressively log users in.</p>
    <p>See also:</p>
    <ol>
     <li data-md>
@@ -2197,6 +2239,7 @@ This conflicts with <a href="#self-presentation">the previous mitigation</a>, bu
    <li><a href="#dom-federatedcredentialrequestoptions-providers">providers</a><span>, in § 8.2.1</span>
    <li><a href="#registered">registered</a><span>, in § 4</span>
    <li><a href="#relying-party">Relying Party</a><span>, in § 4</span>
+   <li><a href="#revocation-request">revocation request</a><span>, in § 6.5</span>
    <li><a href="#dom-federatedcredential-revoke">revoke(accountId)</a><span>, in § 8.3</span>
    <li><a href="#rp">RP</a><span>, in § 4</span>
    <li><a href="#rp-request">RP request</a><span>, in § 6.4</span>
@@ -2640,16 +2683,17 @@ This conflicts with <a href="#self-presentation">the previous mitigation</a>, bu
     <li><a href="#ref-for-rp③">5. High Level Design</a>
     <li><a href="#ref-for-rp④">6.3. Client Metadata</a> <a href="#ref-for-rp⑤">(2)</a> <a href="#ref-for-rp⑥">(3)</a>
     <li><a href="#ref-for-rp⑦">6.4. ID Token</a> <a href="#ref-for-rp⑧">(2)</a>
-    <li><a href="#ref-for-rp⑨">7. The Relying Party API</a>
-    <li><a href="#ref-for-rp①⓪">7.1. Logout</a> <a href="#ref-for-rp①①">(2)</a> <a href="#ref-for-rp①②">(3)</a> <a href="#ref-for-rp①③">(4)</a>
-    <li><a href="#ref-for-rp①④">8. The Browser API</a> <a href="#ref-for-rp①⑤">(2)</a> <a href="#ref-for-rp①⑥">(3)</a> <a href="#ref-for-rp①⑦">(4)</a> <a href="#ref-for-rp①⑧">(5)</a>
-    <li><a href="#ref-for-rp①⑨">8.1. The State Machine</a>
-    <li><a href="#ref-for-rp②⓪">8.2.2. IDP Sign-in API</a> <a href="#ref-for-rp②①">(2)</a> <a href="#ref-for-rp②②">(3)</a>
-    <li><a href="#ref-for-rp②③">8.4.2. IDP Sign-out</a>
-    <li><a href="#ref-for-rp②④">10.1.1. Principals</a> <a href="#ref-for-rp②⑤">(2)</a>
-    <li><a href="#ref-for-rp②⑥">10.1.3.1.1. Cross-Site Correlation</a>
-    <li><a href="#ref-for-rp②⑦">10.1.3.1.3. Data Compromise</a>
-    <li><a href="#ref-for-rp②⑧">10.1.3.3.1. Intrusion</a>
+    <li><a href="#ref-for-rp⑨">6.5. Revocation</a> <a href="#ref-for-rp①⓪">(2)</a>
+    <li><a href="#ref-for-rp①①">7. The Relying Party API</a>
+    <li><a href="#ref-for-rp①②">7.1. Logout</a> <a href="#ref-for-rp①③">(2)</a> <a href="#ref-for-rp①④">(3)</a> <a href="#ref-for-rp①⑤">(4)</a>
+    <li><a href="#ref-for-rp①⑥">8. The Browser API</a> <a href="#ref-for-rp①⑦">(2)</a> <a href="#ref-for-rp①⑧">(3)</a> <a href="#ref-for-rp①⑨">(4)</a> <a href="#ref-for-rp②⓪">(5)</a>
+    <li><a href="#ref-for-rp②①">8.1. The State Machine</a>
+    <li><a href="#ref-for-rp②②">8.2.2. IDP Sign-in API</a> <a href="#ref-for-rp②③">(2)</a> <a href="#ref-for-rp②④">(3)</a>
+    <li><a href="#ref-for-rp②⑤">8.4.2. IDP Sign-out</a>
+    <li><a href="#ref-for-rp②⑥">10.1.1. Principals</a> <a href="#ref-for-rp②⑦">(2)</a>
+    <li><a href="#ref-for-rp②⑧">10.1.3.1.1. Cross-Site Correlation</a>
+    <li><a href="#ref-for-rp②⑨">10.1.3.1.3. Data Compromise</a>
+    <li><a href="#ref-for-rp③⓪">10.1.3.3.1. Intrusion</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="identity-provider">
@@ -2715,7 +2759,8 @@ This conflicts with <a href="#self-presentation">the previous mitigation</a>, bu
    <ul>
     <li><a href="#ref-for-id-token">3. Examples</a>
     <li><a href="#ref-for-id-token①">6.4. ID Token</a> <a href="#ref-for-id-token②">(2)</a>
-    <li><a href="#ref-for-id-token③">8.2.1. RP Sign-in API</a> <a href="#ref-for-id-token④">(2)</a> <a href="#ref-for-id-token⑤">(3)</a> <a href="#ref-for-id-token⑥">(4)</a> <a href="#ref-for-id-token⑦">(5)</a>
+    <li><a href="#ref-for-id-token③">6.5. Revocation</a>
+    <li><a href="#ref-for-id-token④">8.2.1. RP Sign-in API</a> <a href="#ref-for-id-token⑤">(2)</a> <a href="#ref-for-id-token⑥">(3)</a> <a href="#ref-for-id-token⑦">(4)</a> <a href="#ref-for-id-token⑧">(5)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="high-level-api">
@@ -2842,6 +2887,12 @@ This conflicts with <a href="#self-presentation">the previous mitigation</a>, bu
    <b><a href="#dom-idtoken_endpoint_request_request-nonce">#dom-idtoken_endpoint_request_request-nonce</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-dom-idtoken_endpoint_request_request-nonce">8.2.1. RP Sign-in API</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="revocation-request">
+   <b><a href="#revocation-request">#revocation-request</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-revocation-request">6.5. Revocation</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="dom-statemachine-account-state">

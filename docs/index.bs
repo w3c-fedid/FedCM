@@ -409,6 +409,7 @@ The [=IDP=] proactively and cooperatively exposes itself as a comformant agent b
 1. An [[#accounts_endpoint]] endpoint
 1. A [[#client_id_metadata_endpoint]] endpoint
 1. An [[#idtoken_endpoint]] endpoint
+1. A [[#revocation_endpoint]] endpoint
 
 <!-- ============================================================ -->
 ## Manifest ## {#well-known}
@@ -438,6 +439,8 @@ The file is parsed expecting the following properties:
     ::  A URL that points to an HTTP API that complies with the [[#client_id_metadata_endpoint]] API.
     :   <dfn>idtoken_endpoint</dfn>
     ::  A URL that points to an HTTP API that complies with the [[#idtoken_endpoint]] API.
+    :   <dfn>revocation_endpoint</dfn>
+    :: A URL that points to an HTTP API that complies with the [[#revocation_endpoint]] API.
 </dl>
 
 For example:
@@ -448,6 +451,7 @@ For example:
   "accounts_endpoint": "/accounts.php",
   "client_id_metadata_endpoint": "/metadata.php",
   "idtoken_endpoint": "/idtokens.php",
+  "revocation_endpoint": "/revocation.php"
 }
 ```
 </div>
@@ -624,7 +628,51 @@ For example:
 ## Revocation ## {#revocation_endpoint}
 <!-- ============================================================ -->
 
-Note: support revocation.
+
+The revocation endpoint is responsible for revoking all [=id token=]s for the
+specified client ID for the user.
+
+The revocation endpoint is fetched (a) as a **POST** request, (b)  **with**
+cookies, (c) **with** a special [[#Sec-FedCM-CSR]] header, and (d) **with**
+a Referer header indicating the [=RP=] URL.
+
+It will also contain the following parameters passed as a JSON object:
+
+<dl dfn-type="argument" dfn-for="revocation_endpoint_request">
+    :   <dfn>account_id</dfn>
+    :: The account identifier for the user (e.g. email).
+    :   <dfn>request</dfn>
+    :: The [=revocation request=]
+</dl>
+
+The <dfn>revocation request</dfn> has the following properties:
+
+<dl dfn-type="argument" dfn-for="revocation_endpoint_request_request">
+    :   <dfn>client_id</dfn>
+    :: The [=RP=]'s client id
+</dl>
+
+For example:
+
+<div class=example>
+```http
+POST /webid_revocation_endpoint HTTP/1.1
+Host: idp.example
+Referer: rp.example
+Content-Type: application/json
+Cookie: 0x23223
+Sec-FedCM-CSRF: random_value
+{
+  "account_id": "123",
+  "request": {
+    "client_id": "client1234"
+  }
+}
+```
+</div>
+
+If successful, the response is an empty response with an HTTP 204 code,
+otherwise an HTTP error code.
 
 <!-- ============================================================ -->
 ## <code><dfn data-export="">`Sec-FedCM-CSR`</dfn></code> ## {#Sec-FedCM-CSR}
