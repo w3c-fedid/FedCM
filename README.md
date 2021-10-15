@@ -1,12 +1,10 @@
----
-title: "FedCM"
-created: 01/01/2020
-updated: 03/02/2021
-redirect_from: "index.html"
-layout: "default"
----
-
-This is an **active** exploration to react to the **ongoing** privacy-oriented changes in browsers (e.g. [1](https://webkit.org/blog/10218/full-third-party-cookie-blocking-and-more/), [2](https://blog.mozilla.org/blog/2019/09/03/todays-firefox-blocks-third-party-tracking-cookies-and-cryptomining-by-default/) and [3](https://blog.google/products/chrome/privacy-sustainability-and-the-importance-of-and/)) and **preserve** and **elevate** identity federation (e.g. OpenID, OAuth and SAML) for a more private Web.
+This is an **active** exploration to react to the **ongoing**
+privacy-oriented changes in browsers (e.g.
+[1](https://webkit.org/blog/10218/full-third-party-cookie-blocking-and-more/),
+[2](https://blog.mozilla.org/blog/2019/09/03/todays-firefox-blocks-third-party-tracking-cookies-and-cryptomining-by-default/) and
+[3](https://blog.google/products/chrome/privacy-sustainability-and-the-importance-of-and/))
+and **preserve** and **elevate** identity federation (e.g. OpenID, OAuth
+and SAML) for a more private Web.
 
 This explainer is divided in three (big) sections:
 
