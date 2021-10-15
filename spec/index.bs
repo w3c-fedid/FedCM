@@ -252,6 +252,13 @@ which the [=RP=] can use to authenticate the user.
 
     var user;
 
+    const identityProvider = {
+      url: provider,
+      // the pre-registered client id
+      clientId: clientId,
+      nonce: "456"
+    };
+
     async function login(provider, clientId) {
       const {idToken} = await navigator.credentials.get({
         // controls whether auto sign-in is enabled or not
@@ -262,12 +269,7 @@ which the [=RP=] can use to authenticate the user.
         // controls which identity providers to use
         federated: {
           // controls whether the account chooser is modal or not
-          providers: [{
-            url: provider,
-            // the pre-registered client id
-            clientId: clientId,
-            nonce: "456"
-          }],
+          providers: [identityProvider],
         }
       });
 
@@ -285,7 +287,7 @@ which the [=RP=] can use to authenticate the user.
     }
 
     async function revoke() {
-      await FederatedCredential.revoke(user.id);
+      await FederatedCredential.revoke(user.id, identityProvider);
     }
     </script>
   </body>
@@ -1011,8 +1013,8 @@ instead of a [[#use-cases-sign-in]] flow.
 
 <div class=example>
 ```js
-async function revoke(accountId) {
-  return await FederatedCredential.revoke(accountId);
+async function revoke(accountId, identityProvider) {
+  return await FederatedCredential.revoke(accountId, identityProvider);
 }
 ```
 </div>
@@ -1022,7 +1024,7 @@ This specification extends the {{FederatedCredential}} interface with an extra s
 <xmp class=idl>
 [Exposed=Window, SecureContext]
 partial interface FederatedCredential : Credential {
-  static Promise<void> revoke(USVString accountId);
+  static Promise<void> revoke(USVString accountId, FederatedIdentityProvider provider);
 };
 </xmp>
 
