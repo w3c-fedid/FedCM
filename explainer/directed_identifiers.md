@@ -1,9 +1,3 @@
----
-title: Directed Identifiers
-description: An exploration of Directed Identifiers and Verifiably Directed Identifiers.
-layout: "default"
----
-
 * [Directed identifiers](#directed_identifiers)
 * [General implementation approaches](#general-implementation-approaches)
 * [Directed identifiers in FedCM](#directed-identifiers-in-webid)
@@ -125,9 +119,9 @@ Another common example of this is social networks that help users connect to fri
 ### Regulatory compliance
 The claim has been made that relay emails may not be a reliable enough bar for contacting users for a variety of regulatory use-cases, including:
 * Data breach laws that require data controllers to notify individuals in a timely manner (30-45 days) in the event of a data breach.
-* Data access / deletion laws which require the RP to identify the user upon request for data access / deletion followed by timely execution (e.g., within 30 days). 
+* Data access / deletion laws which require the RP to identify the user upon request for data access / deletion followed by timely execution (e.g., within 30 days).
 * Laws requiring notices for Terms of Service / Privacy Policy changes.
-* Notification to users related to copyright / trademark infringements (e.g., DMCA). 
+* Notification to users related to copyright / trademark infringements (e.g., DMCA).
 
 More investigation is needed, as it is unclear exactly what properties of relay emails create issues and whether these issues are meaningful from a regulator perspective.
 

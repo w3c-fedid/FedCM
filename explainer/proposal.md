@@ -1,7 +1,3 @@
----
-layout: "default"
----
-
 This is a proposal to solve the problems described [here](problem.md).
 
 # Proposal

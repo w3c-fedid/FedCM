@@ -1,7 +1,3 @@
----
-layout: "default"
----
-
 ## Sequencing
 
 While [The End State](#the-end-state) gives us guidance of where to aim at, we consider an equally hard problem to find a plausible path that leads us there.

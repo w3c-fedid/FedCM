@@ -1,12 +1,3 @@
----
-title: "Delegation-oriented API"
-maintainer: "majido"
-created: 08/10/2020
-updated: 08/10/2020
-
----
-
-
 # Delegation-oriented API
 
 This approach attempts to provide technical enforcements of [Identity Provider
