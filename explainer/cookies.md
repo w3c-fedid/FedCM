@@ -88,7 +88,7 @@ The browser intercepts this invocation and runs the following algorithm for each
 
 ### Fetch Well-Known
 
-As a convention, the browser expects a `application/json` file to be hosted on the `.well-known/webid` path of the `provider` host.
+As a convention, the browser expects a `application/json` file to be hosted on the `.well-known/federated-credentials` path of the `provider` host.
 
 The configuration file is expected to have the following format:
 
@@ -182,7 +182,7 @@ The response of the `POST` request is expected to have the following layout:
 Here is an example of the `POST` request:
 
 ```http
-POST /webid/idtoken.php HTTP/1.1
+POST /fedcm/idtoken.php HTTP/1.1
 Host: idp.example
 Cookie: 123
 Content-Type: application/json

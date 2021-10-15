@@ -1,6 +1,6 @@
 <pre class='metadata'>
 Title: Federated Credential Management API
-Shortname: webid
+Shortname: FedCM
 Level: 1
 Status: CG-DRAFT
 Group: WICG
@@ -419,15 +419,16 @@ The [=IDP=] proactively and cooperatively exposes itself as a comformant agent b
 ## Manifest ## {#well-known}
 <!-- ============================================================ -->
 
-The well-known discovery endpoint is an endpoint located at the [=IDP=]'s `.well-known/webid` and serves as a discovery device to other endpoints provided by the [=IDP=].
+The well-known discovery endpoint is an endpoint located at the [=IDP=]'s
+`.well-known/federated-credentials` and serves as a discovery device to other endpoints provided by the [=IDP=].
 
-The well-known discovery endpoint is fetched (a) **without** cookies and (b) **with** a special [[#Sec-FedCM-CSR]] header.
+The well-known discovery endpoint is fetched (a) **without** cookies and (b) **with** a special [[#Sec-FedCM-CSRF]] header.
 
 For example:
 
 <div class=example>
 ```http
-GET /.well-known/webid HTTP/1.1
+GET /.well-known/federated-credentials HTTP/1.1
 Host: idp.example
 Accept: application/json
 Sec-FedCM-CSRF: random_value
@@ -466,7 +467,7 @@ For example:
 
 The accounts list endpoint provides the list of accounts the user has at the [=IDP=].
 
-The accounts list endpoint is fetched (a) **with** any cookies and (b) **with** a special [[#Sec-FedCM-CSR]] header.
+The accounts list endpoint is fetched (a) **with** any cookies and (b) **with** a special [[#Sec-FedCM-CSRF]] header.
 
 For example:
 
@@ -530,7 +531,7 @@ For example:
 
 The client metadata endpoint provides metadata about [=RP=]s.
 
-The client medata endpoint is fetched (a) **without** cookies and (b) **with** a special [[#Sec-FedCM-CSR]] header.
+The client medata endpoint is fetched (a) **without** cookies and (b) **with** a special [[#Sec-FedCM-CSRF]] header.
 
 The user agent also passes the **client_id**.
 
@@ -571,7 +572,7 @@ For example:
 
 The ID Token endpoint is responsible for minting a new [=id token=] for the user.
 
-The ID Token endpoint is fetched (a) as a **POST** request, (b)  **with** cookies and (c) **with** a special [[#Sec-FedCM-CSR]] header.
+The ID Token endpoint is fetched (a) as a **POST** request, (b)  **with** cookies and (c) **with** a special [[#Sec-FedCM-CSRF]] header.
 
 It will also contain the following parameters passed as a JSON object:
 
@@ -595,7 +596,7 @@ For example:
 
 <div class=example>
 ```http
-POST /webid_token_endpoint HTTP/1.1
+POST /fedcm_token_endpoint HTTP/1.1
 Host: idp.example
 Referer: rp.example
 Content-Type: application/json
@@ -637,7 +638,7 @@ The revocation endpoint is responsible for revoking all [=id token=]s for the
 specified client ID for the user.
 
 The revocation endpoint is fetched (a) as a **POST** request, (b)  **with**
-cookies, (c) **with** a special [[#Sec-FedCM-CSR]] header, and (d) **with**
+cookies, (c) **with** a special [[#Sec-FedCM-CSRF]] header, and (d) **with**
 a Referer header indicating the [=RP=] URL.
 
 It will also contain the following parameters passed as a JSON object:
@@ -660,7 +661,7 @@ For example:
 
 <div class=example>
 ```http
-POST /webid_revocation_endpoint HTTP/1.1
+POST /fedcm_revocation_endpoint HTTP/1.1
 Host: idp.example
 Referer: rp.example
 Content-Type: application/json
@@ -679,7 +680,7 @@ If successful, the response is an empty response with an HTTP 204 code,
 otherwise an HTTP error code.
 
 <!-- ============================================================ -->
-## <code><dfn data-export="">`Sec-FedCM-CSR`</dfn></code> ## {#Sec-FedCM-CSR}
+## <code><dfn data-export="">`Sec-FedCM-CSRF`</dfn></code> ## {#Sec-FedCM-CSRF}
 <!-- ============================================================ -->
 
 <!-- ============================================================ -->
@@ -936,9 +937,9 @@ To <dfn>explicit sign-in</dfn> the user run this algorithm:
 
 To <dfn>fetch the well-known</dfn> configuration file, run this algorithm:
 
-1. Let the |wellknown url| be the relative url ".well-known/webid" of |provider|["{{FederatedIdentityProvider/url}}"]
+1. Let the |wellknown url| be the relative url ".well-known/federated-credentials" of |provider|["{{FederatedIdentityProvider/url}}"]
 
-1. Return the result of fetching the |wellknown url| with the [[#Sec-FedCM-CSR|Sec-FedCM-CSR]] header but without the [=Identity Provider=]'s cookies.
+1. Return the result of fetching the |wellknown url| with the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]] header but without the [=Identity Provider=]'s cookies.
 
 To <dfn>fetch the accounts list</dfn> run this algorithm:
 
@@ -951,7 +952,7 @@ To <dfn>fetch the accounts list</dfn> run this algorithm:
 To <dfn>fetch the client id metadata</dfn> run this algorithm:
 
 1. Let the |client_id_metadata_endpoint| url be the relative url |wellknown|["{{WellKnown/client_id_metadata_endpoint}}"] of |provider|["{{FederatedIdentityProvider/url}}"]
-1. Let the |policies| be the result of fetching the |client_id_metadata_endpoint| with the [[#Sec-FedCM-CSR|Sec-FedCM-CSR]] header but without the [=Identity Provider=]'s cookies.
+1. Let the |policies| be the result of fetching the |client_id_metadata_endpoint| with the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]] header but without the [=Identity Provider=]'s cookies.
 1. Return |policies|
 
 The <dfn>Privacy Policy</dfn> are the policies described at {{client_id_metadata_endpont_response/privacy_policy_url}}.
@@ -1094,14 +1095,14 @@ async function logout() {
 [=IDP=]s can call <code><a idl for="FederatedCredential" lt="get()">FederatedCredential.logout(...)</a></code> to log the user out of the [=RP=]s they are signed into.
 
 <xmp class=idl>
-dictionary WebIdLogoutRequest {
+dictionary FederatedCredentialLogoutRequest {
     required USVString endpoint;
     required USVString accountId;
 };
 
 [Exposed=Window, SecureContext]
 partial interface FederatedCredential : Credential {
-  static Promise<void> logout(optional sequence<WebIdLogoutRequest> logout_requests = []);
+  static Promise<void> logout(optional sequence<FederatedCredentialLogoutRequest> logout_requests = []);
 };
 </xmp>
 
@@ -1688,10 +1689,6 @@ Note: write down the Acknowledgements section.
   "BrowserID": {
     "href": "https://github.com/mozilla/id-specs/blob/prod/browserid/index.md",
     "title": "BrowserID"
-  },
-  "FedCM": {
-    "href": "https://www.w3.org/2005/Incubator/webid/spec/identity/",
-    "title": "FedCM"
   },
   "CM": {
     "href": "https://w3c.github.io/webappsec-credential-management/",
