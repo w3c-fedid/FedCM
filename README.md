@@ -2,6 +2,8 @@
 
 This is the repository for the W3C's WICG Federated Credentials Management.
 
+Explainer: [explainer/README.md](explainer/README.md)
+
 Work-in-progress specification: <https://wicg.github.io/FedCM/>
 
 ## Code of Conduct
