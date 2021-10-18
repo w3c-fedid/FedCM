@@ -1,6 +1,6 @@
 * [Directed identifiers](#directed_identifiers)
 * [General implementation approaches](#general-implementation-approaches)
-* [Directed identifiers in FedCM](#directed-identifiers-in-webid)
+* [Directed identifiers in FedCM](#directed-identifiers-in-fedcm)
   * [Essential fields](#essential-fields)
   * [Other fields](#other-fields)
   * [Directed basic profile](#directed-basic-profile)
@@ -50,7 +50,7 @@ The remaining OIDC standard Claims have varying levels of value and usefulness i
 There are also non-standard Claims sometimes included in some federated sign-in scenarios, which do not necessarily violate the directedness requirements. An example is an IdP with multiple subscriber levels, in a case where it is useful for an RP to know which subscriber level is associated with that user. Adding a few bits of information should be possible, though it is an open question how the user agent can know that this does not pose a tracking risk requiring additional user consent, especially if there are other non-essential fields present that might cumulatively create undirected entropy.
 
 ## Directed basic profile
-This proposal defines the concept of a [directed basic profile](https://github.com/WICG/FedCM/blob/master/design.md#directed-basic-profile) which attempts to provide a set of directed fields that, when populated in a conforming way, can allow federated sign-in without risk of user tracking by identifier correlation. The precise definition of a directed basic profile is still a topic for dicussion.
+This proposal defines the concept of a [directed basic profile](https://github.com/WICG/FedCM/blob/master/design.md#directed-basic-profile) which attempts to provide a set of directed fields that, when populated in a conforming way, can allow federated sign-in without risk of user tracking by identifier correlation. The precise definition of a directed basic profile is still a topic for discussion.
 
 # User agent behavior
 The value of a directed identifier is that a user agent can cooperate with it being passed from an IdP to an RP without having to attempt to acquire user consent for the tracking risk that is associated with correlatable identifiers. The precise shape of the user consent flow is discussed elsewhere in the FedCM proposal.

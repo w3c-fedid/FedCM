@@ -81,19 +81,19 @@ _Note that the UI for the mediation-oriented variation is still in development, 
 ### Permission-oriented variation protocol details
 
 #### Well-Known configuration request
-After the RP initiates a sign-in flow by calling the API, the browser learns about the IdP's FedCM support with a fetch to `https://idp.example/.well-known/webid`, where `https://idp.example` was specified as the provider by the RP.
+After the RP initiates a sign-in flow by calling the API, the browser learns about the IdP's FedCM support with a fetch to `https://idp.example/.well-known/fedcm`, where `https://idp.example` was specified as the provider by the RP.
 
 The browser expects a response with MIME type `application/json`, currently containing only one field:<br>
 ```json
 {
-  "idp_endpoint": "https://idp.example/webid/idp_endpoint"
+  "idp_endpoint": "https://idp.example/fedcm/idp_endpoint"
 }
 ```
 
 The `idp_endpoint` value provides the URL that the browser should use for the next step.
 
 #### ID token fetch
-The browser will then issue a credentialed `GET` request to `https://idp.example/webid/signin?{OAuth request string}`.
+The browser will then issue a credentialed `GET` request to `https://idp.example/fedcm/idp_endpoint?{OAuth request string}`.
 
 The browser expects one of two responses (both with MIME type `application/json`):
 1. If the IdP can reply immediately with a token to fulfill the sign-in token request:<br>
@@ -108,7 +108,7 @@ The browser expects one of two responses (both with MIME type `application/json`
 
 ```json
 {
-  "signin_url": "https://idp.example/webid/user_login"
+  "signin_url": "https://idp.example/fedcm/user_login"
 }
 ```
 
@@ -124,13 +124,13 @@ The string should contain a [JWT](https://jwt.io/).
 ### Mediation-oriented variation protocol details
 
 #### Well-Known configuration request
-After the RP initiates a sign-in flow by calling the API, the browser learns about the IdP's FedCM support with a fetch to `https://idp.example/.well-known/webid`, where `https://idp.example` was specified as the provider by the RP.
+After the RP initiates a sign-in flow by calling the API, the browser learns about the IdP's FedCM support with a fetch to `https://idp.example/.well-known/fedcm`, where `https://idp.example` was specified as the provider by the RP.
 
 The browser expects a response with MIME type `application/json`, currently containing two fields:<br>
 ```json
 {
-  "idtoken_endpoint": "https://idp.example/webid/webid_token_endpoint",
-  "accounts_endpoint": "https://idp.example/webid/webid_accounts_endpoint",
+  "idtoken_endpoint": "https://idp.example/fedcm/token_endpoint",
+  "accounts_endpoint": "https://idp.example/fedcm/accounts_endpoint",
 }
 ```
 
