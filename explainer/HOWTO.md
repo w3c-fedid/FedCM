@@ -81,7 +81,7 @@ _Note that the UI for the mediation-oriented variation is still in development, 
 ### Permission-oriented variation protocol details
 
 #### Well-Known configuration request
-After the RP initiates a sign-in flow by calling the API, the browser learns about the IdP's FedCM support with a fetch to `https://idp.example/.well-known/federated-credentials`, where `https://idp.example` was specified as the provider by the RP.
+After the RP initiates a sign-in flow by calling the API, the browser learns about the IdP's FedCM support with a fetch to `https://idp.example/.well-known/fedcm`, where `https://idp.example` was specified as the provider by the RP.
 
 The browser expects a response with MIME type `application/json`, currently containing only one field:<br>
 ```json
@@ -124,7 +124,7 @@ The string should contain a [JWT](https://jwt.io/).
 ### Mediation-oriented variation protocol details
 
 #### Well-Known configuration request
-After the RP initiates a sign-in flow by calling the API, the browser learns about the IdP's FedCM support with a fetch to `https://idp.example/.well-known/federated-credentials`, where `https://idp.example` was specified as the provider by the RP.
+After the RP initiates a sign-in flow by calling the API, the browser learns about the IdP's FedCM support with a fetch to `https://idp.example/.well-known/fedcm`, where `https://idp.example` was specified as the provider by the RP.
 
 The browser expects a response with MIME type `application/json`, currently containing two fields:<br>
 ```json

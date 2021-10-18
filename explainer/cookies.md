@@ -88,7 +88,7 @@ The browser intercepts this invocation and runs the following algorithm for each
 
 ### Fetch Well-Known
 
-As a convention, the browser expects a `application/json` file to be hosted on the `.well-known/federated-credentials` path of the `provider` host.
+As a convention, the browser expects a `application/json` file to be hosted on the `.well-known/fedcm` path of the `provider` host.
 
 The configuration file is expected to have the following format:
 
