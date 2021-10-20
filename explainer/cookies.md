@@ -1,3 +1,5 @@
+# Cookies
+
 This is a **proposal** for a high level API to support identity federation under this [threat model](https://wicg.github.io/FedCM/#privacy-threat-model).
 
 It is widely known that browsers are either **already** blocking third party cookies or are planning to.
@@ -8,21 +10,21 @@ It is widely known that browsers are either **already** blocking third party coo
 > 1. [Firefox](https://blog.mozilla.org/blog/2019/09/03/todays-firefox-blocks-third-party-tracking-cookies-and-cryptomining-by-default/): third party cookies are **already** blocked **by a blocklist**, and
 > 1. [Chrome](https://blog.google/products/chrome/privacy-sustainability-and-the-importance-of-and/): on iOS **already** blocked **by default** and intends to offer **alternatives** to make them **obsolete** in the [near term](https://www.blog.google/products/chrome/building-a-more-private-web/) in other platforms.
 
-Unfortunately, that has either broken or are about to break a few use cases in federation, namely [logging out](https://openid.net/specs/openid-connect-rpinitiated-1_0.html), social [buttons](https://developers.facebook.com/docs/facebook-login/userexperience/) and [widget](https://developers.google.com/identity/one-tap/web) personalization (anything else? add your use case [here](README.md#how-can-i-help))).
+Unfortunately, that has either broken or is about to break a few use cases in federation, namely [logging out](https://openid.net/specs/openid-connect-rpinitiated-1_0.html), [social buttons](https://developers.facebook.com/docs/facebook-login/userexperience/) and [widget personalization](https://developers.google.com/identity/one-tap/web).
 
 This is a proposal to preserve these operations in the absence of third party cookies.
 
-# The lifecycle
+## The lifecycle
 
 Cross-site communication is used throughout the entire lifecycle of the user signing in to a RP with an IDP, beginning at signing-up a new user all the way through managing the sessions (e.g. signing in, signing out or renewing refresh tokens).
 
-From a [privacy threat model](https://wicg.github.io/FedCM/#privacy-threat-model) perspective, the design of this proposal is anchored on the observation that the most critical moment is the precise moment in which the identities between the RP and the IDP are joined for the very first time, namely when the user creates a new account in the RP using the identifiers from the IDP or when a user signs-in to an RP with an IDP for the first time in the browser: once the identities are joined, any arbitrary/uncontrolled cross-side communication can happen (with or without the browser's permission, e.g. via backchannel or cookie-less requests).
+From a [privacy threat model](https://wicg.github.io/FedCM/#privacy-threat-model) perspective, the design of this proposal is anchored on the observation that the most critical moment is when the identities between the RP and the IDP are joined for the very first time, namely when the user creates a new account in the RP using the identifiers from the IDP or when a user signs-in to an RP with an IDP for the first time in the browser: once the identities are joined, any arbitrary/uncontrolled cross-side communication can happen (with or without the browser's permission, e.g. via backchannel or cookie-less requests).
 
 So, under this observation, in this proposal the browser:
 
-1. Intermediates (e.g. gathers the user consent / intent) to observe the moment in which the identies get joined for the very first time between RPs and IDPs (a sign-up or a sign-in)
+1. Intermediates (e.g. gathers the user consent / intent) to observe the moment in which the identities get joined for the very first time between RPs and IDPs (a sign-up or a sign-in)
 1. Stores locally the relationship between the RP/IDP that was established
-1. Based on the status of that relationship (which can be explicitly revoked, e.g. via API calls or user settings), unlocks third party cookies to be sent under controlled circumstances (namelly, signing-in, signing-out and renewing refresh tokens)
+1. Based on the status of that relationship (which can be explicitly revoked, e.g. via API calls or user settings), unlocks third party cookies to be sent under controlled circumstances (e.g. signing-in, signing-out and renewing refresh tokens)
 
 The browser stores the state in which the user is at in the following state machine:
 
@@ -44,37 +46,47 @@ In its most basic formulation, the RP invokes the sign-up process via a JS API (
 We propose to extend the [FederatedCredentialRequestOptions](https://w3c.github.io/webappsec-credential-management/#dictdef-federatedcredentialrequestoptions) and the [FederatedCredential](https://w3c.github.io/webappsec-credential-management/#federatedcredential) interface with the following properties:
 
 ```javascript
-dictionary FederatedCredentialAuthRequestOptions {
-  USVString endpoint;
-  USVString client_id;
-  USVString> nonce;
+dictionary FederatedIdentityProvider {
+  required USVString url;
+  USVString clientId;
+  USVString nonce;
 };
 
-dictionary FederatedCredentialRequestOptions {
-  // ...
-  // TODO(goto): how do we make "provides" take the options "or"
-  // the string?
-  sequence<FederatedCredentialAuthRequestOptions> providers;
-  // ...
+partial dictionary FederatedCredentialRequestOptions {
+  sequence<(DOMString or FederatedIdentityProvider)> providers;
 };
 
-interface FederatedCredential : Credential {
-  // ...
-  // New properties
-  DOMString idtoken;
+enum FederatedCredentialApprovedBy {
+  "auto",
+  "user"
+};
+
+dictionary FederatedCredentialLogoutRequest {
+    required USVString endpoint;
+    required USVString accountId;
+};
+
+[Exposed=Window, SecureContext]
+partial interface FederatedCredential : Credential {
+  readonly attribute USVString idToken;
+  readonly attribute FederatedCredentialApprovedBy approvedBy;
+
+  static Promise<void> revoke(USVString accountId);
+  static Promise<void> logout(optional sequence<FederatedCredentialLogoutRequest> logout_requests = []);
 };
 ```
 
 With these extensions to the credential management API, here is an example of an invocation:
 
 ```javascript
-let {idtoken} = await navigator.credentials.get({
-  providers: [{
-    endpoint: "https://accounts.example.com",
-    client_id: "my_client_id",
-    scope: "openid email",
-    nonce: "abcxyz"
-  }],
+const {idtoken} = await navigator.credentials.get({
+  federated: {
+    providers: [{
+      url: "https://accounts.example.com",
+      clientId: "my_client_id",
+      nonce: "abcxyz"
+    }],
+  },
 });
 ```
 
@@ -95,35 +107,39 @@ The configuration file is expected to have the following format:
 | Property              | Type        | Method  | Description                               |
 | --------------------- | ----------- | ------- | ----------------------------------------- |
 | accounts_endpoint     | URL         | GET     | Returns a list of available user accounts |
+| client_id_metadata_endpoing | URL   | GET     | Returns RP metadata                       |
 | idtoken_endpoint      | URL         | POST    | Returns a newly minted id token           |
+| revocation_endpoint   | URL         | POST    | Notifies IDP user deleted RP account      |
+
 
 ### Fetch Accounts
 
-The `accounts_endpoint` in the configuration that the browser gathered while fetching the [.well-known](#fetch-well-known) file is used to fetch a list of user's accounts. The fetch contains two important headers:
+The `accounts_endpoint` is used to fetch a list of user's accounts. The fetch contains two important headers:
 
-1. A `Sec-FedCM-CSRF` which can be used by the server to know that it is an HTTP request originated from the browser
-1. The `Cookie` header which allows the server to restore the user's session
+1. A `Sec-FedCM-CSRF` which can be used by the server to know that it is a FedCM request
+1. The `Cookie` header which contains the IDPs cookie, allowing the IDP to restore the user's session
 
 The browser expects the response to have the following format:
 
 | Property              | Type        | Description                                          |
 | --------------------- | ----------- | ---------------------------------------------------- |
 | accounts              | Account[]   | The list of user accounts available                  |
-| authorization_url     | URL         | A URL to redirect the user to gather extra scopes    |
+
 
 Each `Account` type is an object with the following properties:
 
 | Property     | Type        | Description                               |
 | ------------ | ----------- | ----------------------------------------- |
-| sub          | String      | The user's id                               |
+| account_id   | String      | The user's id                             |
 | name         | String      | The user's full name                      |
+| given_name   | String      | The user's given name                     |
 | email        | String      | The user's email address                  |
 | picture      | URL         | The user's profile picture                |
 
 For example:
 
 ```http
-GET /accounts.php HTTPS/1.1
+GET /accounts.php HTTP/1.1
 Host: idp.example
 Content-Type: application/json
 Cookie: 0x23223
@@ -133,11 +149,12 @@ Sec-FedCM-CSRF: random_value
 And here is an example of a typical response:
 
 ```http
-HTTP/2.0 200 OK
+HTTP/1.1 200 OK
 Content-Type: application/json
+
 {
   "accounts": [{
-    "sub": 1234,
+    "account_id": 1234,
     "name": "Sam Goto",
     "given_name": "Sam",
     "email": "samuelgoto@gmail.com",
@@ -148,22 +165,27 @@ Content-Type: application/json
 
 ### Show Account Chooser
 
-With the accounts that the browser [fetched](#fetch-accounts), the browser then controls the experience with the user to carry on:
+With the accounts retrieved, the browser then controls the experience with the user to carry on:
 
 ![](static/mock44.svg)
 
-When the user selects an account, the browser does one of two things:
+When the user selects an account, the browser calls the `idtoken_endpoint` to [create an IdToken](#create-idtoken).
 
-1. If an `authorization_url` was *not* available in the `accounts_endpoint`, an id token is immediately generated described [below](#create-idtoken).
-1. If an `authorization_url` was available in the `accounts_endpoint`, the user is navigated to that URL to continue their account registration.
 
 ### Create IdToken
 
-To create an idtoken, the browser issues a `POST` request to the previously gathered `idtoken_endpoint` while [fetching](#fetch-well-known) the `.well-known` file.
+To create an idtoken, the browser issues a `POST` request to the `idtoken_endpoint`.
+
+The fetch contains two important headers:
+
+1. A `Sec-FedCM-CSRF` which can be used by the server to know that it is a FedCM request
+1. The `Cookie` header which contains the IDPs cookie, allowing the IDP to restore the user's session
+
+The request should include a JSON body with the following parameters.
 
 | Property     | Type        | Description                               |
 | ------------ | ----------- | ----------------------------------------- |
-| sub          | String      | The user id that was selected             |
+| account_id   | String      | The user id that was selected             |
 | request      | Request     | The request parameters                    |
 
 The `Request` object contains information about the relying party that is needed to mint an idtoken:
@@ -185,6 +207,7 @@ Here is an example of the `POST` request:
 POST /fedcm/idtoken.php HTTP/1.1
 Host: idp.example
 Cookie: 123
+Sec-FedCM-CSRF: 123abc
 Content-Type: application/json
 
 {
@@ -197,15 +220,13 @@ Content-Type: application/json
 }
 ```
 
-Which may respond with the following JWT:
+Which may respond with the following:
 
 ```json
 {
   "id_token" : "asdlkjop2awlasd"
 }
 ```
-
-And with the response, resolves the promise.
 
 ### Show IDP Modal
 
@@ -218,29 +239,29 @@ And with the response, resolves the promise.
 >   - the IDP is able to inform the browser when a revocation has happened
 >   - maybe the RP gets to ask for unregistration too?
 
+
 # Session Management API
 
 ## Sign-in
 
-Signing-in is invoked precisely the same way as signing-up, with the exception of a single property:
-
-- `login_hint`, which can be used to indicate to the browser a specific account to be used
+Signing-in is invoked precisely the same way as signing-up:
 
 For example:
 
 ```javascript
-let {idtoken} = await navigator.credentials.get({
-  providers: [{
-    endpoint: "https://accounts.example.com",
-    client_id: "my_client_id",
-    scope: "openid email",
-    nonce: "abcxyz",
-    login_hint: "1234",
-  }],
+const {idtoken} = await navigator.credentials.get({
+  federated: {
+    providers: [{
+      url: "https://accounts.example.com",
+      clientId: "my_client_id",
+      nonce: "abcxyz"
+    }],
+  },
 });
 ```
 
 The same algorithm used during [sign-up](#sign-up) is used, which falls back gracefully when the internal state of the browser already contains more than one registered account.
+
 
 ## Sign-out
 
@@ -252,16 +273,20 @@ In this proposal, the browser exposes a new JS API that takes a list of endpoint
 1. clears the session associated with the current account.
 
 ```javascript
-await navigator.credentials.logout({
-  endpoints: [
-    "https://rp1.com",
-    "https://rp2.com",
-    "https://rp3.com",
-    // ...
-    "https://rp8.com",
-    "https://rp9.com",
-  ]
-});
+await navigator.credentials.logout([
+  {
+    endpoint: "https://rp1.com",
+    accountId: "123"
+  },
+  {
+    endpoint: "https://rp2.com",
+    accountId: "245"
+  },
+  {
+    endpoint: "https://rp3.com",
+    accountId: "abc"
+  }
+]);
 ```
 
 The logout endpoints are configured out-of-band in the process relying parties register with identity providers: the identity provider is the only entity aware of the endpoints that need to be loaded. So, an array of relying party logout endpoints is passed, and whenever the logouts have a coinciding observed login, a credentialed request is made:
@@ -269,6 +294,7 @@ The logout endpoints are configured out-of-band in the process relying parties r
 > NOTE(goto): the exact criteria to make the matching between the login and logout is TBD. two thoughts occurred to us: (a) matching origins and (b) making the IDP declare the endpoint upon login.
 
 ![](static/mock31.svg)
+
 
 # Alternatives under consideration
 
@@ -289,8 +315,6 @@ dictionary FederatedCredentialRequestOptions {
 };
 ```
 
-### Permissions
-
 ## Sign-in
 
 ### fenced frames
@@ -299,7 +323,7 @@ There is a variety of privacy controls that we are exploring, but the fenced fra
 
 In this variation, we offer the user the identity-specific controls whenever cross-site identity-specific communication is conducted (e.g. from the relying party to the IDP and vice versa), based on exposing new high level identity-specific APIs.
 
-This is still under active exploration, but our efforts are going into exploring ways in which we can leverage [fencedframes](https://github.com/shivanigithub/fenced-frame) and introduce new high-level javascript APIs.
+This is still under active exploration, but our efforts are going into exploring ways in which we can leverage [fenced frames](https://github.com/shivanigithub/fenced-frame) and introduce new high-level javascript APIs.
 
 For example, we are looking into ways we could replace the `<iframe>` tag with the web-bundle version of `<fencedframe>`s:
 
@@ -308,7 +332,7 @@ For example, we are looking into ways we could replace the `<iframe>` tag with t
 </fencedframe>
 ```
 
-In this formulation, the web bundle is a static (yet personalized) bundle that can be displayed on page load but can't have any uncontrolled communication outwards (e.g. over the network or over in-browser features, like postMessage).
+In this example, the web bundle is a static (yet personalized) bundle that can be displayed on page load but can't have any uncontrolled communication outwards (e.g. over the network or over in-browser features, like `postMessage`).
 
 The IDP-controlled fenced frame can communicates back with the RP with a high-level API (in replacement of the low-level `postMessage`) too (which isn't allowed in a fenced frame):
 
@@ -321,7 +345,7 @@ await navigator.credentials.store({
 
 ![](static/mock28.svg)
 
-Upon approval, the user agent would hand it back the result to the relying party using the existing mechanisms:
+Upon approval, the user agent would hand back the result to the relying party using the existing mechanisms:
 
 ```javascript
 window.addEventListener(`message`, (e) => {
@@ -338,6 +362,4 @@ But this variation isn't perfect: while it is backwards compatible, we believe i
 
 For one, the user has to make **two** choices (on the consequences of tracking) that are unrelated to the job to be done (sign-in) which we don't expect to be the most effective way to affect change.
 
-That leads us to the [mediation-oriented](#the-mediation-oriented-variation) variation which bundles these prompts into a browser mediated experience (which also comes with trade-offs).
-
-
+That leads us to the [mediation-oriented](problem.md#the-mediated-oriented-api) variation which bundles these prompts into a browser mediated experience (which also comes with trade-offs).

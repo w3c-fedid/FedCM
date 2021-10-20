@@ -1,6 +1,6 @@
 # How to experiment with FedCM in Chrome
 
-A prototype of the API approaches described in the [solutions page](navigations.md) is present in Chrome 89 and later. **This is intended for experimentation purposes and is subject to change as a specification takes shape and develops.**
+A prototype of the API described in the [solutions page](navigations.md) is present in Chrome 89 and later. **This is intended for experimentation purposes and is subject to change as a specification takes shape and develops.**
 
 We will do our best to keep these instructions up to date as protocol and API changes occur.
 
@@ -10,11 +10,12 @@ It will subsequently roll into downstream channels, but with lag in functionalit
 1. Download [Chrome Canary](https://www.google.com/chrome/). Since this is a prototype with ongoing development, the implementation in other channels will be out of date with respect to functionality and bug fixes.
 2. Enable FedCM. As of Chrome 91 this can be done directly from chrome://flags.
 
+
 ## Available functionality
 * Automatic permission prompts on [top-level Open ID Connect protocol navigations](navigations.md#the-sign-in-api)
-* `navigator.id.get()` API call under [the permission-oriented flow](navigations.md#the-permission-oriented-variation)
+* `navigator.credentials.get()` API call under [the permission-oriented flow](navigations.md#the-permission-oriented-variation)
 https://github.com/WICG/FedCM/blob/main/cookies.md#logout
-* `navigator.id.get()` API call under [the mediation-oriented flow](navigations.md#the-mediation-oriented-variation)
+* `navigator.credentials.get()` API call under [the mediation-oriented flow](navigations.md#the-mediation-oriented-variation)
 * A potential [Logout API](cookies.md#logout)
 
 These are described in more detail in the sections below.
@@ -198,13 +199,3 @@ For security reasons, the IDP does not learn whether any of the network requests
 
 The shape of this API, its behavior, its effectiveness for addressing current problems, and its privacy properties are topics of discussion.
 
-# How can I help?
-
-At the moment, we are actively working with the browser and the identity ecosystem to help us determine product requirements (contribute [here](https://github.com/IDBrowserUseCases/docs) with the list of use cases), ergonomics and deployment strategies that minimize change and maximize control, for example via testing our APIs ([instructions](HOWTO.md)) and giving us feedback.
-
-Much of this explainer is evolving as a result of this field experimentation.
-The most constructive/objective way you can help is to:
-
-1. get a good understanding of the **why**: understand the ongoing privacy-oriented changes in browsers ([example](https://blog.chromium.org/2020/01/building-more-private-web-path-towards.html)) and their [principles](https://github.com/michaelkleber/privacy-model)
-1. help us understand **what**: contribute [here](https://github.com/IDBrowserUseCases/docs) with a use case that you believe can be impacted
-1. help us understand **how**: help us discover options (for [cookies](cookies.md) and [navigations](navigations.md)) and evaluate their trade-offs. [Try](https://github.com/WICG/FedCM/blob/main/HOWTO.md) the APIs under development and help us understand what works / doesn't work.
