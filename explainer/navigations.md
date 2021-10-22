@@ -1,9 +1,11 @@
-This is an **early exploration** of the design alternatives to address [this](README.md#stage-2-bounce-tracking) under [this threat model](https://wicg.github.io/FedCM/#privacy-threat-model).
+# Navigations
+
+This is an **early exploration** of the design alternatives to address [bounce tracking](README.md#stage-2-bounce-tracking) under [this threat model](https://wicg.github.io/FedCM/#privacy-threat-model).
 
 This section goes over the **what** and the **how**. It presuposes that you have read and started from:
 
-- The **why**: the [problem](README.md) statement and the [motivations](https://wicg.github.io/FedCM/#privacy-threat-model) and the [topology](activation.md) of the parties involved.
-- The **why not**: the [alternatives](alternatives_considered.md) considered (e.g. the [prior art](prior.md), the [status quo](alternatives_considered.md#the-status-quo) and the [requestStorageAccess API](alternatives_considered.md#the-request-storage-access-api)).
+- The **why**: the [problem statement](problem.md) and the [motivations](https://wicg.github.io/FedCM/#privacy-threat-model) and the [topology](activation.md) of the parties involved.
+- The **why not**: the [alternatives considered](alternatives_considered.md) (e.g. the [prior art](prior.md), the [status quo](alternatives_considered.md#the-status-quo) and the [requestStorageAccess API](alternatives_considered.md#the-request-storage-access-api)).
 
 We'll then go over the [high-level overview](#high-level-design) and a breakdown into two smaller problems:
 
@@ -50,7 +52,7 @@ Lets first turn to the former use, and then go over authorization following that
 
 Simply put, the Sign-In API is a Web Platform affordance that takes an identity provider as input and returns a [directed basic profile](directed_basic_profile.md) as output. It substitutes the navigational/popup affordances currently used.
 
-We don't know yet exactly what it should look like, but here is an example that can serve as a starting point:
+We don't know yet exactly what it should look like, but here is an example to serve as a starting point:
 
 ```javascript
 // This is just a possible starting point, largely TBD.
