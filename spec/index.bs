@@ -22,6 +22,7 @@ spec: ecma262; urlPrefix: https://tc39.github.io/ecma262/
     type: dfn
         text: time values; url: sec-time-values-and-time-range
         text: promise; url: sec-promise-objects
+        text: internal method; url: sec-ordinary-object-internal-methods-and-internal-slots
 
 spec: credential-management-1; urlPrefix: https://w3c.github.io/webappsec-credential-management/
     type: dictionary
@@ -35,11 +36,17 @@ spec: credential-management-1; urlPrefix: https://w3c.github.io/webappsec-creden
     type: dfn
         text: signal
         text: same-origin with its ancestors; url: same-origin-with-its-ancestors
+
+spec: html; urlPrefix: https://html.spec.whatwg.org/multipage/origin.html
+    type: dfn
+        text: origin; for: html-origin-def; url: concept-origin
 </pre>
 
 <pre class=link-defaults>
 spec:infra; type:dfn; text:list
+spec:infra; type:dfn; text:user agent
 spec:html; type:dfn; for:environment settings object; text:global object
+spec:html; type:dfn; for:html-origin-def; text:origin
 spec:webidl; type:dfn; text:resolve
 </pre>
 
@@ -56,10 +63,13 @@ dl.domintro dt a {
 dl.domintro dt code {
     font-size: inherit;
 }
+div.image {
+    background-color: white;
+}
 </style>
 
 <!-- ============================================================ -->
-# Introduction # {#intro}
+# Introduction # {#introduction}
 <!-- ============================================================ -->
 
 *This section is non-normative.*
@@ -77,12 +87,6 @@ Over the years, as these [=low-level API=]s get abused, browsers intervene and f
 The challenge is that some of these low level primitives are getting increasingly abused to allow users on the web to be tracked. So, as a result, browsers are applying stricter and stricter policies around them.
 
 This specification defines a set of [=high-level API=]s that serve as a foundation where identity federation on Web can thrive without incurring into [[UNSANCTIONED-TRACKING]].
-
-<div class="example">
-  <pre class=include-raw>
-  path: img/mock46.svg
-  </pre>
-</div>
 
 <!-- ============================================================ -->
 # Use Cases # {#use-cases}
@@ -212,7 +216,7 @@ After a user navigates to a [=Relying Party=] in a browser and decides to create
 </div>
 
 <!-- ============================================================ -->
-## Access ## {#Access}
+## Access ## {#use-cases-access}
 <!-- ============================================================ -->
 
 <div class="example">
@@ -342,7 +346,7 @@ to become [=directed identifiers=].
 
 : <dfn>Relying Party</dfn>
 : <dfn>RP</dfn>
-: <dfn>Website</dfn>
+: <dfn noexport>Website</dfn>
 :: TODO(goto): find existing definitions.
 
 : <dfn>Identity Provider</dfn>
@@ -358,7 +362,7 @@ to become [=directed identifiers=].
 : <dfn>id token</dfn>
 :: TODO(goto): find existing definition.
 
-: <df>unsactioned tracking</dfn>
+: <df>unsanctioned tracking</dfn>
 :: [[UNSANCTIONED-TRACKING]]
 
 : <dfn>high-level API</dfn>
@@ -386,16 +390,18 @@ to become [=directed identifiers=].
 ::
 
 <!-- ============================================================ -->
-# High Level Design # {#lifecycle}
+# High Level Design # {#high-level-design}
 <!-- ============================================================ -->
 
 At a high level, the Identity Federation Management API works by the intermediation of cooperating [=IDP=]s and [=RP=]s.
 
-The [[#idp-api]] and the [[#rp-api]] defines a set of HTTP APIs that cooperating [=IDP=]s and [=IDP=]s exposes as well as the entry points in the [[#API]] that they can use.
+The [[#idp-api]] and the [[#rp-api]] defines a set of HTTP APIs that cooperating [=IDP=]s and [=IDP=]s exposes as well as the entry points in the [[#browser-api]] that they can use.
 
+<div class='image'>
 <pre class=include-raw>
 path: img/mock43.svg
 </pre>
+</div>
 
 The user agent intermediates in such a matter that makes it impractical for the API to be used for tracking purposes, while preserving the functionality of identity federation.
 
@@ -403,7 +409,7 @@ This document defines the APIs in the following order:
 
 1. The [[#idp-api]]
 1. The [[#rp-api]]
-1. The [[#API]]
+1. The [[#browser-api]]
 
 <!-- ============================================================ -->
 # The Identity Provider API # {#idp-api}
@@ -411,14 +417,14 @@ This document defines the APIs in the following order:
 
 The [=IDP=] proactively and cooperatively exposes itself as a comformant agent by exposing a series of HTTP endpoints:
 
-1. A [[#well-known]] endpoint in a well-known location that points to
-1. An [[#accounts_endpoint]] endpoint
-1. A [[#client_id_metadata_endpoint]] endpoint
-1. An [[#idtoken_endpoint]] endpoint
-1. A [[#revocation_endpoint]] endpoint
+1. A [[#idp-api-manifest]] endpoint in a well-known location that points to
+1. An [[#idp-api-accounts-endpoint]] endpoint
+1. A [[#idp-api-client-id-metadata-endpoint]] endpoint
+1. An [[#idp-api-idtoken-endpoint]] endpoint
+1. A [[#idp-api-revocation-endpoint]] endpoint
 
 <!-- ============================================================ -->
-## Manifest ## {#well-known}
+## Manifest ## {#idp-api-manifest}
 <!-- ============================================================ -->
 
 The well-known discovery endpoint is an endpoint located at the [=IDP=]'s
@@ -441,13 +447,13 @@ The file is parsed expecting the following properties:
 
 <dl dfn-type="argument" dfn-for="WellKnown">
     :   <dfn>accounts_endpoint</dfn>
-    ::  A URL that points to an HTTP API that complies with the [[#accounts_endpoint]] API.
+    ::  A URL that points to an HTTP API that complies with the [[#idp-api-accounts-endpoint]] API.
     :   <dfn>client_id_metadata_endpoint</dfn>
-    ::  A URL that points to an HTTP API that complies with the [[#client_id_metadata_endpoint]] API.
+    ::  A URL that points to an HTTP API that complies with the [[#idp-api-client-id-metadata-endpoint]] API.
     :   <dfn>idtoken_endpoint</dfn>
-    ::  A URL that points to an HTTP API that complies with the [[#idtoken_endpoint]] API.
+    ::  A URL that points to an HTTP API that complies with the [[#idp-api-idtoken-endpoint]] API.
     :   <dfn>revocation_endpoint</dfn>
-    :: A URL that points to an HTTP API that complies with the [[#revocation_endpoint]] API.
+    :: A URL that points to an HTTP API that complies with the [[#idp-api-revocation-endpoint]] API.
 </dl>
 
 For example:
@@ -464,7 +470,7 @@ For example:
 </div>
 
 <!-- ============================================================ -->
-## Accounts List ## {#accounts_endpoint}
+## Accounts List ## {#idp-api-accounts-endpoint}
 <!-- ============================================================ -->
 
 The accounts list endpoint provides the list of accounts the user has at the [=IDP=].
@@ -528,7 +534,7 @@ For example:
 </div>
 
 <!-- ============================================================ -->
-## Client Metadata ## {#client_id_metadata_endpoint}
+## Client Metadata ## {#idp-api-client-id-metadata-endpoint}
 <!-- ============================================================ -->
 
 The client metadata endpoint provides metadata about [=RP=]s.
@@ -569,10 +575,10 @@ For example:
 </div>
 
 <!-- ============================================================ -->
-## ID Token ## {#idtoken_endpoint}
+## ID Token ## {#idp-api-idtoken-endpoint}
 <!-- ============================================================ -->
 
-The ID Token endpoint is responsible for minting a new [=id token=] for the user.
+The ID Token endpoint is responsible for [=minting=] a new [=id token=] for the user.
 
 The ID Token endpoint is fetched (a) as a **POST** request, (b)  **with** cookies and (c) **with** a special [[#Sec-FedCM-CSRF]] header.
 
@@ -632,7 +638,7 @@ For example:
 </div>
 
 <!-- ============================================================ -->
-## Revocation ## {#revocation_endpoint}
+## Revocation ## {#idp-api-revocation-endpoint}
 <!-- ============================================================ -->
 
 
@@ -689,13 +695,13 @@ otherwise an HTTP error code.
 # The Relying Party API # {#rp-api}
 <!-- ============================================================ -->
 
-[=RP=]'s expose a [[#logout_endpoint]] to facilitate with [[#use-cases-idp-sign-out]].
+[=RP=]'s expose a [[#rp-api-logout-endpoint]] to facilitate with [[#use-cases-idp-sign-out]].
 
 <!-- ============================================================ -->
-## Logout ## {#logout_endpoint}
+## Logout ## {#rp-api-logout-endpoint}
 <!-- ============================================================ -->
 
-When [=IDP=]s call the [[#idp-sign-out]] API, every [=RP=] gets a
+When [=IDP=]s call the [[#browser-api-idp-sign-out]] API, every [=RP=] gets a
 chance to log the user out (e.g. clear cookies, clear local storage)
 via the logout endpoint.
 
@@ -711,32 +717,34 @@ when accounts **and** sessions are already established between the [=IDP=] and
 the [=RP=].
 
 <!-- ============================================================ -->
-# The Browser API # {#API}
+# The Browser API # {#browser-api}
 <!-- ============================================================ -->
 
 The Browser API exposes APIs to [=RP=]s and [=IDP=]s to call and intermediates the exchange of the user's identity.
 
 For [=RP=]s, it allows them to:
 
-1. The [[#sign-in]] allows [=RP=]'s users to [[#use-cases-sign-up]] and [[#use-cases-sign-up]]
-1. The [[#revocation]] allows [=RP=]'s users to go through [[#use-cases-rp-revocation]] of their accounts
-1. The [[#rp-sign-out]] API allows [=RP=]s to [[#use-cases-rp-sign-out]] of their accounts.
+1. The [[#browser-api-sign-in]] allows [=RP=]'s users to [[#use-cases-sign-up]] and [[#use-cases-sign-up]]
+1. The [[#browser-api-revocation]] allows [=RP=]'s users to go through [[#use-cases-rp-revocation]] of their accounts
+1. The [[#browser-api-rp-sign-out]] API allows [=RP=]s to [[#use-cases-rp-sign-out]] of their accounts.
 
 For [=IDP=]s, it allows them to:
 
-1. The [[#idp-sign-out]] API allows [=IDP=]s to [[#use-cases-idp-sign-out]] of their accounts.
+1. The [[#browser-api-idp-sign-out]] API allows [=IDP=]s to [[#use-cases-idp-sign-out]] of their accounts.
 
-The Browser API manages the lifecycle of the user's accounts and sessions with an internal [[#state-machine]].
+The Browser API manages the lifecycle of the user's accounts and sessions with an internal [[#browser-api-state-machine]].
 
 <!-- ============================================================ -->
-## The State Machine ## {#state-machine}
+## The State Machine ## {#browser-api-state-machine}
 <!-- ============================================================ -->
 
 Internally, the account management and session management APIs allows the user to explicitly move through the different stages of their accounts. At each stage, the state machine manages the [=RP=]'s and the [=IDP=]'s access to the appropriate browser capabilities.
 
+<div class='image'>
 <pre class=include-raw>
 path: img/mock42.svg
 </pre>
+</div>
 
 <dl dfn-type="argument" dfn-for="StateMachine">
     :   <dfn>Account State</dfn>
@@ -746,11 +754,11 @@ path: img/mock42.svg
 </dl>
 
 <!-- ============================================================ -->
-## The Sign-in API ## {#sign-in}
+## The Sign-in API ## {#browser-api-sign-in}
 <!-- ============================================================ -->
 
 <!-- ============================================================ -->
-### RP Sign-in API ### {#rp-sign-in}
+### RP Sign-in API ### {#browser-api-rp-sign-in}
 <!-- ============================================================ -->
 
 The Sign-up and Sign-in APIs are APIs used by the [=Relying Party=]s to ask the browser to intermediate the relationship with the [=Identity Provider=] and the provisioning of an [=id token=].
@@ -945,13 +953,13 @@ To <dfn>fetch the well-known</dfn> configuration file, run this algorithm:
 
 To <dfn>fetch the accounts list</dfn> run this algorithm:
 
-1. Let the |acccounts_endpoint| url be the relative url |wellknown|["{{WellKnown/accounts_endpoint}}"] of |provider|["{{FederatedIdentityProvider/url}}"]
+1. Let the |accounts_endpoint| url be the relative url |wellknown|["{{WellKnown/accounts_endpoint}}"] of |provider|["{{FederatedIdentityProvider/url}}"]
 
 1. Let the |accounts list| be the result of fetching the |accounts_endpoint| with the [=Identity Provider=]'s cookies.
 
 1. Return the |accounts list|
 
-To <dfn>fetch the client id metadata</dfn> run this algorithm:
+To <dfn noexport>fetch the client id metadata</dfn> run this algorithm:
 
 1. Let the |client_id_metadata_endpoint| url be the relative url |wellknown|["{{WellKnown/client_id_metadata_endpoint}}"] of |provider|["{{FederatedIdentityProvider/url}}"]
 1. Let the |policies| be the result of fetching the |client_id_metadata_endpoint| with the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]] header but without the [=Identity Provider=]'s cookies.
@@ -961,7 +969,7 @@ The <dfn>Privacy Policy</dfn> are the policies described at {{client_id_metadata
 
 The <dfn>Terms of Service</dfn> are the policies described at {{client_id_metadata_endpont_response/terms_of_service_url}}.
 
-To <dfn>mint a new id token</dfn>, run the following algorithm:
+To <dfn>mint</dfn> a new id token, run the following algorithm:
 
 1. Let |token| be the result of making a POST request to the |wellknown|["{{WellKnown/idtoken_endpoint}}"] with:
     * Let the {{idtoken_endpoint_request/account_id}} be |account|["{{accounts_endpoint_response_accounts/account_id}}"].
@@ -974,13 +982,13 @@ To <dfn>mint a new id token</dfn>, run the following algorithm:
     * {{FederatedCredential/provider}} with |provider|["{{FederatedIdentityProvider/url}}"]
 
 <!-- ============================================================ -->
-### IDP Sign-in API ### {#idp-sign-in}
+### IDP Sign-in API ### {#browser-api-idp-sign-in}
 <!-- ============================================================ -->
 
 The IDP Sign-in API allows an [=IDP=] to sign the user into a [=RP=] by
-storing a [=FederatedCredential=] that can later be retrieved by a [=RP=].
+storing a {{FederatedCredential}} that can later be retrieved by a [=RP=].
 
-Its effect is equivalent to the [[#rp-sign-in]] in its effect, except that
+Its effect is equivalent to the [[#browser-api-rp-sign-in]] in its effect, except that
 it is designed to be called while the user is at the [=IDP=] rather than
 at the [=RP=].
 
@@ -1001,7 +1009,7 @@ async function login({id, name, iconURL}) {
 </div>
 
 <!-- ============================================================ -->
-## The Revocation API ## {#revocation}
+## The Revocation API ## {#browser-api-revocation}
 <!-- ============================================================ -->
 
 Whenever the user decides to delete their account on the [=Relying Party=]
@@ -1031,11 +1039,11 @@ partial interface FederatedCredential {
 Note: go over the revocation API.
 
 <!-- ============================================================ -->
-## The Sign-out API ## {#sign-out}
+## The Sign-out API ## {#browser-api-sign-out}
 <!-- ============================================================ -->
 
 <!-- ============================================================ -->
-### RP Sign-out ### {#rp-sign-out}
+### RP Sign-out ### {#browser-api-rp-sign-out}
 <!-- ============================================================ -->
 
 When a user wants to log out of their session in the [=Relying Party=],
@@ -1057,7 +1065,7 @@ function logout() {
 Note: go over the RP sign-out API.
 
 <!-- ============================================================ -->
-### IDP Sign-out ### {#idp-sign-out}
+### IDP Sign-out ### {#browser-api-idp-sign-out}
 <!-- ============================================================ -->
 
 In enterprise scenarios, it is common for the user to want to clear all of
@@ -1076,9 +1084,11 @@ Each [=Relying Party=] endpoint is responsible for clearing its local state
 After the completion of this API, the user's session is cleared and will go
 through an [[#use-cases-explicit-sign-in]] upon return.
 
+<div class='image'>
 <pre class=include-raw>
 path: img/mock31.svg
 </pre>
+</div>
 
 <div class=example>
 ```js
@@ -1094,7 +1104,7 @@ async function logout() {
 ```
 </div>
 
-[=IDP=]s can call <code><a idl for="FederatedCredential" lt="get()">FederatedCredential.logout(...)</a></code> to log the user out of the [=RP=]s they are signed into.
+[=IDP=]s can call <code><a idl for="FederatedCredential" lt="logout()">FederatedCredential.logout(...)</a></code> to log the user out of the [=RP=]s they are signed into.
 
 <xmp class=idl>
 dictionary FederatedCredentialLogoutRequest {
@@ -1111,7 +1121,7 @@ partial interface FederatedCredential {
 Note: go over how this is implemented.
 
 <!-- ============================================================ -->
-## Backwards Compatibility ## {#backwards-compatibility}
+## Backwards Compatibility ## {#browser-api-backwards-compatibility}
 <!-- ============================================================ -->
 
 Note: go over how we are planning to deal with backwards compatibility.
@@ -1144,66 +1154,57 @@ See also:
     * [Security and Privacy Considerations for SAML V2.0](https://docs.oasis-open.org/security/saml/v2.0/saml-sec-consider-2.0-os.pdf)
 
 <!-- ============================================================ -->
-### Principals ### {#principals}
+### Principals ### {#privacy-threat-model-principals}
 <!-- ============================================================ -->
 
 This section describes the three principals that would participate in an invocation of the API and expectations around their behavior.
 
-1. The [=User Agent=] implements [[#API]] and controls the execution contexts for the [=RP=] and [=IDP=] content. The user agent is assumed to be trusted by the user, and transitively trusted by the RP and IDP.
+1. The [=User Agent=] implements [[#browser-api]] and controls the execution contexts for the [=RP=] and [=IDP=] content. The user agent is assumed to be trusted by the user, and transitively trusted by the RP and IDP.
 1. [=Relying Party=]s ([=RP=]s) are [=first party=] websites that invoke the FedCM API for the purpose of authenticating a user to their account or for requesting information about that user. A well-behaving RP would only invoke the API following a clear user signal -- typically, clicking a sign-in button. Since any site can invoke the API, RPs cannot necessarily be trusted to limit the user information it collects or use that information in an acceptable way.
 1. [=Identity Provider=]s ([=IDP=]s) are [=third party=] websites that are the target of a FedCM call to attempt to fetch an ID token. Usually the IDP has a higher level of trust than the RP since it already has the user’s personal information, but it is possible that the IDP might use the user’s information in non-approved ways. It is possible that the IDP specified in the API call may not be an IDP the user knows about, or may not be a bona fide IDP at all, in which case it likely does not have personal user information in advance, but also might be less accountable for its behavior.
 
 <!-- ============================================================ -->
-### High-level threats ### {#high-level-threats}
+### High-level threats ### {#privacy-threat-model-high-level-threats}
 <!-- ============================================================ -->
 
 [[RFC6973]] describes the following high-level privacy threats, which the TAG
 has adopted into [[security-privacy-questionnaire#threats]]:
 
-: <dfn>Surveillance</dfn>
-
+: <dfn noexport>Surveillance</dfn>
 :: Surveillance is the observation or monitoring of an individual’s
     communications or activities.
 
 : <dfn noexport>Stored Data Compromise</dfn>
-
 :: End systems that do not take adequate measures to secure stored data from
     unauthorized or inappropriate access.
 
-: <dfn>Intrusion</dfn>
-
+: <dfn noexport>Intrusion</dfn>
 :: Intrusion consists of invasive acts that disturb or interrupt one’s life or
     activities.
 
-: <dfn>Misattribution</dfn>
-
+: <dfn noexport>Misattribution</dfn>
 :: Misattribution occurs when data or communications related to one individual
     are attributed to another.
 
-: <dfn>Correlation</dfn>
-
+: <dfn noexport>Correlation</dfn>
 :: Correlation is the combination of various pieces of information related to an
     individual or that obtain that characteristic when combined.
 
-: <dfn>Identification</dfn>
-
+: <dfn noexport>Identification</dfn>
 :: Identification is the linking of information to a particular individual to
     infer an individual’s identity or to allow the inference of an individual’s
         identity.
 
-: <dfn>Secondary Use</dfn>
-
+: <dfn noexport>Secondary Use</dfn>
 :: Secondary use is the use of collected information about an individual without
     the individual’s consent for a purpose different from that for which the
         information was collected.
 
-: <dfn>Disclosure</dfn>
-
+: <dfn noexport>Disclosure</dfn>
 :: Disclosure is the revelation of information about an individual that affects
     the way others judge the individual.
 
 : <dfn noexport>Exclusion</dfn>
-
 :: Exclusion is the failure to allow individuals to know about the data that
     others have about them and to participate in its handling and use.
 
@@ -1216,9 +1217,9 @@ specifications to defend against, described in subsections here:
 
 This section describes the scenarios in which various agents might attempt to gain user information. It considers the possibilities when:
 
-    * [[#by-rp|The RP is collecting information]],
-    * [[#by-idp|The IDP is collecting information]], or
-    * [[#by-collusion|Both the RP and the IDP are colluding]].
+    * [[#attack-scenarios-by-rp|The RP is collecting information]],
+    * [[#attack-scenarios-by-idp|The IDP is collecting information]], or
+    * [[#attack-scenarios-by-idp-by-collusion|Both the RP and the IDP are colluding]].
 
 For the purposes of this section, a principal is considered to be participating in the collection of information if it directly or indirectly performs actions with the aim of realizing one of the above threats.
 
@@ -1231,11 +1232,11 @@ See also:
     1. [[RFC7258]]
 
 <!-- ============================================================ -->
-#### By the RP #### {#by-rp}
+#### By the RP #### {#attack-scenarios-by-rp}
 <!-- ============================================================ -->
 
 <!-- ============================================================ -->
-##### Cross-Site Correlation ##### {#cross-site-correlation}
+##### Cross-Site Correlation ##### {#attack-scenarios-by-rp-cross-site-correlation}
 <!-- ============================================================ -->
 
 Related to:
@@ -1256,11 +1257,13 @@ Sometimes this is referred to as [=joining=] since it amounts to a join of user 
 
 This correlation and profile-building is outside the user’s control and entirely out of the [=User Agent=]’s or [=IDP=]’s view.
 
-<div class="example">
+<div class="image">
    <pre class=include-raw>
    path: img/mock3.svg
    </pre>
+</div>
 
+<div class="example">
     1. User signs into RP1 (which sells jewelry) with an IDP, providing to RP1 their email address user@email.example
     1. User signs into RP2 (which sells houses) with an IDP, providing to RP2 their email address user@email.example
     1. User browses the collection of wedding rings in RP1.
@@ -1270,9 +1273,9 @@ This correlation and profile-building is outside the user’s control and entire
     1. User is surprised that RP2 knows that they are shopping for wedding rings.
 </div>
 
-A generalization of [[#cross-site-correlation]] is:
+A generalization of [[#attack-scenarios-by-rp-cross-site-correlation]] is:
 
-(<dfn>RP Secondary Use</dfn>) Relying Party uses user information for purposes not authorized by the user:
+(<dfn noexport>RP Secondary Use</dfn>) Relying Party uses user information for purposes not authorized by the user:
 
 When the user agrees to allow the IDP to provide information to the RP,
 the consent is specific to certain purposes, such as sign-in and personalization.
@@ -1282,7 +1285,7 @@ did not authorize, such as selling email addresses to a spam list.
 Spamming risk can exist even when using [=directed identifiers=].
 
 <!-- ============================================================ -->
-##### Same-Site Identification ##### {#same-site-identification}
+##### Same-Site Identification ##### {#attack-scenarios-by-rp-same-site-identification}
 <!-- ============================================================ -->
 
 Identification is the linking of information to a particular individual
@@ -1298,11 +1301,13 @@ vector for fingerprinting or ‘supercookies’.
 This risk would be increased by any proposal for browser mediation that
 adds directly (or indirectly) detectable client state.
 
-<div class="example">
+<div class="image">
 <pre class=include-raw>
 path: img/mock5.svg
 </pre>
+</div>
 
+<div class='example'>
 For example, an RP can use the browser state of the FedCM to add bits of entropy and fingerprint the user.
 </div>
 
@@ -1311,11 +1316,11 @@ See also:
    1. [[FINGERPRINTING-GUIDANCE]]
 
 <!-- ============================================================ -->
-##### Data Compromise ##### {#data-compromise}
+##### Data Compromise ##### {#attack-scenarios-by-rp-data-compromise}
 <!-- ============================================================ -->
 
 This attack scenario happens when the [=RP=] takes advantage of
-inadequate measures (by the [=IDP=] or the [=UA=]) to secure stored data to
+inadequate measures (by the [=IDP=] or the UA) to secure stored data to
 obtain personal user information without their consent.
 
 This can happen if user consent mechanisms are missing, inadequate,
@@ -1335,11 +1340,11 @@ See also:
     1. [[RFC6973#section-5.1.2]]
 
 <!-- ============================================================ -->
-#### By the IDP #### {#by-idp}
+#### By the IDP #### {#attack-scenarios-by-idp}
 <!-- ============================================================ -->
 
 <!-- ============================================================ -->
-##### Secondary Use ##### {#idp-secondary-use}
+##### Secondary Use ##### {#attack-scenarios-by-idp-secondary-use}
 <!-- ============================================================ -->
 
 Related to:
@@ -1363,13 +1368,15 @@ to serve targeted advertisements to those users browsing on sites that the IDP c
 This risk can exist even in the case where the IDP does not having pre-existing user
 account information (for instance, if it is not a _bona fide_ IDP), because FedCM
 requests sent to the IDP are credentialed. This is more likely to occur if the RP is
-colluding with the IDP to enable tracking; expanded variants are described in [[#timing-attacks]].
+colluding with the IDP to enable tracking; expanded variants are described in [[#attack-scenarios-by-idp-timing-attacks]].
 
-<div class="example">
+<div class="image">
     <pre class=include-raw>
     path: img/mock23.svg
     </pre>
+</div>
 
+<div class='example'>
     1. User signs into RP1 (which sells jewelry) with an IDP.
     1. User signs into RP2 (which sells houses) with the same IDP.
     1. User navigates to the IDP.
@@ -1378,7 +1385,7 @@ colluding with the IDP to enable tracking; expanded variants are described in [[
 </div>
 
 <!-- ============================================================ -->
-##### Impersonation ##### {#impersonation}
+##### Impersonation ##### {#attack-scenarios-by-idp-impersonation}
 <!-- ============================================================ -->
 
 Since IDPs have unconstrained ability to issue ID tokens, they are capable
@@ -1394,11 +1401,11 @@ impersonating the user and potentially gaining full access to the user's account
 </div>
 
 <!-- ============================================================ -->
-#### By Collusion #### {#by-collusion}
+#### By Collusion #### {#attack-scenarios-by-idp-by-collusion}
 <!-- ============================================================ -->
 
 <!-- ============================================================ -->
-##### Intrusion ##### {#intrusion}
+##### Intrusion ##### {#attack-scenarios-by-idp-intrusion}
 <!-- ============================================================ -->
 
    > From [[PRIVACY-THREAT-MODEL#hl-intrusion]]
@@ -1424,7 +1431,7 @@ See also:
     1. [[DESIGN-PRINCIPLES#safe-to-browse]]
 
 <!-- ============================================================ -->
-##### Back channel ##### {#back-channel}
+##### Back channel ##### {#attack-scenarios-by-idp-back-channel}
 <!-- ============================================================ -->
 
 This attack scenario happens when IDP exceed the user’s information sharing permission.
@@ -1454,10 +1461,10 @@ invisible to the browser, in which case it could contain anything.
 </div>
 
 <!-- ============================================================ -->
-##### Timing Attacks ##### {#timing-attacks}
+##### Timing Attacks ##### {#attack-scenarios-by-idp-timing-attacks}
 <!-- ============================================================ -->
 
-The potential for IDPs profiling users based on their visits to RPs [[#idp-secondary-use]] can
+The potential for IDPs profiling users based on their visits to RPs [[#attack-scenarios-by-idp-secondary-use]] can
 be partially mitigated by hiding the RP from the IDP until after the user has
 consented to that tracking risk.
 
@@ -1487,19 +1494,19 @@ See also:
 
     1. [[DESIGN-PRINCIPLES#safe-to-browse]]
 
-## Mitigation Strategies
+## Mitigation Strategies ## {#mitigation-strategies}
 
 In this section we'll go over some strategies used in this specification to mitigate the [privacy threats](#privacy-threat-model).
 
-### Minimal Disclosure
+### Minimal Disclosure ### {#mitigation-minimal-disclosure}
 
 There is a series of privacy threats that can be mitigated by disclosing the least amount of identifying information and limiting its use as much as possible. Two notable strategies are described in the sections below.
 
-#### Directed Identifiers
+#### Directed Identifiers #### {#mitigation-directed-identifiers}
 
 Mitigates:
 
-    * [[#cross-site-correlation]]
+    * [[#attack-scenarios-by-rp-cross-site-correlation]]
 
 Note: directed, sharding, partitioning
 
@@ -1512,57 +1519,49 @@ cannot be correlated with other RPs.
 In the past, there have been schemes to accomplish this using one-way
 hashes of, for example, the user’s name, the IDP and the RP.
 
-<div class="example">
+<div class="image">
   <pre class=include-raw>
   path: img/mock37.svg
   </pre>
 </div>
 
-<!--
-<div class="example">
-  <pre class=include-raw>
-  path: img/mock13.svg
-  </pre>
-</div>
--->
-
-Note: this mitigation is not robust against [[#back-channel]],
-or the [[#idp-secondary-use]]. Also, collaborating RPs might be able
+Note: this mitigation is not robust against [[#attack-scenarios-by-idp-back-channel]],
+or the [[#attack-scenarios-by-idp-secondary-use]]. Also, collaborating RPs might be able
 to defeat this mitigation by sharing the same CLIENT_ID, although
 possibly this could be detected and presumably would violate RP
-agreements with IDPs with [[#pre-registration]].
+agreements with IDPs with [[#mitigation-pre-registration]].
 
-#### Self Presentation
+#### Self Presentation #### {#mitigation-self-presentation}
 
 Mitigates:
 
-    * [[#idp-secondary-use]] and
-    * [[#timing-attacks]]
+    * [[#attack-scenarios-by-idp-secondary-use]] and
+    * [[#attack-scenarios-by-idp-timing-attacks]]
 
 Note: unbundling issuing from presentation
 
 Preventing tracking of users by the IDP is difficult because the RP has to be coded into the identity token for security reasons, to prevent reuse of the token. There have been cryptographic schemes developed to blind the IDP to the RP while still preventing token reuse in that way (see Mozilla’s [personas](https://wiki.mozilla.org/Identity/Persona_AAR)) but there are other valid uses that the IDP has for knowing the RP, such as fraud and abuse prevention.
 
-<div class="example">
+<div class="image">
   <pre class=include-raw>
   path: img/mock34.svg
   </pre>
 </div>
 
-### Mediation
+### Mediation ### {#mitigation-mediation}
 
 Mitigates:
 
-    * [[#cross-site-correlation]],
-    * [[#data-compromise]],
-    * [[#timing-attacks]]
-    * [[#intrusion①]]
+    * [[#attack-scenarios-by-rp-cross-site-correlation]],
+    * [[#attack-scenarios-by-rp-data-compromise]],
+    * [[#attack-scenarios-by-idp-timing-attacks]]
+    * [[#attack-scenarios-by-idp-intrusion]]
 
 IDPs, whom the user has entrusted with their personal data, are currently responsible for ensuring that the user consents to their information being shared. With browser mediation in place, the user agent might have to assume responsibility for ensuring the user understands what is being shared and that it is intentional. This is certainly the case if the browser is able to entirely intermediate the identity flow without showing any IDP web content, but also might be desirable if there are concerns that the IDP is not collecting consent in an adequate manner.
 
 Additionally, a consent prompt preceding the sharing of the RP’s request to the IDP can mitigate risks around IDP tracking of user visits to RPs.
 
-<div class="example">
+<div class="image">
   <pre class=include-raw>
   path: img/mock46.svg
   </pre>
@@ -1577,21 +1576,21 @@ See also:
   1. [[ETHICS|Ethical Principles]]: [[ETHICS#control|The web must enhance individuals' control and power]]
   1. [[LEAST-POWER]]
 
-#### Verification
+#### Verification #### {#mitigation-verification}
 
 Mitigates:
 
-    * [[#cross-site-correlation]],
+    * [[#attack-scenarios-by-rp-cross-site-correlation]],
 
-The [=User Agent=] can mitigate [[#cross-site-correlation]] by inspecting the contents
+The [=User Agent=] can mitigate [[#attack-scenarios-by-rp-cross-site-correlation]] by inspecting the contents
 of the data exchange, and providing the necessary user controls.
 
 For example, it can inspect the email address that is being exchanged and verify
 whether it is a [=directed identifier=] or not (and warn the user proportionally).
 
-#### Activation
+#### Activation #### {#activation}
 
-The [=User Agent=] can mitigate [[#intrusion①]] by mediating the user controls
+The [=User Agent=] can mitigate [[#attack-scenarios-by-idp-intrusion]] by mediating the user controls
 and offering them proportionally to the intent of the user or the privacy risks involved.
 
 For example, a [=User Agent=] can choose to show a loud / disruptive modal mediated dialog
@@ -1605,7 +1604,7 @@ For example, when a [=directed identifier=] is being exchanged it can be more co
 of the unintended consequeces and offer a more aggressive user experience, whereas when
 global identifiers are exchanged a more conservative user experience.
 
-<div class="example">
+<div class="image">
   <pre class=include-raw>
   path: img/mock45.svg
   </pre>
@@ -1618,16 +1617,16 @@ See also:
     * [WHATWG User Activation](https://html.spec.whatwg.org/multipage/interaction.html#tracking-user-activation)
     * [Querying User Activation](https://github.com/dtapuska/useractivation)
 
-### Policy
+### Policy ### {#mitigation-policy}
 
 Mitigates:
 
-    * [[#impersonation]],
-    * [[#back-channel]]
+    * [[#attack-scenarios-by-idp-impersonation]],
+    * [[#attack-scenarios-by-idp-back-channel]]
 
 Beyond technical constraints, the browser can recognize explicit assertions by the IDP about the privacy characteristics it provides and rely on those assertions in order to guide the user appropriately. An example is a hypothetical case in which the IDP asserts it will only issue [=directed identifiers=] and will not provide identifying information to the RPs out of view of the browser. In that case the browser may not have to warn the user about sharing personalized information.
 
-### Denylists
+### Denylists ### {#mitigation-denylists}
 
 Mitigates:
 
@@ -1635,21 +1634,21 @@ Mitigates:
 
 Any RPs or IDPs observed to be using this API to compromise user privacy in a deceptive or abusive manner could be explicitly blocked from using it, or potentially added to the SafeBrowsing blocklist so that they cannot be loaded at all.
 
-### Pre-registration
+### Pre-registration ### {#mitigation-pre-registration}
 
 Mitigates:
 
-    * [[#data-compromise]],
-    * [[#cross-site-correlation]]
+    * [[#attack-scenarios-by-rp-data-compromise]],
+    * [[#attack-scenarios-by-rp-cross-site-correlation]]
 
 Currently, IDPs require that an RP pre-registers and agrees to specific terms before the IDP will issue an ID token to them.
-This conflicts with [the previous mitigation](#self-presentation), but can provide a measure of RP accountability.
+This conflicts with [the previous mitigation](#mitigation-self-presentation), but can provide a measure of RP accountability.
 
-### 2FA
+### 2FA ### {#mitigation-2fa}
 
 Mitigates:
 
-    * [[#impersonation]],
+    * [[#attack-scenarios-by-idp-impersonation]],
 
 <!-- ====================================================================== -->
 # Extensibility # {#extensibility}
@@ -1683,15 +1682,6 @@ Note: write down the Acknowledgements section.
     "href": "https://datatracker.ietf.org/doc/html/rfc7519",
     "title": "JWT"
   },
-  "WEB-LOGIN": {
-    "authors": [ "Jason Denizac", "Robin Berjon", "Anne van Kesteren" ],
-    "href": "https://github.com/jden/web-login",
-    "title": "web-login"
-  },
-  "BrowserID": {
-    "href": "https://github.com/mozilla/id-specs/blob/prod/browserid/index.md",
-    "title": "BrowserID"
-  },
   "CM": {
     "href": "https://w3c.github.io/webappsec-credential-management/",
     "title": "Credential Management"
@@ -1699,11 +1689,6 @@ Note: write down the Acknowledgements section.
   "Security-Origin-Confusion": {
     "href": "https://w3c.github.io/webappsec-credential-management/#security-origin-confusion",
     "title": "Security Origin Confusion"
-  },
-  "Unsanctioned-Web-Tracking": {
-    "authors": [ "Mark Nottingham" ],
-    "href": "https://www.w3.org/2001/tag/doc/unsanctioned-tracking/",
-    "title": "Unsactioned Web Tracking"
   },
   "Front-Channel-Logout": {
     "authors": [ "M. Jones" ],
