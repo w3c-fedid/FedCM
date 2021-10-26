@@ -420,7 +420,7 @@ The [=IDP=] proactively and cooperatively exposes itself as a comformant agent b
 1. A [[#idp-api-manifest]] endpoint in a well-known location that points to
 1. An [[#idp-api-accounts-endpoint]] endpoint
 1. A [[#idp-api-client-id-metadata-endpoint]] endpoint
-1. An [[#idp-api-idtoken-endpoint]] endpoint
+1. An [[#idp-api-id-token-endpoint]] endpoint
 1. A [[#idp-api-revocation-endpoint]] endpoint
 
 <!-- ============================================================ -->
@@ -450,8 +450,8 @@ The file is parsed expecting the following properties:
     ::  A URL that points to an HTTP API that complies with the [[#idp-api-accounts-endpoint]] API.
     :   <dfn>client_id_metadata_endpoint</dfn>
     ::  A URL that points to an HTTP API that complies with the [[#idp-api-client-id-metadata-endpoint]] API.
-    :   <dfn>idtoken_endpoint</dfn>
-    ::  A URL that points to an HTTP API that complies with the [[#idp-api-idtoken-endpoint]] API.
+    :   <dfn>id_token_endpoint</dfn>
+    ::  A URL that points to an HTTP API that complies with the [[#idp-api-id-token-endpoint]] API.
     :   <dfn>revocation_endpoint</dfn>
     :: A URL that points to an HTTP API that complies with the [[#idp-api-revocation-endpoint]] API.
 </dl>
@@ -463,7 +463,7 @@ For example:
 {
   "accounts_endpoint": "/accounts.php",
   "client_id_metadata_endpoint": "/metadata.php",
-  "idtoken_endpoint": "/idtokens.php",
+  "id_token_endpoint": "/idtokens.php",
   "revocation_endpoint": "/revocation.php"
 }
 ```
@@ -575,7 +575,7 @@ For example:
 </div>
 
 <!-- ============================================================ -->
-## ID Token ## {#idp-api-idtoken-endpoint}
+## ID Token ## {#idp-api-id-token-endpoint}
 <!-- ============================================================ -->
 
 The ID Token endpoint is responsible for [=minting=] a new [=id token=] for the user.
@@ -584,7 +584,7 @@ The ID Token endpoint is fetched (a) as a **POST** request, (b)  **with** cookie
 
 It will also contain the following parameters passed as a JSON object:
 
-<dl dfn-type="argument" dfn-for="idtoken_endpoint_request">
+<dl dfn-type="argument" dfn-for="id_token_endpoint_request">
     :   <dfn>account_id</dfn>
     :: The account identifier that was selected.
     :   <dfn>request</dfn>
@@ -593,7 +593,7 @@ It will also contain the following parameters passed as a JSON object:
 
 The <dfn>RP request</dfn> has the following properties:
 
-<dl dfn-type="argument" dfn-for="idtoken_endpoint_request_request">
+<dl dfn-type="argument" dfn-for="id_token_endpoint_request_request">
     :   <dfn>client_id</dfn>
     :: The [=RP=]'s client it
     :   <dfn>nonce</dfn>
@@ -622,7 +622,7 @@ Sec-FedCM-CSRF: random_value
 
 The response is parsed as a JSON file expecting the following properties:
 
-<dl dfn-type="argument" dfn-for="idtoken_endpoint_response">
+<dl dfn-type="argument" dfn-for="id_token_endpoint_response">
     :   <dfn>id_token</dfn>
     ::  The resulting [=id token=].
 </dl>
@@ -971,11 +971,11 @@ The <dfn>Terms of Service</dfn> are the policies described at {{client_id_metada
 
 To <dfn>mint</dfn> a new id token, run the following algorithm:
 
-1. Let |token| be the result of making a POST request to the |wellknown|["{{WellKnown/idtoken_endpoint}}"] with:
-    * Let the {{idtoken_endpoint_request/account_id}} be |account|["{{accounts_endpoint_response_accounts/account_id}}"].
-    * Let the {{idtoken_endpoint_request/request}} be a new object with
-          * Let {{idtoken_endpoint_request_request/client_id}} be |provider|["{{FederatedIdentityProvider/clientId}}"].
-          * Let the {{idtoken_endpoint_request_request/nonce}} be |provider|["{{FederatedIdentityProvider/nonce}}"].
+1. Let |token| be the result of making a POST request to the |wellknown|["{{WellKnown/id_token_endpoint}}"] with:
+    * Let the {{id_token_endpoint_request/account_id}} be |account|["{{accounts_endpoint_response_accounts/account_id}}"].
+    * Let the {{id_token_endpoint_request/request}} be a new object with
+          * Let {{id_token_endpoint_request_request/client_id}} be |provider|["{{FederatedIdentityProvider/clientId}}"].
+          * Let the {{id_token_endpoint_request_request/nonce}} be |provider|["{{FederatedIdentityProvider/nonce}}"].
 1. Return a new {{FederatedCredential}} as:
     * {{Credential/id}} with |account|["{{accounts_endpoint_response_accounts/account_id}}"]
     * {{FederatedCredential/idToken}} with |token|
