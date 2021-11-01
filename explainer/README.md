@@ -21,7 +21,7 @@ This explainer has been broken into several sections.
 1. What's the [problem](problem.md) being solved?
    * What are some [related problems](related_problems.md)?
    * What has been tried [previously](prior.md)?
-1. Description of where we [should](proposal.md) be and accompaning
+1. Description of where we [should](proposal.md) be and accompanying
    [FedCM API](https://wicg.github.io/FedCM) proposal.
    * What [alternatives](alternatives_considered.md) have been explored?
 1. Potential [roadmap](roadmap.md) to the [proposal](proposal.md).

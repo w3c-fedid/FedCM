@@ -1,7 +1,8 @@
 # Related Problems
 
-Although not directly related to federation, there exist a number of other authentication and identity related problems that are worth mentioning, which can be addressed by other efforts that may be related to, but pursued independently of, efforts to improve federation.
-
+Authentication and authorization is a large problem space. There are
+several related federation issues where the browser maybe able to
+provide an enhanced experience.
 
 ## The [NASCAR flag](https://developers.google.com/identity/toolkit/web/federated-login#the_nascar_page) problem
 
@@ -22,6 +23,6 @@ Because cookies are not propagated across devices, a user has to sign in (and re
 
 ## The Session State Opacity Problem
 
-Because session state management is implemented via general purpose low-level primitives (namely, cookies), when users intend to “log-out” there are no guarantees that anything necessarily happens (e.g. the origin can still know who you are, but it can pretend it doesn’t). Only clearing all cookies currently guarantees that an origin is not **adversarially tracking** you post log-out. There are proposals such as [IsLoggedIn](https://github.com/WebKit/explainers/tree/master/IsLoggedIn) to address this issue.
+Because session state management is implemented via general purpose low-level primitives (namely, cookies), when users intend to “log-out” there are no guarantees that anything necessarily happens (e.g. the origin can still know who you are, but it can pretend it does not). Only clearing all cookies currently guarantees that an origin is not **adversarially tracking** you post log-out. There are proposals such as [IsLoggedIn](https://github.com/WebKit/explainers/tree/master/IsLoggedIn) to address this issue.
 
 ![](static/mock5.svg)

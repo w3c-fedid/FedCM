@@ -166,5 +166,5 @@ This is accomplished via an HTTP protocol between the IDP and the User-Agent ([u
 
 The mediated-oriented API offers a balance between trade-offs:
 
-* **Pros**: backwards compatible with relying parties (which are many), requires work from the IDPd (which are few). Largely backwards compatible from a user experience/behavior/norm perspective. Privacy controls are offered contextually.
+* **Pros**: backwards compatible with relying parties (which are many), requires work from the IDP (which are few). Largely backwards compatible from a user experience/behavior/norm perspective. Privacy controls are offered contextually.
 * **Cons**: takes on some of the responsibility for the user agent (e.g. account chooser), which affects the autonomy of IDPs and RPs.
