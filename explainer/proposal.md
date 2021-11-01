@@ -46,7 +46,7 @@ In the future, the user agent will intermediate and assist in the cross-origin e
 1. **The RP Tracking Mitigation**: Unbundling your **global** identity into multiple **directed** identities per-site.
 1. **The IDP Tracking Mitigation**: Unbundling the **issuing** of credentials with their **presentation**.
 
-![](static/mock37.svg)
+![](../spec/img/mock37.svg)
 
 The first principle can be solved by the user agent insisting on a progressive disclosure of identification, starting with the minimal disclosure for the most constrained use (e.g. a directed identifier that is recoverable between devices) towards progressively and contextually exposing information (e.g. giving access to your calendar):
 
@@ -58,7 +58,7 @@ When you present your driver's license as a form of identification to, say, a st
 
 We believe that unbundling these operations, means users can use their credentials without **necessarily** phone-homing to their issuers:
 
-![](static/mock34.svg)
+![](../spec/img/mock34.svg)
 
 
 ### The Delegation-oriented API

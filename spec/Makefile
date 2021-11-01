@@ -12,7 +12,7 @@ $(DEST)/fedcm.idl: index.bs
 	./extract_idl.rb $(DEST)/fedcm.idl
 
 $(DEST)/index.html: index.bs
-	bikeshed --die-on=fatal --allow-nonlocal-files spec index.bs
+	bikeshed --die-on=fatal spec index.bs
 	mv index.html $(DEST)
 
 clean:
