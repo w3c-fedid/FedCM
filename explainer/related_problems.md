@@ -25,4 +25,4 @@ Because cookies are not propagated across devices, a user has to sign in (and re
 
 Because session state management is implemented via general purpose low-level primitives (namely, cookies), when users intend to “log-out” there are no guarantees that anything necessarily happens (e.g. the origin can still know who you are, but it can pretend it does not). Only clearing all cookies currently guarantees that an origin is not **adversarially tracking** you post log-out. There are proposals such as [IsLoggedIn](https://github.com/WebKit/explainers/tree/master/IsLoggedIn) to address this issue.
 
-![](static/mock5.svg)
+![](../spec/img/mock5.svg)

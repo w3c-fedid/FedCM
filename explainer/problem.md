@@ -65,7 +65,7 @@ In this example of **bounce tracking**, websites redirect the user to cross-orig
 
 In federation, that's less invisible/automatic, but it is still there. Cross-site tracking is enabled via federation when relying parties, that the user signs in to, **collude** with each other (and other entities) to deterministically (or probabilistically) **link** their user's accounts to build a richer user profile (e.g. one site selling data on browsing history for ads targeting to another service). While this could be enabled without federation (users could manually provide a joinable email address or phone number), federated identity providers have an opportunity to address this problem at scale by providing their users with site-specific/directed identifiers.
 
-![](static/mock3.svg)
+![](../spec/img/mock3.svg)
 
 Because of these tracking risks, browsers are starting to disable third-party cookies in iframes and more generally provide tighter control over cross-site communication (e.g. a [privacy model](https://github.com/michaelkleber/privacy-model) for the web).
 

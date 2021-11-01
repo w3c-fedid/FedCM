@@ -28,7 +28,7 @@ So, under this observation, in this proposal the browser:
 
 The browser stores the state in which the user is at in the following state machine:
 
-![](static/mock42.svg)
+![](../spec/img/mock42.svg)
 
 Because the first moment in which the identies are joined is the most important/critical one, we'll start there. But then, assuming that the browser was able to observe that moment, we'll go over the APIs that it unlocks to support managing sessions:
 
@@ -96,7 +96,7 @@ An (unregistered) user turns into a (registered) account via a process we call s
 
 The browser intercepts this invocation and runs the following algorithm for each RP/IDP pair:
 
-![](static/mock43.svg)
+![](../spec/img/mock43.svg)
 
 ### Fetch Well-Known
 
@@ -293,7 +293,7 @@ The logout endpoints are configured out-of-band in the process relying parties r
 
 > NOTE(goto): the exact criteria to make the matching between the login and logout is TBD. two thoughts occurred to us: (a) matching origins and (b) making the IDP declare the endpoint upon login.
 
-![](static/mock31.svg)
+![](../spec/img/mock31.svg)
 
 
 # Alternatives under consideration
