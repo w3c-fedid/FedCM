@@ -1,20 +1,17 @@
-DEST=../docs
-
 .PHONY: all spec idl clean
 
 all: spec idl
 
-spec: $(DEST)/index.html
+spec: index.html
 
-idl: $(DEST)/fedcm.idl
+idl: fedcm.idl
 
-$(DEST)/fedcm.idl: index.bs
-	./extract_idl.rb $(DEST)/fedcm.idl
+fedcm.idl: index.bs
+	./extract_idl.rb fedcm.idl
 
-$(DEST)/index.html: index.bs
+index.html: index.bs
 	bikeshed --die-on=fatal spec index.bs
-	mv index.html $(DEST)
 
 clean:
-	rm $(DEST)/index.html
-	rm $(DEST)/fedcm.idl
+	rm index.html
+	rm fedcm.idl
