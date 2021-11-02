@@ -54,7 +54,7 @@ There are several ways to contribute to the Federated Credential Management API.
  * If you're a Relying Party (i.e. website) and would like to test the changes out
    we'd appreciate feedback, you'll need to do something similar to the
    [HOWTO.md](explainer/HOWTO.md) to setup a fake IDP which can serve the needed
-   JavaScript. (Until an IDP provides first part JavaScript to work with FedCM
+   JavaScript. (Until an IDP provides first party JavaScript to work with FedCM
    this integration will be tricker). You can also review the demo provided by the
    HOWTO and take a look at the
    [Relying Party API](https://wicg.github.io/FedCM/#rp-api) to see what is needed
