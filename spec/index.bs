@@ -294,7 +294,11 @@ which the [=RP=] can use to authenticate the user.
     }
 
     async function revoke() {
-      await FederatedCredential.revoke(user.id, identityProvider);
+      await new FederatedCredential({
+          id: user.id,
+          provider: identityProvider.url,
+          client_id: identityProvider.clientId,
+        }).revoke();
     }
     </script>
   </body>
@@ -1025,17 +1029,23 @@ instead of a [[#use-cases-sign-in]] flow.
 <div class=example>
 ```js
 async function revoke(accountId, identityProvider) {
-  return await FederatedCredential.revoke(accountId, identityProvider);
+  return await new FederatedCredential({
+    id: accountId,
+    provider: identityProvider.url,
+    client_id: identityProvider.clientId,
+  }).revoke();
+
+);
 }
 ```
 </div>
 
-This specification extends the {{FederatedCredential}} interface with an extra static method:
+This specification extends the {{FederatedCredential}} interface with an extra method:
 
 <xmp class=idl>
 [Exposed=Window, SecureContext]
 partial interface FederatedCredential {
-  static Promise<undefined> revoke(USVString accountId, FederatedIdentityProvider provider);
+  Promise<undefined> revoke();
 };
 </xmp>
 
