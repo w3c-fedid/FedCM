@@ -92,146 +92,140 @@ The challenge is that some of these low level primitives are getting increasingl
 This specification defines a set of [=high-level API=]s that serve as a foundation where identity federation on Web can thrive without incurring into [[UNSANCTIONED-TRACKING]].
 
 <!-- ============================================================ -->
-# Use Cases # {#use-cases}
+## Use Cases ## {#use-cases}
 <!-- ============================================================ -->
 
-The below use case scenarios illustrate some basic supported flows. Additional scenarios, including sample code, are given later in the [[Identity-Use-Cases-in-Browser-Catalog]].
+The below use case scenarios illustrate some basic supported flows.
+Additional scenarios, including sample code, are given in the
+[[Identity-Use-Cases-in-Browser-Catalog]].
 
 <!-- ============================================================ -->
-## Sign-up ## {#use-cases-sign-up}
+### Sign-up ### {#use-cases-sign-up}
 <!-- ============================================================ -->
 
-A Sign-up occurs when the user is registering a new account at the [=Relying Party=] using their [=Identity Provider=].
+A Sign-up occurs when the user is registering a new account at the
+[=Relying Party=] using their [=Identity Provider=].
 
-<div class="example">
-* A user navigates to a [=Relying Party=] in a browser and decides to create an account.
-* The [=Relying Party=] supports multiple [=Identity Provider=] as an authentication mechanism.
-* A user selects their favorite [=Identity Provider=] to sign-up with.
-* The [=Identity Provider=] prompts, "Do you want to create an account with the [=Relying Party=]?"
-* The user agrees.
-* The [=Relying Party=] shows the message "Registration complete."
-* An [=account=] in created in the [=Relying Party=] and a [=session=] initialized.
-
-</div>
+For instance, a user navigates to a [=Relying Party=] in their browser
+and creates an account. The [=Relying Party=] displays supported
+[=Identity Providers=] to the user who selects their favorite. The user
+is prompted "Do you want to create an account with the [=Relying Party=]?".
+Upon user agreement an [=account=] is created with the [=Relying Party=] and
+the user has a [=session=] initialized.
 
 <!-- ============================================================ -->
-## Sign-in ## {#use-cases-sign-in}
+### Sign-in ### {#use-cases-sign-in}
 <!-- ============================================================ -->
 
-After a user navigates to a [=Relying Party=] in a browser and decides to create an account by going through their [[#use-cases-sign-up]] flow, there are two ways a user logs into their [=account=] once their [=session=] expires:
+After a user navigates to a [=Relying Party=] in a browser and decides to
+create an account by going through their [[#use-cases-sign-up]] flow,
+there are two ways a user logs into their [=account=] once their [=session=] expires:
 
 <!-- ============================================================ -->
-### Auto Sign-in ### {#use-cases-auto-sign-in}
+#### Auto Sign-in #### {#use-cases-auto-sign-in}
 <!-- ============================================================ -->
 
-Auto Sign-in occurs when the [=Identity Provider=] has already gathered enough permission from the user to share their identity that it doesn't block on gathering further permission and automatically signs the user in.
+Auto Sign-in occurs when the [=Identity Provider=] has already gathered
+permissions from the user to share their identity with the [=Relying Party=]
+and automatically signs the user in.
 
-<div class="example">
-* Using another device (e.g. their laptop):
-    * The user goes to the [=Relying Party=].
-    * The user selects their favorite [=Identity Provider=] to sign-in.
-    * The [=Identity Provider=] remembers and proves that the user already has an [=account=] with the [=Relying Party=].
-    * The [=Relying Party=] creates a new [=session=] for the user's existing [=account=].
-
-</div>
+For example, the user has previously executed the [[#use-cases-sign-up]] flow
+and then changes from their phone to their laptop. On the new device the
+user goes to the [=Relying Party=] and selects to sign-in using their
+[=Identity Provider=]. The [=Identity Provider=] knows, and proves, the user
+has signed up to the [=Relying Party=] and the [=Relying Party=] creates a
+new [=session=] for the users [=account=].
 
 <!-- ============================================================ -->
-### Explicit Sign-in ### {#use-cases-explicit-sign-in}
+#### Explicit Sign-in #### {#use-cases-explicit-sign-in}
 <!-- ============================================================ -->
 
 An explicit sign-in occurs when the [=Identity Provider=] believes it is necessary to gather an explicit permission from the user to sign into a [=Relying Party=], typically after the user goes through a [[#use-cases-sign-out]] flow.
 
-<div class="example">
-* The user decides to [[#use-cases-sign-out]] of the [=Relying Party=]
-
-A few months later:
-
-* The user navigates to the [=Relying Party=]
-* The user selects their favorite [=Identity Provider=] to sign-in again.
-* The [=Identity Provider=] knows that:
+For example, after the user has done the [[#use-cases-sign-out]] flow of the
+[=Relying Party=] they decide to log in again. The user visits the
+[=Relying Party=] and selects their [=Identity Provider=] to sign-in. The
+[=Identity Provider=] knows:
     * the user already has an account with the [=Relying Party=].
     * the user has logged out of the [=Relying Party=].
-* The [=Identity Provider=] prompts, "Do you want to sign-in with the [=Relying Party=]?"
-* The user agrees.
-* The [=Relying Party=] creates a new [=session=] for the user's existing [=account=].
 
-</div>
+The user is then prompted, "Do you want to sign-in with the [=Relying Party=]?" and upon user agreement the [=Relying Party=] creates a new [=session=] with
+the users existing [=account=].
 
 <!-- ============================================================ -->
-## Sign-out ## {#use-cases-sign-out}
+### Sign-out ### {#use-cases-sign-out}
 <!-- ============================================================ -->
 
-After a user navigates to a [=Relying Party=] in a browser and decides to create an [=account=] by going through their [[#use-cases-sign-up]] flow, there are two ways a user can clear their [=session=]s:
+After a user navigates to a [=Relying Party=] in a browser and decides to
+create an [=account=] by going through their [[#use-cases-sign-up]] flow,
+there are two ways a user can clear their [=session=]s:
 
 <!-- ============================================================ -->
-### RP Sign-out ### {#use-cases-rp-sign-out}
+#### RP Sign-out #### {#use-cases-rp-sign-out}
 <!-- ============================================================ -->
 
-<div class="example">
-* On a shared computer:
-    * The user decides to close their session and logs out of the [=Relying Party=].
-    * The user is now logged out of the [=Relying Party=].
-    * Upon return to the [=Relying Party=], the user expects to go through an [[#use-cases-explicit-sign-in]].
-
-</div>
+The user can log out through the [=Relying Party=] by using a provided
+sign-out button or link provided by the [=Relying Party=]. This then
+removes the users [=session=] and, when the user visits the [=Relying Party=]
+again they will need to go through the [[#use-cases-explicit-sign-in]] flow
+in order to establish a new session.
 
 <!-- ============================================================ -->
-### IDP Sign-out ### {#use-cases-idp-sign-out}
+#### IDP Sign-out #### {#use-cases-idp-sign-out}
 <!-- ============================================================ -->
 
-<div class="example">
-* On a shared computer:
-    * The user decides to close their [=session=] and logs out of the [=Relying Party=].
-    * The [=Relying Party=] lets the [=Identity Provider=] know that the user wants to logout.
-    * The [=Identity Provider=] logs the user out of all of the [=Relying Party=]s and itself.
-    * Upon return to the [=Relying Party=], the goes through an [[#use-cases-explicit-sign-in]].
-
-</div>
-
-<!-- ============================================================ -->
-## Revocation ## {#use-cases-revocation}
-<!-- ============================================================ -->
-
-After a user navigates to a [=Relying Party=] in a browser and decides to create an account by going through their [[#use-cases-sign-up]] flow, there are two ways a user can cancel their account:
+The user can log out through the [=Identity Provider=] by using a provided
+sign-out system provided by the [=Identity Provider=]. After using the
+sign-out system the [=Identity Provider=] will log the user out of all
+[=Relying Parties=] the user has signed into along with logging the user
+out of the [=Identity Provider=] itself. Upon returning to any associated
+[=Relying Party=], or the [=Identity Provider=], the user will have to
+go through the [[#use-cases-explicit-sign-in]] flow.
 
 <!-- ============================================================ -->
-### IDP Revocation ### {#use-cases-idp-revocation}
+### Revocation ### {#use-cases-revocation}
 <!-- ============================================================ -->
 
-<div class="example">
-* On the [=Identity Provider=]:
-    * The user decides to cancel their account.
-    * The user goes to their [=Identity Provider=] and revokes access to the [=Relying Party=].
-    * Upon return to the [=Relying Party=], the user expects to go through a [[#use-cases-sign-up]].
-
-</div>
+After a user has created an account with a [=Relying Party=] there are two
+ways a user can cancel their account with the [=Relying Party=]:
 
 <!-- ============================================================ -->
-### RP Revocation ### {#use-cases-rp-revocation}
+#### RP Revocation #### {#use-cases-rp-revocation}
 <!-- ============================================================ -->
 
-<div class="example">
-* On the [=Relying Party=]:
-    * The user decides to cancel their account.
-    * The user navigates to the [=Relying Party=] and cancels their account, also letting the [=Identity Provider=] know.
-    * Upon return to the [=Relying Party=], the user expects to go through a [[#use-cases-sign-up]].
-
-</div>
+The user can delete their account through the [=Relying Party=] by using
+the provided cancel account system. The [=Relying Party=] informs the
+[=Identity Provider=] that the user has deleted (revoked) their account.
+When the user returns to the [=Relying Party=] they will need to complete
+the [[#use-cases-sign-up]] flow in order to access the site.
 
 <!-- ============================================================ -->
-## Access ## {#use-cases-access}
+#### IDP Revocation #### {#use-cases-idp-revocation}
 <!-- ============================================================ -->
 
-<div class="example">
-* A user navigates to a [=Relying Party=] in a browser and decides to create an [=account=].
-* The [=Relying Party=] supports multiple [=Identity Provider=] which provide access to the user's Calendar.
-* A user selects their favorite [=Identity Provider=] to sign-up with.
-* The [=Identity Provider=] prompts, "Do you want to give access to your Calendar to the [=Relying Party=]?"
-* The user agrees.
-* The [=Relying Party=] shows message, "Registration complete.", creates a [=session=] for the user and
-* Shows the user their calendar entries provided by the [=Identity Provider=].
+The user can delete their account with a [=Relying Party=] by revoking
+[=Relying Party=] access through the [=Identity Provider=]. This can be done
+by going to the [=Identity Provider=] and using their revoke access system.
+Once access is revoked, when the user returns to the [=Relying Party=] they
+will need to complete the [[#use-cases-sign-up]] flow in order to access the
+site.
 
-</div>
+<!-- ============================================================ -->
+### Access ### {#use-cases-access}
+<!-- ============================================================ -->
+
+The [=Identity Provider=] while authenticating the user may also authorize
+access to users resources such as calendars, contacts, etc. The granting
+of access can be done at either sign-up or post sign-up by requesting
+permission from the user.
+
+For example, a user executes the [[#use-cases-sign-up]] flow with a
+[=Relying Party=]. During the flow the [=Relying Party=] has informed the
+[=Identity Provider=] they need calendar access for the user. The user will
+be presented with a prompt, "Do you want to give access to your Calendar
+to the [=Relying Party=]?". The user consents to providing access and when
+the flow is complete the [=Relying Party=] shows the user their calendar
+entries provided by the [=Identity Provider=].
 
 <!-- ============================================================ -->
 # Examples # {#examples}
