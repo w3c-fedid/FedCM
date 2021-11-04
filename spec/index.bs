@@ -16,7 +16,8 @@ Text Macro: TRUE <code>true</code>
 Text Macro: RP Relying Party
 Text Macro: IDP Identity Provider
 
-Abstract: This specification defines a set of [=high-level API=]s that enables users to continue to use [=Identity Provider=]s to authenticate to [=Relying Party=]s without incurring into [[UNSANCTIONED-TRACKING]]. It accomplishes that by exposing the explicit user controls needed to manage the lifecycle of their federated accounts.
+Abstract: This specification defines a set of primitives that enable federated identity without enabling [[UNSANCTIONED-TRACKING]].
+
 Test Suite: https://github.com/web-platform-tests/wpt/blob/master/credential-management/webid.https.html
 </pre>
 
@@ -74,19 +75,26 @@ dl.domintro dt code {
 
 *This section is non-normative.*
 
-Over the last decade, identity federation has unquestionably played a central role in raising the bar for authentication on the web, in terms of ease-of-use (e.g. passwordless single sign-on), security (e.g. improved resistance to phishing and credential stuffing attacks) and trustworthiness compared to its preceding pattern: per-site usernames and passwords.
+The web is evolving. That evolution has caused, and is causing,
+changes to the underlying [[PRIVACY-MODEL]] of the web platform.
 
-The standards that define how identity federation works today on the Web were built independently of the Web Platform (namely, [[SAML]], [[OpenID]] and [[OAuth]]), and their designers had to (rightfully so) work around its limitations rather than extend them.
+With the evolution of the [[PRIVACY-MODEL]], fundamental assumptions of the web
+are being redefined or removed. Third-party cookies are one of those
+assumptions being removed. While overall good for the web,
+the third-party cookie deprecation removes fundamental building blocks
+in how some existing technologies were designed and deployed.
 
-Because of that, existing user [=authentication=] flows were designed on top of general-purpose web platform capabilities such as top-level navigations/redirects with parameters, window popups, iframes and cookies.
+Historically, federated login has relied on third-party cookies or
+navigational redirects as the building blocks. The Federated Credentials
+Management API aims to replace the federated login use of third-party
+cookies without enabling [[UNSANCTIONED-TRACKING]]. The API provides the
+primitives needed to support all stages of federated credentials, from
+sign-in to sign-out and revocation.
 
-However, because these general purpose primitives can be used for an open ended number of use cases (again, notably, by design), browsers have to apply policies that capture the lowest common denominator of abuse, at best applying cumbersome permissions (e.g. popup blockers) and at worst entirely blocking them (e.g. blocking third party cookies).
-
-Over the years, as these [=low-level API=]s get abused, browsers intervene and federation adjusts itself. For example, popup blockers became common and federation had to adjust itself to work in a world where popups blockers were widely deployed.
-
-The challenge is that some of these low level primitives are getting increasingly abused to allow users on the web to be tracked. So, as a result, browsers are applying stricter and stricter policies around them.
-
-This specification defines a set of [=high-level API=]s that serve as a foundation where identity federation on Web can thrive without incurring into [[UNSANCTIONED-TRACKING]].
+In order to remove [[UNSANCTIONED-TRACKING]] the API places the [=UA=] as
+a mediator between [=RP=]s and [=IDP=]s in order to gain user consent
+before permitting the [=RP=]s and [=IDP=]s to know about their connection
+to the user.
 
 <!-- ============================================================ -->
 ## Use Cases ## {#use-cases}
@@ -1198,7 +1206,7 @@ See also:
     * [[SELF-REVIEW#threats]]
     * [[PRIVACY-CONSIDERATIONS#privacy-threats]]
     * [[RFC6973#section-5]]
-    * [A Potential Privacy Model for the Web](https://github.com/michaelkleber/privacy-model)
+    * [[PRIVACY-MODEL]]
     * [Editor’s Draft for a Web Privacy Threat Model](https://w3cping.github.io/privacy-threat-model/)
     * [Security and Privacy Considerations for SAML V2.0](https://docs.oasis-open.org/security/saml/v2.0/saml-sec-consider-2.0-os.pdf)
 
@@ -1760,6 +1768,10 @@ Note: write down the Acknowledgements section.
   "PRIVACY-CONSIDERATIONS": {
     "href": "https://w3c.github.io/privacy-considerations/",
     "title": "Privacy Considerations for Web Protocols"
+  },
+  "PRIVACY-MODEL": {
+    "href": "https://github.com/michaelkleber/privacy-model",
+    "title": "Privacy Model"
   },
   "PRIVACY-THREAT-MODEL": {
     "href": "https://w3cping.github.io/privacy-threat-model/",
