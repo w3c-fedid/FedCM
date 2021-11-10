@@ -7,12 +7,15 @@ Group: WICG
 ED: http://wicg.github.io/FedCM
 Repository: WICG/FedCM
 Editor: Sam Goto, Google Inc. https://google.com, goto@google.com
+
 Markup Shorthands: markdown yes, css no, biblio yes
 Default Biblio Display: inline
+
 Text Macro: FALSE <code>false</code>
 Text Macro: TRUE <code>true</code>
 Text Macro: RP Relying Party
 Text Macro: IDP Identity Provider
+
 Abstract: This specification defines a set of [=high-level API=]s that enables users to continue to use [=Identity Provider=]s to authenticate to [=Relying Party=]s without incurring into [[UNSANCTIONED-TRACKING]]. It accomplishes that by exposing the explicit user controls needed to manage the lifecycle of their federated accounts.
 Test Suite: https://github.com/web-platform-tests/wpt/blob/master/credential-management/webid.https.html
 </pre>
@@ -78,7 +81,7 @@ Over the last decade, identity federation has unquestionably played a central ro
 
 The standards that define how identity federation works today on the Web were built independently of the Web Platform (namely, [[SAML]], [[OpenID]] and [[OAuth]]), and their designers had to (rightfully so) work around its limitations rather than extend them.
 
-Because of that, existing user authentication flows were designed on top of general-purpose web platform capabilities such as top-level navigations/redirects with parameters, window popups, iframes and cookies.
+Because of that, existing user [=authentication=] flows were designed on top of general-purpose web platform capabilities such as top-level navigations/redirects with parameters, window popups, iframes and cookies.
 
 However, because these general purpose primitives can be used for an open ended number of use cases (again, notably, by design), browsers have to apply policies that capture the lowest common denominator of abuse, at best applying cumbersome permissions (e.g. popup blockers) and at worst entirely blocking them (e.g. blocking third party cookies).
 
@@ -89,146 +92,140 @@ The challenge is that some of these low level primitives are getting increasingl
 This specification defines a set of [=high-level API=]s that serve as a foundation where identity federation on Web can thrive without incurring into [[UNSANCTIONED-TRACKING]].
 
 <!-- ============================================================ -->
-# Use Cases # {#use-cases}
+## Use Cases ## {#use-cases}
 <!-- ============================================================ -->
 
-The below use case scenarios illustrate some basic supported flows. Additional scenarios, including sample code, are given later in the [[Identity-Use-Cases-in-Browser-Catalog]].
+The below use case scenarios illustrate some basic supported flows.
+Additional scenarios, including sample code, are given in the
+[[Identity-Use-Cases-in-Browser-Catalog]].
 
 <!-- ============================================================ -->
-## Sign-up ## {#use-cases-sign-up}
+### Sign-up ### {#use-cases-sign-up}
 <!-- ============================================================ -->
 
-A Sign-up occurs when the user is registering a new account at the [=Relying Party=] using their [=Identity Provider=].
+A Sign-up occurs when the user is registering a new account at the
+[=Relying Party=] using their [=Identity Provider=].
 
-<div class="example">
-* A user navigates to a [=Relying Party=] in a browser and decides to create an account.
-* The [=Relying Party=] supports multiple [=Identity Provider=] as an authentication mechanism.
-* A user selects their favorite [=Identity Provider=] to sign-up with.
-* The [=Identity Provider=] prompts, "Do you want to create an account with the [=Relying Party=]?"
-* The user agrees.
-* The [=Relying Party=] shows the message "Registration complete."
-* An [=account=] in created in the [=Relying Party=] and a [=session=] initialized.
-
-</div>
+For instance, a user navigates to a [=Relying Party=] in their browser
+and creates an account. The [=Relying Party=] displays supported
+[=Identity Providers=] to the user who selects their favorite. The user
+is prompted "Do you want to create an account with the [=Relying Party=]?".
+Upon user agreement an [=account=] is created with the [=Relying Party=] and
+the user has a [=session=] initialized.
 
 <!-- ============================================================ -->
-## Sign-in ## {#use-cases-sign-in}
+### Sign-in ### {#use-cases-sign-in}
 <!-- ============================================================ -->
 
-After a user navigates to a [=Relying Party=] in a browser and decides to create an account by going through their [[#use-cases-sign-up]] flow, there are two ways a user logs into their [=account=] once their [=session=] expires:
+After a user navigates to a [=Relying Party=] in a browser and decides to
+create an account by going through their [[#use-cases-sign-up]] flow,
+there are two ways a user logs into their [=account=] once their [=session=] expires:
 
 <!-- ============================================================ -->
-### Auto Sign-in ### {#use-cases-auto-sign-in}
+#### Auto Sign-in #### {#use-cases-auto-sign-in}
 <!-- ============================================================ -->
 
-Auto Sign-in occurs when the [=Identity Provider=] has already gathered enough permission from the user to share their identity that it doesn't block on gathering further permission and automatically signs the user in.
+Auto Sign-in occurs when the [=Identity Provider=] has already gathered
+permissions from the user to share their identity with the [=Relying Party=]
+and automatically signs the user in.
 
-<div class="example">
-* Using another device (e.g. their laptop):
-    * The user goes to the [=Relying Party=].
-    * The user selects their favorite [=Identity Provider=] to sign-in.
-    * The [=Identity Provider=] remembers and proves that the user already has an [=account=] with the [=Relying Party=].
-    * The [=Relying Party=] creates a new [=session=] for the user's existing [=account=].
-
-</div>
+For example, the user has previously executed the [[#use-cases-sign-up]] flow
+and then changes from their phone to their laptop. On the new device the
+user goes to the [=Relying Party=] and selects to sign-in using their
+[=Identity Provider=]. The [=Identity Provider=] knows, and proves, the user
+has signed up to the [=Relying Party=] and the [=Relying Party=] creates a
+new [=session=] for the users [=account=].
 
 <!-- ============================================================ -->
-### Explicit Sign-in ### {#use-cases-explicit-sign-in}
+#### Explicit Sign-in #### {#use-cases-explicit-sign-in}
 <!-- ============================================================ -->
 
 An explicit sign-in occurs when the [=Identity Provider=] believes it is necessary to gather an explicit permission from the user to sign into a [=Relying Party=], typically after the user goes through a [[#use-cases-sign-out]] flow.
 
-<div class="example">
-* The user decides to [[#use-cases-sign-out]] of the [=Relying Party=]
-
-A few months later:
-
-* The user navigates to the [=Relying Party=]
-* The user selects their favorite [=Identity Provider=] to sign-in again.
-* The [=Identity Provider=] knows that:
+For example, after the user has done the [[#use-cases-sign-out]] flow of the
+[=Relying Party=] they decide to log in again. The user visits the
+[=Relying Party=] and selects their [=Identity Provider=] to sign-in. The
+[=Identity Provider=] knows:
     * the user already has an account with the [=Relying Party=].
     * the user has logged out of the [=Relying Party=].
-* The [=Identity Provider=] prompts, "Do you want to sign-in with the [=Relying Party=]?"
-* The user agrees.
-* The [=Relying Party=] creates a new [=session=] for the user's existing [=account=].
 
-</div>
+The user is then prompted, "Do you want to sign-in with the [=Relying Party=]?" and upon user agreement the [=Relying Party=] creates a new [=session=] with
+the users existing [=account=].
 
 <!-- ============================================================ -->
-## Sign-out ## {#use-cases-sign-out}
+### Sign-out ### {#use-cases-sign-out}
 <!-- ============================================================ -->
 
-After a user navigates to a [=Relying Party=] in a browser and decides to create an [=account=] by going through their [[#use-cases-sign-up]] flow, there are two ways a user can clear their [=session=]s:
+After a user navigates to a [=Relying Party=] in a browser and decides to
+create an [=account=] by going through their [[#use-cases-sign-up]] flow,
+there are two ways a user can clear their [=session=]s:
 
 <!-- ============================================================ -->
-### RP Sign-out ### {#use-cases-rp-sign-out}
+#### RP Sign-out #### {#use-cases-rp-sign-out}
 <!-- ============================================================ -->
 
-<div class="example">
-* On a shared computer:
-    * The user decides to close their session and logs out of the [=Relying Party=].
-    * The user is now logged out of the [=Relying Party=].
-    * Upon return to the [=Relying Party=], the user expects to go through an [[#use-cases-explicit-sign-in]].
-
-</div>
+The user can log out through the [=Relying Party=] by using a provided
+sign-out button or link provided by the [=Relying Party=]. This then
+removes the users [=session=] and, when the user visits the [=Relying Party=]
+again they will need to go through the [[#use-cases-explicit-sign-in]] flow
+in order to establish a new session.
 
 <!-- ============================================================ -->
-### IDP Sign-out ### {#use-cases-idp-sign-out}
+#### IDP Sign-out #### {#use-cases-idp-sign-out}
 <!-- ============================================================ -->
 
-<div class="example">
-* On a shared computer:
-    * The user decides to close their [=session=] and logs out of the [=Relying Party=].
-    * The [=Relying Party=] lets the [=Identity Provider=] know that the user wants to logout.
-    * The [=Identity Provider=] logs the user out of all of the [=Relying Party=]s and itself.
-    * Upon return to the [=Relying Party=], the goes through an [[#use-cases-explicit-sign-in]].
-
-</div>
-
-<!-- ============================================================ -->
-## Revocation ## {#use-cases-revocation}
-<!-- ============================================================ -->
-
-After a user navigates to a [=Relying Party=] in a browser and decides to create an account by going through their [[#use-cases-sign-up]] flow, there are two ways a user can cancel their account:
+The user can log out through the [=Identity Provider=] by using a provided
+sign-out system provided by the [=Identity Provider=]. After using the
+sign-out system the [=Identity Provider=] will log the user out of all
+[=Relying Parties=] the user has signed into along with logging the user
+out of the [=Identity Provider=] itself. Upon returning to any associated
+[=Relying Party=], or the [=Identity Provider=], the user will have to
+go through the [[#use-cases-explicit-sign-in]] flow.
 
 <!-- ============================================================ -->
-### IDP Revocation ### {#use-cases-idp-revocation}
+### Revocation ### {#use-cases-revocation}
 <!-- ============================================================ -->
 
-<div class="example">
-* On the [=Identity Provider=]:
-    * The user decides to cancel their account.
-    * The user goes to their [=Identity Provider=] and revokes access to the [=Relying Party=].
-    * Upon return to the [=Relying Party=], the user expects to go through a [[#use-cases-sign-up]].
-
-</div>
+After a user has created an account with a [=Relying Party=] there are two
+ways a user can cancel their account with the [=Relying Party=]:
 
 <!-- ============================================================ -->
-### RP Revocation ### {#use-cases-rp-revocation}
+#### RP Revocation #### {#use-cases-rp-revocation}
 <!-- ============================================================ -->
 
-<div class="example">
-* On the [=Relying Party=]:
-    * The user decides to cancel their account.
-    * The user navigates to the [=Relying Party=] and cancels their account, also letting the [=Identity Provider=] know.
-    * Upon return to the [=Relying Party=], the user expects to go through a [[#use-cases-sign-up]].
-
-</div>
+The user can delete their account through the [=Relying Party=] by using
+the provided cancel account system. The [=Relying Party=] informs the
+[=Identity Provider=] that the user has deleted (revoked) their account.
+When the user returns to the [=Relying Party=] they will need to complete
+the [[#use-cases-sign-up]] flow in order to access the site.
 
 <!-- ============================================================ -->
-## Access ## {#use-cases-access}
+#### IDP Revocation #### {#use-cases-idp-revocation}
 <!-- ============================================================ -->
 
-<div class="example">
-* A user navigates to a [=Relying Party=] in a browser and decides to create an [=account=].
-* The [=Relying Party=] supports multiple [=Identity Provider=] which provide access to the user's Calendar.
-* A user selects their favorite [=Identity Provider=] to sign-up with.
-* The [=Identity Provider=] prompts, "Do you want to give access to your Calendar to the [=Relying Party=]?"
-* The user agrees.
-* The [=Relying Party=] shows message, "Registration complete.", creates a [=session=] for the user and
-* Shows the user their calendar entries provided by the [=Identity Provider=].
+The user can delete their account with a [=Relying Party=] by revoking
+[=Relying Party=] access through the [=Identity Provider=]. This can be done
+by going to the [=Identity Provider=] and using their revoke access system.
+Once access is revoked, when the user returns to the [=Relying Party=] they
+will need to complete the [[#use-cases-sign-up]] flow in order to access the
+site.
 
-</div>
+<!-- ============================================================ -->
+### Access ### {#use-cases-access}
+<!-- ============================================================ -->
+
+The [=Identity Provider=] while authenticating the user may also authorize
+access to users resources such as calendars, contacts, etc. The granting
+of access can be done at either sign-up or post sign-up by requesting
+permission from the user.
+
+For example, a user executes the [[#use-cases-sign-up]] flow with a
+[=Relying Party=]. During the flow the [=Relying Party=] has informed the
+[=Identity Provider=] they need calendar access for the user. The user will
+be presented with a prompt, "Do you want to give access to your Calendar
+to the [=Relying Party=]?". The user consents to providing access and when
+the flow is complete the [=Relying Party=] shows the user their calendar
+entries provided by the [=Identity Provider=].
 
 <!-- ============================================================ -->
 # Examples # {#examples}
@@ -307,74 +304,63 @@ which the [=RP=] can use to authenticate the user.
 [[HTML]] defines an [=origin=] as the tuple of a scheme, hostname, and port that
 provides the main security boundary on the web.
 
-A <dfn>site</dfn> is a set of [=origins=] that are all [=same site=] with each
-other. Note that there are problems ([[PSL-PROBLEMS]]) with using [=registrable
-domains=] as a logical boundary.
-
-A <dfn>party</dfn> is defined by [[tracking-dnt]] as "a natural person, a legal
-entity, or a set of legal entities that share common owner(s), common
-controller(s), and a group identity that is easily discoverable by a user."
-
-The <dfn>first party</dfn> for a user action is the [=party=] that controls the
-[=origin=] of the [=top-level browsing context=] under which the action
-happened. Intuitively, this is the owner of the domain in the browser's URL bar.
-This differs from <a
-href="https://wiki.mozilla.org/Security/Anti_tracking_policy#Tracking_Definition">Mozilla's
-definition</a> in that Mozilla defines other parties as first parties if the
-user can easily discover which party it is and intends to interact with that
-party, for example to allow sign-in widgets to be first-party.
-
-A <dfn>third party</dfn> for a user action is any party that isn't the [=first
-party=] or the user (the second party).
-
-A <dfn>user</dfn> is a human or program that controls a user agent.
-
-A <dfn>user identifier</dfn> is a pair of a [=site=] and a (potentially-large) integer
-allocated by that site that is used to identify a [=user=] on that site. A
-single user will generally have many user IDs that refer to them, and a single
-site may or may not know that multiple user identifiers refer to the same user.
-
-A <dfn>global identifier</dfn> is a string that identifies a particular [=user=]
-independent of which site they're visiting (e.g. email addresses and phone numbers).
-Users generally have relatively few global identifiers and can usually list and
-recognize them. A goal of anti-tracking policy is to prevent [=user identifiers=] from
-becoming [=global identifiers=].
-
-A <dfn>directed identifier</dfn> is a [=user identifier=] that that is unique for each
-site they're visiting. A goal of anti-tracking policy is to promote [=user identifiers=]
-to become [=directed identifiers=].
-
-: <dfn>Relying Party</dfn>
-: <dfn>RP</dfn>
-: <dfn noexport>Website</dfn>
-:: TODO(goto): find existing definitions.
-
-: <dfn>Identity Provider</dfn>
-: <dfn>IDP</dfn>
-:: TODO(goto): find existing definition.
-
-: <dfn>session</dfn>
-:: TODO(goto): find existing definition.
-
 : <dfn>account</dfn>
 :: TODO(goto): find existing definition.
+
+: <dfn>authentication</dfn>
+:: Process used by an [=Identity Provider=] to achieve sufficient confidence in
+    the binding between the user and a presented identity.
+
+    Note that in some discussions and documentation, the term _authentication_ is
+    used to refer to the [=federated sign-in=] process. However, the user does not
+    authenticate to the [=RP=] during [=federated sign-in=]. The user
+    authenticates to the [=IDP=], which then provides a claim to the [=RP=]
+    asserting the user’s identity. The user does not prove their identity to the
+    [=RP=].
+
+    See also:
+    * [[OIDC-Connect-Core#Terminology]]
+    * [[OIDC-Connect-Core#Authentication]]
+    * [[SAML-Glossary]]
+
+: <dfn>directed identifier</dfn>
+:: A [=user identifier=] that that is unique for each [=site=] the user visits. A
+    goal of anti-tracking policy is to promote [=user identifiers=] to become
+    [=directed identifiers=]. See the [[#privacy-threat-model]] for more information.
+
+: <dfn>first party</dfn>
+:: The first-party for a user action is the [=party=] that controls the
+    [=origin=] of the [=top-level browsing context=] under which the action
+    happened. Intuitively, this is the owner of the domain in the browser's URL bar.
+
+    This differs from <a href="https://wiki.mozilla.org/Security/ Anti_tracking_policy#Tracking_Definition">Mozilla's definition</a>
+    in that Mozilla defines other parties as first parties if the user can easily
+    discover which party it is and intends to interact with that party, for
+    example to allow sign-in widgets to be first-party.
+
+: <dfn>global identifier</dfn>
+:: A string that identifies a particular [=user=] independent of which site
+    they're visiting (e.g. email addresses and phone numbers). Users generally
+    have relatively few global identifiers and can usually list and recognize
+    them. A goal of anti-tracking policy is to prevent [=user identifiers=] from
+    becoming [=global identifiers=].
+
+: <dfn>high-level API</dfn>
+:: A use case specific API, as opposed to a [=low-level API=]. See also
+    [high level vs low level](https://w3ctag.github.io/design-principles/#high-level-low-level).
 
 : <dfn>id token</dfn>
 :: TODO(goto): find existing definition.
 
-: <df>unsanctioned tracking</dfn>
-:: [[UNSANCTIONED-TRACKING]]
+: <dfn>Identity Provider</dfn>
+: <dfn>IDP</dfn>
+:: A service that has information about the user and can grant that information
+    to [=Relying Parties=].
 
-: <dfn>high-level API</dfn>
-:: A use case specific API, as opposed to a [=low-level API=]. See also [high level vs low level](https://w3ctag.github.io/design-principles/#high-level-low-level).
+    See also:
+    * [[OIDC-Connect-Core#Terminology]]
 
-: <dfn>low-level API</dfn>
-:: A general purpose API, as opposed to a [=high-level API=]. See also [high level vs low level](https://w3ctag.github.io/design-principles/#high-level-low-level)
-
-: <dfn>registered</dfn>
-:: TODO(goto): find existing definition.
-
-: <dfn>unregistered</dfn>
+: <dfn>joining</dfn>
 :: TODO(goto): find existing definition.
 
 : <dfn>logged in</dfn>
@@ -383,11 +369,64 @@ to become [=directed identifiers=].
 : <dfn>logged out</dfn>
 :: TODO(goto): find existing definition.
 
+: <dfn>low-level API</dfn>
+:: A general purpose API, as opposed to a [=high-level API=]. See also
+    [high level vs low level](https://w3ctag.github.io/design-principles/#high-level-low-level)
+
 : <dfn>out-of-band</dfn>
 :: Outside of the user agent's context.
 
-: <dfn>joining</dfn>
-::
+: <dfn>party</dfn>
+:: Defined by [[tracking-dnt]] as "a natural person, a legal entity, or a set of
+    legal entities that share common owner(s), common controller(s), and a group
+    identity that is easily discoverable by a user."
+
+: <dfn>registered</dfn>
+:: TODO(goto): find existing definition.
+
+: <dfn>Relying Party</dfn>
+: <dfn>RP</dfn>
+: <dfn noexport>Website</dfn>
+:: A service that requests user information from an [=Identity Provider=] for
+    [=federated sign-in=] or for other purposes.
+
+    See also:
+    * [[OIDC-Connect-Core#Terminology]]
+    * [[SAML-Glossary]]
+
+: <dfn>session</dfn>
+:: TODO(goto): find existing definition.
+
+: <dfn>Federated sign-in</dfn>
+:: Process used by a [=Relying Party=] to obtain a [=user identifier=] from an
+    [=Identity Provider=] to which the user performed [=authentication=].
+
+    See also:
+    * [[OIDC-Connect-Core]]
+
+: <dfn>site</dfn>
+:: A set of [=origins=] that are all [=same site=] with each other. Note that
+    there are problems ([[PSL-PROBLEMS]]) with using [=registrable domains=] as
+    a logical boundary.
+
+: <dfn>third party</dfn>
+:: A third-party for a user action is any party that isn't the [=first party=]
+    or the user (the second party).
+
+: <dfn>unregistered</dfn>
+:: TODO(goto): find existing definition.
+
+: <df>unsanctioned tracking</dfn>
+:: [[UNSANCTIONED-TRACKING]]
+
+: <dfn>user</dfn>
+:: A human or program that controls a user agent.
+
+: <dfn>user identifier</dfn>
+:: A pair of a [=site=] and a (potentially-large) integer
+    allocated by that site that is used to identify a [=user=] on that site. A
+    single user will generally have many user IDs that refer to them, and a single
+    site may or may not know that multiple user identifiers refer to the same user.
 
 <!-- ============================================================ -->
 # High Level Design # {#high-level-design}
@@ -420,7 +459,7 @@ The [=IDP=] proactively and cooperatively exposes itself as a comformant agent b
 1. A [[#idp-api-manifest]] endpoint in a well-known location that points to
 1. An [[#idp-api-accounts-endpoint]] endpoint
 1. A [[#idp-api-client-id-metadata-endpoint]] endpoint
-1. An [[#idp-api-idtoken-endpoint]] endpoint
+1. An [[#idp-api-id-token-endpoint]] endpoint
 1. A [[#idp-api-revocation-endpoint]] endpoint
 
 <!-- ============================================================ -->
@@ -430,7 +469,9 @@ The [=IDP=] proactively and cooperatively exposes itself as a comformant agent b
 The well-known discovery endpoint is an endpoint located at the [=IDP=]'s
 `.well-known/fedcm` and serves as a discovery device to other endpoints provided by the [=IDP=].
 
-The well-known discovery endpoint is fetched (a) **without** cookies and (b) **with** a special [[#Sec-FedCM-CSRF]] header.
+The well-known discovery endpoint is fetched
+(a) **without** cookies and
+(b) **with** a special [[#Sec-FedCM-CSRF]] header.
 
 For example:
 
@@ -450,8 +491,8 @@ The file is parsed expecting the following properties:
     ::  A URL that points to an HTTP API that complies with the [[#idp-api-accounts-endpoint]] API.
     :   <dfn>client_id_metadata_endpoint</dfn>
     ::  A URL that points to an HTTP API that complies with the [[#idp-api-client-id-metadata-endpoint]] API.
-    :   <dfn>idtoken_endpoint</dfn>
-    ::  A URL that points to an HTTP API that complies with the [[#idp-api-idtoken-endpoint]] API.
+    :   <dfn>id_token_endpoint</dfn>
+    ::  A URL that points to an HTTP API that complies with the [[#idp-api-id-token-endpoint]] API.
     :   <dfn>revocation_endpoint</dfn>
     :: A URL that points to an HTTP API that complies with the [[#idp-api-revocation-endpoint]] API.
 </dl>
@@ -463,7 +504,7 @@ For example:
 {
   "accounts_endpoint": "/accounts.php",
   "client_id_metadata_endpoint": "/metadata.php",
-  "idtoken_endpoint": "/idtokens.php",
+  "id_token_endpoint": "/idtokens.php",
   "revocation_endpoint": "/revocation.php"
 }
 ```
@@ -475,7 +516,9 @@ For example:
 
 The accounts list endpoint provides the list of accounts the user has at the [=IDP=].
 
-The accounts list endpoint is fetched (a) **with** any cookies and (b) **with** a special [[#Sec-FedCM-CSRF]] header.
+The accounts list endpoint is fetched
+(a) **with** [=IDP=] cookies and
+(b) **with** a special [[#Sec-FedCM-CSRF]] header.
 
 For example:
 
@@ -539,7 +582,9 @@ For example:
 
 The client metadata endpoint provides metadata about [=RP=]s.
 
-The client medata endpoint is fetched (a) **without** cookies and (b) **with** a special [[#Sec-FedCM-CSRF]] header.
+The client medata endpoint is fetched
+(a) **without** cookies and
+(b) **with** a special [[#Sec-FedCM-CSRF]] header.
 
 The user agent also passes the **client_id**.
 
@@ -575,20 +620,20 @@ For example:
 </div>
 
 <!-- ============================================================ -->
-## ID Token ## {#idp-api-idtoken-endpoint}
+## ID Token ## {#idp-api-id-token-endpoint}
 <!-- ============================================================ -->
 
 The ID Token endpoint is responsible for [=minting=] a new [=id token=] for the user.
 
 The ID Token endpoint is fetched
 (a) as a **POST** request,
-(b) **with** cookies,
+(b) **with** [=IDP=] cookies,
 (c) **with** a special [[#Sec-FedCM-CSRF]] header and
 (d) **with** a Referer header indicating the [=RP=] URL.
 
 It will also contain the following parameters passed as a JSON object:
 
-<dl dfn-type="argument" dfn-for="idtoken_endpoint_request">
+<dl dfn-type="argument" dfn-for="id_token_endpoint_request">
     :   <dfn>account_id</dfn>
     :: The account identifier that was selected.
     :   <dfn>request</dfn>
@@ -597,7 +642,7 @@ It will also contain the following parameters passed as a JSON object:
 
 The <dfn>RP request</dfn> has the following properties:
 
-<dl dfn-type="argument" dfn-for="idtoken_endpoint_request_request">
+<dl dfn-type="argument" dfn-for="id_token_endpoint_request_request">
     :   <dfn>client_id</dfn>
     :: The [=RP=]'s client it
     :   <dfn>nonce</dfn>
@@ -626,7 +671,7 @@ Sec-FedCM-CSRF: random_value
 
 The response is parsed as a JSON file expecting the following properties:
 
-<dl dfn-type="argument" dfn-for="idtoken_endpoint_response">
+<dl dfn-type="argument" dfn-for="id_token_endpoint_response">
     :   <dfn>id_token</dfn>
     ::  The resulting [=id token=].
 </dl>
@@ -649,9 +694,11 @@ For example:
 The revocation endpoint is responsible for revoking all [=id token=]s for the
 specified client ID for the user.
 
-The revocation endpoint is fetched (a) as a **POST** request, (b)  **with**
-cookies, (c) **with** a special [[#Sec-FedCM-CSRF]] header, and (d) **with**
-a Referer header indicating the [=RP=] URL.
+The revocation endpoint is fetched
+(a) as a **POST** request,
+(b) **with** [=IDP=] cookies,
+(c) **with** a special [[#Sec-FedCM-CSRF]] header, and
+(d) **with** a Referer header indicating the [=RP=] URL.
 
 It will also contain the following parameters passed as a JSON object:
 
@@ -712,7 +759,9 @@ via the logout endpoint.
 The logout endpoint is an endpoint that is registered with the [=IDP=]
 [=out-of-band=].
 
-The logout endpoint is called (a) with a **GET** and (b) with the [=RP=]'s cookies.
+The logout endpoint is called
+(a) with a **GET** and
+(b) with the [=RP=]'s cookies.
 
 Note: the logout API introduces a credentialed request from the [=IDP=] to
 the [=RP=]s, so it exposes a potential tracking surface area. It is a fairly
@@ -765,11 +814,11 @@ path: img/mock42.svg
 ### RP Sign-in API ### {#browser-api-rp-sign-in}
 <!-- ============================================================ -->
 
-The Sign-up and Sign-in APIs are APIs used by the [=Relying Party=]s to ask the browser to intermediate the relationship with the [=Identity Provider=] and the provisioning of an [=id token=].
+The Sign-up and Sign-in APIs used by the [=Relying Party=]s to ask the browser to intermediate the relationship with the [=Identity Provider=] and the provisioning of an [=id token=].
 
-The [=Relying Party=] makes no delineation between Sign-up and Sign-in, but rather call the same API indistinguishably. The most important parameter to the API call is the set of [=Identity Provider=]s that the [=Relying Party=] supports and has pre-registered with (i.e. it has a `clientId`).
+The [=Relying Party=] makes no delineation between Sign-up and Sign-in, but rather calls the same API indistinguishably. The most important parameter to the API call is the set of [=Identity Provider=]s that the [=Relying Party=] supports and has pre-registered with (i.e. it has a `clientId`).
 
-Additionally, the [=Relying Party=] can control a variety of UX knobs. For example, whether to allow an [[#use-cases-auto-sign-in]] flow and an AbortSignal in case it needs to abort the flow.
+Additionally, the [=Relying Party=] can control a variety of UX knobs. For example, whether to allow an [[#use-cases-auto-sign-in]] flow and an `AbortSignal` in case it needs to abort the flow.
 
 If all goes well, the [=Relying Party=] receives back an [=id token=] in the form of a signed [[JWT]] which it can use to authenticate the user.
 
@@ -975,11 +1024,11 @@ The <dfn>Terms of Service</dfn> are the policies described at {{client_id_metada
 
 To <dfn>mint</dfn> a new id token, run the following algorithm:
 
-1. Let |token| be the result of making a POST request to the |wellknown|["{{WellKnown/idtoken_endpoint}}"] with:
-    * Let the {{idtoken_endpoint_request/account_id}} be |account|["{{accounts_endpoint_response_accounts/account_id}}"].
-    * Let the {{idtoken_endpoint_request/request}} be a new object with
-          * Let {{idtoken_endpoint_request_request/client_id}} be |provider|["{{FederatedIdentityProvider/clientId}}"].
-          * Let the {{idtoken_endpoint_request_request/nonce}} be |provider|["{{FederatedIdentityProvider/nonce}}"].
+1. Let |token| be the result of making a POST request to the |wellknown|["{{WellKnown/id_token_endpoint}}"] with:
+    * Let the {{id_token_endpoint_request/account_id}} be |account|["{{accounts_endpoint_response_accounts/account_id}}"].
+    * Let the {{id_token_endpoint_request/request}} be a new object with
+          * Let {{id_token_endpoint_request_request/client_id}} be |provider|["{{FederatedIdentityProvider/clientId}}"].
+          * Let the {{id_token_endpoint_request_request/nonce}} be |provider|["{{FederatedIdentityProvider/nonce}}"].
 1. Return a new {{FederatedCredential}} as:
     * {{Credential/id}} with |account|["{{accounts_endpoint_response_accounts/account_id}}"]
     * {{FederatedCredential/idToken}} with |token|
@@ -1098,10 +1147,10 @@ path: img/mock31.svg
 ```js
 async function logout() {
   await FederatedCredential.logout([{
-      endpoint: "https://rp1.example",
+      url: "https://rp1.example",
       accountId: "123",
     }, {
-      endpoint: "https://rpN.example",
+      url: "https://rpN.example",
       accountId: "456",
     }]);
 }
@@ -1112,7 +1161,7 @@ async function logout() {
 
 <xmp class=idl>
 dictionary FederatedCredentialLogoutRequest {
-    required USVString endpoint;
+    required USVString url;
     required USVString accountId;
 };
 
@@ -1740,6 +1789,14 @@ Note: write down the Acknowledgements section.
     "authors": [ "V. Bertocci", "G. Fletcher" ],
     "href": "https://datatracker.ietf.org/doc/html/draft-bertocci-identity-in-browser-00",
     "title": "Identity Use Cases in Browser Catalog"
+  },
+  "OIDC-Connect-Core": {
+    "href": "https://openid.net/specs/openid-connect-core-1_0.html",
+    "title": "OIDC Connect Core"
+  },
+  "SAML-Glossary": {
+    "href": "https://docs.oasis-open.org/security/saml/v2.0/saml-glossary-2.0-os.pdf",
+    "title": "SAML glossary"
   }
 }
 </pre>
