@@ -129,7 +129,8 @@ the user has a [=session=] initialized.
 
 After a user navigates to a [=Relying Party=] in a browser and decides to
 create an account by going through their [[#use-cases-sign-up]] flow,
-there are two ways a user logs into their [=account=] once their [=session=] expires:
+there are two ways a user logs into their [=account=] once their
+[=session=] expires:
 
 <!-- ============================================================ -->
 #### Auto Sign-in #### {#use-cases-auto-sign-in}
@@ -150,17 +151,21 @@ new [=session=] for the users [=account=].
 #### Explicit Sign-in #### {#use-cases-explicit-sign-in}
 <!-- ============================================================ -->
 
-An explicit sign-in occurs when the [=Identity Provider=] believes it is necessary to gather an explicit permission from the user to sign into a [=Relying Party=], typically after the user goes through a [[#use-cases-sign-out]] flow.
+An explicit sign-in occurs when the [=Identity Provider=] believes it is
+necessary to gather an explicit permission from the user to sign into a
+[=Relying Party=], typically after the user goes through a
+[[#use-cases-sign-out]] flow.
 
 For example, after the user has done the [[#use-cases-sign-out]] flow of the
 [=Relying Party=] they decide to log in again. The user visits the
 [=Relying Party=] and selects their [=Identity Provider=] to sign-in. The
 [=Identity Provider=] knows:
-    * the user already has an account with the [=Relying Party=].
-    * the user has logged out of the [=Relying Party=].
+  * the user already has an account with the [=Relying Party=].
+  * the user has logged out of the [=Relying Party=].
 
-The user is then prompted, "Do you want to sign-in with the [=Relying Party=]?" and upon user agreement the [=Relying Party=] creates a new [=session=] with
-the users existing [=account=].
+The user is then prompted, "Do you want to sign-in with the [=Relying
+Party=]?" and upon user agreement the [=Relying Party=] creates a new
+[=session=] with the users existing [=account=].
 
 <!-- ============================================================ -->
 ### Sign-out ### {#use-cases-sign-out}
@@ -221,6 +226,12 @@ will need to complete the [[#use-cases-sign-up]] flow in order to access the
 site.
 
 <!-- ============================================================ -->
+### Request Token ### {#use-cases-request-token}
+<!-- ============================================================ -->
+
+The [=RP=] can request a token from the [=IDP=].
+
+<!-- ============================================================ -->
 ### Access ### {#use-cases-access}
 <!-- ============================================================ -->
 
@@ -241,68 +252,79 @@ entries provided by the [=Identity Provider=].
 # Examples # {#examples}
 <!-- ============================================================ -->
 
-This specification extends the {{FederatedCredential}} type and internal algorithms to allow the exchange
-of identity between [=IDP=]s and [=RP=]s. When it succeeds, it returns to the [=RP=] a signed [=id token=]
-which the [=RP=] can use to authenticate the user.
+This specification extends the {{FederatedCredential}} type and internal
+algorithms to allow the exchange of identity between [=IDPs=] and [=RPs=].
 
 <div class=example>
 ```html
 <html>
   <head>
-    <title>Welcome to my WebSite!</title>
+    <title>Welcome to my WebSite</title>
   </head>
   <body>
-    <button onclick="login('https://foo.example', '123')">Sign-in with Foo</button>
+    <button onclick="login()">Sign-in with Foo</button>
     <button onclick="logout()">logout</button>
 
-    Welcome <span id="name"></span>!!
+    Welcome <span id="name"></span>
 
     <button onclick="revoke">delete account</button>
 
     <script>
+    // The URL for the IDP
+    const provider = 'https://foo.example';
 
-    var user;
+    // The pre-registered client id.
+    const clientId = '123';
 
-    const identityProvider = {
-      url: provider,
-      // the pre-registered client id
-      clientId: clientId,
-      nonce: "456"
-    };
-
-    async function login(provider, clientId) {
-      const {idToken} = await navigator.credentials.get({
-        // controls whether auto sign-in is enabled or not
+    async function login() {
+      const creds = await navigator.credentials.get({
+        // Controls whether auto sign-in is enabled or not
         mediation: "optional",
-        // controls abortions of the account chooser
+
+        // Controls abortions of the account chooser
         signal: signal
 
-        // controls which identity providers to use
+        // Controls which identity providers to use
         federated: {
-          // controls whether the account chooser is modal or not
-          providers: [identityProvider],
+          providers: [{
+            url: provider,
+            clientId: clientId,
+            nonce: "456"
+          }],
         }
       });
+      const tokens = creds.fetchTokens();
 
       // ... do stuff ...
       // ... send to server ...
       // ... validate ...
       // ... update local storage ...
 
-      user = parse(idToken);
+      let user = parse(tokens["id_token"]);
       document.getElementById("name").innerText = user.name;
     }
 
     async function logout() {
-      await navigator.credentials.preventSilentAccess();
+      await navigator.credentials.get({
+        federated: {
+            providers: [{
+              url: provider
+            }]
+        }
+      }).logout();
     }
 
     async function revoke() {
-      await FederatedCredential.revoke(user.id, identityProvider);
+      await navigator.credentials.get({
+        federated: {
+            providers: [{
+              url: provider
+            }]
+        }
+      }).revoke();
     }
     </script>
   </body>
-
 </html>
 ```
 </div>
@@ -315,7 +337,7 @@ which the [=RP=] can use to authenticate the user.
 provides the main security boundary on the web.
 
 : <dfn>account</dfn>
-:: TODO(goto): find existing definition.
+:: Issue(goto): find existing definition.
 
 : <dfn>authentication</dfn>
 :: Process used by an [=Identity Provider=] to achieve sufficient confidence in
@@ -360,7 +382,7 @@ provides the main security boundary on the web.
     [high level vs low level](https://w3ctag.github.io/design-principles/#high-level-low-level).
 
 : <dfn>id token</dfn>
-:: TODO(goto): find existing definition.
+:: Issue(goto): find existing definition.
 
 : <dfn>Identity Provider</dfn>
 : <dfn>IDP</dfn>
@@ -371,13 +393,13 @@ provides the main security boundary on the web.
     * [[OIDC-Connect-Core#Terminology]]
 
 : <dfn>joining</dfn>
-:: TODO(goto): find existing definition.
+:: Issue(goto): find existing definition.
 
 : <dfn>logged in</dfn>
-:: TODO(goto): find existing definition.
+:: Issue(goto): find existing definition.
 
 : <dfn>logged out</dfn>
-:: TODO(goto): find existing definition.
+:: Issue(goto): find existing definition.
 
 : <dfn>low-level API</dfn>
 :: A general purpose API, as opposed to a [=high-level API=]. See also
@@ -392,7 +414,7 @@ provides the main security boundary on the web.
     identity that is easily discoverable by a user."
 
 : <dfn>registered</dfn>
-:: TODO(goto): find existing definition.
+:: Issue(goto): find existing definition.
 
 : <dfn>Relying Party</dfn>
 : <dfn>RP</dfn>
@@ -405,7 +427,7 @@ provides the main security boundary on the web.
     * [[SAML-Glossary]]
 
 : <dfn>session</dfn>
-:: TODO(goto): find existing definition.
+:: Issue(goto): find existing definition.
 
 : <dfn>Federated sign-in</dfn>
 :: Process used by a [=Relying Party=] to obtain a [=user identifier=] from an
@@ -424,7 +446,7 @@ provides the main security boundary on the web.
     or the user (the second party).
 
 : <dfn>unregistered</dfn>
-:: TODO(goto): find existing definition.
+:: Issue(goto): find existing definition.
 
 : <df>unsanctioned tracking</dfn>
 :: [[UNSANCTIONED-TRACKING]]
@@ -442,17 +464,22 @@ provides the main security boundary on the web.
 # High Level Design # {#high-level-design}
 <!-- ============================================================ -->
 
-At a high level, the Identity Federation Management API works by the intermediation of cooperating [=IDP=]s and [=RP=]s.
+At a high level, the Identity Federation Management API works by the
+intermediation of cooperating [=IDPs=] and [=RPs=].
 
-The [[#idp-api]] and the [[#rp-api]] defines a set of HTTP APIs that cooperating [=IDP=]s and [=IDP=]s exposes as well as the entry points in the [[#browser-api]] that they can use.
+The [[#idp-api]] and the [[#rp-api]] defines a set of HTTP APIs that
+[=IDP=]s and [=RP=]s exposes as well as the entry points in the
+[[#browser-api]].
 
 <div class='image'>
 <pre class=include-raw>
-path: img/mock43.svg
+path: img/mediation_api.svg
 </pre>
 </div>
 
-The user agent intermediates in such a matter that makes it impractical for the API to be used for tracking purposes, while preserving the functionality of identity federation.
+The user agent intermediates in such a matter that makes it impractical for the
+API to be used for tracking purposes, while preserving the functionality of
+identity federation.
 
 This document defines the APIs in the following order:
 
@@ -464,26 +491,44 @@ This document defines the APIs in the following order:
 # The Identity Provider API # {#idp-api}
 <!-- ============================================================ -->
 
-The [=IDP=] proactively and cooperatively exposes itself as a comformant agent by exposing a series of HTTP endpoints:
+The [=IDP=] proactively and cooperatively identifies itself as a conformant
+agent by providing a series of HTTP endpoints:
 
-1. A [[#idp-api-manifest]] endpoint in a well-known location that points to
+1. A  [[#idp-api-manifest]] endpoint in a well-known location
 1. An [[#idp-api-accounts-endpoint]] endpoint
-1. A [[#idp-api-client-id-metadata-endpoint]] endpoint
-1. An [[#idp-api-id-token-endpoint]] endpoint
-1. A [[#idp-api-revocation-endpoint]] endpoint
+1. A  [[#idp-api-client-id-metadata-endpoint]] endpoint
+1. A  [[#idp-api-token-endpoint]] endpoint
+1. A  [[#idp-api-revocation-endpoint]] endpoint
 
 <!-- ============================================================ -->
 ## Manifest ## {#idp-api-manifest}
 <!-- ============================================================ -->
 
-The well-known discovery endpoint is an endpoint located at the [=IDP=]'s
-`.well-known/fedcm` and serves as a discovery device to other endpoints provided by the [=IDP=].
+The well-known discovery endpoint is an endpoint located at the [=IDPs=]
+`.well-known/fedcm` and serves as a discovery device to other endpoints provided
+by the [=IDP=].
 
 The well-known discovery endpoint is fetched
-(a) **without** cookies and
-(b) **with** a special [[#Sec-FedCM-CSRF]] header.
+(a) **without** cookies,
+(b) **without** referrer, and
+(c) **with** a special [[#Sec-FedCM-CSRF]] header.
 
-For example:
+The file contains the following required properties:
+
+<dl dfn-type="argument" dfn-for="WellKnown">
+    :  <dfn>accounts_endpoint</dfn>
+    :: A URL that points to an HTTP API that complies with the
+         [[#idp-api-accounts-endpoint]] API.
+    :  <dfn>client_id_metadata_endpoint</dfn>
+    :: A URL that points to an HTTP API that complies with the
+         [[#idp-api-client-id-metadata-endpoint]] API.
+    :  <dfn>token_endpoint</dfn>
+    :: A URL that points to an HTTP API that complies with the
+         [[#idp-api-token-endpoint]] API.
+    :  <dfn>revocation_endpoint</dfn>
+    :: A URL that points to an HTTP API that complies with the
+         [[#idp-api-revocation-endpoint]] API.
+</dl>
 
 <div class=example>
 ```http
@@ -492,29 +537,12 @@ Host: idp.example
 Accept: application/json
 Sec-FedCM-CSRF: random_value
 ```
-</div>
 
-The file is parsed expecting the following properties:
-
-<dl dfn-type="argument" dfn-for="WellKnown">
-    :   <dfn>accounts_endpoint</dfn>
-    ::  A URL that points to an HTTP API that complies with the [[#idp-api-accounts-endpoint]] API.
-    :   <dfn>client_id_metadata_endpoint</dfn>
-    ::  A URL that points to an HTTP API that complies with the [[#idp-api-client-id-metadata-endpoint]] API.
-    :   <dfn>id_token_endpoint</dfn>
-    ::  A URL that points to an HTTP API that complies with the [[#idp-api-id-token-endpoint]] API.
-    :   <dfn>revocation_endpoint</dfn>
-    :: A URL that points to an HTTP API that complies with the [[#idp-api-revocation-endpoint]] API.
-</dl>
-
-For example:
-
-<div class=example>
 ```json
 {
   "accounts_endpoint": "/accounts.php",
   "client_id_metadata_endpoint": "/metadata.php",
-  "id_token_endpoint": "/idtokens.php",
+  "token_endpoint": "/tokens.php",
   "revocation_endpoint": "/revocation.php"
 }
 ```
@@ -524,13 +552,35 @@ For example:
 ## Accounts List ## {#idp-api-accounts-endpoint}
 <!-- ============================================================ -->
 
-The accounts list endpoint provides the list of accounts the user has at the [=IDP=].
+The accounts list endpoint provides the list of accounts the user has at
+the [=IDP=].
 
 The accounts list endpoint is fetched
-(a) **with** [=IDP=] cookies and
-(b) **with** a special [[#Sec-FedCM-CSRF]] header.
+(a) **with** [=IDP=] cookies,
+(b) **without** referrer, and
+(c) **with** a special [[#Sec-FedCM-CSRF]] header.
 
-For example:
+The response is required to have the following properties:
+
+<dl dfn-type="argument" dfn-for="accounts_endpoint_response">
+    :  <dfn>accounts</dfn> (required)
+    :: A list of [=Account Objects=].
+</dl>
+
+Every <dfn>Account Object</dfn> has the following required properties:
+
+<dl dfn-type="argument" dfn-for="accounts_endpoint_response_accounts">
+    :  <dfn>account_id</dfn> (required)
+    :: An account identifier.
+    :  <dfn>name</dfn> (required)
+    :: The user's full name.
+    :  <dfn>given_name</dfn> (required)
+    :: The user's given name.
+    :  <dfn>email</dfn> (optional)
+    :: The user's email address.
+    :  <dfn>picture</dfn> (optional)
+    :: The user's profile picture.
+</dl>
 
 <div class=example>
 ```http
@@ -540,33 +590,7 @@ Accept: application/json
 Cookie: 0x23223
 Sec-FedCM-CSRF: random_value
 ```
-</div>
 
-The response is expected to have the following properties:
-
-<dl dfn-type="argument" dfn-for="accounts_endpoint_response">
-    :   <dfn>accounts</dfn> (required)
-    ::  A list of [=Account JSON=].
-</dl>
-
-Every <dfn>Account JSON</dfn> is expected to have the following properties:
-
-<dl dfn-type="argument" dfn-for="accounts_endpoint_response_accounts">
-    :   <dfn>account_id</dfn> (required)
-    ::  An account identifier.
-    :   <dfn>name</dfn> (required)
-    ::  The user's full name.
-    :   <dfn>given_name</dfn> (required)
-    ::  The user's given name.
-    :   <dfn>email</dfn> (optional)
-    ::  The user's email address.
-    :   <dfn>picture</dfn> (optional)
-    :: The user's profile picture.
-</dl>
-
-For example:
-
-<div class=example>
 ```json
 {
  "accounts": [{
@@ -575,7 +599,8 @@ For example:
    "name": "John Doe",
    "email": "john_doe@idp.example",
    "picture": "https://idp.example/profile/123",
-  }, {
+  },
+  {
    "account_id": "5678",
    "given_name": "Johnny",
    "name": "Johnny",
@@ -590,37 +615,35 @@ For example:
 ## Client Metadata ## {#idp-api-client-id-metadata-endpoint}
 <!-- ============================================================ -->
 
-The client metadata endpoint provides metadata about [=RP=]s.
+The client metadata endpoint provides metadata about the [=RP=]. This metadata
+is stored at the IDP and contains, for example, the privacy policy link for the
+[=RP=]. The metadata endpoint is called without cookies so the request is not
+associated to a given user account.
 
-The client medata endpoint is fetched
-(a) **without** cookies and
-(b) **with** a special [[#Sec-FedCM-CSRF]] header.
+The client metadata endpoint is fetched
+(a) **without** cookies,
+(b) **with** a referer set to the [=RP=],
+(c) **with** a **client_id** query parameter set to the [=RPs=] client_id with the IDP, and
+(d) **with** a special [[#Sec-FedCM-CSRF]] header.
 
-The user agent also passes the **client_id**.
+The result object contains the following properties:
 
-For example:
+<dl dfn-type="argument" dfn-for="client_id_metadata_endpont_response">
+    :  <dfn>privacy_policy_url</dfn>
+    :: A link to the [=RP=]'s privacy policy. (required)
+    :  <dfn>terms_of_service_url</dfn>
+    :: A link to the [=RP=]'s terms of service. (required)
+</dl>
 
 <div class=example>
 ```http
 GET /client_medata.php?client_id=1234 HTTP/1.1
 Host: idp.example
+Referer: rp.com
 Accept: application/json
 Sec-FedCM-CSRF: random_value
 ```
-</div>
 
-The file is parsed expecting the following properties:
-
-<dl dfn-type="argument" dfn-for="client_id_metadata_endpont_response">
-    :   <dfn>privacy_policy_url</dfn>
-    ::  A link to the [=RP=]'s privacy policy.
-    :   <dfn>terms_of_service_url</dfn>
-    ::  A link to the [=RP=]'s terms of service.
-</dl>
-
-For example:
-
-<div class=example>
 ```json
 {
   "privacy_policy_url": "/privacy.html",
@@ -630,35 +653,43 @@ For example:
 </div>
 
 <!-- ============================================================ -->
-## ID Token ## {#idp-api-id-token-endpoint}
+## Token ## {#idp-api-token-endpoint}
 <!-- ============================================================ -->
 
-The ID Token endpoint is responsible for [=minting=] a new [=id token=] for the user.
+The token endpoint is responsible for [=minting=] tokens for the user. The only
+token currently exposed is an [=id token=].
 
 The ID Token endpoint is fetched
 (a) as a **POST** request,
 (b) **with** [=IDP=] cookies,
-(c) **with** a special [[#Sec-FedCM-CSRF]] header and
+(c) **with** a referer set to the [=RP=],
+(d) **with** a POST body containing the [=token_endpoint_request=] object, and
+(e) **with** a special [[#Sec-FedCM-CSRF]] header.
 
-It will also contain the following parameters passed as a JSON object:
-
-<dl dfn-type="argument" dfn-for="id_token_endpoint_request">
-    :   <dfn>account_id</dfn>
-    :: The account identifier that was selected.
-    :   <dfn>request</dfn>
+<dl dfn-type="argument" dfn-for="token_endpoint_request">
+    :  <dfn>account_id</dfn>
+    :: The users account id
+    : <dfn>tokens</dfn>
+    :: The comma separated list of tokens to request. Currently accepts "id_token".
+    :  <dfn>request</dfn>
     :: The [=RP request=]
 </dl>
 
 The <dfn>RP request</dfn> has the following properties:
 
-<dl dfn-type="argument" dfn-for="id_token_endpoint_request_request">
-    :   <dfn>client_id</dfn>
+<dl dfn-type="argument" dfn-for="token_endpoint_request_request">
+    :  <dfn>client_id</dfn>
     :: The [=RP=]'s client it
-    :   <dfn>nonce</dfn>
+    :  <dfn>nonce</dfn>
     :: A random number of the choice of the [=RP=]
 </dl>
 
-For example:
+The response is JSON with the following properties:
+
+<dl dfn-type="argument" dfn-for="token_endpoint_response">
+    :  <dfn>id_token</dfn>
+    :: The resulting [=id token=]. (required)
+</dl>
 
 <div class=example>
 ```http
@@ -668,26 +699,17 @@ Referer: rp.example
 Content-Type: application/json
 Cookie: 0x23223
 Sec-FedCM-CSRF: random_value
+
 {
   "account_id": "123",
+  "tokens": "id_token",
   "request": {
     "client_id": "client1234",
     "nonce": "Ct60bD"
   }
 }
 ```
-</div>
 
-The response is parsed as a JSON file expecting the following properties:
-
-<dl dfn-type="argument" dfn-for="id_token_endpoint_response">
-    :   <dfn>id_token</dfn>
-    ::  The resulting [=id token=].
-</dl>
-
-For example:
-
-<div class=example>
 ```json
 {
   "id_token" : "eyJC...J9.eyJzdWTE2...MjM5MDIyfQ.SflV_adQssw....5c"
@@ -699,33 +721,28 @@ For example:
 ## Revocation ## {#idp-api-revocation-endpoint}
 <!-- ============================================================ -->
 
-
-The revocation endpoint is responsible for revoking all [=id token=]s for the
+The revocation endpoint is responsible for revoking all [=id tokens=] for the
 specified client ID for the user.
 
 The revocation endpoint is fetched
 (a) as a **POST** request,
 (b) **with** [=IDP=] cookies,
-(c) **with** a special [[#Sec-FedCM-CSRF]] header, and
-(d) **with** a Referer header indicating the [=RP=] URL.
-
-It will also contain the following parameters passed as a JSON object:
+(c) **with** a POST body containing the [=revocation_endpoint_request=] object, and
+(d) **with** a Referer header indicating the [=RP=] URL, and
+(e) **with** a special [[#Sec-FedCM-CSRF]] header.
 
 <dl dfn-type="argument" dfn-for="revocation_endpoint_request">
-    :   <dfn>account_id</dfn>
-    :: The account identifier for the user (e.g. email).
-    :   <dfn>request</dfn>
+    :  <dfn>account_id</dfn>
+    :: The users account id
+    :  <dfn>request</dfn>
     :: The [=revocation request=]
 </dl>
 
 The <dfn>revocation request</dfn> has the following properties:
-
 <dl dfn-type="argument" dfn-for="revocation_endpoint_request_request">
-    :   <dfn>client_id</dfn>
+    :  <dfn>client_id</dfn>
     :: The [=RP=]'s client id
 </dl>
-
-For example:
 
 <div class=example>
 ```http
@@ -735,6 +752,7 @@ Referer: rp.example
 Content-Type: application/json
 Cookie: 0x23223
 Sec-FedCM-CSRF: random_value
+
 {
   "account_id": "123",
   "request": {
@@ -744,36 +762,37 @@ Sec-FedCM-CSRF: random_value
 ```
 </div>
 
-If successful, the response is an empty response with an HTTP 204 code,
-otherwise an HTTP error code.
+There is no response returned from the UA for this request.
 
 <!-- ============================================================ -->
 ## <code><dfn data-export="">`Sec-FedCM-CSRF`</dfn></code> ## {#Sec-FedCM-CSRF}
 <!-- ============================================================ -->
 
+Issue: Complete this section.
+
 <!-- ============================================================ -->
 # The Relying Party API # {#rp-api}
 <!-- ============================================================ -->
 
-[=RP=]'s expose a [[#rp-api-logout-endpoint]] to facilitate with [[#use-cases-idp-sign-out]].
+If the [=RP=] requires front-channel logout then the [=RP=] must expose a
+[[#rp-api-logout-endpoint]].
 
 <!-- ============================================================ -->
 ## Logout ## {#rp-api-logout-endpoint}
 <!-- ============================================================ -->
 
-When [=IDP=]s call the [[#browser-api-idp-sign-out]] API, every [=RP=] gets a
+When a [=IDP=] calls the [[#browser-api-idp-sign-out]] API, every [=RP=] gets a
 chance to log the user out (e.g. clear cookies, clear local storage)
 via the logout endpoint.
 
-The logout endpoint is an endpoint that is registered with the [=IDP=]
-[=out-of-band=].
+The logout endpoint is registered with the [=IDP=] [=out-of-band=].
 
 The logout endpoint is called
 (a) with a **GET** and
 (b) with the [=RP=]'s cookies.
 
 Note: the logout API introduces a credentialed request from the [=IDP=] to
-the [=RP=]s, so it exposes a potential tracking surface area. It is a fairly
+the [=RP=], so it exposes a potential tracking surface area. It is a fairly
 limited and controlled tracking area because the logout API is only available
 when accounts **and** sessions are already established between the [=IDP=] and
 the [=RP=].
@@ -782,37 +801,50 @@ the [=RP=].
 # The Browser API # {#browser-api}
 <!-- ============================================================ -->
 
-The Browser API exposes APIs to [=RP=]s and [=IDP=]s to call and intermediates the exchange of the user's identity.
+The Browser API provides the mediation layer between the an [=RP=] and [=IDP=].
 
-For [=RP=]s, it allows them to:
+For [=RP=]s:
 
-1. The [[#browser-api-sign-in]] allows [=RP=]'s users to [[#use-cases-sign-up]] and [[#use-cases-sign-up]]
-1. The [[#browser-api-revocation]] allows [=RP=]'s users to go through [[#use-cases-rp-revocation]] of their accounts
-1. The [[#browser-api-rp-sign-out]] API allows [=RP=]s to [[#use-cases-rp-sign-out]] of their accounts.
+1. The [[#browser-api-sign-in]] allows [=RP=] to
+     [[#use-cases-sign-up]] and [[#use-cases-sign-in]] a user.
+1. The [[#browser-api-token]] allows [=RP=] to [[#use-cases-request-token=]]
+1. The [[#browser-api-revocation]] allows [=RP=] user to go through
+     [[#use-cases-rp-revocation]] of their accounts
+1. The [[#browser-api-rp-sign-out]] allows [=RP=] user to
+     [[#use-cases-rp-sign-out]] of their accounts.
 
-For [=IDP=]s, it allows them to:
+For [=IDP=]s:
 
-1. The [[#browser-api-idp-sign-out]] API allows [=IDP=]s to [[#use-cases-idp-sign-out]] of their accounts.
+1. The [[#browser-api-idp-sign-out]] allows [=IDP=] user to
+     [[#use-cases-idp-sign-out]] of their accounts.
 
-The Browser API manages the lifecycle of the user's accounts and sessions with an internal [[#browser-api-state-machine]].
+The browser manages the life-cycle of the user's accounts and sessions with
+an internal [[#browser-api-state-machine]].
 
 <!-- ============================================================ -->
 ## The State Machine ## {#browser-api-state-machine}
 <!-- ============================================================ -->
 
-Internally, the account management and session management APIs allows the user to explicitly move through the different stages of their accounts. At each stage, the state machine manages the [=RP=]'s and the [=IDP=]'s access to the appropriate browser capabilities.
+Internally, the Federated Credential Management API allows the user to
+explicitly move through the different stages of their accounts. At each stage,
+the state machine manages the [=RP=] and [=IDP=] access to the appropriate
+browser capabilities.
 
 <div class='image'>
 <pre class=include-raw>
-path: img/mock42.svg
+path: img/browser_state_machine_diagram.svg
 </pre>
 </div>
 
 <dl dfn-type="argument" dfn-for="StateMachine">
-    :   <dfn>Account State</dfn>
-    ::  Keeps track of whether the user has an account or not. Can be [=registered=] or (by default) [=unregistered=].
-    :   <dfn>Session State</dfn>
-    ::  Keeps track of whether the user has an open or closed session. Can be [=logged in=] or (by default) [=logged out=].
+    :  <dfn>Account State</dfn>
+    :: Keeps track of whether the user has an account associating a given ([=RP=],
+         [=IDP=]) pair. Can be [=registered=] or [=unregistered=].
+         Default: [=unregistered=].
+    :  <dfn>Session State</dfn>
+    :: Keeps track of whether the user has an open or closed session with a
+         ([=RP=], [=IDP=]) pair. Can be [=logged in=] or [=logged out=].
+          Default: [=logged-out=].
 </dl>
 
 <!-- ============================================================ -->
@@ -823,47 +855,58 @@ path: img/mock42.svg
 ### RP Sign-in API ### {#browser-api-rp-sign-in}
 <!-- ============================================================ -->
 
-The Sign-up and Sign-in APIs used by the [=Relying Party=]s to ask the browser to intermediate the relationship with the [=Identity Provider=] and the provisioning of an [=id token=].
+The Sign-up and Sign-in APIs used by the [=Relying Party=]s to ask the browser
+to intermediate the relationship with the [=Identity Provider=] and the
+provisioning of an [=account=].
 
-The [=Relying Party=] makes no delineation between Sign-up and Sign-in, but rather calls the same API indistinguishably. The most important parameter to the API call is the set of [=Identity Provider=]s that the [=Relying Party=] supports and has pre-registered with (i.e. it has a `clientId`).
+The [=Relying Party=] makes no delineation between Sign-up and Sign-in, but
+rather calls the same API indistinguishably. The most important parameter to the
+API call is the set of [=Identity Provider=]s that the [=Relying Party=]
+supports and has previously registered with [=out-of-band=].
+(i.e. the [=RP=] has a `clientId` from the [=IDP=]).
 
-Additionally, the [=Relying Party=] can control a variety of UX knobs. For example, whether to allow an [[#use-cases-auto-sign-in]] flow and an `AbortSignal` in case it needs to abort the flow.
+Additionally, the [=Relying Party=] can control a variety of UX knobs. For
+example, whether to allow an [[#use-cases-auto-sign-in]] flow and an
+`AbortSignal` in case it needs to abort the flow.
 
-If all goes well, the [=Relying Party=] receives back an [=id token=] in the form of a signed [[JWT]] which it can use to authenticate the user.
+If all goes well, the [=Relying Party=] receives back an [=credential=]
+which it can use to received [=tokens=].
 
 <div class=example>
 ```js
 async function login(signal) {
-  const {idToken} = await navigator.credentials.get({
-    // controls whether auto sign-in is enabled or not
+  let cred = await navigator.credentials.get({
+    // Controls whether auto sign-in is enabled or not.
     mediation: "optional",
-    // controls abortions of the account chooser
+
+    // Controls abortions of the account chooser.
     signal: signal
 
-    // controls which identity providers to use
+    // Controls which identity providers to use.
     federated: {
-      // controls whether the account chooser is modal or not
       providers: [{
         url: "https://idp.example",
-        // the pre-registered client id
+
+        // The pre-registered client id.
         clientId: "123",
         nonce: "456"
       }],
     }
   });
 
-  return idToken;
+  return cred;
 }
 ```
 </div>
 
-To accomplish that, this specification does three things:
+To accomplish that, this specification does a few things:
 
-1. It extends {{FederatedCredential}} with more fields.
-1. It redefines {{FederatedCredential}}'s <code><dfn for="FederatedCredential" method>\[[DiscoverFromExternalSource]]()</dfn></code>.
+1. It extends {{FederatedCredential}} with more fields and methods.
 1. It extends {{FederatedCredentialRequestOptions}} with more options.
+1. Adds a {{FederatedIdentityProvider}} object.
 
-First, this specification extends the {{FederatedCredential}} type adding two more fields:
+Issue: There are deviations from FederatedCredential in [=CM=] that need to be
+resolved.
 
 <xmp class=idl>
 enum FederatedCredentialApprovedBy {
@@ -873,184 +916,238 @@ enum FederatedCredentialApprovedBy {
 
 [Exposed=Window, SecureContext]
 partial interface FederatedCredential {
-  readonly attribute USVString idToken;
+  readonly attribute FederatedIdentityProvider provider;
+  readonly attribute USVString accountId;
   readonly attribute FederatedCredentialApprovedBy approvedBy;
+};
+
+partial dictionary FederatedCredentialInit {
+  required FederatedIdentityProvider provider;
+  required USVString accountId;
+  FederatedCredentialApprovedBy approvedBy;
 };
 </xmp>
 
 <dl dfn-type="attribute" dfn-for="FederatedCredential">
-    :   {{idToken}}
-    ::  The [=id token=].
-
-    :   {{approvedBy}}
-    ::  When used in conjunction with {{CredentialRequestOptions/mediation}}, it indicates whether the credential was provided via a [[#use-cases-auto-sign-in]] or an [[#use-cases-explicit-sign-in]].
+    :  {{provider}}
+    :: The {{FederatedIdentityProvider}}
+    :  {{accountId}}
+    :: The [=account id=] of the user with the IDP.
+    :  {{approvedBy}}
+    :: When used in conjunction with {{CredentialRequestOptions/mediation}},
+         it indicates whether the credential was provided via a
+         [[#use-cases-auto-sign-in]] or an [[#use-cases-explicit-sign-in]].
 </dl>
 
-Second, it extends the {{FederatedCredentialRequestOptions}} by adding a list of {{FederatedIdentityProvider}}s:
+The {{FederatedCredentialRequestOptions}} is updated by replacing the
+`sequence<UVString> providers` with a list of {{FederatedIdentityProvider}}s:
 
 <xmp class=idl>
 partial dictionary FederatedCredentialRequestOptions {
-  sequence<(DOMString or FederatedIdentityProvider)> providers;
+  sequence<FederatedIdentityProvider> providers;
 };
 
 dictionary FederatedIdentityProvider {
-  required USVString url;
+  required USVString idpUrl;
   USVString clientId;
   USVString nonce;
+  DOMString? protocol;
 };
 </xmp>
 
-And finally, this specification overrides the {{FederatedCredential}}'s <code><dfn for="FederatedCredential" method>\[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</dfn></code> Method.
+This specification overrides the {{FederatedCredential}}'s <code>
+<dfn for="FederatedCredential" method>\[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</dfn></code> method.
 
-This algorithm runs in parallel inside the [[CM#algorithm-request]] to request credentials and returns a set of {{FederatedCredential}} objects from a remote [=Identity Provider=].
+This algorithm runs in parallel inside the [[CM#algorithm-request]] to request credentials and returns a {{FederatedCredential}} object from a remote
+[=Identity Provider=].
 
 This [=internal method=] accepts three arguments:
 
 <dl dfn-type="argument" dfn-for="FederatedCredential/[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)">
 
-    :   <dfn>origin</dfn>
-    ::  This argument is the [=relevant settings object=]'s [=environment settings object/origin=], as determined by the
-        calling {{CredentialsContainer/get()}} implementation, i.e., {{CredentialsContainer}}'s <a abstract-op>Request a `Credential`</a> abstract operation.
+    :  <dfn>origin</dfn>
+    :: The [=relevant settings object=]'s [=environment settings object/origin=],
+         as determined by the calling {{CredentialsContainer/get()}} implementation,
+         i.e., {{CredentialsContainer}}'s <a abstract-op>Request a `Credential`</a>
+         abstract operation.
 
-    :   <dfn>options</dfn>
-    ::  This argument is a {{CredentialRequestOptions}} object whose
-        <code>|options|.{{CredentialRequestOptions/federated}}</code> member contains a {{FederatedCredentialRequestOptions}}
-        object specifying the exchange options.
+    :  <dfn>options</dfn>
+    :: A {{CredentialRequestOptions}} object whose
+         <code>|options|.{{CredentialRequestOptions/federated}}</code> member
+         contains a {{FederatedCredentialRequestOptions}} object specifying the
+         [=IDPs=].
 
-    :   <dfn>sameOriginWithAncestors</dfn>
-    ::  This argument is a Boolean value which is [TRUE] if and only if the caller's [=environment settings object=] is
-        [=same-origin with its ancestors=]. It is [FALSE] if caller is cross-origin.
+    :  <dfn>sameOriginWithAncestors</dfn>
+    :: A boolean value which is [TRUE] if and only if the caller's
+         [=environment settings object=] is [=same-origin with its ancestors=].
+         It is [FALSE] if the caller is cross-origin.
 </dl>
 
 When this method is invoked, the user agent MUST execute the following algorithm:
 
-    1.  If <var ignore>sameOriginWithAncestors</var> is `false`, return a "{{NotAllowedError}}" {{DOMException}}.
+  1. If <var ignore>sameOriginWithAncestors</var> is `false`, return a
+     "{{NotAllowedError}}" {{DOMException}}.
 
-        Note: This restriction aims to address the concern raised in [[Security-Origin-Confusion]].
+     Note: This restriction aims to address the concern raised in
+     [[Security-Origin-Confusion]].
 
-    1.  Assert: |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"] [=map/exists=].
+  1. Assert: |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"] [=map/exists=].
 
-    1.  Assert: |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"] [=list/size=] is 1.
+  1. Assert: |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"] [=list/size=] is 1.
 
-        Note: At some point we would like to support choosing accounts from multiple [=Identity Provider=]s.
+     Note: At some point we would like to support choosing accounts from
+     multiple [=Identity Provider=]s.
 
-    1. Let |provider| be |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"][0].
+  1. Let |provider| be |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"][0].
 
-    1. Assert: |provider|["{{FederatedIdentityProvider/url}}"] [=map/exists=].
+  1. Assert: |provider|["{{FederatedIdentityProvider/url}}"] [=map/exists=].
 
-    1. Assert: |provider|["{{FederatedIdentityProvider/clientId}}"] [=map/exists=].
+  1. Assert: |provider|["{{FederatedIdentityProvider/clientId}}"] [=map/exists=].
 
-    1. Assert: |provider|["{{FederatedIdentityProvider/nonce}}"] [=map/exists=].
+  1. Assert: |provider|["{{FederatedIdentityProvider/nonce}}"] [=map/exists=].
 
-    1. Let |wellknown| be the result of running the [=fetch the well-known=] algorithm with the |provider|.
+  1. Let |wellknown| be the result of running the [=fetch the well-known=]
+     algorithm with the |provider|.
 
-    1. Let |accounts list| be the result of running the [=fetch the accounts list=] algorithm.
+  1. Let |accounts list| be the result of running the
+     [=fetch the accounts list=] algorithm.
 
-    1. Let |account| be the result of running the [=select an account=] from the |accounts list| algorithm.
+  1. Let |account| be the result of running the [=select an account=] from
+     the |accounts list| algorithm.
 
-    1. If the {{StateMachine/Account State}} is [=unregistered=]
+  1. If the {{StateMachine/Account State}} is [=unregistered=]
 
-        1. Return the result of running the [=sign-up=] algorithm.
+     1. Return the result of running the [=sign-up=] algorithm.
 
-    1.  If the {{StateMachine/Session State}} is  [=logged out=] then
+  1. If the {{StateMachine/Session State}} is  [=logged out=] then
 
-        1. Return the result of running the [=explicit sign-in=] algorithm.
+     1. Return the result of running the [=explicit sign-in=] algorithm.
 
-    1. Return the result of running the [=auto sign-in=] algorithm.
+  1. Return the result of running the [=auto sign-in=] algorithm.
 
 
 To <dfn>sign-up</dfn> the user run this algorithm:
 
-    1. Gather explicit intent to create an account
+  1. Let |metadata| be the result of running the
+     [=fetch the client id metadata=] algorithm with the |provider|.
 
-    1. Gather explicit agreement with the [=Privacy Policy=]
+  1. Assert: |metadata|["privacy_policy"] [=map/exists=].
 
-    1. Gather explicit agreement with the [=Terms of Service=]
+  1. Assert: |metadata|["terms_of_service"] [=map/exists=].
 
-    1. Set the account's {{StateMachine/Account State}} from [=unregistered=] to [=registered=].
+  1. Let |privacy| be |metadata|["privacy_policy"].
 
-    1. Set the account's {{StateMachine/Session State}} from [=logged out=] to [=logged in=].
+  1. Let |tos| be |metadata|["terms_of_service"] [=map/exists=].
 
-    1. Return the result of [=minting=] a new [=id token=].
+  1. Gather explicit intent to create an account
+
+  1. Gather explicit agreement with the [=Privacy Policy=] linked from |privacy|
+
+  1. Gather explicit agreement with the [=Terms of Service=] linked from |tos|
+
+  1. Set the account's {{StateMachine/Account State}} from [=unregistered=]
+     to [=registered=].
+
+  1. Set the account's {{StateMachine/Session State}} from [=logged out=]
+     to [=logged in=].
+
+  1. Return the the {{FederatedCredential}}
+
+  1. Return a new {{FederatedCredential}} as:
+    * {{FederatedCredential/accountId}} with
+        |account|["{{accounts_endpoint_response_accounts/account_id}}"]
+    * {{FederatedCredential/provider}} with
+        |provider|["{{FederatedIdentityProvider}}"]
 
 To <dfn>select an account</dfn> from the accounts list run this algorithm:
 
-    1. If |accounts list|'s [=list/size=] is 1
+  1. If |accounts list|'s [=list/size=] is 1
 
-        1. Let |account| be |accounts list|[0]
+     1. Let |account| be |accounts list|[0]
 
-        1. Return |account|
+     1. Return |account|
 
-    1. Display an account chooser
+  1. Display an account chooser
 
-    1. Let |account| be an account that the user manually selects from the accounts chooser
+  1. Let |account| be an account that the user manually selects from the
+       accounts chooser
 
-    1. Return |account|
+  1. Return |account|
 
 To <dfn>sign-in</dfn> the user run this algorithm:
 
-    1. Assert that the {{StateMachine/Account State}} is [=registered=]
+  1. Assert that the {{StateMachine/Account State}} is [=registered=]
 
-    1. Set the account's {{StateMachine/Session State}} from [=logged out=] to [=logged in=].
+  1. Set the account's {{StateMachine/Session State}} from [=logged out=]
+     to [=logged in=].
 
-    1. Return the result of [=minting=] a new [=id token=].
+  1. Return a new {{FederatedCredential}}.
+
+Issue: Is this credential pulled from the credential store?
 
 
 To <dfn>auto sign-in</dfn> the user run this algorithm:
 
-    1. Return the result of running the [=sign-in=] algorithm.
+  1. Return the result of running the [=sign-in=] algorithm.
 
 
 To <dfn>explicit sign-in</dfn> the user run this algorithm:
 
-    1. Gather explicit confirmation that the user wants to sign-in to [=Relying Party=] with their [=Identity Provider=]'s |account|
+  1. Gather explicit confirmation that the user wants to sign-in to
+       [=Relying Party=] with their [=Identity Provider=]'s |account|
 
-    1. Return the result of running the [=sign-in=] algorithm.
+  1. Return the result of running the [=sign-in=] algorithm.
 
 To <dfn>fetch the well-known</dfn> configuration file, run this algorithm:
 
-1. Let the |wellknown url| be the relative url ".well-known/fedcm" of |provider|["{{FederatedIdentityProvider/url}}"]
+  1. Let the |wellknown url| be the relative url ".well-known/fedcm" of
+       |provider|["{{FederatedIdentityProvider/url}}"]
 
-1. Return the result of fetching the |wellknown url| with the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]] header but without the [=Identity Provider=]'s cookies.
+  1. Return the result of fetching the |wellknown url| with the
+       [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]] header but without the
+       [=Identity Provider=]'s cookies.
 
 To <dfn>fetch the accounts list</dfn> run this algorithm:
 
-1. Let the |accounts_endpoint| url be the relative url |wellknown|["{{WellKnown/accounts_endpoint}}"] of |provider|["{{FederatedIdentityProvider/url}}"]
+  1. Let the |accounts_endpoint| url be the relative url
+       |wellknown|["{{WellKnown/accounts_endpoint}}"] of
+       |provider|["{{FederatedIdentityProvider/url}}"]
 
-1. Let the |accounts list| be the result of fetching the |accounts_endpoint| with the [=Identity Provider=]'s cookies.
+  1. Let the |accounts list| be the result of fetching the |accounts_endpoint|
+       with the [=Identity Provider=]'s cookies.
 
-1. Return the |accounts list|
+  1. Return the |accounts list|
 
 To <dfn noexport>fetch the client id metadata</dfn> run this algorithm:
 
-1. Let the |client_id_metadata_endpoint| url be the relative url |wellknown|["{{WellKnown/client_id_metadata_endpoint}}"] of |provider|["{{FederatedIdentityProvider/url}}"]
-1. Let the |policies| be the result of fetching the |client_id_metadata_endpoint| with the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]] header but without the [=Identity Provider=]'s cookies.
-1. Return |policies|
+  1. Let the |client_id_metadata_endpoint| url be the relative url
+       |wellknown|["{{WellKnown/client_id_metadata_endpoint}}"] of
+       |provider|["{{FederatedIdentityProvider/url}}"]
 
-The <dfn>Privacy Policy</dfn> are the policies described at {{client_id_metadata_endpont_response/privacy_policy_url}}.
+  1. Let the |policies| be the result of fetching the
+       |client_id_metadata_endpoint| with the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]]
+       header but without the [=Identity Provider=]'s cookies.
 
-The <dfn>Terms of Service</dfn> are the policies described at {{client_id_metadata_endpont_response/terms_of_service_url}}.
+  1. Return |policies|
 
-To <dfn>mint</dfn> a new id token, run the following algorithm:
+The <dfn>Privacy Policy</dfn> is described at
+{{client_id_metadata_endpont_response/privacy_policy_url}}.
 
-1. Let |token| be the result of making a POST request to the |wellknown|["{{WellKnown/id_token_endpoint}}"] with:
-    * Let the {{id_token_endpoint_request/account_id}} be |account|["{{accounts_endpoint_response_accounts/account_id}}"].
-    * Let the {{id_token_endpoint_request/request}} be a new object with
-          * Let {{id_token_endpoint_request_request/client_id}} be |provider|["{{FederatedIdentityProvider/clientId}}"].
-          * Let the {{id_token_endpoint_request_request/nonce}} be |provider|["{{FederatedIdentityProvider/nonce}}"].
-1. Return a new {{FederatedCredential}} as:
-    * {{Credential/id}} with |account|["{{accounts_endpoint_response_accounts/account_id}}"]
-    * {{FederatedCredential/idToken}} with |token|
-    * {{FederatedCredential/provider}} with |provider|["{{FederatedIdentityProvider/url}}"]
+The <dfn>Terms of Service</dfn> is described at
+{{client_id_metadata_endpont_response/terms_of_service_url}}.
 
 <!-- ============================================================ -->
 ### IDP Sign-in API ### {#browser-api-idp-sign-in}
 <!-- ============================================================ -->
 
-The IDP Sign-in API allows an [=IDP=] to sign the user into a [=RP=] by
-storing a {{FederatedCredential}} that can later be retrieved by a [=RP=].
+Issue: Determine how the `origin` works in this case. What are the security
+implications of the IDP setting data into a third-party context?
+https://github.com/WICG/FedCM/issues/146.
 
-Its effect is equivalent to the [[#browser-api-rp-sign-in]] in its effect, except that
+The IDP Sign-in API allows an [=IDP=] to sign the user into a [=RP=] by
+storing a {{FederatedCredential}} that can later be retrieved by the [=RP=].
+
+Its effect is equivalent to the [[#browser-api-rp-sign-in]], except that
 it is designed to be called while the user is at the [=IDP=] rather than
 at the [=RP=].
 
@@ -1059,10 +1156,11 @@ at the [=RP=].
 async function login({id, name, iconURL}) {
   const credential = new FederatedCredential({
     id: id,
-    provider: 'https://idp.example',
-    name: name,
-    iconURL: iconUrl,
-    client_id: "1234",
+    provider: {
+      idpUrl: 'https://idp.example',
+      clientId: "1234"
+    },
+    origin: 'rp.example.com'
   });
 
   return await navigator.credentials.store(credential);
@@ -1070,35 +1168,95 @@ async function login({id, name, iconURL}) {
 ```
 </div>
 
+
 <!-- ============================================================ -->
-## The Revocation API ## {#browser-api-revocation}
+## The Token API ## {#browser-api-token}
 <!-- ============================================================ -->
 
-Whenever the user decides to delete their account on the [=Relying Party=]
-the [=Relying Party=] can call an API to let the [=Identity Provider=] and
-the browser know.
+The [=RP=] can use the token API to request tokens from the [=IDP=] for the
+authenticated user.
 
-Upon return to the [=Relying Party=], the user goes through a [[#use-cases-sign-up]] flow
-instead of a [[#use-cases-sign-in]] flow.
+<xmp class=idl>
+dictionary FederatedTokenRequest {
+  sequence<USVString> tokens;
+};
+
+dictionary FederatedTokenResponse {
+  USVString idToken;
+};
+
+[Exposed=Window, SecureContext]
+partial interface FederatedCredential {
+    Promise<FederatedTokenResponse> fetchTokens(optional FederatedTokenRequest request);
+};
+</xmp>
 
 <div class=example>
 ```js
-async function revoke(accountId, identityProvider) {
-  return await FederatedCredential.revoke(accountId, identityProvider);
+async function id_token(FederatedCredential cred) {
+  let tokens = await cred.fetchTokens();
+  return tokens.idToken;
 }
 ```
 </div>
 
-This specification extends the {{FederatedCredential}} interface with an extra static method:
+The `FederatedTokenRequest` is optional and defaults to `{tokens: "id_token"}`
+if not provided.
+
+When this method is invoked, the user agent MUST execute the following algorithm:
+
+  1. Assert: |cred| is defined and valid
+
+  1. Assert: {{FederatedTokenRequest/tokens}} contains only "id_token"
+
+  1. Let |tokens| be the result of making a POST request to the
+      |wellknown|["{{WellKnown/token_endpoint}}"] with:
+
+      * Let the {{token_endpoint_request/account_id}} be
+         |account|["{{accounts_endpoint_response_accounts/account_id}}"].
+
+      * Let the {{token_endpoint_request/request}} be a new object with
+          * Let {{token_endpoint_request_request/client_id}} be
+              |provider|["{{FederatedIdentityProvider/clientId}}"].
+          * Let the {{token_endpoint_request_request/nonce}} be
+              |provider|["{{FederatedIdentityProvider/nonce}}"].
+
+  1. Return a new {{FederatedTokenResponse}} as:
+    * {{FederatedTokenResponse/idToken}} with |tokens["id_token"]|
+
+
+<!-- ============================================================ -->
+## The Revocation API ## {#browser-api-revocation}
+<!-- ============================================================ -->
+
+If the user decides to delete their account on the [=Relying Party=]
+the [=Relying Party=] can call an API to notify the [=Identity Provider=] and
+browser.
+
+Upon return to the [=Relying Party=], the user goes through a
+[[#use-cases-sign-up]] flow instead of a [[#use-cases-sign-in]] flow.
+
+<div class=example>
+```js
+async function revoke(FederatedCredential cred) {
+  return await cred.revoke();
+}
+```
+</div>
+
+This specification extends the {{FederatedCredential}} interface with an extra
+method:
 
 <xmp class=idl>
 [Exposed=Window, SecureContext]
 partial interface FederatedCredential {
-  static Promise<undefined> revoke(USVString accountId, FederatedIdentityProvider provider);
+  Promise<undefined> revoke();
 };
 </xmp>
 
-Note: go over the revocation API.
+When this method is invoked, the user agent MUST execute the following algorithm:
+
+Issue: go over the revocation API.
 
 <!-- ============================================================ -->
 ## The Sign-out API ## {#browser-api-sign-out}
@@ -1109,22 +1267,27 @@ Note: go over the revocation API.
 <!-- ============================================================ -->
 
 When a user wants to log out of their session in the [=Relying Party=],
-the [=Relying Party=] can let the browser know that it wants the [[#use-cases-auto-sign-in]]
-flow to be disabled, so that the user doesn't get into an infinite loop.
+the [=Relying Party=] can let the browser know that it wants the
+[[#use-cases-auto-sign-in]] flow to be disabled.
 
-It does so by calling the `preventSilentAccess()` API, which clear the
-user's current account session and takes them to an [[#use-cases-explicit-sign-in]] flow
+It does so by calling the `logout()` API, which clears the user's current
+account session and takes them to an [[#use-cases-explicit-sign-in]] flow
 whenever the user wants to log back in.
 
 <div class=example>
 ```js
-function logout() {
+function logout(FederatedCredential cred) {
+  cred.logout();
   navigator.credentials.preventSilentAccess();
 }
 ```
 </div>
 
 Note: go over the RP sign-out API.
+
+When this method is invoked, the user agent MUST execute the following algorithm:
+
+  1. Execute `navigator.credentials.preventSilentAccess();`
 
 <!-- ============================================================ -->
 ### IDP Sign-out ### {#browser-api-idp-sign-out}
@@ -1136,9 +1299,8 @@ their existing sessions in all of the [=Relying Party=]s they are logged into.
 It does so by being navigated to their [=Identity Provider=] who initiates
 what's called a [[Front-Channel-Logout]].
 
-The browser exposes an API that takes the list of [=Relying Party=]s that the
-[=Identity Provider=] wants to initiate the logout which are loaded in parallel
-with cookies.
+The browser exposes an API that takes the list of [=Relying Parties=] that the
+[=Identity Provider=] wants to logout.
 
 Each [=Relying Party=] endpoint is responsible for clearing its local state
 (e.g. clearing cookies).
@@ -1155,7 +1317,7 @@ path: img/mock31.svg
 <div class=example>
 ```js
 async function logout() {
-  await FederatedCredential.logout([{
+  await FederatedCredential.idpLogout([{
       url: "https://rp1.example",
       accountId: "123",
     }, {
@@ -1166,19 +1328,22 @@ async function logout() {
 ```
 </div>
 
-[=IDP=]s can call <code><a idl for="FederatedCredential" lt="logout()">FederatedCredential.logout(...)</a></code> to log the user out of the [=RP=]s they are signed into.
+[=IDP=]s can call
+<code><a idl for="FederatedCredential" lt="ipdLogout()">FederatedCredential.idpLogout(...)</a></code> to log the user out of the [=RP=]s they are signed into.
 
 <xmp class=idl>
 dictionary FederatedCredentialLogoutRequest {
-    required USVString url;
+    required USVString rpLogoutUrl;
     required USVString accountId;
 };
 
 [Exposed=Window, SecureContext]
 partial interface FederatedCredential {
-  static Promise<undefined> logout(optional sequence<FederatedCredentialLogoutRequest> logout_requests = []);
+  static Promise<undefined> idpLogout(optional sequence<FederatedCredentialLogoutRequest> logout_requests = []);
 };
 </xmp>
+
+When this method is invoked, the user agent MUST execute the following algorithm:
 
 Note: go over how this is implemented.
 
@@ -1219,11 +1384,28 @@ See also:
 ### Principals ### {#privacy-threat-model-principals}
 <!-- ============================================================ -->
 
-This section describes the three principals that would participate in an invocation of the API and expectations around their behavior.
+This section describes the three principals that would participate in an
+invocation of the API and expectations around their behavior.
 
-1. The [=User Agent=] implements [[#browser-api]] and controls the execution contexts for the [=RP=] and [=IDP=] content. The user agent is assumed to be trusted by the user, and transitively trusted by the RP and IDP.
-1. [=Relying Party=]s ([=RP=]s) are [=first party=] websites that invoke the FedCM API for the purpose of authenticating a user to their account or for requesting information about that user. A well-behaving RP would only invoke the API following a clear user signal -- typically, clicking a sign-in button. Since any site can invoke the API, RPs cannot necessarily be trusted to limit the user information it collects or use that information in an acceptable way.
-1. [=Identity Provider=]s ([=IDP=]s) are [=third party=] websites that are the target of a FedCM call to attempt to fetch an ID token. Usually the IDP has a higher level of trust than the RP since it already has the user’s personal information, but it is possible that the IDP might use the user’s information in non-approved ways. It is possible that the IDP specified in the API call may not be an IDP the user knows about, or may not be a bona fide IDP at all, in which case it likely does not have personal user information in advance, but also might be less accountable for its behavior.
+1. The [=User Agent=] implements [[#browser-api]] and controls the execution
+     contexts for the [=RP=] and [=IDP=] content. The user agent is assumed to be
+     trusted by the user, and transitively trusted by the RP and IDP.
+
+1. [=Relying Party=]s ([=RP=]s) are [=first party=] websites that invoke the
+      FedCM API for the purpose of authenticating a user to their account or for
+      requesting information about that user. A well-behaving RP would only invoke the
+      API following a clear user signal -- typically, clicking a sign-in button. Since
+      any site can invoke the API, RPs cannot necessarily be trusted to limit the user
+      information it collects or use that information in an acceptable way.
+
+1. [=Identity Provider=]s ([=IDP=]s) are [=third party=] websites that are the
+      target of a FedCM call to attempt to fetch a credential. Usually the IDP has a
+      higher level of trust than the RP since it already has the user’s personal
+      information, but it is possible that the IDP might use the user’s information in
+      non-approved ways. It is possible that the IDP specified in the API call may not
+      be an IDP the user knows about, or may not be a legitimate IDP at all, in which
+      case it likely does not have personal user information in advance, but also
+      might be less accountable for its behavior.
 
 <!-- ============================================================ -->
 ### High-level threats ### {#privacy-threat-model-high-level-threats}
@@ -1234,41 +1416,41 @@ has adopted into [[security-privacy-questionnaire#threats]]:
 
 : <dfn noexport>Surveillance</dfn>
 :: Surveillance is the observation or monitoring of an individual’s
-    communications or activities.
+     communications or activities.
 
 : <dfn noexport>Stored Data Compromise</dfn>
 :: End systems that do not take adequate measures to secure stored data from
-    unauthorized or inappropriate access.
+     unauthorized or inappropriate access.
 
 : <dfn noexport>Intrusion</dfn>
 :: Intrusion consists of invasive acts that disturb or interrupt one’s life or
-    activities.
+     activities.
 
 : <dfn noexport>Misattribution</dfn>
 :: Misattribution occurs when data or communications related to one individual
-    are attributed to another.
+     are attributed to another.
 
 : <dfn noexport>Correlation</dfn>
 :: Correlation is the combination of various pieces of information related to an
-    individual or that obtain that characteristic when combined.
+     individual or that obtain that characteristic when combined.
 
 : <dfn noexport>Identification</dfn>
 :: Identification is the linking of information to a particular individual to
-    infer an individual’s identity or to allow the inference of an individual’s
-        identity.
+     infer an individual’s identity or to allow the inference of an individual’s
+     identity.
 
 : <dfn noexport>Secondary Use</dfn>
 :: Secondary use is the use of collected information about an individual without
-    the individual’s consent for a purpose different from that for which the
-        information was collected.
+     the individual’s consent for a purpose different from that for which the
+     information was collected.
 
 : <dfn noexport>Disclosure</dfn>
 :: Disclosure is the revelation of information about an individual that affects
-    the way others judge the individual.
+     the way others judge the individual.
 
 : <dfn noexport>Exclusion</dfn>
 :: Exclusion is the failure to allow individuals to know about the data that
-    others have about them and to participate in its handling and use.
+     others have about them and to participate in its handling and use.
 
 These threats combine into the particular concrete threats we want web
 specifications to defend against, described in subsections here:
@@ -1279,15 +1461,21 @@ specifications to defend against, described in subsections here:
 
 This section describes the scenarios in which various agents might attempt to gain user information. It considers the possibilities when:
 
-    * [[#attack-scenarios-by-rp|The RP is collecting information]],
-    * [[#attack-scenarios-by-idp|The IDP is collecting information]], or
-    * [[#attack-scenarios-by-idp-by-collusion|Both the RP and the IDP are colluding]].
+  * [[#attack-scenarios-by-rp|The RP is collecting information]],
+  * [[#attack-scenarios-by-idp|The IDP is collecting information]], or
+  * [[#attack-scenarios-by-idp-by-collusion|Both the RP and the IDP are
+     colluding]].
 
-For the purposes of this section, a principal is considered to be participating in the collection of information if it directly or indirectly performs actions with the aim of realizing one of the above threats.
+For the purposes of this section, a principal is considered to be participating
+in the collection of information if it directly or indirectly performs actions
+with the aim of realizing one of the above threats.
 
-Note: An example of indirect collusion would be an RP importing a script supplied by an IDP where the IDP intends to track users.
+Note: An example of indirect collusion would be an RP importing a script
+supplied by an IDP where the IDP intends to track users.
 
-For the purpose of discussion this document assumes that third-party cookies are **disabled** by default and are no longer effective for use in tracking mechanisms, and also some form of mitigations are implemented against ‘bounce tracking’ using link decoration or postMessage. Most of these scenarios consider how user tracking might happen **without** them.
+For the purpose of discussion this document assumes that third-party cookies are
+**disabled** by default and are no longer effective for use in tracking
+mechanisms. Most of these scenarios consider how user tracking might happen **without** third-party cookies.
 
 See also:
 
@@ -1307,17 +1495,21 @@ Related to:
     * [[PRIVACY-CONSIDERATIONS#privacy-threats| Privacy Considerations for Web Protocols: Correlation]]
     * [[RFC6973#section-5.2.1|RFC6973: Correlation]]
 
-Correlation is the combination of various pieces of information related to an individual or that obtain that characteristic when combined.
+Correlation is the combination of various pieces of information related to an
+individual or that obtain that characteristic when combined.
 
-This attack happens when multiple [=RP=]s collude to use their user's data to correlate them and build a richer profile.
+This attack happens when multiple [=RP=]s collude to use their user's data to
+correlate them and build a richer profile.
 
 When a user willingly provides their full name, email address, phone number, etc,
 to multiple relying parties, those relying parties can collaborate to build a
 profile of that user and their activity across collaborating sites.
 
-Sometimes this is referred to as [=joining=] since it amounts to a join of user records between the account databases of multiple RPs.
+Sometimes this is referred to as [=joining=] since it amounts to a join of user
+records between the account databases of multiple RPs.
 
-This correlation and profile-building is outside the user’s control and entirely out of the [=User Agent=]’s or [=IDP=]’s view.
+This correlation and profile-building is outside the user’s control and entirely
+out of the [=User Agent=]’s or [=IDP=]’s view.
 
 <div class="image">
    <pre class=include-raw>
@@ -1326,18 +1518,23 @@ This correlation and profile-building is outside the user’s control and entire
 </div>
 
 <div class="example">
-    1. User signs into RP1 (which sells jewelry) with an IDP, providing to RP1 their email address user@email.example
-    1. User signs into RP2 (which sells houses) with an IDP, providing to RP2 their email address user@email.example
+    1. User signs into RP1 (which sells jewelry) with an IDP, providing to RP1
+         their email address user@email.example
+    1. User signs into RP2 (which sells houses) with an IDP, providing to RP2 their
+         email address user@email.example
     1. User browses the collection of wedding rings in RP1.
-    1. Out of band, RP1 tells RP2 that user@email.example is shopping for wedding rings
+    1. Out of band, RP1 tells RP2 that user@email.example is shopping for
+         wedding rings
     1. User browses the housing inventory in RP2.
-    1. RP2 uses the fact that the user is shopping for wedding rings in RP1 to advertise and filters their housing inventory.
+    1. RP2 uses the fact that the user is shopping for wedding rings in RP1 to
+         advertise and filters their housing inventory.
     1. User is surprised that RP2 knows that they are shopping for wedding rings.
 </div>
 
 A generalization of [[#attack-scenarios-by-rp-cross-site-correlation]] is:
 
-(<dfn noexport>RP Secondary Use</dfn>) Relying Party uses user information for purposes not authorized by the user:
+(<dfn noexport>RP Secondary Use</dfn>) Relying Party uses user information for
+purposes not authorized by the user:
 
 When the user agrees to allow the IDP to provide information to the RP,
 the consent is specific to certain purposes, such as sign-in and personalization.
@@ -1357,7 +1554,7 @@ individual’s identity.
 This attack happens when the Relying Party employs client state-based
 tracking to identify user.
 
-Any API that exposes any kind of client state to the web risk becoming a
+Any API that exposes any kind of client state to the web risks becoming a
 vector for fingerprinting or ‘supercookies’.
 
 This risk would be increased by any proposal for browser mediation that
@@ -1370,7 +1567,8 @@ path: img/mock5.svg
 </div>
 
 <div class='example'>
-For example, an RP can use the browser state of the FedCM to add bits of entropy and fingerprint the user.
+For example, an RP can use the browser state of the FedCM to add bits of entropy
+and fingerprint the user.
 </div>
 
 See also:
@@ -1389,11 +1587,11 @@ This can happen if user consent mechanisms are missing, inadequate,
 or susceptible to bypass.
 
 <div class="example">
-An RP can use clickjacking to trick the user into signing-into their site.
+An RP can use clickjacking to trick the user into signing into their site.
 </div>
 
 <div class="example">
-An RP can impersonate another RP to phish the user into signing-into their site.
+An RP can impersonate another RP to phish the user into signing into their site.
 </div>
 
 See also:
@@ -1421,28 +1619,32 @@ This attack happens when Identity Providers misuses the the information
 collected to enable sign-in for other purposes.
 
 Existing federation protocols require that the IDP know which service is
-requesting an ID token in order to allow identity federation (e.g. the IDP must know the OAuth `client_id`).
+requesting an ID token in order to allow identity federation (e.g. the IDP must
+know the OAuth `client_id`).
 
-Identity providers can use this fact to build profiles of users across sites where the user
-has decided to use federation with the same account. This profile could be used, for example,
-to serve targeted advertisements to those users browsing on sites that the IDP controls.
+Identity providers can use this fact to build profiles of users across sites
+where the user has decided to use federation with the same account. This profile
+could be used, for example, to serve targeted advertisements to those users
+browsing on sites that the IDP controls.
 
-This risk can exist even in the case where the IDP does not having pre-existing user
-account information (for instance, if it is not a _bona fide_ IDP), because FedCM
-requests sent to the IDP are credentialed. This is more likely to occur if the RP is
-colluding with the IDP to enable tracking; expanded variants are described in [[#attack-scenarios-by-idp-timing-attacks]].
+This risk can exist even in the case where the IDP does not having pre-existing
+user account information (for instance, if it is not a _legitimate_ IDP),
+because FedCM requests sent to the IDP are credentialed. This is more likely to
+occur if the RP is colluding with the IDP to enable tracking; expanded variants
+are described in [[#attack-scenarios-by-idp-timing-attacks]].
 
 <div class="image">
-    <pre class=include-raw>
-    path: img/mock23.svg
-    </pre>
+<pre class=include-raw>
+path: img/mock23.svg
+</pre>
 </div>
 
 <div class='example'>
     1. User signs into RP1 (which sells jewelry) with an IDP.
     1. User signs into RP2 (which sells houses) with the same IDP.
     1. User navigates to the IDP.
-    1. Because the IDP knows that the user has an account with RP1 and RP2, the IDP can show ads about vacations for honeymoons.
+    1. Because the IDP knows that the user has an account with RP1 and RP2, the
+         IDP can show ads about vacations for honeymoons.
     1. The user is surprised that their IDP is aware of their plans to get married.
 </div>
 
@@ -1452,14 +1654,17 @@ colluding with the IDP to enable tracking; expanded variants are described in [[
 
 Since IDPs have unconstrained ability to issue ID tokens, they are capable
 of logging in to users’ federated accounts without user knowledge or action,
-impersonating the user and potentially gaining full access to the user's account on the RP.
+impersonating the user and potentially gaining full access to the user's
+account on the RP.
 
 <div class="example">
     1. User signs into RP1 (which is a online dating site) with an IDP.
     1. An evil employee at IDP is an ex-spouse of the user.
-    1. The evil employee impersonates themselves as the User and gains access to RP1
+    1. The evil employee impersonates themselves as the User and gains access
+         to RP1
     1. The evil employee looks at the user's dating history.
-    1. The user is surprised by their ex-spouse's knowledge of their recent dating affairs.
+    1. The user is surprised by their ex-spouse's knowledge of their recent
+         dating affairs.
 </div>
 
 <!-- ============================================================ -->
@@ -1496,7 +1701,8 @@ See also:
 ##### Back channel ##### {#attack-scenarios-by-idp-back-channel}
 <!-- ============================================================ -->
 
-This attack scenario happens when IDP exceed the user’s information sharing permission.
+This attack scenario happens when IDP exceed the user’s information sharing
+ permission.
 
 Existing federated identity protocols are clear on what information an RP
 is requesting, which the IDP can provide. While the browser can inspect
@@ -1511,14 +1717,19 @@ Another example is if identifying information is shared out-of-band,
 invisible to the browser, in which case it could contain anything.
 
 <div class="example">
-    1. User signs into RP1 (which sells jewelry) with an IDP, providing to RP1 their [=directed identifier=] email address SHA256(user + RP1)@email.example
-    1. User signs into RP2 (which sells houses) with an IDP, providing to RP2 their [=directed identifier=] email address SHA256(user + RP2)@email.example
+    1. User signs into RP1 (which sells jewelry) with an IDP, providing to RP1
+         their [=directed identifier=] email address SHA256(user + RP1)@email.example
+    1. User signs into RP2 (which sells houses) with an IDP, providing to RP2
+         their [=directed identifier=] email address SHA256(user + RP2)@email.example
     1. User browses the collection of wedding rings in RP1.
-    1. Out of band, RP1 colludes with the IDP and exchanges SHA256(user + RP1)@email.example to user@email.example.
+    1. Out of band, RP1 colludes with the IDP and exchanges
+         SHA256(user + RP1)@email.example to user@email.example.
     1. RP1 tells RP2 that user@email.example is shopping for wedding rings
     1. User browses the housing inventory in RP2.
-    1. Out of band, RP2 colludes with the IDP and exchanges SHA256(user + RP2)@email.example to user@email.example.
-    1. RP2 uses the fact that the user is shopping for wedding rings in RP1 to advertise and filters their housing inventory.
+    1. Out of band, RP2 colludes with the IDP and exchanges
+         SHA256(user + RP2)@email.example to user@email.example.
+    1. RP2 uses the fact that the user is shopping for wedding rings in RP1 to
+         advertise and filters their housing inventory.
     1. User is surprised that RP2 knows that they are shopping for wedding rings.
 </div>
 
@@ -1526,31 +1737,34 @@ invisible to the browser, in which case it could contain anything.
 ##### Timing Attacks ##### {#attack-scenarios-by-idp-timing-attacks}
 <!-- ============================================================ -->
 
-The potential for IDPs profiling users based on their visits to RPs [[#attack-scenarios-by-idp-secondary-use]] can
-be partially mitigated by hiding the RP from the IDP until after the user has
-consented to that tracking risk.
+The potential for IDPs profiling users based on their visits to RPs
+[[#attack-scenarios-by-idp-secondary-use]] can be partially mitigated by hiding
+the RP from the IDP until after the user has consented to that tracking risk.
 
 However, there is residual risk in cases where the RP and IDP are colluding.
 
 If a credentialed request is sent to the IDP that does not explicitly identify
 the RP, either of the following would still allow tracking by the IDP (again,
-possibly not a _bona fide_ IDP that has existing knowledge of the user):
+possibly not a _legitimate_ IDP that has existing knowledge of the user):
 
-    * The RP controlling any field in the request that can be used to convey identifying
-          data in the request that the IDP could correlate to other requests from other RPs;
+  * The RP controlling any field in the request that can be used to convey
+    identifying data in the request that the IDP could correlate to other
+    requests from other RPs;
 
-* The RP being able to provide fine-resolution timing information about
+  * The RP being able to provide fine-resolution timing information about
     the request to the IDP out of band.
 
 The timing information can enable tracking in the following way:
 
-    1. The RP logs the time at which it invoked the API, and
-    1. The IDP logs the time at which it received a credentialed FedCM request from the user, and later
-    1. They attempt to link the invocation and the request together using that information.
+  1. The RP logs the time at which it invoked the API, and
+  1. The IDP logs the time at which it received a credentialed FedCM request
+     from the user, and later
+  1. They attempt to link the invocation and the request together using that
+     information.
 
-Notably, this is possible without FedCM using simple cross-origin top-level navigations,
-but using FedCM for this purpose would worsen the problem if it improved timing resolution
-or was less visible to users.
+Notably, this is possible without FedCM using simple cross-origin top-level
+navigations, but using FedCM for this purpose would worsen the problem if it
+improved timing resolution or was less visible to users.
 
 See also:
 
@@ -1558,11 +1772,14 @@ See also:
 
 ## Mitigation Strategies ## {#mitigation-strategies}
 
-In this section we'll go over some strategies used in this specification to mitigate the [privacy threats](#privacy-threat-model).
+In this section we'll go over some strategies used in this specification to
+mitigate the [privacy threats](#privacy-threat-model).
 
 ### Minimal Disclosure ### {#mitigation-minimal-disclosure}
 
-There is a series of privacy threats that can be mitigated by disclosing the least amount of identifying information and limiting its use as much as possible. Two notable strategies are described in the sections below.
+There is a series of privacy threats that can be mitigated by disclosing the
+least amount of identifying information and limiting its use as much as
+possible. Two notable strategies are described in the sections below.
 
 #### Directed Identifiers #### {#mitigation-directed-identifiers}
 
@@ -1582,14 +1799,15 @@ In the past, there have been schemes to accomplish this using one-way
 hashes of, for example, the user’s name, the IDP and the RP.
 
 <div class="image">
-  <pre class=include-raw>
-  path: img/mock37.svg
-  </pre>
+<pre class=include-raw>
+path: img/mock37.svg
+</pre>
 </div>
 
-Note: this mitigation is not robust against [[#attack-scenarios-by-idp-back-channel]],
-or the [[#attack-scenarios-by-idp-secondary-use]]. Also, collaborating RPs might be able
-to defeat this mitigation by sharing the same CLIENT_ID, although
+Note: this mitigation is not robust against
+[[#attack-scenarios-by-idp-back-channel]], or the
+[[#attack-scenarios-by-idp-secondary-use]]. Also, collaborating RPs might be
+able to defeat this mitigation by sharing the same `clientId`, although
 possibly this could be detected and presumably would violate RP
 agreements with IDPs with [[#mitigation-pre-registration]].
 
@@ -1602,12 +1820,18 @@ Mitigates:
 
 Note: unbundling issuing from presentation
 
-Preventing tracking of users by the IDP is difficult because the RP has to be coded into the identity token for security reasons, to prevent reuse of the token. There have been cryptographic schemes developed to blind the IDP to the RP while still preventing token reuse in that way (see Mozilla’s [personas](https://wiki.mozilla.org/Identity/Persona_AAR)) but there are other valid uses that the IDP has for knowing the RP, such as fraud and abuse prevention.
+Preventing tracking of users by the IDP is difficult because the RP has to be
+coded into the identity token for security reasons, to prevent reuse of the
+token. There have been cryptographic schemes developed to blind the IDP to the
+RP while still preventing token reuse in that way (see Mozilla’s [
+personas](https://wiki.mozilla.org/Identity/Persona_AAR)) but there are other
+valid uses that the IDP has for knowing the RP, such as fraud and abuse
+prevention.
 
 <div class="image">
-  <pre class=include-raw>
-  path: img/mock34.svg
-  </pre>
+<pre class=include-raw>
+path: img/mock34.svg
+</pre>
 </div>
 
 ### Mediation ### {#mitigation-mediation}
@@ -1619,14 +1843,22 @@ Mitigates:
     * [[#attack-scenarios-by-idp-timing-attacks]]
     * [[#attack-scenarios-by-idp-intrusion]]
 
-IDPs, whom the user has entrusted with their personal data, are currently responsible for ensuring that the user consents to their information being shared. With browser mediation in place, the user agent might have to assume responsibility for ensuring the user understands what is being shared and that it is intentional. This is certainly the case if the browser is able to entirely intermediate the identity flow without showing any IDP web content, but also might be desirable if there are concerns that the IDP is not collecting consent in an adequate manner.
+IDPs, whom the user has entrusted with their personal data, are currently
+responsible for ensuring that the user consents to their information being
+shared. With browser mediation in place, the user agent might have to assume
+responsibility for ensuring the user understands what is being shared and that
+it is intentional. This is certainly the case if the browser is able to entirely
+intermediate the identity flow without showing any IDP web content, but also
+might be desirable if there are concerns that the IDP is not collecting consent
+in an adequate manner.
 
-Additionally, a consent prompt preceding the sharing of the RP’s request to the IDP can mitigate risks around IDP tracking of user visits to RPs.
+Additionally, a consent prompt preceding the sharing of the RP’s request to the
+IDP can mitigate risks around IDP tracking of user visits to RPs.
 
 <div class="image">
-  <pre class=include-raw>
-  path: img/mock46.svg
-  </pre>
+<pre class=include-raw>
+path: img/mock46.svg
+</pre>
 </div>
 
 See also:
@@ -1644,40 +1876,44 @@ Mitigates:
 
     * [[#attack-scenarios-by-rp-cross-site-correlation]],
 
-The [=User Agent=] can mitigate [[#attack-scenarios-by-rp-cross-site-correlation]] by inspecting the contents
+The [=User Agent=] can mitigate
+[[#attack-scenarios-by-rp-cross-site-correlation]] by inspecting the contents
 of the data exchange, and providing the necessary user controls.
 
 For example, it can inspect the email address that is being exchanged and verify
-whether it is a [=directed identifier=] or not (and warn the user proportionally).
+whether it is a [=directed identifier=] or not (and warn the user
+proportionally).
 
 #### Activation #### {#activation}
 
-The [=User Agent=] can mitigate [[#attack-scenarios-by-idp-intrusion]] by mediating the user controls
-and offering them proportionally to the intent of the user or the privacy risks involved.
+The [=User Agent=] can mitigate [[#attack-scenarios-by-idp-intrusion]] by
+mediating the user controls and offering them proportionally to the intent of
+the user or the privacy risks involved.
 
-For example, a [=User Agent=] can choose to show a loud / disruptive modal mediated dialog
-when it has enough confidence of the user's intent or show a quiet / conservative UI hint
-when it doesn't.
+For example, a [=User Agent=] can choose to show a loud / disruptive modal
+mediated dialog when it has enough confidence of the user's intent or show a
+quiet / conservative UI hint when it doesn't.
 
-A [=User Agent=] could also choose to control disruption of the user's experience based
-on the risks involved.
+A [=User Agent=] could also choose to control disruption of the user's
+experience based on the risks involved.
 
-For example, when a [=directed identifier=] is being exchanged it can be more confident
-of the unintended consequeces and offer a more aggressive user experience, whereas when
-global identifiers are exchanged a more conservative user experience.
+For example, when a [=directed identifier=] is being exchanged it can be more
+confident of the unintended consequences and offer a more aggressive user
+experience, whereas when global identifiers are exchanged a more conservative
+user experience.
 
 <div class="image">
-  <pre class=include-raw>
-  path: img/mock45.svg
-  </pre>
+<pre class=include-raw>
+path: img/mock45.svg
+</pre>
 </div>
 
 See also:
 
-    * [Requiring user gesture to call WebAuthn API](https://github.com/w3c/webauthn/issues/1293)
-    * [Require user gesture to request notification permissions](https://github.com/wicg/interventions/issues/49)
-    * [WHATWG User Activation](https://html.spec.whatwg.org/multipage/interaction.html#tracking-user-activation)
-    * [Querying User Activation](https://github.com/dtapuska/useractivation)
+  * [Requiring user gesture to call WebAuthn API](https://github.com/w3c/webauthn/issues/1293)
+  * [Require user gesture to request notification permissions](https://github.com/wicg/interventions/issues/49)
+  * [WHATWG User Activation](https://html.spec.whatwg.org/multipage/interaction.html#tracking-user-activation)
+  * [Querying User Activation](https://github.com/dtapuska/useractivation)
 
 ### Policy ### {#mitigation-policy}
 
@@ -1686,15 +1922,25 @@ Mitigates:
     * [[#attack-scenarios-by-idp-impersonation]],
     * [[#attack-scenarios-by-idp-back-channel]]
 
-Beyond technical constraints, the browser can recognize explicit assertions by the IDP about the privacy characteristics it provides and rely on those assertions in order to guide the user appropriately. An example is a hypothetical case in which the IDP asserts it will only issue [=directed identifiers=] and will not provide identifying information to the RPs out of view of the browser. In that case the browser may not have to warn the user about sharing personalized information.
+Beyond technical constraints, the browser can recognize explicit assertions by
+the IDP about the privacy characteristics it provides and rely on those
+assertions in order to guide the user appropriately. An example is a
+hypothetical case in which the IDP asserts it will only issue [=directed
+identifiers=] and will not provide identifying information to the RPs out of
+view of the browser. In that case the browser may not have to warn the user
+about sharing personalized information.
 
 ### Denylists ### {#mitigation-denylists}
 
 Mitigates:
 
-    * Potentially all threats, but is subject to the likelihood of bad behavior being detected, which for some might be difficult.
+  * Potentially all threats, but is subject to the likelihood of bad behavior
+    being detected, which for some might be difficult.
 
-Any RPs or IDPs observed to be using this API to compromise user privacy in a deceptive or abusive manner could be explicitly blocked from using it, or potentially added to the SafeBrowsing blocklist so that they cannot be loaded at all.
+Any RPs or IDPs observed to be using this API to compromise user privacy in a
+deceptive or abusive manner could be explicitly blocked from using it, or
+potentially added to the SafeBrowsing blocklist so that they cannot be loaded at
+all.
 
 ### Pre-registration ### {#mitigation-pre-registration}
 
@@ -1703,8 +1949,10 @@ Mitigates:
     * [[#attack-scenarios-by-rp-data-compromise]],
     * [[#attack-scenarios-by-rp-cross-site-correlation]]
 
-Currently, IDPs require that an RP pre-registers and agrees to specific terms before the IDP will issue an ID token to them.
-This conflicts with [the previous mitigation](#mitigation-self-presentation), but can provide a measure of RP accountability.
+Currently, IDPs require that an RP pre-registers and agrees to specific terms
+before the IDP will issue an ID token to them. This conflicts with
+[the previous mitigation](#mitigation-self-presentation), but can provide a
+measure of RP accountability.
 
 ### 2FA ### {#mitigation-2fa}
 
