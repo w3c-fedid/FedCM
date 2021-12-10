@@ -887,11 +887,12 @@ partial interface FederatedCredential {
     ::  When used in conjunction with {{CredentialRequestOptions/mediation}}, it indicates whether the credential was provided via a [[#use-cases-auto-sign-in]] or an [[#use-cases-explicit-sign-in]].
 </dl>
 
-Second, it extends the {{FederatedCredentialRequestOptions}} by adding a list of {{FederatedIdentityProvider}}s:
+Second, it extends the {{FederatedCredentialRequestOptions}} by adding a list of {{FederatedIdentityProvider}}s and a way to abort the get request:
 
 <xmp class=idl>
 partial dictionary FederatedCredentialRequestOptions {
   sequence<(DOMString or FederatedIdentityProvider)> providers;
+  AbortSignal signal;
 };
 
 dictionary FederatedIdentityProvider {
@@ -1043,6 +1044,9 @@ To <dfn>mint</dfn> a new id token, run the following algorithm:
     * {{Credential/id}} with |account|["{{accounts_endpoint_response_accounts/account_id}}"]
     * {{FederatedCredential/idToken}} with |token|
     * {{FederatedCredential/provider}} with |provider|["{{FederatedIdentityProvider/url}}"]
+
+If a signal is provided in the request options, and the signal gets aborted before the get request
+finishes, the promise must be rejected with a DOMException containing an AbortError.
 
 <!-- ============================================================ -->
 ### IDP Sign-in API ### {#browser-api-idp-sign-in}
