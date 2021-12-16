@@ -1,201 +1,232 @@
-# How to experiment with FedCM in Chrome
-
-A prototype of the API described in the [solutions page](navigations.md) is present in Chrome 89 and later. **This is intended for experimentation purposes and is subject to change as a specification takes shape and develops.**
-
-We will do our best to keep these instructions up to date as protocol and API changes occur.
-
-It will subsequently roll into downstream channels, but with lag in functionality and bug fixes since this is under development.
-
-## Enabling FedCM in Chrome
-1. Download [Chrome Canary](https://www.google.com/chrome/). Since this is a prototype with ongoing development, the implementation in other channels will be out of date with respect to functionality and bug fixes.
-2. Enable FedCM. As of Chrome 91 this can be done directly from chrome://flags#webid.
-
+We will do our best to keep these instructions up to date as protocol and API
+changes occur. It will subsequently roll into downstream channels, but with lag
+in functionality and bug fixes since this is under development.
 
 ## Available functionality
-* Automatic permission prompts on [top-level Open ID Connect protocol navigations](navigations.md#the-sign-in-api)
-* `navigator.credentials.get()` API call under [the permission-oriented flow](navigations.md#the-permission-oriented-variation)
-https://github.com/WICG/FedCM/blob/main/cookies.md#logout
-* `navigator.credentials.get()` API call under [the mediation-oriented flow](navigations.md#the-mediation-oriented-variation)
-* A potential [Logout API](cookies.md#logout)
+
+As of December 2021, Chrome supports the mediation-oriented flow on mobile.
+
+From Relying Party (RP) aspect:
+
+* `navigator.credentials.get()`: Sign-up and sign-in.
+
+From Identity Provider (IdP) aspect:
+
+* `FederatedCredential.logout()`: Sends a signal to specified RPs to logout the user.
+* A request for the FedCM Well-Known configuration.
+* A request for a list of accounts that the user can use for federated sign-in.
+* A request for a metadata about clients (RPs).
+* A request for an ID token associated with a specified account.
+* A request to revoke an ID token associated with an account.
 
 These are described in more detail in the sections below.
 
-### Permission persistence
-In the flows where permission prompts are shown and the user accepts them, their acceptance is stored in the Chrome user profile as a website setting. The permission prompt will **not** subsequently be shown for the same RP and IDP pair. There are two distinct permissions, corresponding to the two prompts shown during the above flows.
+**Note**: Though we do have a working implementation of the permission-oriented
+flow on desktop, it's not currently actively maintained and we do not guarantee
+that it will continue to work the way it is in the future.
 
-At the moment the only way to reset these permissions is to clear browsing data on the profile. This can be done from Settings, and requires manually selecting the `Site Settings` checkbox from the `Advanced` tab of the Clear Browsing Data dialog. Also be sure the time range of data being cleared includes the time when the permission was set. Testing can be done in Guest mode or with single-use profiles if permission persistence is not desired.
+## Enabling FedCM in Chrome
 
-## Automatic permission prompts
-When FedCM is enabled and a user attempts a federated sign-in using the OpenID Connect protocol over a top-level cross-origin navigation, the navigation request can be blocked by FedCM and a permission prompt shown to the user. The same happens with a different prompt when an OIDC response is returned to the relying party. There is [a rough heuristic](README.md#the-permission-oriented-api) to identify these navigations, so it is possible some requests might be missed.
+1. Download Chrome Canary. Since this is a prototype with ongoing development,
+   the implementation in other channels will be out of date with respect to
+   functionality and bug fixes.
+2. Enable FedCM. This can be done directly from `chrome://flags#fedcm` from
+   Chrome 98 or later.
 
-This is intended to illustrate a simple backward-compatible relaxation of web privacy restrictions for identity flows. It has some known limitations, such as behaving poorly in the presence of redirects on the request to the IDP.
+At the moment the only way to reset the sign-up status is to clear browsing data
+on the Chrome profile. This can be done from **[Settings]**, and requires
+manually selecting the **[Site Settings]** checkbox from the **[Advanced]** tab
+of the **[Clear Browsing Data]** dialog. Also be sure the time range of data
+being cleared includes the time when the sign-up status was set.
+
+Testing can be easier in Incognito mode, Guest mode or with single-use profiles
+if sign-up status persistence is not desired.
 
 ## Testing the API
 
 ### Relying Party implementation
 
-The RP interacts with the FedCM API to obtain an ID token for a user. The API method returns a promise that either resolves successfully and provides the token, or else is rejected with an error. The page must be served over HTTPS.
+The RP interacts with the FedCM API to obtain an ID token for a user. The API
+method returns a promise that either resolves successfully and provides the
+token, or else is rejected with an error. The page must be served over HTTPS.
 
-The `mode` parameter to the API specifies whether the permission or mediation-oriented flow is beings tested. Omitting the argument defaults to permission-oriented flow. Using `mode: "mediated"` triggers the mediation-oriented flow.
-
-```javascript
+```js
 async function login() {
   // Feature detection.
-  if (!navigator.id) {
+  if (!'FederatedCredential' in window || !Federated.revoke) {
     console.log("FedCM is not available.");
     return;
   }
 
   try {
+    const ac = new AbortController();
+
     // In this example, https://idp.example is the IdP's URL.
-    // |request| could include any OAuth request fields.
-    const token = await navigator.id.get({
-        provider: "https://idp.example",
-        request: "client_id=1234&nonce=Ct60bD&response_type=code&scope=email openid profile",
-        mode: "permission",
+    const { idToken } = await navigator.credentials.get({
+        mediation: "optional",
+        signal: ac.signal,
+        federated: {
+          providers: [{
+            url: "https://idp.example", // IdP domain
+            clientId: "1234", // Client ID of the RP
+            nonce: "5678", // Nonce (random value)
+        },
     });
 
-    log(`received token: ${token}`);
+    console.log(`received token: ${idToken}`);
   } catch (e) {
-    log(`rejected with ${e}`);
+    console.log(`rejected with ${e}`);
   }
 };
+
 ```
 
 ### Identity Provider implementation
-The Chrome prototype implements two protocols between the browser and the IDP, one for each supported variation of the API.
 
-In the permission-oriented variation, the IdP must respond to three different HTTP requests:
-1. A request for the FedCM Well-Known configuration.
-2. A request to fetch an ID token.
-3. A request for a sign-in web page if the IdP requires user interaction before providing the token.
+The Chrome prototype implements multiple protocols between the browser and the
+IdP. On the mediation-oriented flow, there are five different HTTP requests:
 
-The mediation-oriented variation also has three different HTTP requests:
 1. A request for the FedCM Well-Known configuration.
 2. A request for a list of accounts that the user can use for federated sign-in.
-3. A request for an ID token associated with a specified the accounts.
+3. A request for a metadata about clients (RPs).
+4. A request for an ID token associated with a specified account.
+5. A request to revoke an ID token associated with an account.
 
-All of these must be served over HTTPS. These requests are tagged with a forbidden header `Sec-FedCM-CSRF` to identify them as browser-generated FedCM requests. The `Sec-` prefix prevents web content being able to set this header on other kinds of traffic such as via `XMLHttpRequest`, which makes it useful to prevent CSRF attacks. The header currently has an empty value.
+All of these must be served over HTTPS. These requests are tagged with a
+forbidden header `Sec-FedCM-CSRF` to identify them as browser-generated FedCM
+requests. The `Sec-` prefix prevents web content being able to set this header
+on other kinds of traffic such as via `XMLHttpRequest`, which makes it useful to
+prevent CSRF attacks. The header currently has an empty value.
 
-_Note that the UI for the mediation-oriented variation is still in development, but the protocol can be tested on Canary. This note is current as of 2021-05-20._
-
-### Permission-oriented variation protocol details
-
-#### Well-Known configuration request
-After the RP initiates a sign-in flow by calling the API, the browser learns about the IdP's FedCM support with a fetch to `https://idp.example/.well-known/fedcm`, where `https://idp.example` was specified as the provider by the RP.
-
-The browser expects a response with MIME type `application/json`, currently containing only one field:<br>
-```json
-{
-  "idp_endpoint": "https://idp.example/fedcm/idp_endpoint"
-}
-```
-
-The `idp_endpoint` value provides the URL that the browser should use for the next step.
-
-#### ID token fetch
-The browser will then issue a credentialed `GET` request to `https://idp.example/fedcm/idp_endpoint?{OAuth request string}`.
-
-The browser expects one of two responses (both with MIME type `application/json`):
-1. If the IdP can reply immediately with a token to fulfill the sign-in token request:<br>
-
-```json
-{
-  "id_token": "ID_token_here"
-}
-````
-
-2. If the IdP requires user interaction such as sign-in or choosing an account, before issuing a token:<br>
-
-```json
-{
-  "signin_url": "https://idp.example/fedcm/user_login"
-}
-```
-
-#### IdP sign-in page
-If the IdP responded to the token fetch in the previous step with a `signin_url`, the browser will then load and render a page from that URL. The page will contain HTML for the user to provide whatever action is needed, then the IdP will invoke the `navigator.id.provide()` API to give a token back to the RP (or provide an empty string if it chooses not to give a token).<br>
-
-```javascript
-navigator.id.provide('YOUR_JWT_HERE');
-```
-
-The string should contain a [JWT](https://jwt.io/).
-
-### Mediation-oriented variation protocol details
+### Protocol details
 
 #### Well-Known configuration request
-After the RP initiates a sign-in flow by calling the API, the browser learns about the IdP's FedCM support with a fetch to `https://idp.example/.well-known/fedcm`, where `https://idp.example` was specified as the provider by the RP.
 
-The browser expects a response with MIME type `application/json`, currently containing two fields:<br>
+After the RP initiates a sign-in flow by calling the
+`navigator.credentials.get()`, the browser learns about the IdP's FedCM support
+with a fetch to `https://idp.example/.well-known/fedcm`, where
+`https://idp.example` was specified as the provider by the RP.
+
+The browser expects a response with MIME type `application/json`, currently
+containing four fields:
+
 ```json
 {
-  "idtoken_endpoint": "https://idp.example/fedcm/token_endpoint",
   "accounts_endpoint": "https://idp.example/fedcm/accounts_endpoint",
+  "client_id_metadata_endpoint": "https://idp.example/fedcm/client_id_metadata_endpoint",
+  "id_token_endpoint": "https://idp.example/fedcm/token_endpoint",
+  "revocation_endpoint": "https://idp.example/fedcm/revocation_endpoint"
 }
 ```
 
-The `accounts_endpoint` value provides the URL for the next step, fetching a list of user accounts. The `token_endpoint` value provides the URL that the browser should use for the third step, requesting an ID token.
+* The `accounts_endpoint` value provides the URL for the next step, fetching a
+  list of user accounts.
+* The `client_id_metadata_endpoint` value provides the URL to fetch the client
+  metadata including terms of services and privacy policy.
+* The `id_token_endpoint` value provides the URL that the browser should use for
+  the third step, requesting an ID token.
+* The `revocation_endpoint` value provides the endpoint URL to revoke all id
+  tokens of the user.
 
 #### Account list fetch
-The browser sends a credentialed request to the specified `accounts_endpoint`. The cookie on the request can be used to identify valid signed-in accounts the user might have on the IDP which are then returned in the response. A valid response body would look like:<br>
+
+After fetching the well-known configuration, the browser sends a credentialed
+request to the specified `accounts_endpoint`. The cookie on the request can be
+used to identify valid signed-in accounts the user might have on the IdP which
+are then returned in the response. A valid response body would look like:
+
 ```json
 {
- "accounts": [{
-    "sub": "1234",
-    "name": "John Doe",
-    "given_name": "John",
-    "email": "john_doe@idp",
-    "picture": "https://idp.example/profile/123",
-  }, {
-    "sub": "5678",
-    "name": "Johnny",
-    "given_name": "Johnny",
-    "email": "johnny@idp",
-    "picture": "https://idp.example/profile/456"
-  }
- ],
- "tos": "https://idp.example/tos.html",
- "privacy_policy": "https://idp.example/privacy.html"
+  "accounts": [
+    {
+      "account_id": "1234",
+      "name": "John Doe",
+      "given_name": "John",
+      "email": "john_doe@idp",
+      "picture": "https://idp.example/profile/123"
+    },
+    {
+      "account_id": "5678",
+      "name": "Johnny",
+      "given_name": "Johnny",
+      "email": "johnny@idp",
+      "picture": "https://idp.example/profile/456"
+    }
+  ]
 }
 ```
 
-Several of the fields have obvious function.
+The browser will render an account picker UI based on this information.
 
-`enrolled_relying_parties` provides a list of RPs that this account has been used to sign in to before. The browser can determine whether the current RP is on the list and adapt the user experience accordingly.
+#### metadata endpoint
 
-`request_id` allows the IDP to correlate this response with the subsequent ID token request.
+The client metadata endpoint provides metadata about the RP.
+
+```json
+{
+  "privacy_policy_url": "https://idp.example/privacy.html",
+  "terms_of_service_url": "https://idp.example/tos.html",
+}
+```
+
+Currently terms of service and privacy policy are defined as returned
+properties. They are rendered in the account picker UI.
 
 #### ID token fetch
-If the user selects an account from one that is offered, the browser sends a `POST` request to the `token_endpoint` with a body such as:<br>
+
+If the user selects an account from one that is offered, the browser sends a
+`application/x-www-form-urlencoded` POST request to the `id_token_endpoint` with
+a body such as:
+
+```http
+account_id=1234&client_id=myclientid&nonce=abc987987cba"
+```
+
+`account_id` is taken from the response of the previous request.
+
+The response will include `idToken`.
+
 ```json
 {
-  "account": 1234,
-  "request_id": "xyz123123zyx",
-  "request": {
-    "client_id": "myclientid",
-    "nonce": "abc987987cba"
-  }
+  "idToken": "eyJC...J9.eyJzdWTE2...MjM5MDIyfQ.SflV_adQssw....5c",
+  "approvedBy": "user"
 }
 ```
 
-`account` and `request_id` are taken from the response of the previous request, and the `request` field contains information from the RP's original identity request.
+* `idToken` is a proof of IdP authentication.
+* `approvedBy` indicates whether this authentication is done `auto`-matically or
+  by the `user`.
 
 ## Session Management
 
-We have also been experimenting with methods for helping session management features continue to work that currently rely on third-party cookies. So far the only implemented proposal is an API for Logout.
+We have also been experimenting with methods for helping session management
+features continue to work that currently rely on third-party cookies. So far the
+only implemented proposal is an API for Logout.
 
 ### Logout API
 
-The Logout API, `navigator.id.logout()` which is being explored as a way to preserve OIDC front-channel logout and SAML Single Signout with loss of access to third-party cookies in embedded contexts. It is intended to replace situations where an IDP logging out a user also must log out the user in RP contexts and would normally do it using iframes with each RP's known logout URL.
+The Logout API, `FederatedCredential.logout()` which is being explored as a way
+to preserve OIDC front-channel logout and SAML Single Signout with loss of
+access to third-party cookies in embedded contexts. It is intended to replace
+situations where an IDP logging out a user also must log out the user in RP
+contexts and would normally do it using iframes with each RP's known logout URL.
 
-The API takes an array of URLs as an argument. For each URL, the browser determines if the user is known to have previously logged in to the RP using that IDP, and if it has, it sends a credentialed GET request to that URL. The determination is currently based on the permission set during an identity request from the RP to the IDP, either via `navigator.id.get()` or from an intercepted OIDC navigation with an automatic permission prompt. That logic should be considered very tentative.
+The API takes an array of URLs as an argument. For each URL, the browser
+determines if the user is known to have previously logged in to the RP using
+that IDP, and if it has, it sends a credentialed GET request to that URL.
 
-```javascript
-navigator.id.logout(['https://rp1.example/logout', 'https://rp2.example/logout']);
+```js
+FederatedCredential.logout([{
+  url: "https://rp1.example/logout",
+  accountId: "123",
+}, {
+  url: "https://rp2.example/logout",
+  accountId: "456",
+]);
 ```
 
-For security reasons, the IDP does not learn whether any of the network requests succeeded or failed.
+For security reasons, the IDP does not learn whether any of the network requests
+succeeded or failed.
 
-The shape of this API, its behavior, its effectiveness for addressing current problems, and its privacy properties are topics of discussion.
-
+The shape of this API, its behavior, its effectiveness for addressing current
+problems, and its privacy properties are topics of discussion.
