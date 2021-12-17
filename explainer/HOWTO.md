@@ -182,7 +182,7 @@ credentialed `application/x-www-form-urlencoded` POST request to the
 `id_token_endpoint` with a body such as:
 
 ```http
-account_id=1234&client_id=myclientid&nonce=abc987987cba"
+account_id=1234&client_id=myclientid&nonce=abc987987cba
 ```
 
 `account_id` is taken from the response of the previous request.
@@ -207,6 +207,8 @@ features continue to work that currently rely on third-party cookies. So far the
 only implemented proposal is an API for Logout.
 
 ### Logout API
+
+*The Logout API is not implemeted yet as of December 2021.*
 
 The Logout API, `FederatedCredential.logout()` which is being explored as a way
 to preserve OIDC front-channel logout and SAML Single Signout with loss of
