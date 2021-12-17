@@ -54,7 +54,7 @@ token, or else is rejected with an error. The page must be served over HTTPS.
 ```js
 async function login() {
   // Feature detection: Since `FederatedCredential` is already available in
-  // Chrome for the old Credential Management API, additiona
+  // Chrome for the old Credential Management API, additional
   // `FederatedCredential.revoke` check is required.
   if (!'FederatedCredential' in window || !FederatedCredential.revoke) {
     console.log("FedCM is not available.");
@@ -86,7 +86,7 @@ async function login() {
 
 ### Identity Provider implementation
 
-The Chrome prototype supports multiple protocols between the browser and the
+The Chrome prototype supports multiple endpoints between the browser and the
 IdP. On the mediation-oriented flow, there are five different HTTP requests:
 
 1. A request for the `/.well-known/fedcm` configuration.
