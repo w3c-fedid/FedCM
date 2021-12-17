@@ -9,11 +9,12 @@ As of December 2021, Chrome supports the mediation-oriented flow on mobile.
 From Relying Party (RP) aspect:
 
 * `navigator.credentials.get()`: Sign-up and sign-in.
+* `FederatedCredential.revoke()`: Revoke an account that's already signed up.
 
 From Identity Provider (IdP) aspect:
 
 * `FederatedCredential.logout()`: Sends a signal to specified RPs to logout the user.
-* A request for the FedCM Well-Known configuration.
+* A request for the `/.well-known/fedcm` configuration.
 * A request for a list of accounts that the user can use for federated sign-in.
 * A request for a metadata about clients (RPs).
 * A request for an ID token associated with a specified account.
@@ -21,9 +22,9 @@ From Identity Provider (IdP) aspect:
 
 These are described in more detail in the sections below.
 
-**Note**: Though we do have a working implementation of the permission-oriented
-flow on desktop, it's not currently actively maintained and we do not guarantee
-that it will continue to work the way it is in the future.
+**Note**: Though we do have a prototyping implementation of the
+permission-oriented flow on desktop, it's not currently actively maintained and
+we do not guarantee that it will continue to work the way it is in the future.
 
 ## Enabling FedCM in Chrome
 
@@ -34,10 +35,10 @@ that it will continue to work the way it is in the future.
    Chrome 98 or later.
 
 At the moment the only way to reset the sign-up status is to clear browsing data
-on the Chrome profile. This can be done from **[Settings]**, and requires
-manually selecting the **[Site Settings]** checkbox from the **[Advanced]** tab
-of the **[Clear Browsing Data]** dialog. Also be sure the time range of data
-being cleared includes the time when the sign-up status was set.
+on the Chrome profile. This can be done from the **[ClearBrowsing Data
+(`chrome://settings/clearBrowserData`)]** **[Settings]** dialog. Under
+**[Advanced]** select the **[Site Settings]** checkbox. Also be sure the time
+range of data being cleared includes the time when the sign-up status was set.
 
 Testing can be easier in Incognito mode, Guest mode or with single-use profiles
 if sign-up status persistence is not desired.
@@ -52,8 +53,10 @@ token, or else is rejected with an error. The page must be served over HTTPS.
 
 ```js
 async function login() {
-  // Feature detection.
-  if (!'FederatedCredential' in window || !Federated.revoke) {
+  // Feature detection: Since `FederatedCredential` is already available in
+  // Chrome for the old Credential Management API, additiona
+  // `FederatedCredential.revoke` check is required.
+  if (!'FederatedCredential' in window || !FederatedCredential.revoke) {
     console.log("FedCM is not available.");
     return;
   }
@@ -83,29 +86,29 @@ async function login() {
 
 ### Identity Provider implementation
 
-The Chrome prototype implements multiple protocols between the browser and the
+The Chrome prototype supports multiple protocols between the browser and the
 IdP. On the mediation-oriented flow, there are five different HTTP requests:
 
-1. A request for the FedCM Well-Known configuration.
+1. A request for the `/.well-known/fedcm` configuration.
 2. A request for a list of accounts that the user can use for federated sign-in.
 3. A request for a metadata about clients (RPs).
 4. A request for an ID token associated with a specified account.
 5. A request to revoke an ID token associated with an account.
 
 All of these must be served over HTTPS. These requests are tagged with a
-forbidden header `Sec-FedCM-CSRF` to identify them as browser-generated FedCM
-requests. The `Sec-` prefix prevents web content being able to set this header
-on other kinds of traffic such as via `XMLHttpRequest`, which makes it useful to
-prevent CSRF attacks. The header currently has an empty value.
+browser-controlled header `Sec-FedCM-CSRF` to identify them as browser-generated
+FedCM requests. The `Sec-` prefix prevents web content being able to set this
+header on other kinds of traffic such as via `XMLHttpRequest`, which makes it
+useful to prevent CSRF attacks. The header value is undefined.
 
 ### Protocol details
 
-#### Well-Known configuration request
+#### `/.well-known/fedcm` configuration request
 
 After the RP initiates a sign-in flow by calling the
 `navigator.credentials.get()`, the browser learns about the IdP's FedCM support
 with a fetch to `https://idp.example/.well-known/fedcm`, where
-`https://idp.example` was specified as the provider by the RP.
+`https://idp.example` was specified as the provider URL by the RP.
 
 The browser expects a response with MIME type `application/json`, currently
 containing four fields:
@@ -119,12 +122,11 @@ containing four fields:
 }
 ```
 
-* The `accounts_endpoint` value provides the URL for the next step, fetching a
-  list of user accounts.
+* The `accounts_endpoint` value provides the URL to fetch a list of user
+  accounts.
 * The `client_id_metadata_endpoint` value provides the URL to fetch the client
   metadata including terms of services and privacy policy.
-* The `id_token_endpoint` value provides the URL that the browser should use for
-  the third step, requesting an ID token.
+* The `id_token_endpoint` value provides the URL to request an ID token.
 * The `revocation_endpoint` value provides the endpoint URL to revoke all id
   tokens of the user.
 
@@ -160,7 +162,8 @@ The browser will render an account picker UI based on this information.
 
 #### metadata endpoint
 
-The client metadata endpoint provides metadata about the RP.
+The client metadata endpoint provides metadata about the RP. The browser sends a
+un-credentialed request to the `client_id_metadata_endpoint`.
 
 ```json
 {
@@ -175,8 +178,8 @@ properties. They are rendered in the account picker UI.
 #### ID token fetch
 
 If the user selects an account from one that is offered, the browser sends a
-`application/x-www-form-urlencoded` POST request to the `id_token_endpoint` with
-a body such as:
+credentialed `application/x-www-form-urlencoded` POST request to the
+`id_token_endpoint` with a body such as:
 
 ```http
 account_id=1234&client_id=myclientid&nonce=abc987987cba"
