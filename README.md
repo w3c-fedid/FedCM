@@ -4,7 +4,7 @@ This is the repository for the W3C's WICG Federated Credentials Management API.
 
 Explainer: [explainer/README.md](explainer/README.md)
 
-Work-in-progress specification: <https://wicg.github.io/FedCM/>
+Work-in-progress specification: <https://fedidcg.github.io/FedCM/>
 
 
 ## Introduction
@@ -22,7 +22,7 @@ the removal of third-party cookies on federated login. Historically this has
 relied on third-party cookies or navigational redirects in order to function
 as they were the primitives provided by the web.
 
-The [explainer](explainer/README.md) and [spec](https://wicg.github.io/FedCM)
+The [explainer](explainer/README.md) and [spec](https://fedidcg.github.io/FedCM)
 provide a potential API and the rational behind how that API was designed.
 
 
@@ -46,9 +46,9 @@ There are several ways to contribute to the Federated Credential Management API.
  * If you're an Identity Provider, there are two sides of the implementation that
    will be needed and any feedback on either side is appreciated.
 
-   1. The [Identity Provider API](https://wicg.github.io/FedCM/#idp-api) describes
+   1. The [Identity Provider API](https://fedidcg.github.io/FedCM/#idp-api) describes
       the manifest and API needed server side.
-   2. The [Browser API](https://wicg.github.io/FedCM/#API) describes the JavaScript
+   2. The [Browser API](https://fedidcg.github.io/FedCM/#browser-api) describes the JavaScript
       interface to FedCM which will need to be utilized.
 
  * If you're a Relying Party (i.e. website) and would like to test the changes out
@@ -57,7 +57,7 @@ There are several ways to contribute to the Federated Credential Management API.
    JavaScript. (Until an IDP provides first party JavaScript to work with FedCM
    this integration will be tricker). You can also review the demo provided by the
    HOWTO and take a look at the
-   [Relying Party API](https://wicg.github.io/FedCM/#rp-api) to see what is needed
+   [Relying Party API](https://fedidcg.github.io/FedCM/#rp-api) to see what is needed
    on the RP side.
 
 
