@@ -691,24 +691,18 @@ For example:
 The revocation endpoint is responsible for revoking all [=id token=]s for the
 specified client ID for the user.
 
-The revocation endpoint is fetched
+The request is made:
+
 (a) as a **POST** request,
 (b) **with** [=IDP=] cookies,
 (c) **with** a special [[#Sec-FedCM-CSRF]] header, and
 (d) **with** a Referer header indicating the [=RP=] URL.
 
-It will also contain the following parameters passed as a JSON object:
+It will also contain the following parameters in the request body `application/x-www-form-urlencoded`:
 
 <dl dfn-type="argument" dfn-for="revocation_endpoint_request">
     :   <dfn>account_id</dfn>
     :: The account identifier for the user (e.g. email).
-    :   <dfn>request</dfn>
-    :: The [=revocation request=]
-</dl>
-
-The <dfn>revocation request</dfn> has the following properties:
-
-<dl dfn-type="argument" dfn-for="revocation_endpoint_request_request">
     :   <dfn>client_id</dfn>
     :: The [=RP=]'s client id
 </dl>
@@ -720,15 +714,10 @@ For example:
 POST /fedcm_revocation_endpoint HTTP/1.1
 Host: idp.example
 Referer: rp.example
-Content-Type: application/json
+Content-Type: application/x-www-form-urlencoded
 Cookie: 0x23223
 Sec-FedCM-CSRF: random_value
-{
-  "account_id": "123",
-  "request": {
-    "client_id": "client1234"
-  }
-}
+account_id=123&client_id=client1234
 ```
 </div>
 
