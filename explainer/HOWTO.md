@@ -13,7 +13,7 @@ From Relying Party (RP) aspect:
 
 From Identity Provider (IdP) aspect:
 
-* `FederatedCredential.logout()`: Sends a signal to specified RPs to logout the user.
+* `FederatedCredential.logoutRPs()`: Sends a signal to specified RPs to logout the user.
 * A request for the `/.well-known/fedcm` configuration.
 * A request for a list of accounts that the user can use for federated sign-in.
 * A request for a metadata about clients (RPs).
@@ -210,7 +210,7 @@ only implemented proposal is an API for Logout.
 
 *The Logout API is not implemeted yet as of December 2021.*
 
-The Logout API, `FederatedCredential.logout()` which is being explored as a way
+The Logout API, `FederatedCredential.logoutRPs()` which is being explored as a way
 to preserve OIDC front-channel logout and SAML Single Signout with loss of
 access to third-party cookies in embedded contexts. It is intended to replace
 situations where an IDP logging out a user also must log out the user in RP
@@ -221,7 +221,7 @@ determines if the user is known to have previously logged in to the RP using
 that IDP, and if it has, it sends a credentialed GET request to that URL.
 
 ```js
-FederatedCredential.logout([{
+FederatedCredential.logoutRPs([{
   url: "https://rp1.example/logout",
   accountId: "123",
 }, {
