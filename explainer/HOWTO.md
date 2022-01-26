@@ -14,7 +14,7 @@ From Relying Party (RP) aspect:
 From Identity Provider (IdP) aspect:
 
 * `FederatedCredential.logout()`: Sends a signal to specified RPs to logout the user.
-* A request for the `/.well-known/fedcm` configuration.
+* A request for the `/fedcm.json` configuration.
 * A request for a list of accounts that the user can use for federated sign-in.
 * A request for a metadata about clients (RPs).
 * A request for an ID token associated with a specified account.
@@ -89,7 +89,7 @@ async function login() {
 The Chrome prototype supports multiple endpoints between the browser and the
 IdP. On the mediation-oriented flow, there are five different HTTP requests:
 
-1. A request for the `/.well-known/fedcm` configuration.
+1. A request for the `/fedcm.json` configuration.
 2. A request for a list of accounts that the user can use for federated sign-in.
 3. A request for a metadata about clients (RPs).
 4. A request for an ID token associated with a specified account.
@@ -103,11 +103,11 @@ useful to prevent CSRF attacks. The header value is undefined.
 
 ### Protocol details
 
-#### `/.well-known/fedcm` configuration request
+#### `/fedcm.json` configuration request
 
 After the RP initiates a sign-in flow by calling the
 `navigator.credentials.get()`, the browser learns about the IdP's FedCM support
-with a fetch to `https://idp.example/.well-known/fedcm`, where
+with a fetch to `https://idp.example/fedcm.json`, where
 `https://idp.example` was specified as the provider URL by the RP.
 
 The browser expects a response with MIME type `application/json`, currently
@@ -132,7 +132,7 @@ containing four fields:
 
 #### Account list fetch
 
-After fetching the well-known configuration, the browser sends a credentialed
+After fetching the configuration, the browser sends a credentialed
 request to the specified `accounts_endpoint`. The cookie on the request can be
 used to identify valid signed-in accounts the user might have on the IdP which
 are then returned in the response. A valid response body would look like:
