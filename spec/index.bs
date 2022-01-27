@@ -467,7 +467,7 @@ This document defines the APIs in the following order:
 
 The [=IDP=] proactively and cooperatively exposes itself as a comformant agent by exposing a series of HTTP endpoints:
 
-1. A [[#idp-api-manifest]] endpoint in a well-known location that points to
+1. A [[#idp-api-manifest]] endpoint in an agreed upon location that points to
 1. An [[#idp-api-accounts-endpoint]] endpoint
 1. A [[#idp-api-client-id-metadata-endpoint]] endpoint
 1. An [[#idp-api-id-token-endpoint]] endpoint
@@ -477,10 +477,11 @@ The [=IDP=] proactively and cooperatively exposes itself as a comformant agent b
 ## Manifest ## {#idp-api-manifest}
 <!-- ============================================================ -->
 
-The well-known discovery endpoint is an endpoint located at the [=IDP=]'s
-`.well-known/fedcm` and serves as a discovery device to other endpoints provided by the [=IDP=].
+The manifest discovery endpoint is an endpoint located at the [=IDP=]'s
+`fedcm.json` file and serves as a discovery device to other endpoints provided by the [=IDP=].
 
-The well-known discovery endpoint is fetched
+The manifest discovery endpoint is fetched:
+
 (a) **without** cookies and
 (b) **with** a special [[#Sec-FedCM-CSRF]] header.
 
@@ -488,7 +489,7 @@ For example:
 
 <div class=example>
 ```http
-GET /.well-known/fedcm HTTP/1.1
+GET /fedcm.json HTTP/1.1
 Host: idp.example
 Accept: application/json
 Sec-FedCM-CSRF: random_value
@@ -497,7 +498,7 @@ Sec-FedCM-CSRF: random_value
 
 The file is parsed expecting the following properties:
 
-<dl dfn-type="argument" dfn-for="WellKnown">
+<dl dfn-type="argument" dfn-for="Manifest">
     :   <dfn>accounts_endpoint</dfn>
     ::  A URL that points to an HTTP API that complies with the [[#idp-api-accounts-endpoint]] API.
     :   <dfn>client_id_metadata_endpoint</dfn>
@@ -951,7 +952,7 @@ When this method is invoked, the user agent MUST execute the following algorithm
 
     1. Assert: |provider|["{{FederatedIdentityProvider/nonce}}"] [=map/exists=].
 
-    1. Let |wellknown| be the result of running the [=fetch the well-known=] algorithm with the |provider|.
+    1. Let |manifest| be the result of running the [=fetch the manifest=] algorithm with the |provider|.
 
     1. Let |accounts list| be the result of running the [=fetch the accounts list=] algorithm.
 
@@ -1016,15 +1017,15 @@ To <dfn>explicit sign-in</dfn> the user run this algorithm:
 
     1. Return the result of running the [=sign-in=] algorithm.
 
-To <dfn>fetch the well-known</dfn> configuration file, run this algorithm:
+To <dfn>fetch the manifest</dfn> configuration file, run this algorithm:
 
-1. Let the |wellknown url| be the relative url ".well-known/fedcm" of |provider|["{{FederatedIdentityProvider/url}}"]
+1. Let the |manifest url| be the relative url "fedcm.json" of |provider|["{{FederatedIdentityProvider/url}}"]
 
-1. Return the result of fetching the |wellknown url| with the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]] header but without the [=Identity Provider=]'s cookies.
+1. Return the result of fetching the |manifest url| with the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]] header but without the [=Identity Provider=]'s cookies.
 
 To <dfn>fetch the accounts list</dfn> run this algorithm:
 
-1. Let the |accounts_endpoint| url be the relative url |wellknown|["{{WellKnown/accounts_endpoint}}"] of |provider|["{{FederatedIdentityProvider/url}}"]
+1. Let the |accounts_endpoint| url be the relative url |manifest|["{{Manifest/accounts_endpoint}}"] of |provider|["{{FederatedIdentityProvider/url}}"]
 
 1. Let the |accounts list| be the result of fetching the |accounts_endpoint| with the [=Identity Provider=]'s cookies.
 
@@ -1032,7 +1033,7 @@ To <dfn>fetch the accounts list</dfn> run this algorithm:
 
 To <dfn noexport>fetch the client id metadata</dfn> run this algorithm:
 
-1. Let the |client_id_metadata_endpoint| url be the relative url |wellknown|["{{WellKnown/client_id_metadata_endpoint}}"] of |provider|["{{FederatedIdentityProvider/url}}"]
+1. Let the |client_id_metadata_endpoint| url be the relative url |manifest|["{{Manifest/client_id_metadata_endpoint}}"] of |provider|["{{FederatedIdentityProvider/url}}"]
 1. Let the |policies| be the result of fetching the |client_id_metadata_endpoint| with the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]] header but without the [=Identity Provider=]'s cookies.
 1. Return |policies|
 
@@ -1042,7 +1043,7 @@ The <dfn>Terms of Service</dfn> are the policies described at {{client_id_metada
 
 To <dfn>mint</dfn> a new id token, run the following algorithm:
 
-1. Let |token| be the result of making a POST request to the |wellknown|["{{WellKnown/id_token_endpoint}}"] with:
+1. Let |token| be the result of making a POST request to the |manifest|["{{Manifest/id_token_endpoint}}"] with:
     * Let the {{id_token_endpoint_request/account_id}} be |account|["{{accounts_endpoint_response_accounts/account_id}}"].
     * Let the {{id_token_endpoint_request/request}} be a new object with
           * Let {{id_token_endpoint_request_request/client_id}} be |provider|["{{FederatedIdentityProvider/clientId}}"].
