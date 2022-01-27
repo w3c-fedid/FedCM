@@ -549,6 +549,8 @@ The response is expected to have the following properties:
 <dl dfn-type="argument" dfn-for="accounts_endpoint_response">
     :   <dfn>accounts</dfn> (required)
     ::  A list of [=Account JSON=].
+    :   <dfn>branding</dfn> (optional)
+    ::  A set of [=Branding JSON=] options.
 </dl>
 
 Every <dfn>Account JSON</dfn> is expected to have the following properties:
@@ -564,6 +566,26 @@ Every <dfn>Account JSON</dfn> is expected to have the following properties:
     ::  The user's email address.
     :   <dfn>picture</dfn> (optional)
     :: The user's profile picture.
+</dl>
+
+The <dfn>Branding JSON</dfn> is expected to have the following properties:
+
+<dl dfn-type="argument" dfn-for="accounts_endpoint_response_branding">
+    :   <dfn>background_color</dfn> (optional)
+    ::  The background color of the button.
+    :   <dfn>foreground_color</dfn> (optional)
+    ::  The foreground color of the button.
+    :   <dfn>icons</dfn> (optinal)
+    ::  A list of [=Icon JSON=] objects.
+</dl>
+
+The <dfn>Icon JSON</dfn> is expected to have the following properties:
+
+<dl dfn-type="argument" dfn-for="accounts_endpoint_response_branding_icons">
+    :   <dfn>url</dfn> (required)
+    ::  The url pointing to the icon image.
+    :   <dfn>size</dfn> (optional)
+    ::  The size of the icon (assumed to be squared).
 </dl>
 
 For example:
@@ -583,7 +605,15 @@ For example:
    "name": "Johnny",
    "email": "johnny@idp.example",
    "picture": "https://idp.example/profile/456"
-  }]
+  }],
+  "branding": {
+   "background_color": "green",
+   "foreground_color": "0xFFEEAA",
+   "icons": [{
+     "url": "https://idp.example/icon.ico",
+     "size": 10
+   }],
+ }
 }
 ```
 </div>
@@ -651,6 +681,8 @@ It will also contain the following parameters in the request body `application/x
     :: A random number of the choice of the [=RP=]
     :   <dfn>account_id</dfn>
     :: The account identifier that was selected.
+    :   <dfn>consent_acquired</dfn>
+    :: Whether the privacy policy and the terms of service were displayed to the user.
 </dl>
 
 For example:
@@ -663,7 +695,7 @@ Referer: rp.example
 Content-Type: application/x-www-form-urlencoded
 Cookie: 0x23223
 Sec-FedCM-CSRF: random_value
-account_id=123&client_id=client1234&nonce=Ct60bD
+account_id=123&client_id=client1234&nonce=Ct60bD&consent_acquired=true
 ```
 </div>
 
@@ -1133,7 +1165,7 @@ path: img/mock31.svg
 <div class=example>
 ```js
 async function logout() {
-  await FederatedCredential.logout([{
+  await FederatedCredential.logoutRPs([{
       url: "https://rp1.example",
       accountId: "123",
     }, {
@@ -1144,7 +1176,7 @@ async function logout() {
 ```
 </div>
 
-[=IDP=]s can call <code><a idl for="FederatedCredential" lt="logout()">FederatedCredential.logout(...)</a></code> to log the user out of the [=RP=]s they are signed into.
+[=IDP=]s can call <code><a idl for="FederatedCredential" lt="logout()">FederatedCredential.logoutRPs(...)</a></code> to log the user out of the [=RP=]s they are signed into.
 
 <xmp class=idl>
 dictionary FederatedCredentialLogoutRequest {
@@ -1154,7 +1186,7 @@ dictionary FederatedCredentialLogoutRequest {
 
 [Exposed=Window, SecureContext]
 partial interface FederatedCredential {
-  static Promise<undefined> logout(optional sequence<FederatedCredentialLogoutRequest> logout_requests = []);
+  static Promise<undefined> logoutRPs(optional sequence<FederatedCredentialLogoutRequest> logout_requests = []);
 };
 </xmp>
 
