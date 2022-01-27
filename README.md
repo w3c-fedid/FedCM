@@ -1,6 +1,6 @@
-# WICG Federated Credentials Management
+# FedID CG Federated Credentials Management
 
-This is the repository for the W3C's WICG Federated Credentials Management API.
+This is the repository for the W3C's FedID CG Federated Credentials Management API.
 
 Explainer: [explainer/README.md](explainer/README.md)
 
