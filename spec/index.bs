@@ -529,8 +529,9 @@ For example:
 The accounts list endpoint provides the list of accounts the user has at the [=IDP=].
 
 The accounts list endpoint is fetched
-(a) **with** [=IDP=] cookies and
-(b) **with** a special [[#Sec-FedCM-CSRF]] header.
+(a) **with** [=IDP=] cookies,
+(b) **with** a special [[#Sec-FedCM-CSRF]] header and
+(c) **without** a [[RFC7231#header.referer|Referer]] header.
 
 For example:
 
@@ -627,8 +628,11 @@ For example:
 The client metadata endpoint provides metadata about [=RP=]s.
 
 The client medata endpoint is fetched
-(a) **without** cookies and
-(b) **with** a special [[#Sec-FedCM-CSRF]] header.
+(a) **without** cookies,
+(b) **with** a special [[#Sec-FedCM-CSRF]] header and
+(c) **with** a [[RFC7231#header.referer|Referer]] header indicating the [=RP=]'s origin
+    (as if [[referrer-policy#referrer-policy-strict-origin|Referer-Policy: strict-origin]]
+    was in use).
 
 The user agent also passes the **client_id**.
 
@@ -638,6 +642,7 @@ For example:
 ```http
 GET /client_medata.php?client_id=1234 HTTP/1.1
 Host: idp.example
+Referer: https://rp.example/
 Accept: application/json
 Sec-FedCM-CSRF: random_value
 ```
@@ -672,7 +677,10 @@ The ID Token endpoint is responsible for [=minting=] a new [=id token=] for the 
 The ID Token endpoint is fetched
 (a) as a **POST** request,
 (b) **with** [=IDP=] cookies,
-(c) **with** a special [[#Sec-FedCM-CSRF]] header and
+(c) **with** a [[RFC7231#header.referer|Referer]] header indicating the [=RP=]'s origin
+    (as if [[referrer-policy#referrer-policy-strict-origin|Referer-Policy: strict-origin]]
+    was in use), and
+(d) **with** a special [[#Sec-FedCM-CSRF]] header.
 
 It will also contain the following parameters in the request body `application/x-www-form-urlencoded`:
 
@@ -693,7 +701,7 @@ For example:
 ```http
 POST /fedcm_token_endpoint HTTP/1.1
 Host: idp.example
-Referer: rp.example
+Referer: https://rp.example/
 Content-Type: application/x-www-form-urlencoded
 Cookie: 0x23223
 Sec-FedCM-CSRF: random_value
@@ -731,7 +739,9 @@ The request is made:
 (a) as a **POST** request,
 (b) **with** [=IDP=] cookies,
 (c) **with** a special [[#Sec-FedCM-CSRF]] header, and
-(d) **with** a Referer header indicating the [=RP=] URL.
+(d) **with** a [[RFC7231#header.referer|Referer]] header indicating the [=RP=]'s origin
+    (as if [[referrer-policy#referrer-policy-strict-origin|Referer-Policy: strict-origin]]
+    was in use).
 
 It will also contain the following parameters in the request body `application/x-www-form-urlencoded`:
 
@@ -748,7 +758,7 @@ For example:
 ```http
 POST /fedcm_revocation_endpoint HTTP/1.1
 Host: idp.example
-Referer: rp.example
+Referer: https://rp.example/
 Content-Type: application/x-www-form-urlencoded
 Cookie: 0x23223
 Sec-FedCM-CSRF: random_value
