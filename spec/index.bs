@@ -507,7 +507,31 @@ The file is parsed expecting the following properties:
     ::  A URL that points to an HTTP API that complies with the [[#idp-api-id-token-endpoint]] API.
     :   <dfn>revocation_endpoint</dfn>
     :: A URL that points to an HTTP API that complies with the [[#idp-api-revocation-endpoint]] API.
+    :   <dfn>theme</dfn> (optional)
+    ::  A set of [=Theme JSON=] options.
 </dl>
+
+The <dfn>Theme JSON</dfn> is expected to have the following properties:
+
+<dl dfn-type="argument" dfn-for="accounts_endpoint_response_theme">
+    :   <dfn>background-color</dfn> (optional)
+    ::  The [=IDP=]'s preferred background [=color=].
+    :   <dfn>color</dfn> (optional)
+    ::  The [=IDP=]'s foreground [=color=] of text.
+    :   <dfn>icons</dfn> (optional)
+    ::  A list of [=Icon JSON=] objects.
+</dl>
+
+The <dfn>Icon JSON</dfn> is expected to have the following properties:
+
+<dl dfn-type="argument" dfn-for="accounts_endpoint_response_theme_icons">
+    :   <dfn>url</dfn> (required)
+    ::  The url pointing to the icon image.
+    :   <dfn>size</dfn> (optional)
+    ::  The size of the icon (assumed to be squared).
+</dl>
+
+The <dfn>color</dfn> is a subset of CSS <<color>> syntax, namely <<hex-color>>s, ''hsl()''s, ''rgb()''s and <<named-color>>.
 
 For example:
 
@@ -517,7 +541,15 @@ For example:
   "accounts_endpoint": "/accounts.php",
   "client_id_metadata_endpoint": "/metadata.php",
   "id_token_endpoint": "/idtokens.php",
-  "revocation_endpoint": "/revocation.php"
+  "revocation_endpoint": "/revocation.php",
+  "theme": {
+   "background-color": "green",
+   "color": "0xFFEEAA",
+   "icons": [{
+     "url": "https://idp.example/icon.ico",
+     "size": 10
+   }],
+  }
 }
 ```
 </div>
@@ -550,8 +582,6 @@ The response is expected to have the following properties:
 <dl dfn-type="argument" dfn-for="accounts_endpoint_response">
     :   <dfn>accounts</dfn> (required)
     ::  A list of [=Account JSON=].
-    :   <dfn>branding</dfn> (optional)
-    ::  A set of [=Branding JSON=] options.
 </dl>
 
 Every <dfn>Account JSON</dfn> is expected to have the following properties:
@@ -568,28 +598,6 @@ Every <dfn>Account JSON</dfn> is expected to have the following properties:
     :   <dfn>picture</dfn> (optional)
     :: The user's profile picture.
 </dl>
-
-The <dfn>Branding JSON</dfn> is expected to have the following properties:
-
-<dl dfn-type="argument" dfn-for="accounts_endpoint_response_branding">
-    :   <dfn>background_color</dfn> (optional)
-    ::  The background [=color=] of the button.
-    :   <dfn>foreground_color</dfn> (optional)
-    ::  The foreground [=color=] of the button.
-    :   <dfn>icons</dfn> (optinal)
-    ::  A list of [=Icon JSON=] objects.
-</dl>
-
-The <dfn>Icon JSON</dfn> is expected to have the following properties:
-
-<dl dfn-type="argument" dfn-for="accounts_endpoint_response_branding_icons">
-    :   <dfn>url</dfn> (required)
-    ::  The url pointing to the icon image.
-    :   <dfn>size</dfn> (optional)
-    ::  The size of the icon (assumed to be squared).
-</dl>
-
-The <dfn>color</dfn> is a subset of CSS <<color>> syntax, namely <<hex-color>>s, ''hsl()''s, ''rgb()''s and <<named-color>>.
 
 For example:
 
@@ -609,14 +617,6 @@ For example:
    "email": "johnny@idp.example",
    "picture": "https://idp.example/profile/456"
   }],
-  "branding": {
-   "background_color": "green",
-   "foreground_color": "0xFFEEAA",
-   "icons": [{
-     "url": "https://idp.example/icon.ico",
-     "size": 10
-   }],
- }
 }
 ```
 </div>
