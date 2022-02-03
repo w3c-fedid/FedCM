@@ -507,28 +507,34 @@ The file is parsed expecting the following properties:
     ::  A URL that points to an HTTP API that complies with the [[#idp-api-id-token-endpoint]] API.
     :   <dfn>revocation_endpoint</dfn>
     :: A URL that points to an HTTP API that complies with the [[#idp-api-revocation-endpoint]] API.
-    :   <dfn>theme</dfn> (optional)
-    ::  A set of [=Theme JSON=] options.
+    :   <dfn>branding</dfn> (optional)
+    ::  A set of [=Branding JSON=] options.
 </dl>
 
-The <dfn>Theme JSON</dfn> is expected to have the following properties:
+The <dfn>Branding JSON</dfn> allows an [=IDP=] to express their branding preferences, which can be used by User Agents in customization entry points.
 
-<dl dfn-type="argument" dfn-for="accounts_endpoint_response_theme">
+Note: The branding preferences are deliberaly designed to be high level / abstract (rather than opinionated about a specific UI structure), to allow different [=User Agents=] to offer different UI experiences and for them to evolve independently over time.
+
+It is expected to have the following properties:
+
+<dl dfn-type="argument" dfn-for="accounts_endpoint_response_branding">
     :   <dfn>background-color</dfn> (optional)
     ::  The [=IDP=]'s preferred background [=color=].
     :   <dfn>color</dfn> (optional)
-    ::  The [=IDP=]'s foreground [=color=] of text.
+    ::  The [=IDP=]'s preferred foreground [=color=] of text.
     :   <dfn>icons</dfn> (optional)
     ::  A list of [=Icon JSON=] objects.
 </dl>
 
 The <dfn>Icon JSON</dfn> is expected to have the following properties:
 
-<dl dfn-type="argument" dfn-for="accounts_endpoint_response_theme_icons">
+<dl dfn-type="argument" dfn-for="accounts_endpoint_response_branding_icons">
     :   <dfn>url</dfn> (required)
     ::  The url pointing to the icon image.
     :   <dfn>size</dfn> (optional)
     ::  The size of the icon (assumed to be squared).
+    :   <dfn>background-brightness</dfn> (optional)
+    ::  The preferred background brightness for the icon. Either "dark" or "light".
 </dl>
 
 The <dfn>color</dfn> is a subset of CSS <<color>> syntax, namely <<hex-color>>s, ''hsl()''s, ''rgb()''s and <<named-color>>.
@@ -542,12 +548,13 @@ For example:
   "client_id_metadata_endpoint": "/metadata.php",
   "id_token_endpoint": "/idtokens.php",
   "revocation_endpoint": "/revocation.php",
-  "theme": {
+  "branding": {
    "background-color": "green",
    "color": "0xFFEEAA",
    "icons": [{
      "url": "https://idp.example/icon.ico",
-     "size": 10
+     "size": 10,
+     "background-brightness": "light"
    }],
   }
 }

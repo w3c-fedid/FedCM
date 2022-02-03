@@ -119,12 +119,13 @@ containing four fields:
   "client_id_metadata_endpoint": "https://idp.example/fedcm/client_id_metadata_endpoint",
   "id_token_endpoint": "https://idp.example/fedcm/token_endpoint",
   "revocation_endpoint": "https://idp.example/fedcm/revocation_endpoint",
-  "theme": {
+  "branding": {
    "background-color": "green",
    "color": "0xFFEEAA",
    "icons": [{
      "url": "https://idp.example/icon.ico",
-     "size": 10
+     "size": 10,
+     "background-brightness": "light"
    }],
   },
 }
