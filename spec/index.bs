@@ -483,7 +483,8 @@ The manifest discovery endpoint is an endpoint located at the [=IDP=]'s
 The manifest discovery endpoint is fetched:
 
 (a) **without** cookies and
-(b) **with** a special [[#Sec-FedCM-CSRF]] header.
+(b) **with** a special [[#Sec-FedCM-CSRF]] header, and
+(c) **without** following [[RFC7231#header.location|HTTP redirects]].
 
 For example:
 
@@ -530,8 +531,9 @@ The accounts list endpoint provides the list of accounts the user has at the [=I
 
 The accounts list endpoint is fetched
 (a) **with** [=IDP=] cookies,
-(b) **with** a special [[#Sec-FedCM-CSRF]] header and
-(c) **without** a [[RFC7231#header.referer|Referer]] header.
+(b) **with** a special [[#Sec-FedCM-CSRF]] header,
+(c) **without** a [[RFC7231#header.referer|Referer]] header, and
+(d) **without** following [[RFC7231#header.location|HTTP redirects]].
 
 For example:
 
@@ -631,10 +633,11 @@ The client metadata endpoint provides metadata about [=RP=]s.
 
 The client medata endpoint is fetched
 (a) **without** cookies,
-(b) **with** a special [[#Sec-FedCM-CSRF]] header and
+(b) **with** a special [[#Sec-FedCM-CSRF]] header,
 (c) **with** a [[RFC7231#header.referer|Referer]] header indicating the [=RP=]'s origin
     (as if [[referrer-policy#referrer-policy-strict-origin|Referer-Policy: strict-origin]]
-    was in use).
+    was in use), and
+(d) **without** following [[RFC7231#header.location|HTTP redirects]].
 
 The user agent also passes the **client_id**.
 
@@ -681,8 +684,9 @@ The ID Token endpoint is fetched
 (b) **with** [=IDP=] cookies,
 (c) **with** a [[RFC7231#header.referer|Referer]] header indicating the [=RP=]'s origin
     (as if [[referrer-policy#referrer-policy-strict-origin|Referer-Policy: strict-origin]]
-    was in use), and
-(d) **with** a special [[#Sec-FedCM-CSRF]] header.
+    was in use),
+(d) **with** a special [[#Sec-FedCM-CSRF]] header, and
+(e) **without** following [[RFC7231#header.location|HTTP redirects]].
 
 It will also contain the following parameters in the request body `application/x-www-form-urlencoded`:
 
@@ -740,10 +744,11 @@ The request is made:
 
 (a) as a **POST** request,
 (b) **with** [=IDP=] cookies,
-(c) **with** a special [[#Sec-FedCM-CSRF]] header, and
+(c) **with** a special [[#Sec-FedCM-CSRF]] header,
 (d) **with** a [[RFC7231#header.referer|Referer]] header indicating the [=RP=]'s origin
     (as if [[referrer-policy#referrer-policy-strict-origin|Referer-Policy: strict-origin]]
-    was in use).
+    was in use), and
+(e) **without** following [[RFC7231#header.location|HTTP redirects]].
 
 It will also contain the following parameters in the request body `application/x-www-form-urlencoded`:
 
@@ -1041,12 +1046,14 @@ To <dfn>fetch the manifest</dfn> configuration file, run this algorithm:
 1. Let the |manifest url| be the file "fedcm.json" relative to the directory prefix passed as |provider|["{{FederatedIdentityProvider/url}}"]
 
 1. Return the result of fetching the |manifest url| with the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]] header but without the [=Identity Provider=]'s cookies.
+   This request MUST NOT follow [[RFC7231#header.location|HTTP redirects]] and instead abort with an error if there are any.
 
 To <dfn>fetch the accounts list</dfn> run this algorithm:
 
 1. Let the |accounts_endpoint| url be the relative url |manifest|["{{Manifest/accounts_endpoint}}"] of |provider|["{{FederatedIdentityProvider/url}}"]
 
 1. Let the |accounts list| be the result of fetching the |accounts_endpoint| with the [=Identity Provider=]'s cookies.
+   This request MUST NOT follow [[RFC7231#header.location|HTTP redirects]] and instead abort with an error if there are any.
 
 1. Return the |accounts list|
 
@@ -1054,6 +1061,7 @@ To <dfn noexport>fetch the client id metadata</dfn> run this algorithm:
 
 1. Let the |client_id_metadata_endpoint| url be the relative url |manifest|["{{Manifest/client_id_metadata_endpoint}}"] of |provider|["{{FederatedIdentityProvider/url}}"]
 1. Let the |policies| be the result of fetching the |client_id_metadata_endpoint| with the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]] header but without the [=Identity Provider=]'s cookies.
+   This request MUST NOT follow [[RFC7231#header.location|HTTP redirects]] and instead abort with an error if there are any.
 1. Return |policies|
 
 The <dfn>Privacy Policy</dfn> are the policies described at {{client_id_metadata_endpont_response/privacy_policy_url}}.
@@ -1067,6 +1075,7 @@ To <dfn>mint</dfn> a new id token, run the following algorithm:
     * Let the {{id_token_endpoint_request/request}} be a new object with
           * Let {{id_token_endpoint_request_request/client_id}} be |provider|["{{FederatedIdentityProvider/clientId}}"].
           * Let the {{id_token_endpoint_request_request/nonce}} be |provider|["{{FederatedIdentityProvider/nonce}}"].
+   * This request MUST NOT follow [[RFC7231#header.location|HTTP redirects]] and instead abort with an error if there are any.
 1. Return a new {{FederatedCredential}} as:
     * {{Credential/id}} with |account|["{{accounts_endpoint_response_accounts/account_id}}"]
     * {{FederatedCredential/idToken}} with |token|
