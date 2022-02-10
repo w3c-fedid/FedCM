@@ -65,7 +65,7 @@ async function login() {
     const ac = new AbortController();
 
     // In this example, https://idp.example is the IdP's URL.
-    const { idToken } = await navigator.credentials.get({
+    var idToken = await navigator.credentials.get({
         mediation: "optional",
         signal: ac.signal,
         federated: {
@@ -73,7 +73,8 @@ async function login() {
             url: "https://idp.example", // IdP domain
             clientId: "1234", // Client ID of the RP
             nonce: "5678", // Nonce (random value)
-        },
+          }]
+        }
     });
 
     console.log(`received token: ${idToken}`);
