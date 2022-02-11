@@ -6,9 +6,9 @@ This document is continually evolving. Feedback is welcome.
 
 ## Definitions
 ### Authentication
-* _Process used by an [Identity Provider](#identity-provider-idp) to achieve sufficient confidence in the binding between the and a presented identity._
+* _Process used by an [Identity Provider](#identity-provider-idp) to achieve sufficient confidence in the binding between the user and a presented identity._
 
-Note that in some discussions and documentation, the term _authentication_ is used to refer to the federated sign-in process. However, the user does not authenticate to the RP during federated sign-in. The user authenticates to the IdP, which then provides a claim to the RP asserting the user’s identity. The user does not prove their identity to the RP.
+Note that in some discussions and documentation, the term _authentication_ is used to refer to the federated sign-in process. However, the user does not authenticate to the RP during federated sign-in. The user authenticates to the IdP, which then provides a claim to the RP asserting the user’s identity. The user does not prove their identity to the RP directly.
 
 External references: [OIDC terminology](https://openid.net/specs/openid-connect-core-1_0.html#Terminology), [OIDC authentication](https://openid.net/specs/openid-connect-core-1_0.html#Authentication), [SAML glossary](https://docs.oasis-open.org/security/saml/v2.0/saml-glossary-2.0-os.pdf)
 
