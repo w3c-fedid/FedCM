@@ -143,7 +143,7 @@ GET /accounts.php HTTP/1.1
 Host: idp.example
 Content-Type: application/json
 Cookie: 0x23223
-Sec-FedCM-CSRF: random_value
+Sec-FedCM-CSRF: ?1
 ```
 
 And here is an example of a typical response:
@@ -207,7 +207,7 @@ Here is an example of the `POST` request:
 POST /fedcm/idtoken.php HTTP/1.1
 Host: idp.example
 Cookie: 123
-Sec-FedCM-CSRF: 123abc
+Sec-FedCM-CSRF: ?1
 Content-Type: application/json
 
 {
