@@ -20,7 +20,7 @@ Cross-site communication is used throughout the entire lifecycle of the user sig
 
 From a [privacy threat model](https://fedidcg.github.io/FedCM/#privacy-threat-model) perspective, the design of this proposal is anchored on the observation that the most critical moment is when the identities between the RP and the IDP are joined for the very first time, namely when the user creates a new account in the RP using the identifiers from the IDP or when a user signs-in to an RP with an IDP for the first time in the browser: once the identities are joined, any arbitrary/uncontrolled cross-side communication can happen (with or without the browser's permission, e.g. via backchannel or cookie-less requests).
 
-So, under this observation, in this proposal the browser:
+In this proposal, the browser:
 
 1. Intermediates (e.g. gathers the user consent / intent) to observe the moment in which the identities get joined for the very first time between RPs and IDPs (a sign-up or a sign-in)
 1. Stores locally the relationship between the RP/IDP that was established
@@ -39,7 +39,7 @@ Because the first moment in which the identies are joined is the most important/
 
 The goal of the account management API is for the user agent to intermediate the creation and revocation of user accounts in relying parties provisioned by identity providers.
 
-The account management API turns (unregistered) users into (registered) accounts (and vice-versa), which is in and on itself useful (e.g. providing basic authentication), but it also unlocks the more advanced [session management](#session-management-api) capabilities.
+The account management API turns (unregistered) users into (registered) accounts (and vice-versa), which is in and of itself useful (e.g. providing simple authentication), but it also unlocks the more advanced [session management](#session-management-api) capabilities.
 
 In its most basic formulation, the RP invokes the sign-up process via a JS API (or alternatively via the [implicit invocation](#implicit-invocation) API), namely as an extension of the [CredentialManagement API](https://w3c.github.io/webappsec-credential-management).
 
@@ -76,7 +76,7 @@ partial interface FederatedCredential : Credential {
 };
 ```
 
-With these extensions to the credential management API, here is an example of an invocation:
+With these extensions to the Credential Management API, here is an example of an invocation:
 
 ```javascript
 const {idtoken} = await navigator.credentials.get({
@@ -107,7 +107,7 @@ The configuration file is expected to have the following format:
 | Property              | Type        | Method  | Description                               |
 | --------------------- | ----------- | ------- | ----------------------------------------- |
 | accounts_endpoint     | URL         | GET     | Returns a list of available user accounts |
-| client_id_metadata_endpoing | URL   | GET     | Returns RP metadata                       |
+| client_id_metadata_endpoint | URL   | GET     | Returns RP metadata                       |
 | idtoken_endpoint      | URL         | POST    | Returns a newly minted id token           |
 | revocation_endpoint   | URL         | POST    | Notifies IDP user deleted RP account      |
 
@@ -117,7 +117,7 @@ The configuration file is expected to have the following format:
 The `accounts_endpoint` is used to fetch a list of user's accounts. The fetch contains two important headers:
 
 1. A `Sec-FedCM-CSRF` which can be used by the server to know that it is a FedCM request
-1. The `Cookie` header which contains the IDPs cookie, allowing the IDP to restore the user's session
+1. The `Cookie` header which contains the IDP's cookie, allowing the IDP to restore the user's session
 
 The browser expects the response to have the following format:
 
@@ -179,16 +179,16 @@ To create an idtoken, the browser issues a `POST` request to the `idtoken_endpoi
 The fetch contains two important headers:
 
 1. A `Sec-FedCM-CSRF` which can be used by the server to know that it is a FedCM request
-1. The `Cookie` header which contains the IDPs cookie, allowing the IDP to restore the user's session
+1. The `Cookie` header which contains the IDP's cookie, allowing the IDP to restore the user's session
 
 The request should include a JSON body with the following parameters.
 
 | Property     | Type        | Description                               |
 | ------------ | ----------- | ----------------------------------------- |
-| account_id   | String      | The user id that was selected             |
+| account_id   | String      | The account id that was selected          |
 | request      | Request     | The request parameters                    |
 
-The `Request` object contains information about the relying party that is needed to mint an idtoken:
+The `Request` object contains information about the relying party that is needed to mint an IdToken:
 
 | Property     | Type        | Description                               |
 | ------------ | ----------- | ----------------------------------------- |
@@ -220,7 +220,7 @@ Content-Type: application/json
 }
 ```
 
-Which may respond with the following:
+Which may result in the following response:
 
 ```json
 {
@@ -265,7 +265,7 @@ The same algorithm used during [sign-up](#sign-up) is used, which falls back gra
 
 ## Sign-out
 
-In enterprises, when users log out of IDPs, there is typically a desire for users to also be logged out of the RPs they signed into. This is typically accomplished with the IDPs loading iframes pointing to a pre-acquired endpoint for each of the relying parties ([details](https://www.identityserver.com/articles/the-challenge-of-building-saml-single-logout)).
+In enterprises, when users log out of IDPs, there is typically a desire for users to also be logged out of the RPs they signed into. This is typically accomplished by the IDPs loading iframes pointing to a pre-acquired endpoint for each of the relying parties ([details](https://www.identityserver.com/articles/the-challenge-of-building-saml-single-logout)).
 
 In this proposal, the browser exposes a new JS API that takes a list of endpoints as input and:
 
@@ -334,12 +334,12 @@ For example, we are looking into ways we could replace the `<iframe>` tag with t
 
 In this example, the web bundle is a static (yet personalized) bundle that can be displayed on page load but can't have any uncontrolled communication outwards (e.g. over the network or over in-browser features, like `postMessage`).
 
-The IDP-controlled fenced frame can communicates back with the RP with a high-level API (in replacement of the low-level `postMessage`) too (which isn't allowed in a fenced frame):
+The IDP-controlled fenced frame can communicate back with the RP with a high-level API (in replacement of the low-level `postMessage`, which isn't allowed in a fenced frame):
 
 ```javascript
 // This is just a possible starting point, largely TBD.
 await navigator.credentials.store({
-  idtoken: JWT,
+  id_token: JWT,
 });
 ```
 
@@ -349,7 +349,7 @@ Upon approval, the user agent would hand back the result to the relying party us
 
 ```javascript
 window.addEventListener(`message`, (e) => {
-  if (e.origin == "https://idp.example") {
+  if (e.origin === "https://idp.example") {
     // ...
     e.source.postMessage("done, thanks");
   }
