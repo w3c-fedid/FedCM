@@ -266,43 +266,44 @@ When it succeeds, it returns to the [=RP=] a signed [=id token=] which the
   Welcome <span id="name"></span>.
 
   <script>
-  let user = undefined;
+  let account = undefined;
 
-  const auth = await navigator.credentials.get({
+  const conn = await navigator.credentials.get({
     federated: {
       providers: [{
         url: "https://idp.example",
-        clientId: "123",
-        nonce: "456"
+        clientId: "123"
       }]
     }
   });
 
   try_login();
 
+  function get_logged_in_account_id() {
+    /* Site specifc logic to retrieve the accountId or undefined if none set */
+    return undefined;
+  }
+
+  function set_logged_in_account_id() {
+    /* Site specific logic to store the accountId */
+  }
+
   function logout() {
-    if (user === undefined) {
+    if (account === undefined) {
       return;
     }
-    let id = user.id_token['id'];
-    localStorage["users"].remove(user);
-
-    user.logout();
+    account.logout();
   }
 
   function revoke() {
-    if (user === undefined) {
+    if (account === undefined) {
       return;
     }
-    user.revoke();
+    account.revoke();
   }
 
   function login() {
-    let hint = undefined;
-    if (localStorage["users"].length >= 1) {
-      hint = localStorage["users"][0];
-    }
-    do_login(hint);
+    do_login(get_logged_in_account_id());
   }
 
   function switch() {
@@ -310,20 +311,15 @@ When it succeeds, it returns to the [=RP=] a signed [=id token=] which the
   }
 
   function try_login() {
-    if (localStorage["users"].empty()) {
-      return;
-    }
-    do_login(localStorage["users"][0]);
+    do_login(get_logged_in_account_id());
   }
 
   function do_login(hint) {
-    user = await auth.login({
+    account = await conn.login({
       hint: hint,
+      nonce: "456"
     });
-    let token = user.id_token;
-    if (!contains(localStorage["users"], token['id'])) {
-      localStorage["users"] += token['id'];
-    }
+    set_logged_in_account_id(account.idToken['id']);
   }
   </script>
 </body>
@@ -723,8 +719,6 @@ It will also contain the following parameters in the request body `application/x
 <dl dfn-type="argument" dfn-for="id_token_endpoint_request">
     :   <dfn>client_id</dfn>
     :: The [=RP=]'s client it
-    :   <dfn>nonce</dfn>
-    :: A random number of the choice of the [=RP=]
     :   <dfn>account_id</dfn>
     :: The account identifier that was selected.
     :   <dfn>consent_acquired</dfn>
@@ -893,20 +887,19 @@ path: img/mock42.svg
 </dl>
 
 <!-- ============================================================ -->
-## The Authorization Object
+## The Connection Object
 <!-- ============================================================ -->
-Interactions with FedCM are split into two primary objects. The |auth| object
-and the |account| object. The |auth| object allows making calls to create and
+Interactions with FedCM are split into two primary objects. The |conn| object
+and the |account| object. The |conn| object allows making calls to create and
 retrieve federated |account| credentials.
 
 <div class=example>
 ```js
-const auth = await navigator.credentials.get({
+const conn = await navigator.credentials.get({
   federated: {
     providers: [{
-      identity_provider_url: "https://idp.example",
-      clientId: "123",
-      nonce: "456"
+      url: "https://idp.example",
+      clientId: "123"
     }]
   }
 });
@@ -928,25 +921,19 @@ partial dictionary FederatedCredentialRequestOptions {
 dictionary FederatedIdentityProvider {
   required USVString url;
   required USVString clientId;
-  USVString nonce;
 };
 
 dictionary FederatedAuthCredential {
-  required USVString relying_party_url;
-  required USVString identity_provider_url;
-  required bool is_consented;
+  required USVString relyingPartyUrl;
+  required USVString url;
 };
 </xmp>
 
 <dl dfn-type="argument" dfn-for="FederatedAuthCredential">
-    :   <dfn>relying_party_url</dfn>
-    ::  The URL of the relying party origin.
-    :   <dfn>identity_provider_url</dfn>
+    :   <dfn>relyingPartyOrigin</dfn>
+    ::  The origin of the relying party.
+    :   <dfn>url</dfn>
     ::  The URL of the identity provider origin.
-    :   <dfn>is_consented</dfn>
-    ::  Boolean if the communication between the two origins is consented.
-
-          Default: `false`
 </dl>
 
 This specification overrides the {{FederatedCredential}}'s
@@ -1020,9 +1007,11 @@ authenticate the user.
 
 <div class=example>
 ```js
-user = await auth.login({
+const account = conn.login({
   hint: "dan@example.com",
-  signal: signal
+  signal: signal,
+  nonce: "my_nonce"
+
 });
 ```
 </div>
@@ -1031,19 +1020,20 @@ user = await auth.login({
 [Exposed=Window, SecureContext]
 dictionary FederatedAccountRequest {
   USVString hint;
+  USVString nonce;
   bool silent;
   AbortSignal signal;
 };
 
 [Exposed=Window, SecureContext]
 partial interface FederatedAuthCredential {
-  Promise<FederatedAccount> login(optional FederatedAccountRequest request);
+  Promise<FederatedAccount> login(optional FederatedAccountRequest request = {});
 };
 
 [Exposed=Window, SecureContext]
 dictionary FederatedAccount {
    required USVString id;
-   required USVString id_token;
+   required USVString idToken;
 };
 </xmp>
 
@@ -1053,6 +1043,8 @@ dictionary FederatedAccount {
           then the account chooser will be shown.
 
           Default: undefined
+    :   <dfn>nonce</dfn>
+    :: A random number of the choice of the [=RP=]
     :   <dfn>silent</dfn>
     ::  Does not prompt the user, will return the account if a consented account
           is available.
@@ -1065,7 +1057,7 @@ dictionary FederatedAccount {
 <dl dfn-type="argument" dfn-for="FederatedAccount">
     :   <dfn>id</dfn>
     ::  The account id as provided by the [=IDP=]
-    :   <dfn>id_token</dfn>
+    :   <dfn>idToken</dfn>
     ::  The minted ID token
 </dl>
 
@@ -1091,7 +1083,6 @@ To <dfn>sign-up</dfn> the user run this algorithm:
         to [=registered=].
     1. Set the account's {{StateMachine/Session State}} from [=logged out=]
         to [=logged in=].
-    1. Set the {{FederatedAuthCredential}} to |consented|
     1. Return a |FederatedAccount| object containing the result of [=minting=]
         a new [=id token=].
 
@@ -1170,7 +1161,7 @@ To <dfn>mint</dfn> a new id token, run the following algorithm:
            * Let {{id_token_endpoint_request_request/client_id}} be
               |provider|["{{FederatedIdentityProvider/clientId}}"].
            * Let the {{id_token_endpoint_request_request/nonce}} be
-              |provider|["{{FederatedIdentityProvider/nonce}}"].
+              |provider|["{{FederatedAccountRequest/nonce}}"].
         * This request MUST NOT follow [[RFC7231#header.location|HTTP redirects]]
             and instead abort with an error if there are any.
     1. Return a new {{FederatedCredential}} as:
@@ -1193,16 +1184,16 @@ than at the [=RP=].
 
 <div class=example>
 ```js
-const auth = await navigator.credentials.get({
+const conn = await navigator.credentials.get({
   federated: {
-    relying_party_origin: “https://rp.example”
+    relyingPartyOrigin: “https://rp.example”
   }
 });
 
-auth.authorize({
+conn.authorize({
   name: “dan”
   email “dan@example”
-  account_id: 123
+  accountId: 123
 });
 ```
 </div>
@@ -1210,18 +1201,18 @@ auth.authorize({
 <xmp class=idl>
 [exposed=window, SecureContext]
 partial dictionary FederatedIdentityProvider {
-  USVString relying_party_origin;
+  USVString relyingPartyOrigin;
 };
 
 [Exposed=Window, SecureContext]
 dictionary FederatedAuthorizationRequest {
   required USVString name;
   required USVString email;
-  required USVString profile_picture;
+  required USVString picture;
   required USVString id;
 
-  USVString privacy_policy_url;
-  USVString terms_of_service_url;
+  USVString privacyPolicyUrl;
+  USVString termsOfServiceUrl;
 };
 
 [Exposed=Window, SecureContext]
@@ -1231,7 +1222,7 @@ partial interface FederatedAuthCredential {
 </xmp>
 
 <dl dfn-type="argument" dfn-for="FederatedIdentityProvider">
-    :   <dfn>relying_party_origin</dfn>
+    :   <dfn>relyingPartyOrigin</dfn>
     ::  The relying party origin for which this credential is being created.
 </dl>
 
@@ -1240,13 +1231,13 @@ partial interface FederatedAuthCredential {
     ::  The name to display in the dialog
     :   <dfn>email</dfn>
     ::  The email to display in the dialog
-    :   <dfn>profile_picture</dfn>
+    :   <dfn>picture</dfn>
         The URL of the users profile photo to display in the dialog
     :   <dfn>id</dfn>
     ::  The users account id
-    :   <dfn>privacy_policy_url</dfn>
+    :   <dfn>privacyPolicyUrl</dfn>
     ::  The privacy policy url
-    :   <dfn>terms_of_service_url</dfn>
+    :   <dfn>termsOfServiceUrl</dfn>
     ::  The terms of service url
 </dl>
 
@@ -1259,7 +1250,6 @@ When this method is invoked, the user agent MUST execute the following algorithm
         to [=registered=].
     1. Set the account's {{StateMachine/Session State}} from [=logged out=]
         to [=logged in=].
-    1. Set the {{FederatedAuthCredential}} to |consented|
 
 <!-- ============================================================ -->
 ## The Revocation API ## {#browser-api-revocation}
@@ -1274,7 +1264,7 @@ Upon return to the [=Relying Party=], the user goes through a
 
 <div class=example>
 ```js
-user.revoke();
+account.revoke();
 ```
 </div>
 
@@ -1304,7 +1294,7 @@ flow to be disabled, so that the user doesn't get into an infinite loop.
 
 <div class=example>
 ```js
-user.logout();
+account.logout();
 ```
 </div>
 
@@ -1346,7 +1336,7 @@ path: img/mock31.svg
 
 <div class=example>
 ```js
-FederatedCredential.logoutRPs([
+await FederatedCredential.logoutRPs([
   { url: "https://rp1.example",
     accountId: "123" },
   { url: "https://rpN.example",
@@ -1366,7 +1356,7 @@ dictionary FederatedCredentialLogoutRequest {
 
 [Exposed=Window, SecureContext]
 partial interface FederatedCredential {
-  static Promise<undefined> logoutRPs(sequence<FederatedCredentialLogoutRequest> logout_requests);
+  static Promise<undefined> logoutRPs(sequence<FederatedCredentialLogoutRequest> logoutRequests);
 };
 </xmp>
 
