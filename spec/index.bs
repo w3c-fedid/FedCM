@@ -1257,6 +1257,86 @@ When this method is invoked, the user agent MUST execute the following algorithm
 
 
 <!-- ============================================================ -->
+### IDP Sign-in API ### {#browser-api-idp-sign-in}
+<!-- ============================================================ -->
+
+The IDP Sign-in API allows an [=IDP=] to create a credential for the user in
+a given [=RP=] that can later be retrieved by the [=RP=].
+
+It's equivalent to the [[#browser-api-rp-sign-in]] in its effect,
+except that it is designed to be called while the user is at the [=IDP=] rather
+than at the [=RP=].
+
+<div class=example>
+```js
+const federation = await navigator.credentials.get({
+  federated: {
+    relyingPartyOrigin: “https://rp.example”
+  }
+});
+
+federation.authorize({
+  name: “dan”
+  email “dan@example.com”
+  accountId: 123
+});
+```
+</div>
+
+<xmp class=idl>
+[exposed=window, SecureContext]
+partial dictionary FederatedIdentityProvider {
+  USVString relyingPartyOrigin;
+};
+
+[Exposed=Window, SecureContext]
+dictionary FederatedAuthorizationRequest {
+  required USVString name;
+  required USVString email;
+  required USVString picture;
+  required USVString id;
+
+  USVString privacyPolicyUrl;
+  USVString termsOfServiceUrl;
+};
+
+[Exposed=Window, SecureContext]
+partial interface FederatedCredential {
+  Promise<undefined> authorize(FederatedAuthorizationRequest request);
+};
+</xmp>
+
+<dl dfn-type="argument" dfn-for="FederatedIdentityProvider">
+    :   <dfn>relyingPartyOrigin</dfn>
+    ::  The relying party origin for which this credential is being created.
+</dl>
+
+<dl dfn-type="argument" dfn-for="FederatedAuthorizationRequest">
+    :   <dfn>name</dfn>
+    ::  The name to display in the dialog
+    :   <dfn>email</dfn>
+    ::  The email to display in the dialog
+    :   <dfn>picture</dfn>
+        The URL of the users profile photo to display in the dialog
+    :   <dfn>id</dfn>
+    ::  The users account id
+    :   <dfn>privacyPolicyUrl</dfn>
+    ::  The privacy policy url
+    :   <dfn>termsOfServiceUrl</dfn>
+    ::  The terms of service url
+</dl>
+
+When this method is invoked, the user agent MUST execute the following algorithm:
+
+    1. Gather explicit intent to create an account
+    1. Gather explicit agreement with the [=Privacy Policy=]
+    1. Gather explicit agreement with the [=Terms of Service=]
+    1. Set the account's {{StateMachine/Account State}} from [=unregistered=]
+        to [=registered=].
+    1. Set the account's {{StateMachine/Session State}} from [=logged out=]
+        to [=logged in=].
+
+<!-- ============================================================ -->
 ## The Revocation API ## {#browser-api-revocation}
 <!-- ============================================================ -->
 
