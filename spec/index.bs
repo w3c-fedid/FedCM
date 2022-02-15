@@ -268,7 +268,7 @@ When it succeeds, it returns to the [=RP=] a signed [=id token=] which the
   <script>
   let account = undefined;
 
-  const conn = await navigator.credentials.get({
+  const federation = await navigator.credentials.get({
     federated: {
       providers: [{
         url: "https://idp.example",
@@ -288,6 +288,10 @@ When it succeeds, it returns to the [=RP=] a signed [=id token=] which the
     /* Site specific logic to store the accountId */
   }
 
+  function getIdFromIdToken(token) {
+    /* Site logic to decode and retrieve `sub` field from id token */
+  }
+
   function logout() {
     if (account === undefined) {
       return;
@@ -303,23 +307,23 @@ When it succeeds, it returns to the [=RP=] a signed [=id token=] which the
   }
 
   function login() {
-    do_login(getLoggedInAccountId());
+    doLogin(getLoggedInAccountId());
   }
 
   function switch() {
-    do_login(undefined);
+    doLogin(undefined);
   }
 
   function try_login() {
-    do_login(getLoggedInAccountId());
+    doLogin(getLoggedInAccountId());
   }
 
-  function do_login(hint) {
-    account = await conn.login({
+  function doLogin(hint) {
+    account = await federation.login({
       hint: hint,
       nonce: "456"
     });
-    setLoggedInAccountId(account.idToken['id']);
+    setLoggedInAccountId(getIdFromIdToken(account.idToken));
   }
   </script>
 </body>
@@ -896,7 +900,7 @@ retrieve {{FederatedAccounts}}.
 
 <div class=example>
 ```js
-const conn = await navigator.credentials.get({
+const federation = await navigator.credentials.get({
   federated: {
     providers: [{
       url: "https://idp.example",
@@ -923,18 +927,13 @@ dictionary FederatedIdentityProvider {
   required USVString url;
   required USVString clientId;
 };
-
-dictionary FederatedCredential {
-  required USVString relyingPartyUrl;
-  required USVString url;
-};
 </xmp>
 
-<dl dfn-type="argument" dfn-for="FederatedCredential">
-    :   <dfn>relyingPartyOrigin</dfn>
-    ::  The origin of the relying party.
+<dl dfn-type="argument" dfn-for="FederatedIdentityProvider">
     :   <dfn>url</dfn>
     ::  The URL of the identity provider origin.
+    :   <dfn>clientId</dfn>
+    ::  The client ID provided to the [=RP=] out of band by the [=IDP=]
 </dl>
 
 This specification overrides the {{FederatedCredential}}'s
@@ -1008,7 +1007,7 @@ authenticate the user.
 
 <div class=example>
 ```js
-const account = conn.login({
+const account = federation.login({
   hint: "dan@example.com",
   signal: signal,
   nonce: "my_nonce"
@@ -1019,7 +1018,7 @@ const account = conn.login({
 
 <xmp class=idl>
 [Exposed=Window, SecureContext]
-dictionary FederatedAccountRequest {
+dictionary FederatedAccountLoginRequest {
   USVString hint;
   USVString nonce;
   bool silent;
@@ -1028,20 +1027,20 @@ dictionary FederatedAccountRequest {
 
 [Exposed=Window, SecureContext]
 partial interface FederatedCredential {
-  Promise<FederatedAccount> login(optional FederatedAccountRequest request = {});
+  Promise<FederatedAccount> login(optional FederatedAccountLoginRequest request = {});
 };
 
 [Exposed=Window, SecureContext]
 dictionary FederatedAccount {
    required USVString id;
-   required USVString idToken;
+   USVString idToken;
 };
 </xmp>
 
-<dl dfn-type="argument" dfn-for="FederatedAccountRequest">
+<dl dfn-type="argument" dfn-for="FederatedAccountLoginRequest">
     :   <dfn>hint</dfn>
     ::  The accountId to auto-select, or |undefined|. If |undefined| is provided
-          then the account chooser will be shown.
+          then the account chooser MAY be shown.
 
           Default: undefined
     :   <dfn>nonce</dfn>
@@ -1162,7 +1161,7 @@ To <dfn>mint</dfn> a new id token, run the following algorithm:
            * Let {{id_token_endpoint_request_request/client_id}} be
               |provider|["{{FederatedIdentityProvider/clientId}}"].
            * Let the {{id_token_endpoint_request_request/nonce}} be
-              |provider|["{{FederatedAccountRequest/nonce}}"].
+              |provider|["{{FederatedAccountLoginRequest/nonce}}"].
         * This request MUST NOT follow [[RFC7231#header.location|HTTP redirects]]
             and instead abort with an error if there are any.
     1. Return a new {{FederatedCredential}} as:
@@ -1185,13 +1184,13 @@ than at the [=RP=].
 
 <div class=example>
 ```js
-const conn = await navigator.credentials.get({
+const federation = await navigator.credentials.get({
   federated: {
     relyingPartyOrigin: “https://rp.example”
   }
 });
 
-conn.authorize({
+federation.authorize({
   name: “dan”
   email “dan@example”
   accountId: 123
