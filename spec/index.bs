@@ -279,12 +279,12 @@ When it succeeds, it returns to the [=RP=] a signed [=id token=] which the
 
   try_login();
 
-  function get_logged_in_account_id() {
+  function getLoggedInAccountId() {
     /* Site specifc logic to retrieve the accountId or undefined if none set */
     return undefined;
   }
 
-  function set_logged_in_account_id() {
+  function setLoggedInAccountId() {
     /* Site specific logic to store the accountId */
   }
 
@@ -303,7 +303,7 @@ When it succeeds, it returns to the [=RP=] a signed [=id token=] which the
   }
 
   function login() {
-    do_login(get_logged_in_account_id());
+    do_login(getLoggedInAccountId());
   }
 
   function switch() {
@@ -311,7 +311,7 @@ When it succeeds, it returns to the [=RP=] a signed [=id token=] which the
   }
 
   function try_login() {
-    do_login(get_logged_in_account_id());
+    do_login(getLoggedInAccountId());
   }
 
   function do_login(hint) {
@@ -319,7 +319,7 @@ When it succeeds, it returns to the [=RP=] a signed [=id token=] which the
       hint: hint,
       nonce: "456"
     });
-    set_logged_in_account_id(account.idToken['id']);
+    setLoggedInAccountId(account.idToken['id']);
   }
   </script>
 </body>
@@ -887,11 +887,12 @@ path: img/mock42.svg
 </dl>
 
 <!-- ============================================================ -->
-## The Connection Object
+## The FederatedCredential Object ## {#browser-api-federated-credential}
 <!-- ============================================================ -->
-Interactions with FedCM are split into two primary objects. The |conn| object
-and the |account| object. The |conn| object allows making calls to create and
-retrieve federated |account| credentials.
+Interactions with FedCM are split into two primary objects. The
+{{FederatedCredential}} object and the {{FederatedAccount}} object.
+The {{FederatedCredential}} object allows making calls to create and
+retrieve {{FederatedAccounts}}.
 
 <div class=example>
 ```js
@@ -923,13 +924,13 @@ dictionary FederatedIdentityProvider {
   required USVString clientId;
 };
 
-dictionary FederatedAuthCredential {
+dictionary FederatedCredential {
   required USVString relyingPartyUrl;
   required USVString url;
 };
 </xmp>
 
-<dl dfn-type="argument" dfn-for="FederatedAuthCredential">
+<dl dfn-type="argument" dfn-for="FederatedCredential">
     :   <dfn>relyingPartyOrigin</dfn>
     ::  The origin of the relying party.
     :   <dfn>url</dfn>
@@ -980,8 +981,8 @@ When this method is invoked, the user agent MUST execute the following algorithm
   1. Let |provider| be |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"][0].
   1. Assert: |provider|["{{FederatedIdentityProvider/url}}"] [=map/exists=].
   1. Assert: |provider|["{{FederatedIdentityProvider/clientId}}"] [=map/exists=].
-  1. If an existing |FederatedAuthCredential| exists, return it.
-  1. Otherwise, create a new |FederatedAuthCredential| object.
+  1. If an existing |FederatedCredential| exists, return it.
+  1. Otherwise, create a new |FederatedCredential| object.
 
 <!-- ============================================================ -->
 ## The Sign-in API ## {#browser-api-sign-in}
@@ -1026,7 +1027,7 @@ dictionary FederatedAccountRequest {
 };
 
 [Exposed=Window, SecureContext]
-partial interface FederatedAuthCredential {
+partial interface FederatedCredential {
   Promise<FederatedAccount> login(optional FederatedAccountRequest request = {});
 };
 
@@ -1175,10 +1176,10 @@ To <dfn>mint</dfn> a new id token, run the following algorithm:
 ### IDP Sign-in API ### {#browser-api-idp-sign-in}
 <!-- ============================================================ -->
 
-The IDP Sign-in API allows an [=IDP=] to sign the user into a [=RP=] by
-storing a {{FederatedCredential}} that can later be retrieved by a [=RP=].
+The IDP Sign-in API allows an [=IDP=] to create a credential for the user in
+a given [=RP=] that can later be retrieved by the [=RP=].
 
-Its effect is equivalent to the [[#browser-api-rp-sign-in]] in its effect,
+Its equivalent to the [[#browser-api-rp-sign-in]] in its effect,
 except that it is designed to be called while the user is at the [=IDP=] rather
 than at the [=RP=].
 
@@ -1216,7 +1217,7 @@ dictionary FederatedAuthorizationRequest {
 };
 
 [Exposed=Window, SecureContext]
-partial interface FederatedAuthCredential {
+partial interface FederatedCredential {
   Promise<undefined> authorize(FederatedAuthorizationRequest request);
 };
 </xmp>
