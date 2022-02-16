@@ -51,7 +51,7 @@ if sign-up status persistence is not desired.
 
 ### Feature detection
 
-In order to determine whether FedCM API is available, run the following JS
+In order to determine whether the FedCM API is available, run the following JS
 snippet:
 
 ```js
