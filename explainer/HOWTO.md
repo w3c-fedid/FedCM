@@ -81,7 +81,7 @@ async function login() {
 
     // In this example, https://idp.example is the IdP's URL.
     var idToken = await navigator.credentials.get({
-        mediation: "optional",  // controls auto sign-in
+        mediation: "optional",
         signal: ac.signal, // controls abortions of the account chooser
         federated: {
           providers: [{
@@ -99,11 +99,7 @@ async function login() {
 };
 ```
 
-The JS API allows the RP to obtain the following information:
-
-* `idToken` is a proof of IdP authentication.
-* `approvedBy` indicates whether this authentication is done `auto`-matically or
-  by the `user`.
+The JS API allows the RP to obtain the `idToken`, a proof of IDP authentication.
 
 ### Identity Provider implementation
 
