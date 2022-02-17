@@ -251,102 +251,149 @@ algorithms to allow the exchange of identity between [=IDP=]s and [=RP=]s.
 When it succeeds, it returns to the [=RP=] a signed [=id token=] which the
 [=RP=] can use to authenticate the user.
 
-<div class=example>
+<!-- ============================================================ -->
+# Single Account Example # {#example-single-user}
+<!-- ============================================================ -->
+<div clas=example>
+Example showing how a website allowing for a single logged in account
+could be implemented.
+
 ```html
 <html>
 <head>
   <title>Welcome to my Website</title>
 </head>
 <body>
-  <button onclick="login()">Login with Foo</button>
-  <button onclick="revoke()">revoke tokens</button>
-  <button onclick="switchAccount()">switch account</button>
-  <button onclick="logout()">logout</button>
+  <button onclick="login()">Login with idp.example</button>
+  <button onclick="revoke()">Revoke tokens</button>
+  <button onclick="logout()">Logout</button>
 
   <script>
-  let tokens = undefined;
-
-  tryLogin();
-
-  function getLoggedInAccountId() {
-    /* Site specifc logic to retrieve the accountId or undefined if none set */
-  }
-  function setLoggedInAccountId(id) {
-    /* Site specific logic to store the accountId */
-  }
-  function idFromIdToken(idToken) {
-    /* Site specific logic to retrieve `sub` field from id token */
-  }
-
-  async function getCredential(opts) {
-    return navigator.credentials.get({
-      mediation: opts.mediation
+  async function login() {
+    const credential = await navigator.credentials.get({
       federated: {
         providers: [{
           url: "https://idp.example",
-          clientId: "123",
-          hint: opts.hint
+          clientId: "123"
+        }]
+      }
+    });
+    return await credential.login({ nonce: "456" });
+  }
+
+  async function logout() {
+    const credential = getLoggedInCredential();
+    if (credential) {
+      return await credential.logout();
+    }
+    return undefined;
+  }
+
+  async function revoke() {
+    const credential = getLoggedInCredential();
+    if (credential) {
+      return await credential.revoke();
+    }
+    return undefined;
+  }
+
+  async function getLoggedInCredential() {
+    return await navigator.credentials.get({
+      mediation: "silent",
+      federated: {
+        providers: [{
+          url: "https://idp.example",
+          clientId: "123"
         }]
       }
     });
   }
+  </script>
+</body>
+</html>
+```
+</div>
 
-  function tryGetCredential() {
-    const id = getLoggedInAccountId();
-    if (id === undefined) {
-      return undefined;
-    }
-    return await getCredential({
-      hint: id,
-      mediation: "silent"
+<!-- ============================================================ -->
+# Multiple Account Example # {#example-multiple-account}
+<!-- ============================================================ -->
+<div class=example>
+Example showing how a website allowing for multiple logged in accounts
+could be implemented.
+
+```html
+<html>
+<head>
+  <title>Welcome to my Website</title>
+</head>
+<body>
+  <button onclick="login()">Login with idp.example</button>
+  <button onclick="revoke()">Revoke tokens</button>
+  <button onclick="multiLogin()">Switch account</button>
+  <button onclick="logout()">Logout</button>
+
+  <script>
+  async function login() {
+    const id = ...; /* site gets stored id if available */
+    const credential = await navigator.credentials.get({
+      mediation: "optional",
+      federated: {
+        providers: [{
+          url: "https://idp.example",
+          clientId: "123",
+          hint: id
+        }]
+      }
     });
+    const tokens = await credential.login({ nonce: "456" });
+    /* site stores id somewhere */
+    return tokens;
   }
 
-  function tryLogin() {
-    const credential = tryGetCredential();
-    if (credential !== undefined) {
-      tokens = doLogin(credential);
-    }
-  }
-
-  function login() {
-    const id = getLoggedInAccountId();
-    const credential = await getCredential({
-      hint: id,
-      mediation: "optional"
+  async function multiLogin() {
+    const credential = await navigator.credentials.get({
+      mediation: "required",
+      federated: {
+        providers: [{
+          url: "https://idp.example",
+          clientId: "123",
+        }]
+      }
     });
-    if (credential !== undefined) {
-      tokens = doLogin(credential);
-    }
-  }
-
-  function switchAccount() {
-    const credential = await getCredential({mode: "required"});
-    if (credential !== undefined) {
-      tokens = doLogin(credential);
-    }
-  }
-
-  function doLogin(credential) {
-    const tokens = await credential.login({
-      nonce: "456"
-    });
-    setLoggedInAccountId(idFromIdToken(tokens.idToken));
+    const tokens = await credential.login({ nonce: "456" });
+    /* site stores id somewhere */
     return tokens;
   }
 
   async function logout() {
-    const credential = tryGetCredential();
-    if (credential !== undefined) {
+    const credential = await getLoggedInCredential();
+    if (credential) {
       credential.logout();
     }
   }
 
   async function revoke() {
-    const credential = tryGetCredential();
-    if (credential !== undefined) {
+    const credential = await getLoggedInCredential();
+    if (credential) {
       credential.revoke();
     }
+  }
+
+  async function getLoggedInCredential() {
+    const id = ...; /* site gets stored id if available */
+    if (id === undefined) {
+      return undefined;
+    }
+    return navigator.credentials.get({
+      mediation: "silent",
+      federated: {
+        providers: [{
+          url: "https://idp.example",
+          clientId: "123",
+          hint: id,
+        }]
+      }
+    });
   }
   </script>
 </body>
