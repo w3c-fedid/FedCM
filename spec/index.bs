@@ -260,7 +260,7 @@ When it succeeds, it returns to the [=RP=] a signed [=id token=] which the
 <body>
   <button onclick="login()">Login with Foo</button>
   <button onclick="revoke()">revoke tokens</button>
-  <button onclick="switch()">switch</button>
+  <button onclick="switchAccount()">switch account</button>
   <button onclick="logout()">logout</button>
 
   Welcome <span id="name"></span>.
@@ -268,26 +268,16 @@ When it succeeds, it returns to the [=RP=] a signed [=id token=] which the
   <script>
   let tokens = undefined;
 
-  try_login();
+  tryLogin();
 
   function getLoggedInAccountId() {
     /* Site specifc logic to retrieve the accountId or undefined if none set */
-    const parts = document.cookie
-                    .split(';')
-                    .find(row => row.trim().startsWith('id='));
-    if (parts !== undefined) {
-      return parts.split('=')[1];
-    }
-    return undefined;
   }
-
   function setLoggedInAccountId(id) {
     /* Site specific logic to store the accountId */
-    document.cookie = `id=#{id}`
   }
-
   function idFromIdToken(idToken) {
-    return JSON.parse(Base64.decode(idToken.split(“.”)[1])).sub;
+    /* Site specific logic to retrieve `sub` field from id token */
   }
 
   async function getCredential(opts) {
@@ -314,7 +304,7 @@ When it succeeds, it returns to the [=RP=] a signed [=id token=] which the
     });
   }
 
-  function try_login() {
+  function tryLogin() {
     const credential = tryGetCredential();
     if (credential !== undefined) {
       tokens = doLogin(credential);
@@ -332,7 +322,7 @@ When it succeeds, it returns to the [=RP=] a signed [=id token=] which the
     }
   }
 
-  function switch() {
+  function switchAccount() {
     const credential = await getCredential({mode: "required"});
     if (credential !== undefined) {
       tokens = doLogin(credential);
