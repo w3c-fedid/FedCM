@@ -90,7 +90,7 @@ used by certain designs of federated identity.
 The Federated Credential Management API aims to bridge the gap for the
 federated identity designs which relied on third-party cookies.
 The API provides the primitives needed to support federated identity when/where
-it depends on third-party cookies, from sign-in to sign-out and revocation.
+it depends on third-party cookies, from login to logout and revocation.
 
 In order to provide the federated identity primitives without the use of
 third-party cookies the API places the User Agent as a mediator between [=RPs=]
@@ -125,7 +125,7 @@ Upon user agreement an [=account=] is created with the [=Relying Party=] and
 the user has a [=session=] initialized.
 
 <!-- ============================================================ -->
-### Sign-in ### {#use-cases-sign-in}
+### Login ### {#use-cases-login}
 <!-- ============================================================ -->
 
 After a user navigates to a [=Relying Party=] in a browser and decides to
@@ -133,42 +133,42 @@ create an account by going through their [[#use-cases-sign-up]] flow,
 there are two ways a user logs into their [=account=] once their [=session=] expires:
 
 <!-- ============================================================ -->
-#### Auto Sign-in #### {#use-cases-auto-sign-in}
+#### Auto login #### {#use-cases-auto-login}
 <!-- ============================================================ -->
 
-Auto Sign-in occurs when the [=Identity Provider=] has already gathered
+Auto login occurs when the [=Identity Provider=] has already gathered
 permissions from the user to share their identity with the [=Relying Party=]
 and automatically signs the user in.
 
 For example, the user has previously executed the [[#use-cases-sign-up]] flow
 and then changes from their phone to their laptop. On the new device the
-user goes to the [=Relying Party=] and selects to sign-in using their
+user goes to the [=Relying Party=] and selects to login using their
 [=Identity Provider=]. The [=Identity Provider=] knows, and proves, the user
 has signed up to the [=Relying Party=] and the [=Relying Party=] creates a
 new [=session=] for the users [=account=].
 
 <!-- ============================================================ -->
-#### Explicit Sign-in #### {#use-cases-explicit-sign-in}
+#### Explicit Login #### {#use-cases-explicit-login}
 <!-- ============================================================ -->
 
-An explicit sign-in occurs when the [=Identity Provider=] believes it is
+An explicit login occurs when the [=Identity Provider=] believes it is
 necessary to gather an explicit permission from the user to sign into a
 [=Relying Party=], typically after the user goes through a
-[[#use-cases-sign-out]] flow.
+[[#use-cases-logout]] flow.
 
-For example, after the user has done the [[#use-cases-sign-out]] flow of the
+For example, after the user has done the [[#use-cases-logout]] flow of the
 [=Relying Party=] they decide to log in again. The user visits the
-[=Relying Party=] and selects their [=Identity Provider=] to sign-in. The
+[=Relying Party=] and selects their [=Identity Provider=] to login. The
 [=Identity Provider=] knows:
     * the user already has an account with the [=Relying Party=].
     * the user has logged out of the [=Relying Party=].
 
-The user is then prompted, "Do you want to sign-in with the [=Relying Party=]?"
+The user is then prompted, "Do you want to login with the [=Relying Party=]?"
 and upon user agreement the [=Relying Party=] creates a new [=session=] with
 the users existing [=account=].
 
 <!-- ============================================================ -->
-### Sign-out ### {#use-cases-sign-out}
+### Logout ### {#use-cases-logout}
 <!-- ============================================================ -->
 
 After a user navigates to a [=Relying Party=] in a browser and decides to
@@ -176,26 +176,26 @@ create an [=account=] by going through their [[#use-cases-sign-up]] flow,
 there are two ways a user can clear their [=session=]s:
 
 <!-- ============================================================ -->
-#### RP Sign-out #### {#use-cases-rp-sign-out}
+#### RP Logout #### {#use-cases-rp-logout}
 <!-- ============================================================ -->
 
 The user can log out through the [=Relying Party=] by using a provided
-sign-out button or link provided by the [=Relying Party=]. This then
+logout button or link provided by the [=Relying Party=]. This then
 removes the users [=session=] and, when the user visits the [=Relying Party=]
-again they will need to go through the [[#use-cases-explicit-sign-in]] flow
+again they will need to go through the [[#use-cases-explicit-login]] flow
 in order to establish a new session.
 
 <!-- ============================================================ -->
-#### IDP Sign-out #### {#use-cases-idp-sign-out}
+#### IDP Logout #### {#use-cases-idp-logout}
 <!-- ============================================================ -->
 
 The user can log out through the [=Identity Provider=] by using a provided
-sign-out system provided by the [=Identity Provider=]. After using the
-sign-out system the [=Identity Provider=] will log the user out of all
+logout system provided by the [=Identity Provider=]. After using the
+logout system the [=Identity Provider=] will log the user out of all
 [=Relying Parties=] the user has signed into along with logging the user
 out of the [=Identity Provider=] itself. Upon returning to any associated
 [=Relying Party=], or the [=Identity Provider=], the user will have to
-go through the [[#use-cases-explicit-sign-in]] flow.
+go through the [[#use-cases-explicit-login]] flow.
 
 <!-- ============================================================ -->
 ### Revocation ### {#use-cases-revocation}
@@ -258,7 +258,7 @@ When it succeeds, it returns to the [=RP=] a signed [=id token=] which the
   <title>Welcome to my WebSite</title>
 </head>
 <body>
-  <button onclick="login()">Sign-in with Foo</button>
+  <button onclick="login()">Login with Foo</button>
   <button onclick="revoke()">revoke tokens</button>
   <button onclick="switch()">switch</button>
   <button onclick="logout()">logout</button>
@@ -266,64 +266,99 @@ When it succeeds, it returns to the [=RP=] a signed [=id token=] which the
   Welcome <span id="name"></span>.
 
   <script>
-  let account = undefined;
-
-  const federated_credential = await navigator.credentials.get({
-    federated: {
-      providers: [{
-        url: "https://idp.example",
-        clientId: "123"
-      }]
-    }
-  });
+  let tokens = undefined;
 
   try_login();
 
   function getLoggedInAccountId() {
     /* Site specifc logic to retrieve the accountId or undefined if none set */
+    const parts = document.cookie
+                    .split(';')
+                    .find(row => row.trim().startsWith('id='));
+    if (parts !== undefined) {
+      return parts.split('=')[1];
+    }
     return undefined;
   }
 
-  function setLoggedInAccountId() {
+  function setLoggedInAccountId(id) {
     /* Site specific logic to store the accountId */
+    document.cookie = `id=#{id}`
   }
 
-  function getIdFromIdToken(token) {
-    /* Site logic to decode and retrieve `sub` field from id token */
+  function idFromIdToken(idToken) {
+    return JSON.parse(Base64.decode(idToken.split(“.”)[1])).sub;
   }
 
-  function logout() {
-    if (account === undefined) {
-      return;
+  async function getCredential(opts) {
+    return navigator.credentials.get({
+      mediation: opts.mediation
+      federated: {
+        providers: [{
+          url: "https://idp.example",
+          clientId: "123",
+          hint: opts.hint
+        }]
+      }
+    });
+  }
+
+  function tryGetCredential() {
+    const id = getLoggedInAccountId();
+    if (id === undefined) {
+      return undefined;
     }
-    account.logout();
-  }
-
-  function revoke() {
-    if (account === undefined) {
-      return;
-    }
-    account.revoke();
-  }
-
-  function login() {
-    doLogin(getLoggedInAccountId());
-  }
-
-  function switch() {
-    doLogin(undefined);
+    return await getCredential({
+      hint: id,
+      mediation: "silent"
+    });
   }
 
   function try_login() {
-    doLogin(getLoggedInAccountId());
+    const credential = tryGetCredential();
+    if (credential !== undefined) {
+      tokens = doLogin(credential);
+    }
   }
 
-  function doLogin(hint) {
-    account = await federated_credential.login({
-      hint: hint,
+  function login() {
+    const id = getLoggedInAccountId();
+    const credential = await getCredential({
+      hint: id,
+      mediation: "optional"
+    });
+    if (credential !== undefined) {
+      tokens = doLogin(credential);
+    }
+  }
+
+  function switch() {
+    const credential = await getCredential({mode: "required"});
+    if (credential !== undefined) {
+      tokens = doLogin(credential);
+    }
+  }
+
+  function doLogin(credential) {
+    const tokens = await credential.login({
       nonce: "456"
     });
-    setLoggedInAccountId(getIdFromIdToken(account.idToken));
+    setLoggedInAccountId(idFromIdToken(tokens.idToken));
+    return tokens;
+  }
+
+  async function logout() {
+    const credential = tryGetCredential();
+    if (credential !== undefined) {
+      credential.logout();
+    }
+  }
+
+  async function revoke() {
+    const credential = tryGetCredential();
+    if (credential !== undefined) {
+      credential.revoke();
+    }
   }
   </script>
 </body>
@@ -346,8 +381,8 @@ provides the main security boundary on the web.
     the binding between the user and a presented identity.
 
     Note that in some discussions and documentation, the term _authentication_ is
-    used to refer to the [=federated sign-in=] process. However, the user does not
-    authenticate to the [=RP=] during [=federated sign-in=]. The user
+    used to refer to the [=federated login=] process. However, the user does not
+    authenticate to the [=RP=] during [=federated login=]. The user
     authenticates to the [=IDP=], which then provides a claim to the [=RP=]
     asserting the user’s identity. The user does not prove their identity to the
     [=RP=].
@@ -370,7 +405,7 @@ provides the main security boundary on the web.
     This differs from <a href="https://wiki.mozilla.org/Security/Anti_tracking_policy#Tracking_Definition">Mozilla's definition</a>
     in that Mozilla defines other parties as first parties if the user can easily
     discover which party it is and intends to interact with that party, for
-    example to allow sign-in widgets to be first-party.
+    example to allow login widgets to be first-party.
 
 : <dfn>global identifier</dfn>
 :: A string that identifies a particular [=user=] independent of which site
@@ -422,7 +457,7 @@ provides the main security boundary on the web.
 : <dfn>RP</dfn>
 : <dfn noexport>Website</dfn>
 :: A service that requests user information from an [=Identity Provider=] for
-    [=federated sign-in=] or for other purposes.
+    [=federated login=] or for other purposes.
 
     See also:
     * [[OIDC-Connect-Core#Terminology]]
@@ -431,7 +466,7 @@ provides the main security boundary on the web.
 : <dfn>session</dfn>
 :: TODO(goto): find existing definition.
 
-: <dfn>Federated sign-in</dfn>
+: <dfn>Federated login</dfn>
 :: Process used by a [=Relying Party=] to obtain a [=user identifier=] from an
     [=Identity Provider=] to which the user performed [=authentication=].
 
@@ -817,13 +852,13 @@ it is a [=forbidden header name=].
 # The Relying Party API # {#rp-api}
 <!-- ============================================================ -->
 
-[=RP=]'s expose a [[#rp-api-logout-endpoint]] to facilitate with [[#use-cases-idp-sign-out]].
+[=RP=]'s expose a [[#rp-api-logout-endpoint]] to facilitate with [[#use-cases-idp-logout]].
 
 <!-- ============================================================ -->
 ## Logout ## {#rp-api-logout-endpoint}
 <!-- ============================================================ -->
 
-When [=IDP=]s call the [[#browser-api-idp-sign-out]] API, every [=RP=] gets a
+When [=IDP=]s call the [[#browser-api-idp-logout]] API, every [=RP=] gets a
 chance to log the user out (e.g. clear cookies, clear local storage)
 via the logout endpoint.
 
@@ -849,19 +884,19 @@ the exchange of the user's identity.
 
 For [=RP=]s, it allows them to:
 
-1. The [[#browser-api-sign-in]] allows [=RP=]'s users to [[#use-cases-sign-up]]
-    and [[#use-cases-sign-in]]
+1. The [[#browser-api-login]] allows [=RP=]'s users to [[#use-cases-sign-up]]
+    and [[#use-cases-login]]
 1. The [[#browser-api-revocation]] allows [=RP=]'s users to go through
     [[#use-cases-rp-revocation]] of their accounts
-1. The [[#browser-api-rp-sign-out]] API allows [=RP=]s to
-    [[#use-cases-rp-sign-out]] of their accounts.
+1. The [[#browser-api-rp-logout]] API allows [=RP=]s to
+    [[#use-cases-rp-logout]] of their accounts.
 
 For [=IDP=]s, it allows them to:
 
-1. The [[#browser-api-idp-sign-out]] API allows [=IDP=]s to
-    [[#use-cases-idp-sign-out]] of their accounts.
-1. The [[#browser-api-sign-in]] API allows [=IDP=]s to
-    [[#use-cases-sign-in]]
+1. The [[#browser-api-idp-logout]] API allows [=IDP=]s to
+    [[#use-cases-idp-logout]] of their accounts.
+1. The [[#browser-api-login]] API allows [=IDP=]s to
+    [[#use-cases-login]]
 
 The Browser API manages the lifecycle of the user's accounts and sessions with
 an internal [[#browser-api-state-machine]].
@@ -893,18 +928,17 @@ path: img/mock42.svg
 <!-- ============================================================ -->
 ## The FederatedCredential Object ## {#browser-api-federated-credential}
 <!-- ============================================================ -->
-Interactions with FedCM are split into two primary objects. The
-{{FederatedCredential}} object and the {{FederatedAccount}} object.
-The {{FederatedCredential}} object allows making calls to create and
-retrieve {{FederatedAccounts}}.
+The {{FederatedCredential}} object is the primary way to interact with the
+FedCM API.
 
 <div class=example>
 ```js
-const federated_credential = await navigator.credentials.get({
+const credential = await navigator.credentials.get({
   federated: {
     providers: [{
-      url: "https://idp.example",
-      clientId: "123"
+      url: "https://idp.example.com",
+      clientId: "123",
+      hint: "dan@example.com"
     }]
   }
 });
@@ -926,14 +960,23 @@ partial dictionary FederatedCredentialRequestOptions {
 dictionary FederatedIdentityProvider {
   required USVString url;
   required USVString clientId;
+  USVString hint;
 };
 </xmp>
+
+The {{CredentialRequestOptions/mediation}} flag is used to determine if the user
+is prompted to select an account.
+
+The {{CredentialRequestOptions/signal}} is used as an abort signal for the
+requests.
 
 <dl dfn-type="argument" dfn-for="FederatedIdentityProvider">
     :   <dfn>url</dfn>
     ::  The URL of the identity provider.
     :   <dfn>clientId</dfn>
     ::  The client ID provided to the [=RP=] out of band by the [=IDP=]
+    :   <dfn>hint</dfn>
+    ::  Optional |accountId| hint. Maybe used by the UA when displaying the
 </dl>
 
 This specification overrides the {{FederatedCredential}}'s
@@ -980,88 +1023,21 @@ When this method is invoked, the user agent MUST execute the following algorithm
   1. Let |provider| be |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"][0].
   1. Assert: |provider|["{{FederatedIdentityProvider/url}}"] [=map/exists=].
   1. Assert: |provider|["{{FederatedIdentityProvider/clientId}}"] [=map/exists=].
-  1. If an existing |FederatedCredential| exists, return it.
-  1. Otherwise, create a new |FederatedCredential| object.
+  1. Let |mode| be |options|["{{CredentialRequestOptions/mediation"] or "optional" if none provided
+  1. if |mode| is {{CredentialMediationRequirement/required}}
+      1. Return the result of running the [=create-credential=] algorithm.
 
-<!-- ============================================================ -->
-## The Sign-in API ## {#browser-api-sign-in}
-<!-- ============================================================ -->
+  1. if |mode| is {{CredentialMediationRequirement/silent}}
+      1. If |options|["{{FederatedIdentityProvider/hint}}"] does not [=map/exists=]
+         1. Reject
+      1. If a {{FederatedCredential}} with id == |options|["{{FederatedIdentityProvider/hint}}"] exists
+         1. Return credential
+      1. Reject
 
-<!-- ============================================================ -->
-### RP Sign-in API ### {#browser-api-rp-sign-in}
-<!-- ============================================================ -->
+  1. If a single {{FederatedCredential}} exists, return it
+  1. Otherwise, return the result of running teh [=create-credential=] algorithm.
 
-The Sign-up and Sign-in APIs used by the [=Relying Party=]s to ask the browser
-to intermediate the relationship with the [=Identity Provider=] and the
-provisioning of an [=id token=].
-
-The [=Relying Party=] makes no delineation between Sign-up and Sign-in, but
-rather calls the same API indistinguishably.
-
-The [=Relying Party=] can control a variety of UX knobs. For
-example an `AbortSignal` in case it needs to abort the flow.
-
-If all goes well, the [=Relying Party=] receives back a |account| object which
-contains an [=id token=] in the form of a signed [[JWT]] which it can use to
-authenticate the user.
-
-<div class=example>
-```js
-const account = federated_credential.login({
-  hint: "dan@example.com",
-  signal: signal,
-  nonce: "my_nonce"
-});
-```
-</div>
-
-<xmp class=idl>
-[Exposed=Window, SecureContext]
-dictionary FederatedAccountLoginRequest {
-  USVString hint;
-  USVString nonce;
-  bool silent;
-  AbortSignal signal;
-};
-
-[Exposed=Window, SecureContext]
-partial interface FederatedCredential {
-  Promise<FederatedAccount> login(optional FederatedAccountLoginRequest request = {});
-};
-
-[Exposed=Window, SecureContext]
-dictionary FederatedAccount {
-   required USVString id;
-   USVString idToken;
-};
-</xmp>
-
-<dl dfn-type="argument" dfn-for="FederatedAccountLoginRequest">
-    :   <dfn>hint</dfn>
-    ::  The accountId to auto-select, or |undefined|. If |undefined| is provided
-          then the account chooser MAY be shown.
-
-          Default: undefined
-    :   <dfn>nonce</dfn>
-    :: A random number of the choice of the [=RP=]
-    :   <dfn>silent</dfn>
-    ::  Does not prompt the user, will return the account if a consented account
-          is available.
-
-          Default: false
-    :   <dfn>signal</dfn>
-    ::  Abort signal
-</dl>
-
-<dl dfn-type="argument" dfn-for="FederatedAccount">
-    :   <dfn>id</dfn>
-    ::  The account id as provided by the [=IDP=]
-    :   <dfn>idToken</dfn>
-    ::  The minted ID token
-</dl>
-
-When this method is invoked, the user agent MUST execute the following algorithm:
-
+To <dfn>create-credential</dfn> run this algorithm:
     1. Let |manifest| be the result of running the [=fetch the manifest=]
         algorithm with the |provider|.
     1. Let |accounts list| be the result of running the
@@ -1071,8 +1047,8 @@ When this method is invoked, the user agent MUST execute the following algorithm
     1. If the {{StateMachine/Account State}} is [=unregistered=]
         1. Return the result of running the [=sign-up=] algorithm.
     1.  If the {{StateMachine/Session State}} is  [=logged out=] then
-        1. Return the result of running the [=explicit sign-in=] algorithm.
-    1. Return the result of running the [=auto sign-in=] algorithm.
+        1. Return the result of running the [=explicit login=] algorithm.
+    1. Return the result of running the [=auto login=] algorithm.
 
 To <dfn>sign-up</dfn> the user run this algorithm:
     1. Gather explicit intent to create an account
@@ -1082,8 +1058,7 @@ To <dfn>sign-up</dfn> the user run this algorithm:
         to [=registered=].
     1. Set the account's {{StateMachine/Session State}} from [=logged out=]
         to [=logged in=].
-    1. Return a |FederatedAccount| object containing the result of [=minting=]
-        a new [=id token=].
+    1. Return a {{FederatedCredential}} object
 
 To <dfn>select an account</dfn> from the accounts list run this algorithm:
     1. If |accounts list|'s [=list/size=] is 1
@@ -1096,20 +1071,19 @@ To <dfn>select an account</dfn> from the accounts list run this algorithm:
         accounts chooser
     1. Return |account|
 
-To <dfn>sign-in</dfn> the user run this algorithm:
+To <dfn>login</dfn> the user run this algorithm:
     1. Assert that the {{StateMachine/Account State}} is [=registered=]
     1. Set the account's {{StateMachine/Session State}} from [=logged out=] to
         [=logged in=].
-    1. Return a |FederatedAccount| object containing the result of [=minting=]
-        a new [=id token=].
+    1. Return a {{FederatedCredential}} object
 
-To <dfn>auto sign-in</dfn> the user run this algorithm:
-    1. Return the result of running the [=sign-in=] algorithm.
+To <dfn>auto login</dfn> the user run this algorithm:
+    1. Return the result of running the [=login=] algorithm.
 
-To <dfn>explicit sign-in</dfn> the user run this algorithm:
-    1. Gather explicit confirmation that the user wants to sign-in to
+To <dfn>explicit login</dfn> the user run this algorithm:
+    1. Gather explicit confirmation that the user wants to login to
         [=Relying Party=] with their [=Identity Provider=]'s |account|
-    1. Return the result of running the [=sign-in=] algorithm.
+    1. Return the result of running the [=login=] algorithm.
 
 To <dfn>fetch the manifest</dfn> configuration file, run this algorithm:
     1. Run a [[!CSP]] check with a [[CSP#directive-connect-src|connect-src]]
@@ -1151,24 +1125,80 @@ The <dfn>Privacy Policy</dfn> are the policies described at
 The <dfn>Terms of Service</dfn> are the policies described at
 {{client_id_metadata_endpont_response/terms_of_service_url}}.
 
-To <dfn>mint</dfn> a new id token, run the following algorithm:
-    1. Let |token| be the result of making a POST request to the
-        |manifest|["{{Manifest/id_token_endpoint}}"] with:
-        * Let the {{id_token_endpoint_request/account_id}} be
-            |account|["{{accounts_endpoint_response_accounts/account_id}}"].
-        * Let the {{id_token_endpoint_request/request}} be a new object with
-           * Let {{id_token_endpoint_request_request/client_id}} be
-              |provider|["{{FederatedIdentityProvider/clientId}}"].
-           * Let the {{id_token_endpoint_request_request/nonce}} be
-              |provider|["{{FederatedAccountLoginRequest/nonce}}"].
-        * This request MUST NOT follow [[RFC7231#header.location|HTTP redirects]]
-            and instead abort with an error if there are any.
-    1. Return a new {{FederatedCredential}} as:
-        * {{Credential/id}} with
-            |account|["{{accounts_endpoint_response_accounts/account_id}}"]
-        * {{FederatedCredential/idToken}} with |token|
-        * {{FederatedCredential/provider}} with
-            |provider|["{{FederatedIdentityProvider/url}}"]
+<!-- ============================================================ -->
+## The Login API ## {#browser-api-login}
+<!-- ============================================================ -->
+
+<!-- ============================================================ -->
+### RP Login API ### {#browser-api-rp-login}
+<!-- ============================================================ -->
+
+The Sign-up and Login APIs used by the [=Relying Party=]s to ask the browser
+to intermediate the relationship with the [=Identity Provider=] and the
+provisioning of an [=id token=].
+
+The [=Relying Party=] makes no delineation between Sign-up and Login, but
+rather calls the same API indistinguishably.
+
+If all goes well, the [=Relying Party=] receives back a |tokens| object which
+contains an [=id token=] in the form of a signed [[JWT]] which it can use to
+authenticate the user.
+
+<div class=example>
+```js
+const tokens = credential.login({
+  signal: signal,
+  nonce: "my_nonce"
+});
+```
+</div>
+
+<xmp class=idl>
+[Exposed=Window, SecureContext]
+dictionary FederatedAccountLoginRequest {
+  AbortSignal signal;
+  USVString nonce;
+};
+
+[Exposed=Window, SecureContext]
+partial interface FederatedCredential {
+  Promise<FederatedTokens> login(optional FederatedAccountLoginRequest request = {});
+};
+
+[Exposed=Window, SecureContext]
+dictionary FederatedTokens {
+  USVString idToken;
+};
+</xmp>
+
+<dl dfn-type="argument" dfn-for="FederatedAccountLoginRequest">
+    :   <dfn>nonce</dfn>
+    :: A random number of the choice of the [=RP=]
+    :   <dfn>signal</dfn>
+    ::  Abort signal
+</dl>
+
+<dl dfn-type="argument" dfn-for="FederatedTokens">
+    :   <dfn>idToken</dfn>
+    ::  The minted ID token
+</dl>
+
+When this method is invoked, the user agent MUST execute the following algorithm:
+
+1. Let |tokens| be the result of making a POST request to the
+    |manifest|["{{Manifest/id_token_endpoint}}"] with:
+    * Let the {{id_token_endpoint_request/account_id}} be
+        |account|["{{accounts_endpoint_response_accounts/account_id}}"].
+    * Let the {{id_token_endpoint_request/request}} be a new object with
+       * Let {{id_token_endpoint_request_request/client_id}} be
+          |provider|["{{FederatedIdentityProvider/clientId}}"].
+       * Let the {{id_token_endpoint_request_request/nonce}} be
+          |provider|["{{FederatedAccountLoginRequest/nonce}}"].
+    * This request MUST NOT follow [[RFC7231#header.location|HTTP redirects]]
+        and instead abort with an error if there are any.
+1. Return a new {{FederatedTokens}} as:
+    * {{FederatedCredential/idToken}} with |token|
+
 
 <!-- ============================================================ -->
 ## The Revocation API ## {#browser-api-revocation}
@@ -1179,20 +1209,20 @@ the [=Relying Party=] can call an API to let the [=Identity Provider=] and
 the browser know.
 
 Upon return to the [=Relying Party=], the user goes through a
-[[#use-cases-sign-up]] flow instead of a [[#use-cases-sign-in]] flow.
+[[#use-cases-sign-up]] flow instead of a [[#use-cases-login]] flow.
 
 <div class=example>
 ```js
-account.revoke();
+credential.revoke();
 ```
 </div>
 
-This specification extends the {{FederatedCredential}} interface with an extra
-static method:
+This specification extends the {{FederatedCredential}} interface with a `revoke`
+method:
 
 <xmp class=idl>
 [Exposed=Window, SecureContext]
-partial interface FederatedAccount {
+partial interface FederatedCredential {
   Promise<undefined> revoke();
 };
 </xmp>
@@ -1200,35 +1230,37 @@ partial interface FederatedAccount {
 Note: go over the revocation API.
 
 <!-- ============================================================ -->
-## The Sign-out API ## {#browser-api-sign-out}
+## The Logout API ## {#browser-api-logout}
 <!-- ============================================================ -->
 
 <!-- ============================================================ -->
-### RP Sign-out ### {#browser-api-rp-sign-out}
+### RP Logout ### {#browser-api-rp-logout}
 <!-- ============================================================ -->
 
 When a user wants to log out of their session in the [=Relying Party=],
-the [=Relying Party=] can let the browser know that it wants the [[#use-cases-auto-sign-in]]
+the [=Relying Party=] can let the browser know that it wants the [[#use-cases-auto-login]]
 flow to be disabled, so that the user doesn't get into an infinite loop.
 
 <div class=example>
 ```js
-account.logout();
+credential.logout();
 ```
 </div>
 
+This specification extends the {{FederatedCredential}} interface with a `logout`
+method:
 
 <xmp class=idl>
 [Exposed=Window, SecureContext]
-partial interface FederatedAccount {
+partial interface FederatedCredential {
   Promise<undefined> logout();
 };
 </xmp>
 
-Note: go over the RP sign-out API.
+Note: go over the RP logout API.
 
 <!-- ============================================================ -->
-### IDP Sign-out ### {#browser-api-idp-sign-out}
+### IDP Logout ### {#browser-api-idp-logout}
 <!-- ============================================================ -->
 
 In enterprise scenarios, it is common for the user to want to clear all of
@@ -1245,7 +1277,7 @@ Each [=Relying Party=] endpoint is responsible for clearing its local state
 (e.g. clearing cookies).
 
 After the completion of this API, the user's session is cleared and will go
-through an [[#use-cases-explicit-sign-in]] upon return.
+through an [[#use-cases-explicit-login]] upon return.
 
 <div class='image'>
 <pre class=include-raw>
@@ -1269,14 +1301,14 @@ await FederatedCredential.logoutRPs([{
 to log the user out of the [=RP=]s they are signed into.
 
 <xmp class=idl>
-dictionary FederatedCredentialLogoutRequest {
-    required USVString url;
-    required USVString accountId;
+dictionary FederatedCredentialLogoutRpsRequest {
+  required USVString url;
+  required USVString accountId;
 };
 
 [Exposed=Window, SecureContext]
 partial interface FederatedCredential {
-  static Promise<undefined> logoutRPs(sequence<FederatedCredentialLogoutRequest> logoutRequests);
+  static Promise<undefined> logoutRPs(sequence<FederatedCredentialLogoutRpsRequest> logoutRequests);
 };
 </xmp>
 
@@ -1331,7 +1363,7 @@ invocation of the API and expectations around their behavior.
 1. [=Relying Party=]s ([=RP=]s) are [=first party=] websites that invoke the
     FedCM API for the purpose of authenticating a user to their account or for
     requesting information about that user. A well-behaving RP would only invoke
-    the API following a clear user signal -- typically, clicking a sign-in
+    the API following a clear user signal -- typically, clicking a login
     button. Since any site can invoke the API, RPs cannot necessarily be trusted
     to limit the user information it collects or use that information in an
     acceptable way.
@@ -1472,7 +1504,7 @@ A generalization of [[#attack-scenarios-by-rp-cross-site-correlation]] is:
 purposes not authorized by the user:
 
 When the user agrees to allow the IDP to provide information to the RP,
-the consent is specific to certain purposes, such as sign-in and personalization.
+the consent is specific to certain purposes, such as login and personalization.
 The RP might use that data for other purposes that the user would not expect and
 did not authorize, such as selling email addresses to a spam list.
 
@@ -1549,7 +1581,7 @@ without the individual's consent for a purpose different from that
 for which the information was collected.
 
 This attack happens when Identity Providers misuses the the information
-collected to enable sign-in for other purposes.
+collected to enable login for other purposes.
 
 Existing federation protocols require that the IDP know which service is
 requesting an ID token in order to allow identity federation (e.g. the IDP must
