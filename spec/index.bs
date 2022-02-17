@@ -430,6 +430,10 @@ provides the main security boundary on the web.
 :: A general purpose API, as opposed to a [=high-level API=]. See also
     [high level vs low level](https://w3ctag.github.io/design-principles/#high-level-low-level)
 
+: <dfn>minting</dfn>
+: <dfn>minted</dfn>
+:: The act of a new token being creating
+
 : <dfn>out-of-band</dfn>
 :: Outside of the user agent's context.
 
@@ -745,11 +749,13 @@ It will also contain the following parameters in the request body `application/x
 
 <dl dfn-type="argument" dfn-for="id_token_endpoint_request">
     :   <dfn>client_id</dfn>
-    :: The [=RP=]'s client it
+    ::  The [=RP=]'s client it
+    :   <dfn>nonce</dfn>
+    ::  The request nonce
     :   <dfn>account_id</dfn>
-    :: The account identifier that was selected.
+    ::  The account identifier that was selected.
     :   <dfn>consent_acquired</dfn>
-    :: Whether the privacy policy and the terms of service were displayed to the user.
+    ::  Whether the privacy policy and the terms of service were displayed to the user.
 </dl>
 
 For example:
@@ -1108,10 +1114,10 @@ To <dfn noexport>fetch the client id metadata</dfn> run this algorithm:
     1. Return |policies|
 
 The <dfn>Privacy Policy</dfn> are the policies described at
-{{client_id_metadata_endpont_response/privacy_policy_url}}.
+{{client_id_metadata_endpoint_response/privacy_policy_url}}.
 
 The <dfn>Terms of Service</dfn> are the policies described at
-{{client_id_metadata_endpont_response/terms_of_service_url}}.
+{{client_id_metadata_endpoint_response/terms_of_service_url}}.
 
 <!-- ============================================================ -->
 ## The Login API ## {#browser-api-login}
@@ -1131,6 +1137,8 @@ rather calls the same API indistinguishably.
 If all goes well, the [=Relying Party=] receives back a |tokens| object which
 contains an [=id token=] in the form of a signed [[JWT]] which it can use to
 authenticate the user.
+
+The Login API will request the [=id token=] to be [=minted=] by the IDP.
 
 <div class=example>
 ```js
@@ -1177,15 +1185,15 @@ When this method is invoked, the user agent MUST execute the following algorithm
     |manifest|["{{Manifest/id_token_endpoint}}"] with:
     * Let the {{id_token_endpoint_request/account_id}} be
         |account|["{{accounts_endpoint_response_accounts/account_id}}"].
-    * Let the {{id_token_endpoint_request/request}} be a new object with
-       * Let {{id_token_endpoint_request_request/client_id}} be
+    * Let the |id_token_endpoint_request| be a new object with
+       * Let {{id_token_endpoint_request/client_id}} be
           |provider|["{{FederatedIdentityProvider/clientId}}"].
-       * Let the {{id_token_endpoint_request_request/nonce}} be
+       * Let the {{id_token_endpoint_request/nonce}} be
           |provider|["{{FederatedAccountLoginRequest/nonce}}"].
     * This request MUST NOT follow [[RFC7231#header.location|HTTP redirects]]
         and instead abort with an error if there are any.
 1. Return a new {{FederatedTokens}} as:
-    * {{FederatedCredential/idToken}} with |token|
+    * {{FederatedTokens/idToken}} as |token|
 
 
 <!-- ============================================================ -->
