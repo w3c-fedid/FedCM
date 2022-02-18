@@ -514,7 +514,7 @@ The file is parsed expecting the following properties:
 <dl dfn-type="argument" dfn-for="Manifest">
     :   <dfn>accounts_endpoint</dfn> (required)
     ::  A URL that points to an HTTP API that complies with the [[#idp-api-accounts-endpoint]] API.
-    :   <dfn>client_id_metadata_endpoint</dfn> (optional)
+    :   <dfn>client_metadata_endpoint</dfn> (required)
     ::  A URL that points to an HTTP API that complies with the [[#idp-api-client-id-metadata-endpoint]] API.
     :   <dfn>id_token_endpoint</dfn> (required)
     ::  A URL that points to an HTTP API that complies with the [[#idp-api-id-token-endpoint]] API.
@@ -565,7 +565,7 @@ For example:
 ```json
 {
   "accounts_endpoint": "/accounts.php",
-  "client_id_metadata_endpoint": "/metadata.php",
+  "client_metadata_endpoint": "/metadata.php",
   "id_token_endpoint": "/idtokens.php",
   "revocation_endpoint": "/revocation.php",
   "branding": {
@@ -680,8 +680,8 @@ Sec-FedCM-CSRF: ?1
 
 The file is parsed expecting the following properties:
 
-<dl dfn-type="argument" dfn-for="client_id_metadata_endpoint_response">
-    :   <dfn>privacy_policy_url</dfn> (optional)
+<dl dfn-type="argument" dfn-for="client_metadata_endpoint_response">
+    :   <dfn>privacy_policy_url</dfn> (required)
     ::  A link to the [=RP=]'s privacy policy.
     :   <dfn>terms_of_service_url</dfn> (optional)
     ::  A link to the [=RP=]'s terms of service.
@@ -1096,12 +1096,12 @@ To <dfn>fetch the accounts list</dfn> run this algorithm:
         error if there are any.
     1. Return the |accounts list|
 
-To <dfn noexport>fetch the client id metadata</dfn> run this algorithm:
-    1. Let the |client_id_metadata_endpoint| url be the relative url
-        |manifest|["{{Manifest/client_id_metadata_endpoint}}"] of
+To <dfn noexport>fetch the client metadata</dfn> run this algorithm:
+    1. Let the |client_metadata_endpoint| url be the relative url
+        |manifest|["{{Manifest/client_metadata_endpoint}}"] of
         |provider|["{{FederatedIdentityProvider/url}}"]
     1. Let the |policies| be the result of fetching the
-        |client_id_metadata_endpoint| with the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]]
+        |client_metadata_endpoint| with the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]]
         header but without the [=Identity Provider=]'s cookies.  This request
         MUST NOT follow [[RFC7231#header.location|HTTP redirects]] and instead
         abort with
