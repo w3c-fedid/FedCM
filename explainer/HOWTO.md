@@ -58,11 +58,10 @@ snippet:
 // Feature detection: Since `FederatedCredential` is already available in Chrome
 // for the old Credential Management API, additional
 // `FederatedCredential.revoke` check is required.
-if (!('FederatedCrendential' in window) || !FederatedCredential.revoke) {
-  console.log("FedCM is not available");
-} else {
-  console.log("FedCM is available");
+function isFedCMEnabled() {
+  return !(!window.FederatedCredential || !FederatedCredential.revoke);
 }
+console.log(isFedCMEnabled() ? "FedCM is available" : "FedCM is not available");
 ```
 
 ### Relying Party implementation
@@ -77,19 +76,20 @@ defined on other types of pages.
 ```js
 async function login() {
   try {
-    const ac = new AbortController();
+    if (!isFedCMEnabled()) {
+      return;
+    }
 
     // In this example, https://idp.example is the IdP's URL.
     var idToken = await navigator.credentials.get({
-        mediation: "optional",
-        signal: ac.signal, // controls abortions of the account chooser
-        federated: {
-          providers: [{
-            url: "https://idp.example", // IdP domain
-            clientId: "1234", // Client ID of the RP
-            nonce: "5678", // Nonce (random value)
-          }]
-        }
+      mediation: "optional",
+      federated: {
+        providers: [{
+          url: "https://idp.example", // IdP domain
+          clientId: "1234", // Client ID of the RP
+          nonce: "5678", // Nonce (random value)
+        }]
+      }
     });
 
     console.log(`received token: ${idToken}`);
@@ -204,7 +204,7 @@ account_id=1234&client_id=myclientid&nonce=abc987987cba
 
 `account_id` is taken from the response of the previous request.
 
-The response will be parsed as a JSON file including `id_token`.
+The HTTP response will be parsed as a JSON file including `id_token`.
 
 ```json
 {
