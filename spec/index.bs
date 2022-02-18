@@ -519,8 +519,45 @@ The file is parsed expecting the following properties:
     :   <dfn>id_token_endpoint</dfn> (required)
     ::  A URL that points to an HTTP API that complies with the [[#idp-api-id-token-endpoint]] API.
     :   <dfn>revocation_endpoint</dfn> (required)
-    :: A URL that points to an HTTP API that complies with the [[#idp-api-revocation-endpoint]] API.
+    ::  A URL that points to an HTTP API that complies with the [[#idp-api-revocation-endpoint]] API.
+    :   <dfn>branding</dfn> (optional)
+    ::  A set of [=Branding JSON=] options.
 </dl>
+
+The <dfn>Branding JSON</dfn> enables an [=IDP=] to express their branding
+preferences, which may be used by User Agents to customize the user agent
+consent prompt.
+
+Note: The branding preferences are deliberately designed to be high level
+/ abstract (rather than opinionated about a specific UI structure), to
+enable different [=User Agents=] to offer different UI experiences and
+for them to evolve independently over time.
+
+It may have the following properties:
+<dl dfn-type="argument" dfn-for="manifest_branding">
+    :   <dfn>background_color</dfn> (optional)
+    ::  Background [=color=] for [=IDP=]-branded widgets such as buttons.
+    :   <dfn>color</dfn> (optional)
+    ::  [=color=] for text on [=IDP=] branded widgets using
+        [=background_color=].
+    :   <dfn>icons</dfn> (optional)
+    ::  A list of [=Icon JSON=] objects.
+</dl>
+
+The <dfn>Icon JSON</dfn> may have the following properties:
+
+<dl dfn-type="argument" dfn-for="manifest_branding_icons">
+    :   <dfn>url</dfn> (required)
+    ::  The url pointing to the icon image.
+        The icon needs to comply with the
+        [maskable](https://www.w3.org/TR/appmanifest/#icon-masks) specification.
+    :   <dfn>size</dfn> (optional)
+    ::  The size of the icon. The icon is assumed to be square and single resolution
+        (not a multi-resolution .ico). The size may be omitted if the icon is in
+        a vector graphic format (like SVG).
+</dl>
+
+The <dfn>color</dfn> is a subset of CSS <<color>> syntax, namely <<hex-color>>s, ''hsl()''s, ''rgb()''s and <<named-color>>.
 
 For example:
 
@@ -530,7 +567,15 @@ For example:
   "accounts_endpoint": "/accounts.php",
   "client_id_metadata_endpoint": "/metadata.php",
   "id_token_endpoint": "/idtokens.php",
-  "revocation_endpoint": "/revocation.php"
+  "revocation_endpoint": "/revocation.php",
+  "branding": {
+    "background_color": "green",
+    "color": "0xFFEEAA",
+    "icons": [{
+      "url": "https://idp.example/icon.ico",
+      "size": 10,
+    }]
+  }
 }
 ```
 </div>
@@ -564,8 +609,6 @@ The response is expected to have the following properties:
 <dl dfn-type="argument" dfn-for="accounts_endpoint_response">
     :   <dfn>accounts</dfn> (required)
     ::  A list of [=Account JSON=].
-    :   <dfn>branding</dfn> (optional)
-    ::  A set of [=Branding JSON=] options.
 </dl>
 
 Every <dfn>Account JSON</dfn> is expected to have the following properties:
@@ -582,28 +625,6 @@ Every <dfn>Account JSON</dfn> is expected to have the following properties:
     :   <dfn>approved_clients</dfn> (optional)
     ::  A list of [=RP=]s (in the form of Client IDs) this account is already registered with.
 </dl>
-
-The <dfn>Branding JSON</dfn> is expected to have the following properties:
-
-<dl dfn-type="argument" dfn-for="accounts_endpoint_response_branding">
-    :   <dfn>background_color</dfn> (optional)
-    ::  The background [=color=] of the button.
-    :   <dfn>foreground_color</dfn> (optional)
-    ::  The foreground [=color=] of the button.
-    :   <dfn>icons</dfn> (optinal)
-    ::  A list of [=Icon JSON=] objects.
-</dl>
-
-The <dfn>Icon JSON</dfn> is expected to have the following properties:
-
-<dl dfn-type="argument" dfn-for="accounts_endpoint_response_branding_icons">
-    :   <dfn>url</dfn> (required)
-    ::  The url pointing to the icon image.
-    :   <dfn>size</dfn> (optional)
-    ::  The size of the icon (assumed to be squared).
-</dl>
-
-The <dfn>color</dfn> is a subset of CSS <<color>> syntax, namely <<hex-color>>s, ''hsl()''s, ''rgb()''s and <<named-color>>.
 
 For example:
 
@@ -624,15 +645,7 @@ For example:
    "email": "johnny@idp.example",
    "picture": "https://idp.example/profile/456"
    "approved_clients": ["abc", "def", "ghi"],
-  }],
-  "branding": {
-   "background_color": "green",
-   "foreground_color": "0xFFEEAA",
-   "icons": [{
-     "url": "https://idp.example/icon.ico",
-     "size": 10
-   }],
- }
+  }]
 }
 ```
 </div>
