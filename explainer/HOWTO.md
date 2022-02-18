@@ -133,7 +133,7 @@ containing four fields:
 ```json
 {
   "accounts_endpoint": "https://idp.example/fedcm/accounts_endpoint",
-  "client_id_metadata_endpoint": "https://idp.example/fedcm/client_id_metadata_endpoint",
+  "client_metadata_endpoint": "https://idp.example/fedcm/client_metadata_endpoint",
   "id_token_endpoint": "https://idp.example/fedcm/token_endpoint",
   "revocation_endpoint": "https://idp.example/fedcm/revocation_endpoint"
 }
@@ -141,7 +141,7 @@ containing four fields:
 
 * The `accounts_endpoint` value provides the URL to fetch a list of user
   accounts.
-* The `client_id_metadata_endpoint` value provides the URL to fetch the client
+* The `client_metadata_endpoint` value provides the URL to fetch the client
   metadata including terms of services and privacy policy.
 * The `id_token_endpoint` value provides the URL to request an ID token.
 * The `revocation_endpoint` value provides the endpoint URL to revoke all id
@@ -180,7 +180,7 @@ The browser will render an account picker UI based on this information.
 #### metadata endpoint
 
 The client metadata endpoint provides metadata about the RP. The browser sends a
-un-credentialed request to the `client_id_metadata_endpoint`.
+un-credentialed request to the `client_metadata_endpoint`.
 
 ```json
 {
