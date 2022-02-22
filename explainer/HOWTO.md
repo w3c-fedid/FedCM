@@ -82,7 +82,6 @@ async function login() {
 
     // In this example, https://idp.example is the IdP's URL.
     var idToken = await navigator.credentials.get({
-      mediation: "optional",
       federated: {
         providers: [{
           url: "https://idp.example", // IdP domain
