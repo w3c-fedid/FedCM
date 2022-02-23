@@ -248,8 +248,8 @@ entries provided by the [=Identity Provider=].
 
 This specification extends the {{FederatedCredential}} type and internal
 algorithms to allow the exchange of identity between [=IDP=]s and [=RP=]s.
-When it succeeds, it returns to the [=RP=] a signed [=id token=] which the
-[=RP=] can use to authenticate the user.
+When it succeeds, it returns to the [=RP=] tokens. The [=ID Token=] can be
+used by the [=RP=] to authenticate the user.
 
 <!-- ============================================================ -->
 # Single Account Example # {#example-single-user}
@@ -573,7 +573,7 @@ by exposing a series of HTTP endpoints:
 1. A [[#idp-api-manifest]] endpoint in an agreed upon location that points to
 1. An [[#idp-api-accounts-endpoint]] endpoint
 1. A [[#idp-api-client-id-metadata-endpoint]] endpoint
-1. An [[#idp-api-id-token-endpoint]] endpoint
+1. A [[#idp-api-token-endpoint]] endpoint
 1. A [[#idp-api-revocation-endpoint]] endpoint
 
 <!-- ============================================================ -->
@@ -608,8 +608,8 @@ The file is parsed expecting the following properties:
     ::  A URL that points to an HTTP API that complies with the [[#idp-api-accounts-endpoint]] API.
     :   <dfn>client_metadata_endpoint</dfn> (required)
     ::  A URL that points to an HTTP API that complies with the [[#idp-api-client-id-metadata-endpoint]] API.
-    :   <dfn>id_token_endpoint</dfn> (required)
-    ::  A URL that points to an HTTP API that complies with the [[#idp-api-id-token-endpoint]] API.
+    :   <dfn>token_endpoint</dfn> (required)
+    ::  A URL that points to an HTTP API that complies with the [[#idp-api-token-endpoint]] API.
     :   <dfn>revocation_endpoint</dfn> (required)
     ::  A URL that points to an HTTP API that complies with the [[#idp-api-revocation-endpoint]] API.
     :   <dfn>branding</dfn> (optional)
@@ -658,7 +658,7 @@ For example:
 {
   "accounts_endpoint": "/accounts.php",
   "client_metadata_endpoint": "/metadata.php",
-  "id_token_endpoint": "/idtokens.php",
+  "token_endpoint": "/tokens.php",
   "revocation_endpoint": "/revocation.php",
   "branding": {
     "background_color": "green",
@@ -791,12 +791,12 @@ For example:
 </div>
 
 <!-- ============================================================ -->
-## ID Token ## {#idp-api-id-token-endpoint}
+## Tokens ## {#idp-api-token-endpoint}
 <!-- ============================================================ -->
 
-The ID Token endpoint is responsible for [=minting=] a new [=id token=] for the user.
+The Token endpoint is responsible for [=minting=] new tokens for the user.
 
-The ID Token endpoint is fetched
+The Token endpoint is fetched
 (a) as a **POST** request,
 (b) **with** [=IDP=] cookies,
 (c) **with** a [[RFC7231#header.referer|Referer]] header indicating the [=RP=]'s origin
@@ -807,7 +807,7 @@ The ID Token endpoint is fetched
 
 It will also contain the following parameters in the request body `application/x-www-form-urlencoded`:
 
-<dl dfn-type="argument" dfn-for="id_token_endpoint_request">
+<dl dfn-type="argument" dfn-for="token_endpoint_request">
     :   <dfn>client_id</dfn>
     ::  The [=RP=]'s client it
     :   <dfn>nonce</dfn>
@@ -816,7 +816,21 @@ It will also contain the following parameters in the request body `application/x
     ::  The account identifier that was selected.
     :   <dfn>consent_acquired</dfn>
     ::  Whether the privacy policy and the terms of service were displayed to the user.
+    :   <dfn>tokens</dfn>
+    ::  Space separated list of requested tokens.
+          * id_token
+          * access_token
+          * refresh_token
+
+          Default: id_token
+    :   <dfn>scopes</dfn>
+    ::  Space separated list of scopes to request.
+
+          Default: profile_short email
 </dl>
+
+The |tokens| and |scopes| MAY affect the dialog presented to the user to makes
+clear that more power is being granted in the communication.
 
 For example:
 
@@ -828,15 +842,19 @@ Referer: https://rp.example/
 Content-Type: application/x-www-form-urlencoded
 Cookie: 0x23223
 Sec-FedCM-CSRF: ?1
-account_id=123&client_id=client1234&nonce=Ct60bD&consent_acquired=true
+account_id=123&client_id=client1234&nonce=Ct60bD&consent_acquired=true&tokens=id_token&scopes=profile_short%20email
 ```
 </div>
 
-The response is parsed as a JSON file expecting the following properties:
+The response is parsed as a JSON file optionally containing the following properties:
 
-<dl dfn-type="argument" dfn-for="id_token_endpoint_response">
+<dl dfn-type="argument" dfn-for="token_endpoint_response">
     :   <dfn>id_token</dfn>
     ::  The resulting [=id token=].
+    :   <dfn>access_token</dfn>
+    ::  The resulting [=access_token=] if requested.
+    :   <dfn>refresh_token</dfn>
+    ::  The requested [=refresh_token=] if requested.
 </dl>
 
 For example:
@@ -844,7 +862,8 @@ For example:
 <div class=example>
 ```json
 {
-  "id_token" : "eyJC...J9.eyJzdWTE2...MjM5MDIyfQ.SflV_adQssw....5c"
+  "id_token" : "eyJC...J9.eyJzdWTE2...MjM5MDIyfQ.SflV_adQssw....5c",
+  "access_token" : "abc...123...h46...5c"
 }
 ```
 </div>
@@ -854,7 +873,7 @@ For example:
 <!-- ============================================================ -->
 
 
-The revocation endpoint is responsible for revoking all [=id token=]s for the
+The revocation endpoint is responsible for revoking all tokens for the
 specified client ID for the user.
 
 The request is made:
@@ -1031,6 +1050,7 @@ requests.
     ::  The client ID provided to the [=RP=] out of band by the [=IDP=]
     :   <dfn>hint</dfn>
     ::  Optional |accountId| hint. Maybe used by the UA when displaying the
+         user prompt
 </dl>
 
 This specification overrides the {{FederatedCredential}}'s
@@ -1189,16 +1209,14 @@ The <dfn>Terms of Service</dfn> are the policies described at
 
 The Sign-up and Sign-in APIs used by the [=Relying Party=]s to ask the browser
 to intermediate the relationship with the [=Identity Provider=] and the
-provisioning of an [=id token=].
+provisioning of tokens.
 
 The [=Relying Party=] makes no delineation between Sign-up and Sign-in, but
 rather calls the same API indistinguishably.
 
 If all goes well, the [=Relying Party=] receives back a |tokens| object which
-contains an [=id token=] in the form of a signed [[JWT]] which it can use to
-authenticate the user.
-
-The Sign-in API will request the [=id token=] to be [=minted=] by the IDP.
+contains the requested tokens. The [=id token=] should be in the form of a
+signed [[JWT]] which the RP can use to authenticate the user.
 
 <div class=example>
 ```js
@@ -1214,6 +1232,8 @@ const tokens = credential.login({
 dictionary FederatedAccountLoginRequest {
   AbortSignal signal;
   USVString nonce;
+  USVString tokens;
+  USVString scopes;
 };
 
 [Exposed=Window, SecureContext]
@@ -1224,6 +1244,8 @@ partial interface FederatedCredential {
 [Exposed=Window, SecureContext]
 dictionary FederatedTokens {
   USVString idToken;
+  USVString accessToken;
+  USVString refreshToken;
 };
 </xmp>
 
@@ -1232,28 +1254,48 @@ dictionary FederatedTokens {
     :: A random number of the choice of the [=RP=]
     :   <dfn>signal</dfn>
     ::  Abort signal
+    :   <dfn>tokens</dfn>
+    ::  Space separated list of requested tokens.
+          * id_token
+          * access_token
+          * refresh_token
+
+          Default: id_token
+    :   <dfn>scopes</dfn>
+    ::  Space separated list of scopes to request.
+
+          Default: profile_short email
 </dl>
 
 <dl dfn-type="argument" dfn-for="FederatedTokens">
     :   <dfn>idToken</dfn>
     ::  The minted ID token
+    :   <dfn>accessToken</dfn>
+    ::  The minted access token
+    :   <dfn>refreshToken</dfn>
+    ::  The minted refresh token
 </dl>
+
+The |tokens| and |scopes| MAY affect the dialog presented to the user to makes
+clear that more power is being granted in the communication.
 
 When this method is invoked, the user agent MUST execute the following algorithm:
 
 1. Let |tokens| be the result of making a POST request to the
-    |manifest|["{{Manifest/id_token_endpoint}}"] with:
-    * Let the {{id_token_endpoint_request/account_id}} be
+    |manifest|["{{Manifest/token_endpoint}}"] with:
+    * Let the {{token_endpoint_request/account_id}} be
         |account|["{{accounts_endpoint_response_accounts/account_id}}"].
-    * Let the |id_token_endpoint_request| be a new object with
-       * Let {{id_token_endpoint_request/client_id}} be
+    * Let the |token_endpoint_request| be a new object with
+       * Let {{token_endpoint_request/client_id}} be
           |provider|["{{FederatedIdentityProvider/clientId}}"].
-       * Let the {{id_token_endpoint_request/nonce}} be
+       * Let the {{token_endpoint_request/nonce}} be
           |provider|["{{FederatedAccountLoginRequest/nonce}}"].
     * This request MUST NOT follow [[RFC7231#header.location|HTTP redirects]]
         and instead abort with an error if there are any.
 1. Return a new {{FederatedTokens}} as:
-    * {{FederatedTokens/idToken}} as |token|
+    * {{FederatedTokens/idToken}} as |tokens|['id_token']
+    * {{FederatedTokens/accessToken}} as |tokens|['access_token']
+    * {{FederatedTokens/refreshToken}} as |tokens|['refresh_token']
 
 
 <!-- ============================================================ -->
@@ -1424,7 +1466,7 @@ invocation of the API and expectations around their behavior.
     to limit the user information it collects or use that information in an
     acceptable way.
 1. [=Identity Provider=]s ([=IDP=]s) are [=third party=] websites that are the
-    target of a FedCM call to attempt to fetch an ID token. Usually the IDP has a
+    target of a FedCM call to attempt to fetch tokens. Usually the IDP has a
     higher level of trust than the RP since it already has the user’s personal
     information, but it is possible that the IDP might use the user’s information
     in non-approved ways. It is possible that the IDP specified in the API call
@@ -1640,7 +1682,7 @@ This attack happens when Identity Providers misuses the the information
 collected to enable sign-in for other purposes.
 
 Existing federation protocols require that the IDP know which service is
-requesting an ID token in order to allow identity federation (e.g. the IDP must
+requesting a token in order to allow identity federation (e.g. the IDP must
 know the OAuth `client_id`).
 
 Identity providers can use this fact to build profiles of users across sites
@@ -1674,7 +1716,7 @@ described in [[#attack-scenarios-by-idp-timing-attacks]].
 ##### Impersonation ##### {#attack-scenarios-by-idp-impersonation}
 <!-- ============================================================ -->
 
-Since IDPs have unconstrained ability to issue ID tokens, they are capable
+Since IDPs have unconstrained ability to issue tokens, they are capable
 of logging in to users’ federated accounts without user knowledge or action,
 impersonating the user and potentially gaining full access to the user's account
 on the RP.
@@ -1959,7 +2001,7 @@ Mitigates:
     * [[#attack-scenarios-by-rp-cross-site-correlation]]
 
 Currently, IDPs require that an RP pre-registers and agrees to specific terms
-before the IDP will issue an ID token to them.  This conflicts with
+before the IDP will issue tokens to them.  This conflicts with
 [the previous mitigation](#mitigation-self-presentation), but can provide a
 measure of RP accountability.
 
