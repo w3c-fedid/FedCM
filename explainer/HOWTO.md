@@ -1,3 +1,7 @@
+# HOWTO
+
+This article explains how to try out FedCM in Google Chrome.
+
 We will do our best to keep these instructions up to date as protocol and API
 changes occur. It will subsequently roll into downstream channels, but with lag
 in functionality and bug fixes since this is under development.
@@ -6,12 +10,12 @@ in functionality and bug fixes since this is under development.
 
 As of December 2021, Chrome supports the mediation-oriented flow on mobile.
 
-From Relying Party (RP) aspect:
+From the Relying Party (RP):
 
 * `navigator.credentials.get()`: Sign-up and sign-in.
 * `FederatedCredential.revoke()`: Revoke an account that's already signed up.
 
-From Identity Provider (IdP) aspect:
+From the Identity Provider (IdP):
 
 * `FederatedCredential.logoutRPs()`: Sends a signal to specified RPs to logout the user.
 * A request for the `/fedcm.json` configuration.
@@ -32,7 +36,7 @@ we do not guarantee that it will continue to work the way it is in the future.
    the implementation in other channels will be out of date with respect to
    functionality and bug fixes.
 2. Enable FedCM. This can be done directly from `chrome://flags#fedcm` from
-   Chrome 98 or later.
+   Chrome 98 or later. Change the setting from "Default" to "Enabled".
 
 At the moment the only way to reset the sign-up status is to clear browsing data
 on the Chrome profile. This can be done from the **[ClearBrowsing Data
@@ -45,36 +49,46 @@ if sign-up status persistence is not desired.
 
 ## Testing the API
 
+### Feature detection
+
+In order to determine whether the FedCM API is available, run the following JS
+snippet:
+
+```js
+// Feature detection: Since `FederatedCredential` is already available in Chrome
+// for the old Credential Management API, additional
+// `FederatedCredential.revoke` check is required.
+function isFedCMEnabled() {
+  return !(!window.FederatedCredential || !FederatedCredential.revoke);
+}
+console.log(isFedCMEnabled() ? "FedCM is available" : "FedCM is not available");
+```
+
 ### Relying Party implementation
 
 The RP interacts with the FedCM API to obtain an ID token for a user. The API
 method returns a promise that either resolves successfully and provides the
-token, or else is rejected with an error. The page must be served over HTTPS.
+token, or else is rejected with an error.
+
+**Note**: The page must be served over HTTPS. `navigator.credentials` is not
+defined on other types of pages.
 
 ```js
 async function login() {
-  // Feature detection: Since `FederatedCredential` is already available in
-  // Chrome for the old Credential Management API, additional
-  // `FederatedCredential.revoke` check is required.
-  if (!'FederatedCredential' in window || !FederatedCredential.revoke) {
-    console.log("FedCM is not available.");
-    return;
-  }
-
   try {
-    const ac = new AbortController();
+    if (!isFedCMEnabled()) {
+      return;
+    }
 
     // In this example, https://idp.example is the IdP's URL.
     var idToken = await navigator.credentials.get({
-        mediation: "optional",
-        signal: ac.signal,
-        federated: {
-          providers: [{
-            url: "https://idp.example", // IdP domain
-            clientId: "1234", // Client ID of the RP
-            nonce: "5678", // Nonce (random value)
-          }]
-        }
+      federated: {
+        providers: [{
+          url: "https://idp.example", // IdP domain
+          clientId: "1234", // Client ID of the RP
+          nonce: "5678", // Nonce (random value)
+        }]
+      }
     });
 
     console.log(`received token: ${idToken}`);
@@ -82,8 +96,9 @@ async function login() {
     console.log(`rejected with ${e}`);
   }
 };
-
 ```
+
+The JS API allows the RP to obtain the `idToken`, a proof of IDP authentication.
 
 ### Identity Provider implementation
 
@@ -117,7 +132,7 @@ containing four fields:
 ```json
 {
   "accounts_endpoint": "https://idp.example/fedcm/accounts_endpoint",
-  "client_id_metadata_endpoint": "https://idp.example/fedcm/client_id_metadata_endpoint",
+  "client_metadata_endpoint": "https://idp.example/fedcm/client_metadata_endpoint",
   "id_token_endpoint": "https://idp.example/fedcm/token_endpoint",
   "revocation_endpoint": "https://idp.example/fedcm/revocation_endpoint",
   "branding": {
@@ -133,7 +148,7 @@ containing four fields:
 
 * The `accounts_endpoint` value provides the URL to fetch a list of user
   accounts.
-* The `client_id_metadata_endpoint` value provides the URL to fetch the client
+* The `client_metadata_endpoint` value provides the URL to fetch the client
   metadata including terms of services and privacy policy.
 * The `id_token_endpoint` value provides the URL to request an ID token.
 * The `revocation_endpoint` value provides the endpoint URL to revoke all id
@@ -150,14 +165,14 @@ are then returned in the response. A valid response body would look like:
 {
   "accounts": [
     {
-      "account_id": "1234",
+      "id": "1234",
       "name": "John Doe",
       "given_name": "John",
       "email": "john_doe@idp",
       "picture": "https://idp.example/profile/123"
     },
     {
-      "account_id": "5678",
+      "id": "5678",
       "name": "Johnny",
       "given_name": "Johnny",
       "email": "johnny@idp",
@@ -172,7 +187,7 @@ The browser will render an account picker UI based on this information.
 #### metadata endpoint
 
 The client metadata endpoint provides metadata about the RP. The browser sends a
-un-credentialed request to the `client_id_metadata_endpoint`.
+un-credentialed request to the `client_metadata_endpoint`.
 
 ```json
 {
@@ -196,18 +211,13 @@ account_id=1234&client_id=myclientid&nonce=abc987987cba
 
 `account_id` is taken from the response of the previous request.
 
-The response will include `idToken`.
+The HTTP response will be parsed as a JSON file including `id_token`.
 
 ```json
 {
-  "idToken": "eyJC...J9.eyJzdWTE2...MjM5MDIyfQ.SflV_adQssw....5c",
-  "approvedBy": "user"
+  "id_token": "eyJC...J9.eyJzdWTE2...MjM5MDIyfQ.SflV_adQssw....5c",
 }
 ```
-
-* `idToken` is a proof of IdP authentication.
-* `approvedBy` indicates whether this authentication is done `auto`-matically or
-  by the `user`.
 
 ## Session Management
 
