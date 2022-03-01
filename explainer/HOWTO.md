@@ -8,7 +8,7 @@ in functionality and bug fixes since this is under development.
 
 ## Available functionality
 
-As of December 2021, Chrome supports the mediation-oriented flow on mobile.
+As of February 2022, Chrome supports the mediation-oriented flow on Android.
 
 From the Relying Party (RP):
 
