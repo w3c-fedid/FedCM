@@ -275,7 +275,7 @@ could be implemented.
     // This will prompt when !credential[“consented”], but
     // it won’t when credential[“consented”].
     //
-    // If !credential["consented"] and mediation == silent will `reject`.
+    // If !credential["consented"] and mediation == silent will reject.
     //
     // If the user selects an account updates the credential["consented"]
     // state and stores any needed account information.
@@ -528,6 +528,14 @@ provides the main security boundary on the web.
     allocated by that site that is used to identify a [=user=] on that site. A
     single user will generally have many user IDs that refer to them, and a single
     site may or may not know that multiple user identifiers refer to the same user.
+
+:  <dfn>Privacy Policy</dfn>
+:: The policies described at
+    {{client_id_metadata_endpoint_response/privacy_policy_url}}.
+
+:  <dfn>Terms of Service</dfn>
+:: The policies described at
+    {{client_id_metadata_endpoint_response/terms_of_service_url}}.
 
 <!-- ============================================================ -->
 # High Level Design # {#high-level-design}
@@ -847,7 +855,6 @@ For example:
 ## Revocation ## {#idp-api-revocation-endpoint}
 <!-- ============================================================ -->
 
-
 The revocation endpoint is responsible for revoking all [=id token=]s for the
 specified client ID for the user.
 
@@ -1015,6 +1022,20 @@ dictionary FederatedIdentityProvider {
 The {{CredentialRequestOptions/mediation}} flag is used to determine if the user
 is prompted to select an account.
 
+  :  silent
+  :: * If 1 credential exists, return it
+     * If > 1 credentials exist, and hint matches one of them return it
+     * Otherwise return unconsented FederatedCredential
+     * Never prompts the user
+  :  optional
+  :: * If 1 credential exists, return it
+     * If > 1 credentials exist, and hint matches one of them return it
+     * Otherwise return unconsented FederatedCredential
+     * Prompts the user if the credential is unconsented
+  :  required
+  :: * Always returns an unconsented FederatedCredential
+      * Always prompts the user
+
 The {{CredentialRequestOptions/signal}} is used as an abort signal for the
 requests.
 
@@ -1025,6 +1046,7 @@ requests.
     ::  The client ID provided to the [=RP=] out of band by the [=IDP=]
     :   <dfn>hint</dfn>
     ::  Optional |accountId| hint. Maybe used by the UA when displaying the
+         account chooser dialog.
 </dl>
 
 This specification overrides the {{FederatedCredential}}'s
@@ -1056,9 +1078,6 @@ This [=internal method=] accepts three arguments:
          [=same-origin with its ancestors=]. It is [FALSE] if caller is cross-origin.
 </dl>
 
-NOTE: This algorithm is currently out of date and will be updated to match the
-examples.
-
 When this method is invoked, the user agent MUST execute the following algorithm:
 
   1.  If <var ignore>sameOriginWithAncestors</var> is `false`, return a
@@ -1074,107 +1093,25 @@ When this method is invoked, the user agent MUST execute the following algorithm
   1. Let |provider| be |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"][0].
   1. Assert: |provider|["{{FederatedIdentityProvider/url}}"] [=map/exists=].
   1. Assert: |provider|["{{FederatedIdentityProvider/clientId}}"] [=map/exists=].
+  1. Let |hint| be |provider|["{{FederatedIdentityProvider/hint}"] or "undefined" if none provided
   1. Let |mode| be |options|["{{CredentialRequestOptions/mediation"] or "optional" if none provided
-  1. if |mode| is {{CredentialMediationRequirement/required}}
-      1. Return the result of running the [=create-credential=] algorithm.
+  1. if |mode| is "required"
+     1. Let |credential| be a new FederatedCredential
+     1. |credential|["consented"] = false
+     1. |credential|["mayPrompt"] = true
+     1. return |credential|
+  1. If there is 1 existing |credential|
+     1. return |credential|
+  1. If there is > 1 existing |credential| and |hint| matches |credential|["id"]
+     1. return |credential|
+  1. Let |credential| be a new FederatedCredential
+     1. |credential|["consented"] = false
+     1. If |mode| is "silent"
+         1. |credential|["mayPrompt"] = false
+     1. If |mode| is "optional"
+         1. |credential|["mayPrompt"] = true
+     1. return |credential|
 
-  1. if |mode| is {{CredentialMediationRequirement/silent}}
-      1. If |options|["{{FederatedIdentityProvider/hint}}"] does not [=map/exists=]
-         1. Reject
-      1. If a {{FederatedCredential}} with id == |options|["{{FederatedIdentityProvider/hint}}"] exists
-         1. Return credential
-      1. Reject
-
-  1. If a single {{FederatedCredential}} exists, return it
-  1. Otherwise, return the result of running teh [=create-credential=] algorithm.
-
-To <dfn>create-credential</dfn> run this algorithm:
-    1. Let |manifest| be the result of running the [=fetch the manifest=]
-        algorithm with the |provider|.
-    1. Let |accounts list| be the result of running the
-        [=fetch the accounts list=] algorithm.
-    1. Let |account| be the result of running the [=select an account=] from the
-        |accounts list| algorithm.
-    1. If the {{StateMachine/Account State}} is [=unregistered=]
-        1. Return the result of running the [=sign-up=] algorithm.
-    1.  If the {{StateMachine/Session State}} is  [=logged out=] then
-        1. Return the result of running the [=explicit sign-in=] algorithm.
-    1. Return the result of running the [=auto sign-in=] algorithm.
-
-To <dfn>sign-up</dfn> the user run this algorithm:
-    1. Gather explicit intent to create an account
-    1. Gather explicit agreement with the [=Privacy Policy=]
-    1. Gather explicit agreement with the [=Terms of Service=]
-    1. Set the account's {{StateMachine/Account State}} from [=unregistered=]
-        to [=registered=].
-    1. Set the account's {{StateMachine/Session State}} from [=logged out=]
-        to [=logged in=].
-    1. Return a {{FederatedCredential}} object
-
-To <dfn>select an account</dfn> from the accounts list run this algorithm:
-    1. If |accounts list|'s [=list/size=] is 1
-        1. Let |account| be |accounts list|[0]
-        1. Return |account|
-    1. If the |hint| is provided and an account matches |hint|
-        1. Return |account|
-    1. Display an account chooser
-    1. Let |account| be an account that the user manually selects from the
-        accounts chooser
-    1. Return |account|
-
-To <dfn>sign-in</dfn> the user run this algorithm:
-    1. Assert that the {{StateMachine/Account State}} is [=registered=]
-    1. Set the account's {{StateMachine/Session State}} from [=logged out=] to
-        [=logged in=].
-    1. Return a {{FederatedCredential}} object
-
-To <dfn>auto sign-in</dfn> the user run this algorithm:
-    1. Return the result of running the [=sign-in=] algorithm.
-
-To <dfn>explicit sign-in</dfn> the user run this algorithm:
-    1. Gather explicit confirmation that the user wants to sign-in to
-        [=Relying Party=] with their [=Identity Provider=]'s |account|
-    1. Return the result of running the [=sign-in=] algorithm.
-
-To <dfn>fetch the manifest</dfn> configuration file, run this algorithm:
-    1. Run a [[!CSP]] check with a [[CSP#directive-connect-src|connect-src]]
-        directive on the URL passed as |provider|["{{FederatedIdentityProvider/url}}"]
-        and abort this algorithm if the check fails.
-    1. Let the |manifest url| be the file "fedcm.json" relative to the directory
-        prefix passed as |provider|["{{FederatedIdentityProvider/url}}"]
-    1. Return the result of fetching the |manifest url| with the
-        [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]] header but without the
-        [=Identity Provider=]'s cookies.  This request MUST NOT follow
-        [[RFC7231#header.location|HTTP redirects]] and instead abort with an
-        error if there are any.
-
-To <dfn>fetch the accounts list</dfn> run this algorithm:
-    1. Let the |accounts_endpoint| url be the relative url
-        |manifest|["{{Manifest/accounts_endpoint}}"] of
-        |provider|["{{FederatedIdentityProvider/url}}"]
-    1. Let the |accounts list| be the result of fetching the |accounts_endpoint|
-        with the [=Identity Provider=]'s cookies.  This request MUST NOT follow
-        [[RFC7231#header.location|HTTP redirects]] and instead abort with an
-        error if there are any.
-    1. Return the |accounts list|
-
-To <dfn noexport>fetch the client metadata</dfn> run this algorithm:
-    1. Let the |client_metadata_endpoint| url be the relative url
-        |manifest|["{{Manifest/client_metadata_endpoint}}"] of
-        |provider|["{{FederatedIdentityProvider/url}}"]
-    1. Let the |policies| be the result of fetching the
-        |client_metadata_endpoint| with the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]]
-        header but without the [=Identity Provider=]'s cookies.  This request
-        MUST NOT follow [[RFC7231#header.location|HTTP redirects]] and instead
-        abort with
-        an error if there are any.
-    1. Return |policies|
-
-The <dfn>Privacy Policy</dfn> are the policies described at
-{{client_id_metadata_endpoint_response/privacy_policy_url}}.
-
-The <dfn>Terms of Service</dfn> are the policies described at
-{{client_id_metadata_endpoint_response/terms_of_service_url}}.
 
 <!-- ============================================================ -->
 ## The Sign-in API ## {#browser-api-sign-in}
@@ -1237,21 +1174,106 @@ dictionary FederatedTokens {
 </dl>
 
 When this method is invoked, the user agent MUST execute the following algorithm:
+  1. If |credential|["mayPrompt"] is false
+     1. Reject promise
+  1. If |credential|["consented"] is false
+     1. Request user consent by running the [=request-consent=] algorithm.
+  1. Return the result of running the [=create-tokens=] algorithm.
 
-1. Let |tokens| be the result of making a POST request to the
-    |manifest|["{{Manifest/id_token_endpoint}}"] with:
-    * Let the {{id_token_endpoint_request/account_id}} be
-        |account|["{{accounts_endpoint_response_accounts/account_id}}"].
-    * Let the |id_token_endpoint_request| be a new object with
-       * Let {{id_token_endpoint_request/client_id}} be
-          |provider|["{{FederatedIdentityProvider/clientId}}"].
-       * Let the {{id_token_endpoint_request/nonce}} be
-          |provider|["{{FederatedAccountLoginRequest/nonce}}"].
-    * This request MUST NOT follow [[RFC7231#header.location|HTTP redirects]]
-        and instead abort with an error if there are any.
-1. Return a new {{FederatedTokens}} as:
-    * {{FederatedTokens/idToken}} as |token|
+To <dfn>request-consent</dfn> run this algorithm:
+    1. Let |manifest| be the result of running the [=fetch the manifest=]
+        algorithm with the |provider|.
+    1. Let |accounts list| be the result of running the
+        [=fetch the accounts list=] algorithm.
+    1. Let |account| be the result of running the [=select an account=] from the
+        |accounts list| algorithm.
+    1. If the {{StateMachine/Account State}} is [=unregistered=]
+        1.Run the [=sign-up=] algorithm.
+    1.  If the {{StateMachine/Session State}} is  [=logged out=] then
+        1. Run the [=explicit sign-in=] algorithm.
+    1. Run the [=auto sign-in=] algorithm.
 
+To <dfn>sign-up</dfn> the user run this algorithm:
+    1. Gather explicit intent to create an account
+    1. Gather explicit agreement with the [=Privacy Policy=]
+    1. Gather explicit agreement with the [=Terms of Service=]
+    1. Set the account's {{StateMachine/Account State}} from [=unregistered=]
+        to [=registered=].
+    1. Set the account's {{StateMachine/Session State}} from [=logged out=]
+        to [=logged in=].
+
+To <dfn>select an account</dfn> from the accounts list run this algorithm:
+    1. If |accounts list|'s [=list/size=] is 1
+        1. Let |account| be |accounts list|[0]
+        1. Return |account|
+    1. If the |hint| is provided and an account matches |hint|
+        1. Return |account|
+    1. Display an account chooser
+    1. Let |account| be an account that the user manually selects from the
+        accounts chooser
+    1. Return |account|
+
+To <dfn>sign-in</dfn> the user run this algorithm:
+    1. Assert that the {{StateMachine/Account State}} is [=registered=]
+    1. Set the account's {{StateMachine/Session State}} from [=logged out=] to
+        [=logged in=].
+
+To <dfn>auto sign-in</dfn> the user run this algorithm:
+    1. Run the [=sign-in=] algorithm.
+
+To <dfn>explicit sign-in</dfn> the user run this algorithm:
+    1. Gather explicit confirmation that the user wants to sign-in to
+        [=Relying Party=] with their [=Identity Provider=]'s |account|
+    1. Run the [=sign-in=] algorithm.
+
+To <dfn>fetch the manifest</dfn> configuration file, run this algorithm:
+    1. Run a [[!CSP]] check with a [[CSP#directive-connect-src|connect-src]]
+        directive on the URL passed as |provider|["{{FederatedIdentityProvider/url}}"]
+        and abort this algorithm if the check fails.
+    1. Let the |manifest url| be the file "fedcm.json" relative to the directory
+        prefix passed as |provider|["{{FederatedIdentityProvider/url}}"]
+    1. Return the result of fetching the |manifest url| with the
+        [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]] header but without the
+        [=Identity Provider=]'s cookies.  This request MUST NOT follow
+        [[RFC7231#header.location|HTTP redirects]] and instead abort with an
+        error if there are any.
+
+To <dfn>fetch the accounts list</dfn> run this algorithm:
+    1. Let the |accounts_endpoint| url be the relative url
+        |manifest|["{{Manifest/accounts_endpoint}}"] of
+        |provider|["{{FederatedIdentityProvider/url}}"]
+    1. Let the |accounts list| be the result of fetching the |accounts_endpoint|
+        with the [=Identity Provider=]'s cookies.  This request MUST NOT follow
+        [[RFC7231#header.location|HTTP redirects]] and instead abort with an
+        error if there are any.
+    1. Return the |accounts list|
+
+To <dfn noexport>fetch the client metadata</dfn> run this algorithm:
+    1. Let the |client_metadata_endpoint| url be the relative url
+        |manifest|["{{Manifest/client_metadata_endpoint}}"] of
+        |provider|["{{FederatedIdentityProvider/url}}"]
+    1. Let the |policies| be the result of fetching the
+        |client_metadata_endpoint| with the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]]
+        header but without the [=Identity Provider=]'s cookies.  This request
+        MUST NOT follow [[RFC7231#header.location|HTTP redirects]] and instead
+        abort with
+        an error if there are any.
+    1. Return |policies|
+
+To <dfn>create tokens</dfn> run this algorithm:
+    1. Let |tokens| be the result of making a POST request to the
+        |manifest|["{{Manifest/id_token_endpoint}}"] with:
+        * Let the {{id_token_endpoint_request/account_id}} be
+            |account|["{{accounts_endpoint_response_accounts/account_id}}"].
+        * Let the |id_token_endpoint_request| be a new object with
+           * {{id_token_endpoint_request/client_id}} as
+              |provider|["{{FederatedIdentityProvider/clientId}}"].
+           * {{id_token_endpoint_request/nonce}} as
+              |provider|["{{FederatedAccountLoginRequest/nonce}}"].
+        * This request MUST NOT follow [[RFC7231#header.location|HTTP redirects]]
+            and instead abort with an error if there are any.
+    1. Return a new {{FederatedTokens}} as:
+        * {{FederatedTokens/idToken}} as |token|
 
 <!-- ============================================================ -->
 ## The Revocation API ## {#browser-api-revocation}
@@ -1283,7 +1305,18 @@ partial interface FederatedCredential {
 The hint parameter is passed directly to the IDP. Its meaning is defined by the
 IDP; for example, it can be an email address.
 
-Note: go over the revocation API.
+When this method is invoked, the user agent MUST execute the following algorithm:
+
+  1. If |credential|["consented"] is "false"
+    1. Reject
+  1. Let the |revocation_endpoint| url be the relative url
+        |manifest|["{{Manifest/revocation_endpoint}}"] of
+        |provider|["{{FederatedIdentityProvider/url}}"]
+    1. Fetch the |revocation_endpoint| with the [=Identity Provider=]'s
+        cookies.  This request MUST NOT follow
+        [[RFC7231#header.location|HTTP redirects]] and instead abort with an
+        error if there are any.
+    1. Resolve with |undefined|
 
 <!-- ============================================================ -->
 ## The Sign-out API ## {#browser-api-sign-out}
@@ -1313,7 +1346,13 @@ partial interface FederatedCredential {
 };
 </xmp>
 
-Note: go over the RP sign-out API.
+When this method is invoked, the user agent MUST execute the following algorithm:
+
+  1. If |credential|["consented"] is "false"
+    1. Reject
+  1. Mark the |credential| to dis-allow Front-channel logout
+  1. Mark the |credential| to dis-allow auto-signin
+
 
 <!-- ============================================================ -->
 ### IDP Sign-out ### {#browser-api-idp-sign-out}
@@ -1368,7 +1407,22 @@ partial interface FederatedCredential {
 };
 </xmp>
 
-Note: go over how this is implemented.
+When this method is invoked, the user agent MUST execute the following algorithm:
+
+  1. For each request in |logoutRequests|
+    1. Let |credential| be a credential matching
+        {{FederatedCredentialLogoutRpsRequest/url}} and
+        {{FederatedCredentialLogoutRpsRequest/accountId}}
+    1. If no matching |credential| continue
+    1. If |credential|["consented"] = false; continue
+    1. If |credential|["signedIn"] = false; continue
+    1. POST to the {{FederatedCredentialLogoutRpsRequest/url}} with the
+        [=Relying Parties=] cookies.  This request MUST NOT follow
+        [[RFC7231#header.location|HTTP redirects]] and instead abort with an
+        error if there are any.
+    1. Set |credential|["signedIn"] = false
+  1. Resolve with |undefined|
+
 
 <!-- ============================================================ -->
 ## Backwards Compatibility ## {#browser-api-backwards-compatibility}
