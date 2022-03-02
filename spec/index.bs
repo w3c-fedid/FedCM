@@ -270,36 +270,36 @@ could be implemented.
 
   <script>
   async function login() {
-    const credential = await navigator.credentials.get({
-      federated: {
-        providers: [{
-          url: "https://idp.example",
-          clientId: "123"
-        }]
-      }
-    });
+    const credential = getFederatedCredential();
+
+    // This will prompt when !credential[“consented”], but
+    // it won’t when credential[“consented”].
+    //
+    // If !credential["consented"] and mediation == silent will `reject`.
+    //
+    // If the user selects an account updates the credential["consented"]
+    // state and stores any needed account information.
     return await credential.login({ nonce: "456" });
   }
 
   async function logout() {
-    const credential = getLoggedInCredential();
-    if (credential) {
-      return await credential.logout();
-    }
-    return undefined;
+    const credential = getFederatedCredential();
+    // This never prompts, rejects the promise in case !credential[“consented”]
+    return credential.logout();
   }
 
   async function revoke() {
-    const credential = getLoggedInCredential();
-    if (credential) {
-      return await credential.revoke();
-    }
-    return undefined;
+    const credential = getFederatedCredential();
+    // This never prompts, rejects the promise in case !credential[“consented”]
+    return credential.revoke();
   }
 
-  async function getLoggedInCredential() {
+  async function getFederatedCredential() {
+    // This never prompts. A FederatedCredential object will always be returned.
+    // The object will be either consented or unconsented and store information
+    // on if the user should be prompted based on the mediation flag.
     return await navigator.credentials.get({
-      mediation: "silent",
+      mediated: “optional”, // “optional” is the default
       federated: {
         providers: [{
           url: "https://idp.example",
@@ -367,23 +367,16 @@ could be implemented.
 
   async function logout() {
     const credential = await getLoggedInCredential();
-    if (credential) {
-      credential.logout();
-    }
+    return credential.logout();
   }
 
   async function revoke() {
     const credential = await getLoggedInCredential();
-    if (credential) {
-      credential.revoke();
-    }
+    return credential.revoke();
   }
 
   async function getLoggedInCredential() {
     const id = ...; /* site gets stored id if available */
-    if (id === undefined) {
-      return undefined;
-    }
     return navigator.credentials.get({
       mediation: "silent",
       federated: {
@@ -1061,6 +1054,9 @@ This [=internal method=] accepts three arguments:
          caller's [=environment settings object=] is
          [=same-origin with its ancestors=]. It is [FALSE] if caller is cross-origin.
 </dl>
+
+NOTE: This algorithm is currently out of date and will be updated to match the
+examples.
 
 When this method is invoked, the user agent MUST execute the following algorithm:
 
