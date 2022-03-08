@@ -15,7 +15,7 @@ a shared idea of where we _could_ go. For a more specific document on what can
 be done right now, please see the
 [Federated Credential Management API](https://fedidcg.github.io/FedCM) proposal.
 
-This explainer has been broken into several sections.
+This exploration has been broken into several sections.
 
 1. What is the [language](glossary.md) being used?
 1. What's the [problem](problem.md) being solved?
