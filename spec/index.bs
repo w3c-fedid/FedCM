@@ -1026,7 +1026,7 @@ is prompted to select an account.
 
   :  {{CredentialMediationRequirement/silent}}
   :: * If 1 credential exists, return it
-     * If > 1 credentials exist, and hint matches one of them return it
+     * If > 1 credentials exist, and hint matches a credential `id` return it
      * Otherwise return an unapproved {{FederatedCredential}}
      * Rejects the promise of any API call that requires the user to be prompted
   :  {{CredentialMediationRequirement/optional}}
@@ -1055,11 +1055,11 @@ This specification overrides the {{FederatedCredential}}'s
 <code><dfn for="FederatedCredential" method>
  \[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</dfn></code>
 method. As well, several members are defined for {{FederatedCredential}} which
-are internal (non-accessible) properties, these include:
+are internal (non-accessible) properties, these are:
 
-* `approved`
-* `signedIn`
-* `prompts`
+* `approved`: True if the user has approved the RP / IDP communication
+* `signedIn`: True if the user is currently signed into the RP
+* `prompts`: True if the user may be prompted to select their account
 
 This algorithm runs in parallel inside the [[CM#algorithm-request]] to request
 credentials and returns a set of {{FederatedCredential}} for the requested
@@ -1100,7 +1100,7 @@ When this method is invoked, the user agent MUST execute the following algorithm
   1. Let |provider| be |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"][0].
   1. Assert: |provider|["{{FederatedIdentityProvider/url}}"] [=map/exists=].
   1. Assert: |provider|["{{FederatedIdentityProvider/clientId}}"] [=map/exists=].
-  1. Let |hint| be |provider|["{{FederatedIdentityProvider/hint}"] or "undefined" if none provided
+  1. Let |hint| be |provider|["{{FederatedIdentityProvider/hint}"]
   1. Let |mode| be |options|["{{CredentialRequestOptions/mediation"] or "optional" if none provided
   1. if |mode| is "required"
      1. Let |credential| be a new {{FederatedCredential}}
@@ -1280,7 +1280,7 @@ To <dfn>create tokens</dfn> run this algorithm:
         * This request MUST NOT follow [[RFC7231#header.location|HTTP redirects]]
             and instead abort with an error if there are any.
     1. Return a new {{FederatedTokens}} as:
-        * {{FederatedTokens/idToken}} as |token|
+        * {{FederatedTokens/idToken}} as |token|["id_token"]
 
 <!-- ============================================================ -->
 ## The Revocation API ## {#browser-api-revocation}
@@ -1314,7 +1314,7 @@ IDP; for example, it can be an email address.
 
 When this method is invoked, the user agent MUST execute the following algorithm:
 
-  1. If |credential|["approved"] is "false"
+  1. If |credential|["approved"] is "false" or |credential|["signedIn"] is "false"
     1. Reject
   1. Let the |revocation_endpoint| url be the relative url
         |manifest|["{{Manifest/revocation_endpoint}}"] of
