@@ -600,7 +600,7 @@ By that we mean that FedCM gathers the user's consent:
 
 * at every [cross-party](https://github.com/privacycg/first-party-sets#sameparty-cookies-and-first-party-sets) data exchange, for browsers that adopt First Party Sets as a widening of the [machine enforceable contexts](https://w3ctag.github.io/privacy-principles/#dfn-machine-enforceable-context) or
 * at every cross-site data exchange, for browsers that don't or
-* at every cross-site data exchange but with wording that takes into account first party sets ([example](https://github.com/privacycg/first-party-sets/issues/53#issuecomment-901234193))
+* at every cross-site data exchange but with wording that takes into account first party sets ([example](https://github.com/privacycg/first-party-sets/issues/28))
 
 FedCM is being designed to work under different privacy boundaries chosen
 by different browsers. While First Party Sets complements FedCM they are not
