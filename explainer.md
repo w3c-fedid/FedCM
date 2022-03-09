@@ -97,8 +97,8 @@ Features which are out-of-scope for the **current** version of FedCM, but are
 ### Non-goals
 
 * Address problems that are better addressed by [related](#related-work)
-   technologies (e.g. [first party sets](#first-party-sets)) or controls (e.g.
-   [user settings](#settings), [admin policies](#enterprise-policies))
+   technologies or controls (e.g. [user settings](#settings),
+   [admin policies](#enterprise-policies))
 * Zero RP/IDP change deployment: redeployments should be minimized but a
    non-zero number of IDP/RP changes maybe required
 * Replace OIDC / SAML / OAuth: these efforts should continue to thrive by
@@ -589,15 +589,16 @@ proposal.
 
 ### First Party Sets
 
-[First Party Sets](https://github.com/privacycg/first-party-sets) will play a
-big role in preserving the deployment of federation on the Web. There are a lot
-of cases (largely in enterprises), where:
+We expect this proposal to work well either in conjunction with or in the absence
+of [First Party Sets](https://github.com/privacycg/first-party-sets).
 
-* the IDP and the RP are within the same first party set or
-* the IDP goes through redirects within the origin of its first party set
+By that we mean that FedCM gathers the user's consent:
 
-It is a [non goal](#non-goals) to address the use cases that are better served by
-first party sets.
+* at every [cross-party](https://github.com/privacycg/first-party-sets#sameparty-cookies-and-first-party-sets) data exchange, for browsers that adopt First Party Sets or
+* at every cross-site data exchange, for browsers that don't
+
+FedCM's design deliberately leaves to each user agent to delineate the privacy
+boundary that it is trying to establish.
 
 ### Enterprise Policies
 
