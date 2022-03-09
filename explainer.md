@@ -211,7 +211,7 @@ capabilities which requires an HTTP endpoint to be implemented.
 
 The RP initiated `login` API allows an RP to log the user into using their
 federated credentials. The result of the `login` call allows the RP to know if
-the user has consented to the authentication. The returned tokens can then be
+the user has approved the authentication. The returned tokens can then be
 used as needed.
 
 ```js
@@ -291,7 +291,7 @@ The `revoke` method will call into the IDP's
 #### Personalized Login Buttons
 
 Personalized login buttons allow an RP and IDP (for which the user has an
-active consented credential), to display user information in the login button
+active approved credential), to display user information in the login button
 itself. Displaying the user's name, email or profile photo in the login button
 makes it clearer to the user which federated identity provider they used in the
 past and simplifies the decision of which provider to select on subsequent
