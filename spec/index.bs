@@ -31,6 +31,8 @@ spec: ecma262; urlPrefix: https://tc39.github.io/ecma262/
 spec: credential-management-1; urlPrefix: https://w3c.github.io/webappsec-credential-management/
     type: dictionary
         text: CredentialRequestOptions; url: dictdef-credentialrequestoptions
+    type: enum
+        text: CredentialMediationRequirement; url: enumdef-credentialmediationrequirement
     for: Credential
         type: method
             text: [[CollectFromCredentialStore]](origin, options, sameOriginWithAncestors)
@@ -272,31 +274,31 @@ could be implemented.
   async function login() {
     const credential = getFederatedCredential();
 
-    // This will prompt when !credential[“consented”], but
-    // it won’t when credential[“consented”].
+    // This will prompt when !credential[“approved”], but
+    // it won’t when credential[“approved”].
     //
-    // If !credential["consented"] and mediation == silent will reject.
+    // If !credential["approved"] and mediation == silent will reject.
     //
-    // If the user selects an account updates the credential["consented"]
+    // If the user selects an account updates the credential["approved"]
     // state and stores any needed account information.
     return await credential.login({ nonce: "456" });
   }
 
   async function logout() {
     const credential = getFederatedCredential();
-    // This never prompts, rejects the promise in case !credential[“consented”]
+    // This never prompts, rejects the promise in case !credential[“approved”]
     return credential.logout();
   }
 
   async function revoke() {
     const credential = getFederatedCredential();
-    // This never prompts, rejects the promise in case !credential[“consented”]
-    return credential.revoke(credential.id);
+    // This never prompts, rejects the promise in case !credential[“approved”]
+    return credential.revoke();
   }
 
   async function getFederatedCredential() {
     // This never prompts. A FederatedCredential object will always be returned.
-    // The object will be either consented or unconsented and store information
+    // The object will be either approved or unapproved and store information
     // on if the user should be prompted based on the mediation flag.
     return await navigator.credentials.get({
       mediated: “optional”, // “optional” is the default
@@ -1022,19 +1024,19 @@ dictionary FederatedIdentityProvider {
 The {{CredentialRequestOptions/mediation}} flag is used to determine if the user
 is prompted to select an account.
 
-  :  silent
+  :  {{CredentialMediationRequirement/silent}}
   :: * If 1 credential exists, return it
      * If > 1 credentials exist, and hint matches one of them return it
-     * Otherwise return unconsented FederatedCredential
-     * Never prompts the user
-  :  optional
+     * Otherwise return an unapproved {{FederatedCredential}}
+     * Rejects the promise of any API call that requires the user to be prompted
+  :  {{CredentialMediationRequirement/optional}}
   :: * If 1 credential exists, return it
      * If > 1 credentials exist, and hint matches one of them return it
-     * Otherwise return unconsented FederatedCredential
-     * Prompts the user if the credential is unconsented
-  :  required
-  :: * Always returns an unconsented FederatedCredential
-      * Always prompts the user
+     * Otherwise return unapproved {{FederatedCredential}}
+     * Prompts the user if the credential is unapproved
+  :  {{CredentialMediationRequirement/required}}
+  :: * Always returns an unapproved {{FederatedCredential}}
+     * Always prompts the user
 
 The {{CredentialRequestOptions/signal}} is used as an abort signal for the
 requests.
@@ -1052,7 +1054,12 @@ requests.
 This specification overrides the {{FederatedCredential}}'s
 <code><dfn for="FederatedCredential" method>
  \[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</dfn></code>
-method.
+method. As well, several members are defined for {{FederatedCredential}} which
+are internal (non-accessible) properties, these include:
+
+* `approved`
+* `signedIn`
+* `prompts`
 
 This algorithm runs in parallel inside the [[CM#algorithm-request]] to request
 credentials and returns a set of {{FederatedCredential}} for the requested
@@ -1096,20 +1103,20 @@ When this method is invoked, the user agent MUST execute the following algorithm
   1. Let |hint| be |provider|["{{FederatedIdentityProvider/hint}"] or "undefined" if none provided
   1. Let |mode| be |options|["{{CredentialRequestOptions/mediation"] or "optional" if none provided
   1. if |mode| is "required"
-     1. Let |credential| be a new FederatedCredential
-     1. |credential|["consented"] = false
-     1. |credential|["mayPrompt"] = true
+     1. Let |credential| be a new {{FederatedCredential}}
+     1. |credential|["approved"] = false
+     1. |credential|["prompts"] = true
      1. return |credential|
   1. If there is 1 existing |credential|
      1. return |credential|
   1. If there is > 1 existing |credential| and |hint| matches |credential|["id"]
      1. return |credential|
-  1. Let |credential| be a new FederatedCredential
-     1. |credential|["consented"] = false
+  1. Let |credential| be a new {{FederatedCredential}}
+     1. |credential|["approved"] = false
      1. If |mode| is "silent"
-         1. |credential|["mayPrompt"] = false
+         1. |credential|["prompts"] = false
      1. If |mode| is "optional"
-         1. |credential|["mayPrompt"] = true
+         1. |credential|["prompts"] = true
      1. return |credential|
 
 
@@ -1136,7 +1143,7 @@ The Sign-in API will request the [=id token=] to be [=minted=] by the IDP.
 
 <div class=example>
 ```js
-const tokens = credential.login({
+const tokens = await credential.login({
   signal: signal,
   nonce: "my_nonce"
 });
@@ -1174,9 +1181,9 @@ dictionary FederatedTokens {
 </dl>
 
 When this method is invoked, the user agent MUST execute the following algorithm:
-  1. If |credential|["mayPrompt"] is false
+  1. If |credential|["approved"] is false and |credential|["prompts"] is false
      1. Reject promise
-  1. If |credential|["consented"] is false
+  1. If |credential|["approved"] is false
      1. Request user consent by running the [=request-consent=] algorithm.
   1. Return the result of running the [=create-tokens=] algorithm.
 
@@ -1307,7 +1314,7 @@ IDP; for example, it can be an email address.
 
 When this method is invoked, the user agent MUST execute the following algorithm:
 
-  1. If |credential|["consented"] is "false"
+  1. If |credential|["approved"] is "false"
     1. Reject
   1. Let the |revocation_endpoint| url be the relative url
         |manifest|["{{Manifest/revocation_endpoint}}"] of
@@ -1316,6 +1323,8 @@ When this method is invoked, the user agent MUST execute the following algorithm
         cookies.  This request MUST NOT follow
         [[RFC7231#header.location|HTTP redirects]] and instead abort with an
         error if there are any.
+    1. If the HTTP response code is not 2xx
+       1. Reject
     1. Resolve with |undefined|
 
 <!-- ============================================================ -->
@@ -1348,7 +1357,7 @@ partial interface FederatedCredential {
 
 When this method is invoked, the user agent MUST execute the following algorithm:
 
-  1. If |credential|["consented"] is "false"
+  1. If |credential|["approved"] is "false"
     1. Reject
   1. Mark the |credential| to dis-allow Front-channel logout
   1. Mark the |credential| to dis-allow auto-signin
@@ -1414,7 +1423,7 @@ When this method is invoked, the user agent MUST execute the following algorithm
         {{FederatedCredentialLogoutRpsRequest/url}} and
         {{FederatedCredentialLogoutRpsRequest/accountId}}
     1. If no matching |credential| continue
-    1. If |credential|["consented"] = false; continue
+    1. If |credential|["approved"] = false; continue
     1. If |credential|["signedIn"] = false; continue
     1. POST to the {{FederatedCredentialLogoutRpsRequest/url}} with the
         [=Relying Parties=] cookies.  This request MUST NOT follow
@@ -1814,7 +1823,7 @@ invisible to the browser, in which case it could contain anything.
 
 The potential for IDPs profiling users based on their visits to RPs
 [[#attack-scenarios-by-idp-secondary-use]] can be partially mitigated by hiding
-the RP from the IDP until after the user has consented to that tracking risk.
+the RP from the IDP until after the user has agreed to that tracking risk.
 
 However, there is residual risk in cases where the RP and IDP are colluding.
 
