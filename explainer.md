@@ -589,16 +589,18 @@ proposal.
 
 ### First Party Sets
 
-We expect this proposal to work well either in conjunction with or in the absence
-of [First Party Sets](https://github.com/privacycg/first-party-sets).
+FedCM gathers the users consent to avoid [unwanted cross-contexts recognition](https://w3ctag.github.io/privacy-principles/#hl-recognition-cross-context) and deliberately leaves to each user agent the
+delineation of [partitions](https://w3ctag.github.io/privacy-principles/#dfn-partition)
+and the [privacy boundary](https://github.com/w3ctag/privacy-principles/issues/1) they want to set for their users.
+
+We expect this proposal to work well either in conjunction with, in the absence
+of or in coordination with [First Party Sets](https://github.com/privacycg/first-party-sets).
 
 By that we mean that FedCM gathers the user's consent:
 
-* at every [cross-party](https://github.com/privacycg/first-party-sets#sameparty-cookies-and-first-party-sets) data exchange, for browsers that adopt First Party Sets or
-* at every cross-site data exchange, for browsers that don't
-
-FedCM's design deliberately leaves to each user agent to delineate the privacy
-boundary that it is trying to establish.
+* at every [cross-party](https://github.com/privacycg/first-party-sets#sameparty-cookies-and-first-party-sets) data exchange, for browsers that adopt First Party Sets as a widening of the [machine enforceable contexts](https://w3ctag.github.io/privacy-principles/#dfn-machine-enforceable-context) or
+* at every cross-site data exchange, for browsers that don't or
+* at every cross-site data exchange but with wording that takes into account first party sets ([example](https://github.com/privacycg/first-party-sets/issues/53#issuecomment-901234193))
 
 ### Enterprise Policies
 
