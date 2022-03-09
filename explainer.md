@@ -602,6 +602,11 @@ By that we mean that FedCM gathers the user's consent:
 * at every cross-site data exchange, for browsers that don't or
 * at every cross-site data exchange but with wording that takes into account first party sets ([example](https://github.com/privacycg/first-party-sets/issues/53#issuecomment-901234193))
 
+While we would like to see convergence and interoperability between browsers
+with regards to First Party Sets, we acknowledge that FedCM needs to be
+designed to work under different delineations of privacy boundaries chosen
+by different browsers.
+
 ### Enterprise Policies
 
 Enterprise Policies are policies that administrators set for devices managed and
