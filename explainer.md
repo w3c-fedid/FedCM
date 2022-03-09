@@ -121,18 +121,21 @@ async function login() {
   // state and store any needed account information.
   return await credential.login({ nonce: "456" });
 }
+
 async function logout() {
   const credential = getFederatedCredential();
   // This never prompts, rejects the promise in case credential["approved"]
   // is false
   return credential.logout();
 }
+
 async function revoke() {
   const credential = getFederatedCredential();
   // This never prompts, rejects the promise in case credential["approved"]
   // is false
   return credential.revoke();
 }
+
 async function getFederatedCredential() {
   // This never prompts. A FederatedCredential object will always be returned.
   //
