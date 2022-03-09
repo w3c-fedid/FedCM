@@ -112,6 +112,7 @@ The following is an example of a website allowing a user to login with
 ```js
 async function login() {
   const credential = getFederatedCredential();
+
   // This will prompt when credential["approved"] is false , but
   // it won’t when credential["approved"] is true.
   //
