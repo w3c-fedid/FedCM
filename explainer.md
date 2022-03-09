@@ -104,6 +104,52 @@ Features which are out-of-scope for the **current** version of FedCM, but are
 * Replace OIDC / SAML / OAuth: these efforts should continue to thrive by
    offering a better identity-specific foundation
 
+## Example
+
+The following is an example of a website allowing a user to login with
+`idp.example`. The user is able to revoke tokens and logout of the site.
+
+```js
+async function login() {
+  const credential = getFederatedCredential();
+  // This will prompt when credential["approved"] is false , but
+  // it won’t when credential["approved"] is true.
+  //
+  // If credential["approved"] is false and mediation is silent will `reject`.
+  //
+  // If the user selects an account updates the credential["approved"]
+  // state and store any needed account information.
+  return await credential.login({ nonce: "456" });
+}
+async function logout() {
+  const credential = getFederatedCredential();
+  // This never prompts, rejects the promise in case credential["approved"]
+  // is false
+  return credential.logout();
+}
+async function revoke() {
+  const credential = getFederatedCredential();
+  // This never prompts, rejects the promise in case credential["approved"]
+  // is false
+  return credential.revoke();
+}
+async function getFederatedCredential() {
+  // This never prompts. A FederatedCredential object will always be returned.
+  //
+  // The object will be either approved or unapproved and store information
+  // on if the user should be prompted based on the mediation flag.
+  return await navigator.credentials.get({
+    mediated: "optional",  // "optional" is the default
+    federated: {
+      providers: [{
+        url: "https://idp.example",
+        clientId: "123"
+      }]
+    }
+  });
+}
+```
+
 ## Key scenarios
 
   * [RP initiated login](#rp-initiated-login)
