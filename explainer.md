@@ -5,7 +5,7 @@
 
 Over the last decade, identity federation has played a central role in raising
 the bar for authentication on the web, in terms of ease-of-use (e.g.
-password-less single sign-on), security (e.g. improved resistance to phishing
+password-less single sign-in), security (e.g. improved resistance to phishing
 and credential stuffing attacks) and trustworthiness compared to per-site
 usernames and passwords. In identity federation, a **RP (relying party)** relies
 on an **IDP (identity provider)** to provide the user an account without
@@ -65,8 +65,8 @@ With third party cookies blocked, here are the list of things known to degrade:
   must be provided from the RPs top level origin.
 * Personalized buttons. The display of personalized login information on a button
   in the RP origin is implemented as an IDP iframe that requires third party
-  cookies
-* Session Refresh without top-level navigation or popups
+  cookies.
+* Session Refresh without top-level navigation or popups.
 
 
 ### Goals
@@ -75,7 +75,7 @@ With third party cookies blocked, here are the list of things known to degrade:
   [what will break](#what-will-break)) without the use of third-party cookies in
   a way that makes the web meaningfully more private and usable compared to
   the [next best alternative](#related-work)
-* Maximize backwards compatibility, specially for RPs
+* Maximize backwards compatibility, especially for RPs
 * Allow identity protocols to be extended independent of browser changes
 * Reuse as much from OIDC / SAML / OAuth as possible
 
@@ -92,7 +92,7 @@ Features which are out-of-scope for the **current** version of FedCM, but are
    tracking). Knowing that that is on the horizon, FedCM addresses a smaller
    problem now, and builds a small piece of the foundation (i.e. a browser
    mediated federated account chooser), rather than dealing with all problems
-   all at once.
+   at once.
 
 ### Non-goals
 
@@ -100,59 +100,9 @@ Features which are out-of-scope for the **current** version of FedCM, but are
    technologies or controls (e.g. [user settings](#settings),
    [admin policies](#enterprise-policies))
 * Zero RP/IDP change deployment: redeployments should be minimized but a
-   non-zero number of IDP/RP changes maybe required
+   non-zero number of IDP/RP changes may be required
 * Replace OIDC / SAML / OAuth: these efforts should continue to thrive by
    offering a better identity-specific foundation
-
-## Example
-
-The following is an example of a website allowing a user to login with
-`idp.example`. The user is able to revoke tokens and logout of the site.
-
-```js
-async function login() {
-  const credential = getFederatedCredential();
-
-  // This will prompt when credential["approved"] is false , but
-  // it won’t when credential["approved"] is true.
-  //
-  // If credential["approved"] is false and mediation is silent will `reject`.
-  //
-  // If the user selects an account updates the credential["approved"]
-  // state and store any needed account information.
-  return await credential.login({ nonce: "456" });
-}
-
-async function logout() {
-  const credential = getFederatedCredential();
-  // This never prompts, rejects the promise in case credential["approved"]
-  // is false
-  return credential.logout();
-}
-
-async function revoke() {
-  const credential = getFederatedCredential();
-  // This never prompts, rejects the promise in case credential["approved"]
-  // is false
-  return credential.revoke();
-}
-
-async function getFederatedCredential() {
-  // This never prompts. A FederatedCredential object will always be returned.
-  //
-  // The object will be either approved or unapproved and store information
-  // on if the user should be prompted based on the mediation flag.
-  return await navigator.credentials.get({
-    mediated: "optional",  // "optional" is the default
-    federated: {
-      providers: [{
-        url: "https://idp.example",
-        clientId: "123"
-      }]
-    }
-  });
-}
-```
 
 ## Key scenarios
 
@@ -227,10 +177,10 @@ const cred = await navigator.credentials.get({
 const tokens = await cred.login({nonce: "1234"});
 ```
 
-The `login` method will call into the IDP
+The `login` method will call into the IDP's
 [Manifest Endpoint](#fedcm.json),
 [Accounts Endpoint](#accounts_endpoint),
-[Client Metadata Endpoint](#client_metadata_endpoint) and the
+[Client Metadata Endpoint](#client_metadata_endpoint) and
 [Token Endpoint](#token_endpoint).
 
 
@@ -285,7 +235,7 @@ const cred = await navigator.credentials.get({
 cred.revoke();
 ```
 
-The `revoke` method will call into the IDP
+The `revoke` method will call into the IDP's
 [Revocation Endpoint](#revocation_endpoint).
 
 #### Personalized Login Buttons
@@ -355,10 +305,10 @@ const tokens = await cred.login({
 });
 ```
 
-The `login` method will call into the IDP
+The `login` method will call into the IDP's
 [Manifest Endpoint](#fedcm.json),
 [Accounts Endpoint](#accounts_endpoint),
-[Client Metadata Endpoint](#client_metadata_endpoint) and the
+[Client Metadata Endpoint](#client_metadata_endpoint) and
 [Token Endpoint](#token_endpoint).
 
 #### Token Refresh
