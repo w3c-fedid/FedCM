@@ -57,9 +57,9 @@ snippet:
 ```js
 // Feature detection: Since `FederatedCredential` is already available in Chrome
 // for the old Credential Management API, additional
-// `FederatedCredential.revoke` check is required.
+// `FederatedCredential.prototype.login` check is required.
 function isFedCMEnabled() {
-  return !(!window.FederatedCredential || !FederatedCredential.revoke);
+  return !(!window.FederatedCredential || !FederatedCredential.prototype.login);
 }
 console.log(isFedCMEnabled() ? "FedCM is available" : "FedCM is not available");
 ```
