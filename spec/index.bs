@@ -462,12 +462,6 @@ provides the main security boundary on the web.
 : <dfn>joining</dfn>
 :: TODO(goto): find existing definition.
 
-: <dfn>logged in</dfn>
-:: TODO(goto): find existing definition.
-
-: <dfn>logged out</dfn>
-:: TODO(goto): find existing definition.
-
 : <dfn>low-level API</dfn>
 :: A general purpose API, as opposed to a [=high-level API=]. See also
     [high level vs low level](https://w3ctag.github.io/design-principles/#high-level-low-level)
@@ -483,9 +477,6 @@ provides the main security boundary on the web.
 :: Defined by [[tracking-dnt]] as "a natural person, a legal entity, or a set of
     legal entities that share common owner(s), common controller(s), and a group
     identity that is easily discoverable by a user."
-
-: <dfn>registered</dfn>
-:: TODO(goto): find existing definition.
 
 : <dfn>Relying Party</dfn>
 : <dfn>RP</dfn>
@@ -516,9 +507,6 @@ provides the main security boundary on the web.
 :: A third-party for a user action is any party that isn't the [=first party=]
     or the user (the second party).
 
-: <dfn>unregistered</dfn>
-:: TODO(goto): find existing definition.
-
 : <df>unsanctioned tracking</dfn>
 :: [[UNSANCTIONED-TRACKING]]
 
@@ -538,6 +526,28 @@ provides the main security boundary on the web.
 :  <dfn>Terms of Service</dfn>
 :: The policies described at
     {{client_id_metadata_endpoint_response/terms_of_service_url}}.
+
+
+: <dfn>inactive</dfn>
+:: An account is `inactive` if the user has either not signed into the account
+    or has signed out.
+
+: <dfn>active</dfn>
+:: An account is `active` if the user has successfully signed into the account.
+
+: <dfn>approved</dfn>
+:: The account is `approved` if the user has approved the [=RP=] and [=IDP=]
+    communicating.
+
+: <dfn>unapproved</dfn>
+:: The account is `unapproved` if the user has not approved the [=RP=] and
+    [=IDP=] communicating.
+
+: <dfn>enabled</dfn>
+:: TODO(goto): find existing definition.
+
+: <dfn>disabled</dfn>
+:: TODO(goto): find existing definition.
 
 <!-- ============================================================ -->
 # High Level Design # {#high-level-design}
@@ -962,10 +972,10 @@ an internal [[#browser-api-state-machine]].
 ## The State Machine ## {#browser-api-state-machine}
 <!-- ============================================================ -->
 
-Internally, the account management and session management APIs allows the user
-to explicitly move through the different stages of their accounts. At each
-stage, the state machine manages the [=RP=]'s and the [=IDP=]'s access to the
-appropriate browser capabilities.
+Internally, the FedCM API manages a set of |credential|s which are associated
+with an [=RP=] and [=IDP=] pair. Those |credential| objects have different
+stages of there accounts. At each stage, the state machine manages the |credentials|
+access to the appropriate browser capabilities.
 
 <div class='image'>
 <pre class=include-raw>
@@ -975,11 +985,14 @@ path: img/mock42.svg
 
 <dl dfn-type="argument" dfn-for="StateMachine">
     :   <dfn>Account State</dfn>
-    ::  Keeps track of whether the user has an account or not. Can be
-         [=registered=] or (by default) [=unregistered=].
+    ::  Keeps track of whether the user has an account or not.
+         Can be [=approved=] or [=unapproved=] (by default).
     :   <dfn>Session State</dfn>
-    ::  Keeps track of whether the user has an open or closed session. Can be
-         [=logged in=] or (by default) [=logged out=].
+    ::  Keeps track of whether the user has an open or closed session.
+         Can be [=active=] or [=inactive=] (by default).
+    :   <dfn>Prompt State</dfn>
+    ::  Keeps track if prompting the user was requested.
+         Can be [=enabled=] (by default) or [=disabled=].
 </dl>
 
 <!-- ============================================================ -->
@@ -1054,12 +1067,7 @@ requests.
 This specification overrides the {{FederatedCredential}}'s
 <code><dfn for="FederatedCredential" method>
  \[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</dfn></code>
-method. As well, several members are defined for {{FederatedCredential}} which
-are internal (non-accessible) properties, these are:
-
-* `approved`: True if the user has approved the RP / IDP communication
-* `signedIn`: True if the user is currently signed into the RP
-* `prompts`: True if the user may be prompted to select their account
+method.
 
 This algorithm runs in parallel inside the [[CM#algorithm-request]] to request
 credentials and returns a set of {{FederatedCredential}} for the requested
@@ -1102,22 +1110,22 @@ When this method is invoked, the user agent MUST execute the following algorithm
   1. Assert: |provider|["{{FederatedIdentityProvider/clientId}}"] [=map/exists=].
   1. Let |hint| be |provider|["{{FederatedIdentityProvider/hint}"]
   1. Let |mode| be |options|["{{CredentialRequestOptions/mediation"] or "optional" if none provided
+
+  // TODO(dsinclair): What should {{StateMachine/Session State}} be here?
   1. if |mode| is "required"
      1. Let |credential| be a new {{FederatedCredential}}
-     1. |credential|["approved"] = false
-     1. |credential|["prompts"] = true
-     1. return |credential|
+     1. Set |credential|["provider"] = |provider|
+     1. Set {{StateMachine/Account State}} to [=approved=]
+     1. Return |credential|
   1. If there is 1 existing |credential|
-     1. return |credential|
+     1. Return |credential|
   1. If there is > 1 existing |credential| and |hint| matches |credential|["id"]
-     1. return |credential|
+     1. Return |credential|
   1. Let |credential| be a new {{FederatedCredential}}
-     1. |credential|["approved"] = false
+     1. Set |credential|["provider"] = |provider|
      1. If |mode| is "silent"
-         1. |credential|["prompts"] = false
-     1. If |mode| is "optional"
-         1. |credential|["prompts"] = true
-     1. return |credential|
+         1. Set {{StateMachine/Prompt State}} to [=disabled=]
+     1. Return |credential|
 
 
 <!-- ============================================================ -->
@@ -1181,33 +1189,41 @@ dictionary FederatedTokens {
 </dl>
 
 When this method is invoked, the user agent MUST execute the following algorithm:
-  1. If |credential|["approved"] is false and |credential|["prompts"] is false
+  1. If {{StateMachine/Account State}} is [=unapproved=] and
+      {{StateMachine/Prompt State}} is [=disabled=]
      1. Reject promise
-  1. If |credential|["approved"] is false
-     1. Request user consent by running the [=request-consent=] algorithm.
-  1. Return the result of running the [=create-tokens=] algorithm.
+  1. If {{StateMachine/Account State}} is [=unapproved=]
+     1. Request user consent by running the [=request consent=] algorithm.
+  1. If {{StateMachine/Account State}} is [=unapproved=] or
+      {{StateMachine/Session State}} is [=inactive=]
+     1. Reject promise
+  1. Return the result of running the [=create tokens=] algorithm.
 
-To <dfn>request-consent</dfn> run this algorithm:
+To <dfn>request consent</dfn> run this algorithm:
     1. Let |manifest| be the result of running the [=fetch the manifest=]
-        algorithm with the |provider|.
+        algorithm with the |credential|["provider"].
     1. Let |accounts list| be the result of running the
         [=fetch the accounts list=] algorithm.
     1. Let |account| be the result of running the [=select an account=] from the
         |accounts list| algorithm.
-    1. If the {{StateMachine/Account State}} is [=unregistered=]
-        1.Run the [=sign-up=] algorithm.
-    1.  If the {{StateMachine/Session State}} is  [=logged out=] then
-        1. Run the [=explicit sign-in=] algorithm.
-    1. Run the [=auto sign-in=] algorithm.
+    1. If the {{StateMachine/Account State}} is [=unapproved=]
+        1. Run the [=sign-up=] algorithm for |account|.
+    1.  If the {{StateMachine/Session State}} is [=inactive=] then
+        1. Run the [=explicit sign-in=] algorithm for |account|.
+    1. Run the [=sign-in=] algorithm for |account|.
 
 To <dfn>sign-up</dfn> the user run this algorithm:
+    1. Let |metadata| be the result of running the [=fetch the client metadata=]
+        algorithm.
+    1. Display the |metadata|["privacy_policy_url"] link
+    1. If |metadata|["terms_of_service_url"] is defined
+       1. Display the |metadata|["terms_of_service_url"] link
     1. Gather explicit intent to create an account
-    1. Gather explicit agreement with the [=Privacy Policy=]
-    1. Gather explicit agreement with the [=Terms of Service=]
-    1. Set the account's {{StateMachine/Account State}} from [=unregistered=]
-        to [=registered=].
-    1. Set the account's {{StateMachine/Session State}} from [=logged out=]
-        to [=logged in=].
+    1. Set the account's {{StateMachine/Account State}} from [=unapproved=]
+        to [=approved=].
+    1. Set the account's {{StateMachine/Session State}} from [=inactive=]
+        to [=active=].
+    1. Set |credential|["id"] to |account|["id"}]
 
 To <dfn>select an account</dfn> from the accounts list run this algorithm:
     1. If |accounts list|'s [=list/size=] is 1
@@ -1221,17 +1237,31 @@ To <dfn>select an account</dfn> from the accounts list run this algorithm:
     1. Return |account|
 
 To <dfn>sign-in</dfn> the user run this algorithm:
-    1. Assert that the {{StateMachine/Account State}} is [=registered=]
-    1. Set the account's {{StateMachine/Session State}} from [=logged out=] to
-        [=logged in=].
-
-To <dfn>auto sign-in</dfn> the user run this algorithm:
-    1. Run the [=sign-in=] algorithm.
+    1. Assert that the {{StateMachine/Account State}} is [=approved=]
+    1. Set the account's {{StateMachine/Session State}} from [=inactive=] to
+        [=active=].
 
 To <dfn>explicit sign-in</dfn> the user run this algorithm:
     1. Gather explicit confirmation that the user wants to sign-in to
         [=Relying Party=] with their [=Identity Provider=]'s |account|
     1. Run the [=sign-in=] algorithm.
+
+To <dfn>create tokens</dfn> run this algorithm:
+    1. Assert {{StateMachine/Account State}} is [=approved=]
+    1. Assert {{StateMachine/Session State}} is [=active=]
+    1. Let |tokens| be the result of making a POST request to the
+        |manifest|["{{Manifest/id_token_endpoint}}"] with:
+        * Let the {{id_token_endpoint_request/account_id}} be
+            |account|["{{accounts_endpoint_response_accounts/account_id}}"].
+        * Let the |id_token_endpoint_request| be a new object with
+           * {{id_token_endpoint_request/client_id}} as
+              |provider|["{{FederatedIdentityProvider/clientId}}"].
+           * {{id_token_endpoint_request/nonce}} as
+              |provider|["{{FederatedAccountLoginRequest/nonce}}"].
+        * This request MUST NOT follow [[RFC7231#header.location|HTTP redirects]]
+            and instead abort with an error if there are any.
+    1. Return a new {{FederatedTokens}} with:
+        * {{FederatedTokens/idToken}} as |token|["id_token"]
 
 To <dfn>fetch the manifest</dfn> configuration file, run this algorithm:
     1. Run a [[!CSP]] check with a [[CSP#directive-connect-src|connect-src]]
@@ -1267,21 +1297,6 @@ To <dfn noexport>fetch the client metadata</dfn> run this algorithm:
         an error if there are any.
     1. Return |policies|
 
-To <dfn>create tokens</dfn> run this algorithm:
-    1. Let |tokens| be the result of making a POST request to the
-        |manifest|["{{Manifest/id_token_endpoint}}"] with:
-        * Let the {{id_token_endpoint_request/account_id}} be
-            |account|["{{accounts_endpoint_response_accounts/account_id}}"].
-        * Let the |id_token_endpoint_request| be a new object with
-           * {{id_token_endpoint_request/client_id}} as
-              |provider|["{{FederatedIdentityProvider/clientId}}"].
-           * {{id_token_endpoint_request/nonce}} as
-              |provider|["{{FederatedAccountLoginRequest/nonce}}"].
-        * This request MUST NOT follow [[RFC7231#header.location|HTTP redirects]]
-            and instead abort with an error if there are any.
-    1. Return a new {{FederatedTokens}} as:
-        * {{FederatedTokens/idToken}} as |token|["id_token"]
-
 <!-- ============================================================ -->
 ## The Revocation API ## {#browser-api-revocation}
 <!-- ============================================================ -->
@@ -1314,8 +1329,9 @@ IDP; for example, it can be an email address.
 
 When this method is invoked, the user agent MUST execute the following algorithm:
 
-  1. If |credential|["approved"] is "false" or |credential|["signedIn"] is "false"
-    1. Reject
+  1. If {{StateMachine/Account State}} is [=unapproved=] or
+      {{StateMachine/Session State}} is [=inactive=]
+    1. Reject promise
   1. Let the |revocation_endpoint| url be the relative url
         |manifest|["{{Manifest/revocation_endpoint}}"] of
         |provider|["{{FederatedIdentityProvider/url}}"]
@@ -1325,6 +1341,7 @@ When this method is invoked, the user agent MUST execute the following algorithm
         error if there are any.
     1. If the HTTP response code is not 2xx
        1. Reject
+    1. // TODO(dsinclair): Should this change account/session state in some fashion?
     1. Resolve with |undefined|
 
 <!-- ============================================================ -->
@@ -1357,10 +1374,9 @@ partial interface FederatedCredential {
 
 When this method is invoked, the user agent MUST execute the following algorithm:
 
-  1. If |credential|["approved"] is "false"
+  1. If {{StateMachine/Account State}} is [=unapproved=]
     1. Reject
-  1. Mark the |credential| to dis-allow Front-channel logout
-  1. Mark the |credential| to dis-allow auto-signin
+  1. Set {{StateMachine/Session State}} to [=inactive=]
 
 
 <!-- ============================================================ -->
@@ -1423,13 +1439,13 @@ When this method is invoked, the user agent MUST execute the following algorithm
         {{FederatedCredentialLogoutRpsRequest/url}} and
         {{FederatedCredentialLogoutRpsRequest/accountId}}
     1. If no matching |credential| continue
-    1. If |credential|["approved"] = false; continue
-    1. If |credential|["signedIn"] = false; continue
+    1. If the |credential| {{StateMachine/Account State}} is [=unapproved=] or
+        {{StateMachine/Session State}} is [=inactive=]
     1. POST to the {{FederatedCredentialLogoutRpsRequest/url}} with the
         [=Relying Parties=] cookies.  This request MUST NOT follow
         [[RFC7231#header.location|HTTP redirects]] and instead abort with an
         error if there are any.
-    1. Set |credential|["signedIn"] = false
+    1. Set the |credential| {{StateMachine/Session State}} to [=inactive=]
   1. Resolve with |undefined|
 
 
