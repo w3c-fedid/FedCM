@@ -291,7 +291,7 @@ could be implemented.
   async function revoke() {
     const credential = getFederatedCredential();
     // This never prompts, rejects the promise in case !credential[“consented”]
-    return credential.revoke();
+    return credential.revoke(credential.id);
   }
 
   async function getFederatedCredential() {
@@ -372,7 +372,7 @@ could be implemented.
 
   async function revoke() {
     const credential = await getLoggedInCredential();
-    return credential.revoke();
+    return credential.revoke(credential.id);
   }
 
   async function getLoggedInCredential() {
@@ -863,10 +863,10 @@ The request is made:
 It will also contain the following parameters in the request body `application/x-www-form-urlencoded`:
 
 <dl dfn-type="argument" dfn-for="revocation_endpoint_request">
-    :   <dfn>account_id</dfn>
-    :: The account identifier for the user (e.g. email).
     :   <dfn>client_id</dfn>
     :: The [=RP=]'s client id
+    :   <dfn>hint</dfn>
+    :: The hint provided to the JS call.
 </dl>
 
 For example:
@@ -879,7 +879,7 @@ Referer: https://rp.example/
 Content-Type: application/x-www-form-urlencoded
 Cookie: 0x23223
 Sec-FedCM-CSRF: ?1
-account_id=123&client_id=client1234
+client_id=client1234&hint=user@idp.example
 ```
 </div>
 
@@ -1265,7 +1265,7 @@ Upon return to the [=Relying Party=], the user goes through a
 
 <div class=example>
 ```js
-credential.revoke();
+credential.revoke('user@idp.example');
 ```
 </div>
 
@@ -1275,9 +1275,12 @@ method:
 <xmp class=idl>
 [Exposed=Window, SecureContext]
 partial interface FederatedCredential {
-  Promise<undefined> revoke();
+  Promise<undefined> revoke(USVString hint);
 };
 </xmp>
+
+The hint parameter is passed directly to the IDP. Its meaning is defined by the
+IDP; for example, it can be an email address.
 
 Note: go over the revocation API.
 
