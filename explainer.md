@@ -163,7 +163,7 @@ async function getFederatedCredential() {
   * [IDP initiated RP login](#idp-initiated-rp-login)
   * [Token creation](#token-creation)
   * [Token refresh](#token-refresh)
-  * [Iframe support](#iframe-support)
+  * [Cross-Origin iframe Support](#cross-origin-iframe-support)
   * [IDP initiated front-channel logout](#idp-initiated-front-channel-logout)
 
 
@@ -377,31 +377,24 @@ tokens = await cred.refresh({
 
 The IDP calls for `refresh` have not been flushed out yet.
 
-#### iframe Support
+#### Cross-Origin iframe Support
 
-In the Credential Management Level 1 specification FedCM by default restricts
-iframe access to iframes which satisfy
-[`sameOriginAsAncestor`](https://www.w3.org/TR/credential-management-1/#same-origin-with-its-ancestors).
+FedCM adds the `fedcm` [policy-controlled feature](https://w3c.github.io/webappsec-permissions-policy/#policy-controlled-feature)
+with a [default allowlist](https://w3c.github.io/webappsec-permissions-policy/#default-allowlist)
+of `'self'`, which satisfies [`sameOriginAsAncestor`](https://www.w3.org/TR/credential-management-1/#same-origin-with-its-ancestors)
+in the Credential Management Level 1 specification.
 
-There are cases, such as learning management systems where third-party content
-is embedded inside the LMS. That third-party content may embed other content as
-well, the embedded iframes need to be able to retrieve access tokens for the
-user in order to request resources. In this case, the `sameOriginAsAncestor`
-setting would not help as the embeddings are specifically cross site. See
-[fedidcg/use-case-library issue #13](https://github.com/fedidcg/use-case-library/issues/13)
+This Permissions Policy feature allows the RP to specify that FedCM may be called
+inside the iframe by adding an `allow=fedcm` attribute. This allows IDP embedded
+iframe content to continue to function when updated to use FedCM calls.
+
+Optional cross-origin iframe support is needed because there are cases, such as
+learning management systems, where third-party content is embedded inside the LMS.
+That third-party content may embed other content as well, the embedded iframes
+need to be able to retrieve access tokens for the user in order to request resources.
+In this case, the `sameOriginAsAncestor` setting would not help as the embeddings are 
+specifically cross site. See [fedidcg/use-case-library issue #13](https://github.com/fedidcg/use-case-library/issues/13)
 for more context.
-
-FedCM adds an `allow=fedcm` attribute to the `iframe` tag. This allows the RP to
-specify that FedCM may be called inside the iframe. This allows IDP embedded
-iframe content to continue to function when updated to use FedCM calls. Without
-the `allow=fedcm` attribute then the
-[`sameOriginAsAncestor`](https://www.w3.org/TR/credential-management-1/#same-origin-with-its-ancestors)
-setting would apply.
-
-This could also fall under
-[Permissions Policy](https://github.com/w3c/webappsec-permissions-policy/blob/main/integration.md)
-but that seems to be on a per-page basis where FedCM seems more applicable on a
-per-iframe basis.
 
 #### IDP Initiated Front-Channel logout
 
