@@ -334,14 +334,14 @@ could be implemented.
 
   <script>
   async function login() {
-    const id = ...; /* site gets stored id if available */
+    const id = ...; /* site gets stored credential.id if available */
     const credential = await navigator.credentials.get({
       mediation: "optional",
       federated: {
         providers: [{
           url: "https://idp.example",
           clientId: "123",
-          hint: id
+          id: id
         }]
       }
     });
@@ -376,14 +376,14 @@ could be implemented.
   }
 
   async function getLoggedInCredential() {
-    const id = ...; /* site gets stored id if available */
+    const id = ...; /* site gets stored credential.id if available */
     return navigator.credentials.get({
       mediation: "silent",
       federated: {
         providers: [{
           url: "https://idp.example",
           clientId: "123",
-          hint: id,
+          id: id,
         }]
       }
     });
@@ -978,6 +978,12 @@ path: img/mock42.svg
 The {{FederatedCredential}} object is the primary way to interact with the
 FedCM API.
 
+The |id| of the {{FederatedCredential}} maybe used by the RP to identify a
+specific previously created credential. As this value is exposed to the RP it
+MUST NOT be set to any of the values returned in the `accounts_endpoint` as the
+browser does not know if they are exposed to the RP through the ID token.
+
+
 <div class=example>
 ```js
 const credential = await navigator.credentials.get({
@@ -985,7 +991,7 @@ const credential = await navigator.credentials.get({
     providers: [{
       url: "https://idp.example",
       clientId: "123",
-      hint: "dan@example.com"
+      id: "1234-5678-9012"
     }]
   }
 });
@@ -1007,7 +1013,7 @@ partial dictionary FederatedCredentialRequestOptions {
 dictionary FederatedIdentityProvider {
   required USVString url;
   required USVString clientId;
-  USVString hint;
+  USVString id;
 };
 </xmp>
 
@@ -1021,9 +1027,10 @@ requests.
     :   <dfn>url</dfn>
     ::  The URL of the identity provider.
     :   <dfn>clientId</dfn>
-    ::  The client ID provided to the [=RP=] out of band by the [=IDP=]
-    :   <dfn>hint</dfn>
-    ::  Optional |accountId| hint. Maybe used by the UA when displaying the
+    ::  The client ID provided to the [=RP=] out of band by the [=IDP=].
+    :   <dfn>id</dfn>
+    ::  Optional credential |id|. This is the |id| of a previously created
+        credential object.
 </dl>
 
 This specification overrides the {{FederatedCredential}}'s
@@ -1078,14 +1085,14 @@ When this method is invoked, the user agent MUST execute the following algorithm
       1. Return the result of running the [=create-credential=] algorithm.
 
   1. if |mode| is {{CredentialMediationRequirement/silent}}
-      1. If |options|["{{FederatedIdentityProvider/hint}}"] does not [=map/exists=]
+      1. If |options|["{{FederatedIdentityProvider/id}}"] does not [=map/exists=]
          1. Reject
-      1. If a {{FederatedCredential}} with id == |options|["{{FederatedIdentityProvider/hint}}"] exists
+      1. If a {{FederatedCredential}} with id == |options|["{{FederatedIdentityProvider/id}}"] exists
          1. Return credential
       1. Reject
 
   1. If a single {{FederatedCredential}} exists, return it
-  1. Otherwise, return the result of running teh [=create-credential=] algorithm.
+  1. Otherwise, return the result of running the [=create-credential=] algorithm.
 
 To <dfn>create-credential</dfn> run this algorithm:
     1. Let |manifest| be the result of running the [=fetch the manifest=]
