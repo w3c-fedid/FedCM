@@ -981,7 +981,7 @@ an internal [[#browser-api-state-machine]].
 
 Internally, the FedCM API manages a set of |credential|s which are associated
 with an [=RP=] and [=IDP=] pair. Those |credential| objects have different
-stages of there accounts. At each stage, the state machine manages the |credential|s
+stages of their accounts. At each stage, the state machine manages the |credential|s
 access to the appropriate browser capabilities.
 
 <div class='image'>
@@ -1113,15 +1113,13 @@ When this method is invoked, the user agent MUST execute the following algorithm
        Note: At some point we would like to support choosing accounts from
        multiple [=Identity Provider=]s.
   1. Let |provider| be |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"][0].
-  1. Assert: |provider|["{{FederatedIdentityProvider/url}}"] [=map/exists=].
-  1. Assert: |provider|["{{FederatedIdentityProvider/clientId}}"] [=map/exists=].
   1. Let |hint| be |provider|["{{FederatedIdentityProvider/hint}}"]
-  1. Let |mode| be |options|["{{CredentialRequestOptions/mediation}}"] or "optional" if none provided
+  1. Let |mode| be |options|["{{CredentialRequestOptions/mediation}}"]
 
   1. TODO(dsinclair): What should {{StateMachine/Session State}} be here?
   1. if |mode| is "required"
      1. Let |credential| be a new {{FederatedCredential}}
-     1. Set |credential|["provider"] = |provider|
+     1. Set |credential|'s {{FederatedCredential/provider}} to |provider|
      1. Set {{StateMachine/Account State}} to [=approved=]
      1. Return |credential|
   1. If there is 1 existing credential in the credential store
@@ -1196,17 +1194,20 @@ dictionary FederatedTokens {
 </dl>
 
 When this method is invoked, the user agent MUST execute the following algorithm:
+  1. Let |promise| be a new {{Promise}}.
   1. If {{StateMachine/Account State}} is [=unapproved=] and
-      {{StateMachine/Prompt State}} is [=disabled=] then reject promise
+      {{StateMachine/Prompt State}} is [=disabled=] then <a for=Promise>Reject</a>
+      |promise| and return |promise|
   1. If {{StateMachine/Account State}} is [=unapproved=]
      1. Request user consent by running the [=request consent=] algorithm.
   1. If {{StateMachine/Account State}} is [=unapproved=] or
-      {{StateMachine/Session State}} is [=inactive=] then reject promise
+      {{StateMachine/Session State}} is [=inactive=] then <a for=Promise>Reject</a>
+      |promise| and return |promise|
   1. Return the result of running the [=create tokens=] algorithm.
 
 To <dfn>request consent</dfn>:
     1. Let |manifest| be the result of running the [=fetch the manifest=]
-        algorithm with the |credential|["provider"].
+        algorithm with this's {{FederatedCredential/provider}}.
     1. Let |accounts list| be the result of running the
         [=fetch the accounts list=] algorithm.
     1. Let |account| be the result of running the [=select an account=] from the
@@ -1233,7 +1234,8 @@ To <dfn>sign-up</dfn> the user:
 To <dfn>select an account</dfn> from the accounts list:
     1. If |accounts list|'s [=list/size=] is 1:
         1. Let |account| be |accounts list|[0] and return |account|
-    1. If the |hint| is provided and an account matches |hint| then return |account|
+    1. If this's {{FederatedCredential/provider}}["accountId"] is provided and
+        an account matches this's {{FederatedCredential/provider}}["accountId"] then return |account|
     1. Display an account chooser
     1. Let |account| be an account that the user manually selects from the
         accounts chooser
@@ -1247,28 +1249,30 @@ To <dfn>sign-in</dfn> the user:
 To <dfn>explicit sign-in</dfn> the user:
     1. Gather explicit confirmation that the user wants to sign-in to
         [=Relying Party=] with their [=Identity Provider=]'s |account|
+    1. if the user does not provide consent then create a {{Promise}},
+         <a for=Promise>reject</a> it and return it.
     1. Run the [=sign-in=] algorithm.
 
 To <dfn>create tokens</dfn>:
     1. Assert {{StateMachine/Account State}} is [=approved=]
     1. Assert {{StateMachine/Session State}} is [=active=]
+    1. Let |request| be a new object
+        1. Set |request|["account_id"] to |account|["{{accounts_endpoint_response_accounts/id}}"].
+        1. Set |request|["client_id"] to |provider|["{{FederatedIdentityProvider/clientId}}"].
+        1. Set |request|["nonce"] to |request|["{{FederatedAccountLoginRequest/nonce}}"].
     1. Let |tokens| be the result of making a POST request to the
         |manifest|["{{Manifest/id_token_endpoint}}"] with:
-        * Let the {{id_token_endpoint_request/account_id}} be
-            |account|["{{accounts_endpoint_response_accounts/id}}"].
-        * Let the |id_token_endpoint_request| be a new object with
-            * {{id_token_endpoint_request/client_id}} as
-                |provider|["{{FederatedIdentityProvider/clientId}}"].
-            * {{id_token_endpoint_request/nonce}} as
-                |provider|["{{FederatedAccountLoginRequest/nonce}}"].
+        * A body of |request| as application/x-www-form-urlencoded data.
         * This request MUST NOT follow [[RFC7231#header.location|HTTP redirects]]
             and instead abort with an error if there are any.
-    1. Return a new {{FederatedTokens}} with:
+    1. Let |promise| be a new {{Promise}}
+    1. Let |tokens| be a new {{FederatedTokens}} with:
         * {{FederatedTokens/idToken}} as |tokens|["id_token"]
+    1. <a for=Promise>Resolve</a> |promise| with |tokens| and return |promise|.
 
 To <dfn>fetch the manifest</dfn> configuration file:
     1. Run a [[!CSP]] check with a [[CSP#directive-connect-src|connect-src]]
-        directive on the URL passed as |provider|["{{FederatedIdentityProvider/url}}"]
+        directive on the URL passed as this's {{FederatedCredential/provider}}["url"]
         and return if the check fails.
     1. Let the |manifest url| be the file "fedcm.json" relative to the directory
         prefix passed as |provider|["{{FederatedIdentityProvider/url}}"]
@@ -1377,9 +1381,11 @@ partial interface FederatedCredential {
 
 When this method is invoked, the user agent MUST execute the following algorithm:
 
-  1. If {{StateMachine/Account State}} is [=unapproved=]
-    1. Reject
+  1. Let |promise| be a new {{Promise}}
+  1. If {{StateMachine/Account State}} is [=unapproved=] then <a for=Promise>Reject</a>
+      |promise| and return |promise|.
   1. Set {{StateMachine/Session State}} to [=inactive=]
+  1. <a for=Promise>Resolve</a> |promise| and return |promise|.
 
 
 <!-- ============================================================ -->
