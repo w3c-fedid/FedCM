@@ -248,7 +248,7 @@ entries provided by the [=Identity Provider=].
 
 This specification extends the {{FederatedCredential}} type and internal
 algorithms to allow the exchange of identity between [=IDP=]s and [=RP=]s.
-When it succeeds, it returns to the [=RP=] a signed [=id token=] which the
+When it succeeds, it returns to the [=RP=] a signed [=token=] which the
 [=RP=] can use to authenticate the user.
 
 <!-- ============================================================ -->
@@ -566,7 +566,7 @@ by exposing a series of HTTP endpoints:
 1. A [[#idp-api-manifest]] endpoint in an agreed upon location that points to
 1. An [[#idp-api-accounts-endpoint]] endpoint
 1. A [[#idp-api-client-id-metadata-endpoint]] endpoint
-1. An [[#idp-api-id-token-endpoint]] endpoint
+1. An [[#idp-api-token-endpoint]] endpoint
 1. A [[#idp-api-revocation-endpoint]] endpoint
 
 <!-- ============================================================ -->
@@ -602,8 +602,8 @@ The file is parsed expecting the following properties:
     ::  A URL that points to an HTTP API that complies with the [[#idp-api-accounts-endpoint]] API.
     :   <dfn>client_metadata_endpoint</dfn> (required)
     ::  A URL that points to an HTTP API that complies with the [[#idp-api-client-id-metadata-endpoint]] API.
-    :   <dfn>id_token_endpoint</dfn> (required)
-    ::  A URL that points to an HTTP API that complies with the [[#idp-api-id-token-endpoint]] API.
+    :   <dfn>token_endpoint</dfn> (required)
+    ::  A URL that points to an HTTP API that complies with the [[#idp-api-token-endpoint]] API.
     :   <dfn>revocation_endpoint</dfn> (optional)
     ::  A URL that points to an HTTP API that complies with the [[#idp-api-revocation-endpoint]] API.
     :   <dfn>branding</dfn> (optional)
@@ -652,7 +652,7 @@ For example:
 {
   "accounts_endpoint": "/accounts.php",
   "client_metadata_endpoint": "/metadata.php",
-  "id_token_endpoint": "/idtokens.php",
+  "token_endpoint": "/tokens.php",
   "revocation_endpoint": "/revocation.php",
   "branding": {
     "background_color": "green",
@@ -785,12 +785,12 @@ For example:
 </div>
 
 <!-- ============================================================ -->
-## ID Token ## {#idp-api-id-token-endpoint}
+## Token ## {#idp-api-token-endpoint}
 <!-- ============================================================ -->
 
-The ID Token endpoint is responsible for [=minting=] a new [=id token=] for the user.
+The Token endpoint is responsible for [=minting=] a new [=token=] for the user.
 
-The ID Token endpoint is fetched
+The Token endpoint is fetched
 (a) as a **POST** request,
 (b) **with** [=IDP=] cookies,
 (c) **with** a [[RFC7231#header.referer|Referer]] header indicating the [=RP=]'s origin
@@ -801,7 +801,7 @@ The ID Token endpoint is fetched
 
 It will also contain the following parameters in the request body `application/x-www-form-urlencoded`:
 
-<dl dfn-type="argument" dfn-for="id_token_endpoint_request">
+<dl dfn-type="argument" dfn-for="token_endpoint_request">
     :   <dfn>client_id</dfn>
     ::  The [=RP=]'s client it
     :   <dfn>nonce</dfn>
@@ -828,9 +828,9 @@ account_id=123&client_id=client1234&nonce=Ct60bD&consent_acquired=true
 
 The response is parsed as a JSON file expecting the following properties:
 
-<dl dfn-type="argument" dfn-for="id_token_endpoint_response">
-    :   <dfn>id_token</dfn>
-    ::  The resulting [=id token=].
+<dl dfn-type="argument" dfn-for="token_endpoint_response">
+    :   <dfn>token</dfn>
+    ::  The resulting [=token=].
 </dl>
 
 For example:
@@ -838,7 +838,7 @@ For example:
 <div class=example>
 ```json
 {
-  "id_token" : "eyJC...J9.eyJzdWTE2...MjM5MDIyfQ.SflV_adQssw....5c"
+  "token" : "eyJC...J9.eyJzdWTE2...MjM5MDIyfQ.SflV_adQssw....5c"
 }
 ```
 </div>
@@ -1186,16 +1186,16 @@ The <dfn>Terms of Service</dfn> are the policies described at
 
 The Sign-up and Sign-in APIs used by the [=Relying Party=]s to ask the browser
 to intermediate the relationship with the [=Identity Provider=] and the
-provisioning of an [=id token=].
+provisioning of an [=token=].
 
 The [=Relying Party=] makes no delineation between Sign-up and Sign-in, but
 rather calls the same API indistinguishably.
 
 If all goes well, the [=Relying Party=] receives back a |tokens| object which
-contains an [=id token=] in the form of a signed [[JWT]] which it can use to
+contains an [=token=] in the form of a signed [[JWT]] which it can use to
 authenticate the user.
 
-The Sign-in API will request the [=id token=] to be [=minted=] by the IDP.
+The Sign-in API will request the [=token=] to be [=minted=] by the IDP.
 
 <div class=example>
 ```js
@@ -1220,7 +1220,7 @@ partial interface FederatedCredential {
 
 [Exposed=Window, SecureContext]
 dictionary FederatedTokens {
-  USVString idToken;
+  USVString token;
 };
 </xmp>
 
@@ -1232,25 +1232,25 @@ dictionary FederatedTokens {
 </dl>
 
 <dl dfn-type="argument" dfn-for="FederatedTokens">
-    :   <dfn>idToken</dfn>
-    ::  The minted ID token
+    :   <dfn>token</dfn>
+    ::  The minted token that can log the user in.
 </dl>
 
 When this method is invoked, the user agent MUST execute the following algorithm:
 
 1. Let |tokens| be the result of making a POST request to the
-    |manifest|["{{Manifest/id_token_endpoint}}"] with:
-    * Let the {{id_token_endpoint_request/account_id}} be
+    |manifest|["{{Manifest/token_endpoint}}"] with:
+    * Let the {{token_endpoint_request/account_id}} be
         |account|["{{accounts_endpoint_response_accounts/account_id}}"].
-    * Let the |id_token_endpoint_request| be a new object with
-       * Let {{id_token_endpoint_request/client_id}} be
+    * Let the |token_endpoint_request| be a new object with
+       * Let {{token_endpoint_request/client_id}} be
           |provider|["{{FederatedIdentityProvider/clientId}}"].
-       * Let the {{id_token_endpoint_request/nonce}} be
+       * Let the {{token_endpoint_request/nonce}} be
           |provider|["{{FederatedAccountLoginRequest/nonce}}"].
     * This request MUST NOT follow [[RFC7231#header.location|HTTP redirects]]
         and instead abort with an error if there are any.
 1. Return a new {{FederatedTokens}} as:
-    * {{FederatedTokens/idToken}} as |token|
+    * {{FederatedTokens/token}} as |token|
 
 
 <!-- ============================================================ -->
