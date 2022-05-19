@@ -535,12 +535,12 @@ provides the main security boundary on the web.
     {{client_metadata_endpoint_response/terms_of_service_url}}.
 
 
-: <dfn>loggedout</dfn>
-:: An account is `loggedout` if the user has either not signed into the account
+: <dfn>logged-out</dfn>
+:: An account is `logged-out` if the user has either not signed into the account
     or has signed out.
 
-: <dfn>loggedin</dfn>
-:: An account is `loggedin` if the user has successfully signed into the account.
+: <dfn>logged-in</dfn>
+:: An account is `logged-in` if the user has successfully signed into the account.
 
 : <dfn>approved</dfn>
 :: The account is `approved` if the user has approved the [=RP=] and [=IDP=]
@@ -788,7 +788,7 @@ Sec-FedCM-CSRF: ?1
 The file is parsed expecting the following properties:
 
 <dl dfn-type="argument" dfn-for="client_metadata_endpoint_response">
-    :   <dfn>privacy_policy_url</dfn> (required)
+    :   <dfn>privacy_policy_url</dfn> (optional)
     ::  A link to the [=RP=]'s [=privacy policy=].
     :   <dfn>terms_of_service_url</dfn> (optional)
     ::  A link to the [=RP=]'s [=terms of service=].
@@ -995,10 +995,7 @@ The user agent keepts track of the following state machine for each
          Can be [=approved=] or [=unapproved=] (by default).
     :   <dfn>Session State</dfn>
     ::  Keeps track of whether the user has an open or closed session.
-         Can be [=loggedin=] or [=loggedout=] (by default).
-    :   <dfn>Prompt State</dfn>
-    ::  Keeps track if prompting the user was requested.
-         Can be <dfn>explicit</dfn> (by default) or <dfn>silent</dfn>.
+         Can be [=logged-in=] or [=logged-out=] (by default).
 </dl>
 
 <!-- ============================================================ -->
@@ -1056,6 +1053,8 @@ is prompted to select an account.
   :  {{CredentialMediationRequirement/required}}
   :: * Always returns an [=unapproved=] {{FederatedCredential}}
      * Always prompts the user
+
+Note: the behavior when using the {{CredentialMediationRequirement/silent}} value is not specified yet.
 
 The {{CredentialRequestOptions/signal}} is used as an abort signal for the
 requests.
@@ -1116,7 +1115,7 @@ When this method is invoked, the user agent MUST execute the following algorithm
   1. Let |mode| be |options|["{{CredentialRequestOptions/mediation}}"]
 
   1. TODO(dsinclair): What should {{StateMachine/Session State}} be here?
-  1. if |mode| is "required"
+  1. If |mode| is "required"
      1. Let |credential| be a new {{FederatedCredential}}
      1. Set |credential|'s {{FederatedCredential/provider}} to |provider|
      1. Set {{StateMachine/Account State}} to [=approved=]
@@ -1127,8 +1126,7 @@ When this method is invoked, the user agent MUST execute the following algorithm
      1. Return the credential from the credential store
   1. Let |credential| be a new {{FederatedCredential}}
      1. Set |credential|["provider"] = |provider|
-     1. If |mode| is "silent"
-         1. Set {{StateMachine/Prompt State}} to {{StateMachine/silent}}
+     1. TODO: update algorithm when |mode| is "silent"
      1. Return |credential|
 
 
@@ -1194,13 +1192,11 @@ dictionary FederatedTokens {
 
 When this method is invoked, the user agent MUST execute the following algorithm:
   1. Let |promise| be a new {{Promise}}.
-  1. If {{StateMachine/Account State}} is [=unapproved=] and
-      {{StateMachine/Prompt State}} is {{StateMachine/silent}} then <a for=Promise>Reject</a>
-      |promise| and return |promise|
+  1. TODO: update algorithm for silent access.
   1. If {{StateMachine/Account State}} is [=unapproved=]
      1. Request user consent by running the [=request consent=] algorithm.
   1. If {{StateMachine/Account State}} is [=unapproved=] or
-      {{StateMachine/Session State}} is [=loggedout=] then <a for=Promise>Reject</a>
+      {{StateMachine/Session State}} is [=logged-out=] then <a for=Promise>Reject</a>
       |promise| and return |promise|
   1. Return the result of running the [=create tokens=] algorithm.
 
@@ -1213,21 +1209,23 @@ To <dfn>request consent</dfn>:
         |accounts list| algorithm.
     1. If the {{StateMachine/Account State}} is [=unapproved=] then run the
         [=sign-up=] algorithm for |account|.
-    1.  If the {{StateMachine/Session State}} is [=loggedout=] then run the
+    1.  If the {{StateMachine/Session State}} is [=logged-out=] then run the
         [=explicit sign-in=] algorithm for |account|.
     1. Run the [=sign-in=] algorithm for |account|.
 
 To <dfn>sign-up</dfn> the user:
     1. Let |metadata| be the result of running the [=fetch the client metadata=]
         algorithm.
-    1. Display the |metadata|["privacy_policy_url"] link
+    1. If |metadata|["privacy_policy_url"] is defined then display the
+        |metadata|["privacy_policy_url"] link.
     1. If |metadata|["terms_of_service_url"] is defined then display the
-        |metadata|["terms_of_service_url"] link
-    1. Prompt the user to gather explicit intent to create an account
+        |metadata|["terms_of_service_url"] link.
+    1. Prompt the user to gather explicit intent to create an account. The user agent MAY use the
+        [=Branding JSON=] to inform the style choices of its UI.
     1. Set the account's {{StateMachine/Account State}} from [=unapproved=]
         to [=approved=].
-    1. Set the account's {{StateMachine/Session State}} from [=loggedout=]
-        to [=loggedin=].
+    1. Set the account's {{StateMachine/Session State}} from [=logged-out=]
+        to [=logged-in=].
     1. Set |credential|["id"] to |account|["id"}]
 
 To <dfn>select an account</dfn> from the accounts list:
@@ -1242,8 +1240,8 @@ To <dfn>select an account</dfn> from the accounts list:
 
 To <dfn>sign-in</dfn> the user:
     1. Assert that the {{StateMachine/Account State}} is [=approved=]
-    1. Set the account's {{StateMachine/Session State}} from [=loggedout=] to
-        [=loggedin=].
+    1. Set the account's {{StateMachine/Session State}} from [=logged-out=] to
+        [=logged-in=].
 
 To <dfn>explicit sign-in</dfn> the user:
     1. Gather explicit confirmation that the user wants to sign-in to
@@ -1254,7 +1252,7 @@ To <dfn>explicit sign-in</dfn> the user:
 
 To <dfn>create tokens</dfn>:
     1. Assert {{StateMachine/Account State}} is [=approved=]
-    1. Assert {{StateMachine/Session State}} is [=loggedin=]
+    1. Assert {{StateMachine/Session State}} is [=logged-in=]
     1. Let |request| be a new object
         1. Set |request|["account_id"] to |account|["{{accounts_endpoint_response_accounts/id}}"].
         1. Set |request|["client_id"] to |provider|["{{FederatedIdentityProvider/clientId}}"].
@@ -1337,7 +1335,7 @@ When this method is invoked, the user agent MUST execute the following algorithm
 
   1. Let |promise| be a new {{Promise}}.
   1. If {{StateMachine/Account State}} is [=unapproved=] or
-      {{StateMachine/Session State}} is [=loggedout=]
+      {{StateMachine/Session State}} is [=logged-out=]
     1. <a for=Promise>Reject</a> |promise| and return |promise|
   1. Let the |revocation_endpoint| url be the relative url
         |manifest|["{{Manifest/revocation_endpoint}}"] of
@@ -1383,7 +1381,7 @@ When this method is invoked, the user agent MUST execute the following algorithm
   1. Let |promise| be a new {{Promise}}
   1. If {{StateMachine/Account State}} is [=unapproved=] then <a for=Promise>Reject</a>
       |promise| and return |promise|.
-  1. Set {{StateMachine/Session State}} to [=loggedout=]
+  1. Set {{StateMachine/Session State}} to [=logged-out=]
   1. <a for=Promise>Resolve</a> |promise| and return |promise|.
 
 
@@ -1449,11 +1447,11 @@ When this method is invoked, the user agent MUST execute the following algorithm
         |request|'s {{FederatedCredentialLogoutRpsRequest/accountId}}
     1. If no matching |credential| continue
     1. If the |credential| {{StateMachine/Account State}} is [=unapproved=] or
-        {{StateMachine/Session State}} is [=loggedout=] continue
+        {{StateMachine/Session State}} is [=logged-out=] continue
     1. POST to the |request|'s {{FederatedCredentialLogoutRpsRequest/url}} with the
         [=Relying Parties=] cookies.  This request MUST NOT follow
         [[RFC7231#header.location|HTTP redirects]] and instead abort the request.
-    1. Set the |credential| {{StateMachine/Session State}} to [=loggedout=]
+    1. Set the |credential| {{StateMachine/Session State}} to [=logged-out=]
   1. <a for=Promise>Resolve</a> |promise| with |undefined| and return |promise|.
 
 
