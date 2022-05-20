@@ -283,9 +283,6 @@ could be implemented.
 
     // This will prompt when !credential[“approved”], but
     // it won’t when credential[“approved”].
-    //
-    // If !credential["approved"] and mediation == silent will reject.
-    //
     // If the user selects an account updates the credential["approved"]
     // state and stores any needed account information.
     return await credential.login({ nonce: "456" });
@@ -978,13 +975,7 @@ with an [=RP=] and [=IDP=] pair. Those |credential| objects have different
 stages of their accounts. At each stage, the state machine manages the |credential|s
 access to the appropriate browser capabilities.
 
-TODO: update the below image to use ASCII and reflect the algorithms.
-
-<div class='image'>
-<pre class=include-raw>
-path: img/mock42.svg
-</pre>
-</div>
+TODO: add an ASCII image to explain how the states fit into the algorithms.
 
 The user agent keepts track of the following state machine for each
 (account, [=RP=]) pair:
@@ -1037,24 +1028,7 @@ dictionary FederatedIdentityProvider {
 };
 </xmp>
 
-The {{CredentialRequestOptions/mediation}} flag is used to determine if the user
-is prompted to select an account.
-
-  :  {{CredentialMediationRequirement/silent}}
-  :: * If 1 credential exists, return it
-     * If > 1 credentials exist, and hint matches a credential `id` return it
-     * Otherwise return an [=unapproved=] {{FederatedCredential}}
-     * Rejects the promise of any API call that requires the user to be prompted
-  :  {{CredentialMediationRequirement/optional}}
-  :: * If 1 credential exists, return it
-     * If > 1 credentials exist, and hint matches one of them return it
-     * Otherwise return [=unapproved=] {{FederatedCredential}}
-     * Prompts the user if the credential is [=unapproved=]
-  :  {{CredentialMediationRequirement/required}}
-  :: * Always returns an [=unapproved=] {{FederatedCredential}}
-     * Always prompts the user
-
-Note: the behavior when using the {{CredentialMediationRequirement/silent}} value is not specified yet.
+The {{CredentialRequestOptions/mediation}} flag is currently not used.
 
 The {{CredentialRequestOptions/signal}} is used as an abort signal for the
 requests.
@@ -1112,23 +1086,10 @@ When this method is invoked, the user agent MUST execute the following algorithm
        multiple [=Identity Provider=]s.
   1. Let |provider| be |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"][0].
   1. Let |hint| be |provider|["{{FederatedIdentityProvider/hint}}"]
-  1. Let |mode| be |options|["{{CredentialRequestOptions/mediation}}"]
-
-  1. TODO(dsinclair): What should {{StateMachine/Session State}} be here?
-  1. If |mode| is "required"
-     1. Let |credential| be a new {{FederatedCredential}}
-     1. Set |credential|'s {{FederatedCredential/provider}} to |provider|
-     1. Set {{StateMachine/Account State}} to [=approved=]
-     1. Return |credential|
-  1. If there is 1 existing credential in the credential store
-     1. Return the credential from the credential store
-  1. If there is > 1 existing credential in the credential store and |hint| matches the credential["id"]
-     1. Return the credential from the credential store
-  1. Let |credential| be a new {{FederatedCredential}}
-     1. Set |credential|["provider"] = |provider|
-     1. TODO: update algorithm when |mode| is "silent"
-     1. Return |credential|
-
+  1. Let |credential| be a new {{FederatedCredential}}.
+  1. Set |credential|'s {{FederatedCredential/provider}} to |provider|.
+  1. Set |credential|'s {{Credential/id}} to |hint|.
+  1. Return |credential|
 
 <!-- ============================================================ -->
 ## The Sign-in API ## {#browser-api-sign-in}
@@ -1192,11 +1153,8 @@ dictionary FederatedTokens {
 
 When this method is invoked, the user agent MUST execute the following algorithm:
   1. Let |promise| be a new {{Promise}}.
-  1. TODO: update algorithm for silent access.
-  1. If {{StateMachine/Account State}} is [=unapproved=]
-     1. Request user consent by running the [=request consent=] algorithm.
-  1. If {{StateMachine/Account State}} is [=unapproved=] or
-      {{StateMachine/Session State}} is [=logged-out=] then <a for=Promise>Reject</a>
+  1. Request user consent by running the [=request consent=] algorithm.
+  1. If {{StateMachine/Account State}} is [=unapproved=] then <a for=Promise>Reject</a>
       |promise| and return |promise|
   1. Return the result of running the [=create tokens=] algorithm.
 
@@ -1207,10 +1165,9 @@ To <dfn>request consent</dfn>:
         [=fetch the accounts list=] algorithm.
     1. Let |account| be the result of running the [=select an account=] from the
         |accounts list| algorithm.
+    1. If |account| is null, return.
     1. If the {{StateMachine/Account State}} is [=unapproved=] then run the
-        [=sign-up=] algorithm for |account|.
-    1.  If the {{StateMachine/Session State}} is [=logged-out=] then run the
-        [=explicit sign-in=] algorithm for |account|.
+        [=sign-up=] algorithm for |account|, and return.
     1. Run the [=sign-in=] algorithm for |account|.
 
 To <dfn>sign-up</dfn> the user:
@@ -1235,20 +1192,13 @@ To <dfn>select an account</dfn> from the accounts list:
         an account matches this's {{FederatedCredential/provider}}["accountId"] then return |account|
     1. Display an account chooser
     1. Let |account| be an account that the user manually selects from the
-        accounts chooser
+        accounts chooser, or null if no account is selected.
     1. Return |account|
 
 To <dfn>sign-in</dfn> the user:
     1. Assert that the {{StateMachine/Account State}} is [=approved=]
     1. Set the account's {{StateMachine/Session State}} from [=logged-out=] to
         [=logged-in=].
-
-To <dfn>explicit sign-in</dfn> the user:
-    1. Gather explicit confirmation that the user wants to sign-in to
-        [=Relying Party=] with their [=Identity Provider=]'s |account|
-    1. if the user does not provide consent then create a {{Promise}},
-         <a for=Promise>reject</a> it and return it.
-    1. Run the [=sign-in=] algorithm.
 
 To <dfn>create tokens</dfn>:
     1. Assert {{StateMachine/Account State}} is [=approved=]
@@ -1287,6 +1237,7 @@ To <dfn>fetch the accounts list</dfn>:
         with the [=Identity Provider=]'s cookies.  This request MUST NOT follow
         [[RFC7231#header.location|HTTP redirects]] and instead abort with an
         error if there are any.
+        TODO: explain why we must not follow redirects in the security section.
     1. Return the |accounts list|
 
 To <dfn noexport>fetch the client metadata</dfn>:
@@ -1345,7 +1296,8 @@ When this method is invoked, the user agent MUST execute the following algorithm
         [[RFC7231#header.location|HTTP redirects]] and instead abort with an
         error if there are any.
     1. If the HTTP response code is not 2xx <a for=Promise>reject</a> |promise| and return |promise|.
-    1. // TODO(dsinclair): Should this change account/session state in some fashion?
+    1. Set {{StateMachine/Account State}} to [=unapproved=] and {{StateMachine/Session State}} to
+        [=logged-out=].
     1. <a for=Promise>Resolve</a> |promise| with |undefined| and return |promise|.
 
 <!-- ============================================================ -->
