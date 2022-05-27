@@ -1181,7 +1181,7 @@ To <dfn>fetch the accounts list</dfn>:
     1. Let the |accounts list| be the result of fetching the |accounts_endpoint|
         with the [=Identity Provider=]'s cookies.  This request MUST NOT follow
         [[RFC7231#header.location|HTTP redirects]] and instead abort with an
-        error if there are any.
+        error if there are any. See also [[#idp-api-accounts-endpoint]].
         TODO: explain why we must not follow redirects in the security section.
     1. Return the |accounts list|.
 
@@ -1207,15 +1207,15 @@ To <dfn noexport>fetch the client metadata</dfn>:
         |client_metadata_endpoint| with the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]]
         header but without the [=Identity Provider=]'s cookies.  This request
         MUST NOT follow [[RFC7231#header.location|HTTP redirects]] and instead
-        abort with
-        an error if there are any.
+        abort with an error if there are any. See also [[#idp-api-client-id-metadata-endpoint]].
     1. Return |policies|.
 
 To <dfn>select an account</dfn> from the accounts list:
     1. If |accounts list|'s [=list/size=] is 1:
         1. Let |account| be |accounts list|[0] and return |account|
     1. If this's {{FederatedCredential/provider}}["accountId"] is provided and
-        an account matches this's {{FederatedCredential/provider}}["accountId"] then return |account|
+        an account matches this's {{FederatedCredential/provider}}["accountId"] then return
+        |account|.
     1. Display an account chooser
     1. Let |account| be an account that the user manually selects from the
         accounts chooser, or null if no account is selected.
@@ -1233,11 +1233,8 @@ To <dfn>create tokens</dfn>:
         1. Set |request|["account_id"] to |account|["{{accounts_endpoint_response_accounts/id}}"].
         1. Set |request|["client_id"] to |provider|["{{FederatedIdentityProvider/clientId}}"].
         1. Set |request|["nonce"] to |request|["{{FederatedAccountLoginRequest/nonce}}"].
-    1. Let |tokens| be the result of making a POST request to the
-        |manifest|["{{Manifest/id_token_endpoint}}"] with:
-        * A body of |request| as application/x-www-form-urlencoded data.
-        * This request MUST NOT follow [[RFC7231#header.location|HTTP redirects]]
-            and instead abort with an error if there are any.
+    1. Let |tokens| be the result of making a POST request described in
+        [[#idp-api-id-token-endpoint]].
     1. Let |promise| be a new {{Promise}}
     1. Let |tokens| be a new {{FederatedTokens}} with:
         * {{FederatedTokens/idToken}} as |tokens|["id_token"]
@@ -1245,8 +1242,10 @@ To <dfn>create tokens</dfn>:
 
 To <dfn>fetch the manifest</dfn> given a {{FederatedIdentityProvider}} |provider|:
     1. In parallel, perform the following two steps:
-        1. Let |manifestInSet| be the result of running [=check the root manifest=], passing |provider|.
-        1. Let |manifest| be the result of running [=fetch the internal manifest=], passing |provider|.
+        1. Let |manifestInSet| be the result of running [=check the root manifest=], passing
+            |provider|.
+        1. Let |manifest| be the result of running [=fetch the internal manifest=], passing
+            |provider|.
     1. If |manifestInSet| is true, return |manifest|, otherwise abort with an error.
 
 NOTE: We use a two-tier manifest list in order to prevent the [=IDP=] to easily determine the [=RP=]
@@ -1261,7 +1260,7 @@ To <dfn>check the root manifest</dfn> given a {{FederatedIdentityProvider}} |pro
     1. Let |url| be |provider|'s {{FederatedIdentityProvider/url}}.
     1. Let |rootUrl| be a new [=/URL=].
     1. Set |rootUrl|'s [=url/scheme=] to |url|'s [=url/scheme=].
-    1. Set |rootUrl|'s [=url/host=] to |url|'s [=url/host=].
+    1. Set |rootUrl|'s [=url/host=] to |url|'s [=url/host=]'s [=host/registrable domain=].
     1. Set |rootUrl|'s [=url/path=] to ".well-known/fedcm.json".
     1. Let |request| be a new <a spec=fetch for=/>request</a> whose [=request/url=] is |rootUrl| and
         [=request/redirect mode=] set to "error". TODO: what other fields need to be set?
@@ -1327,15 +1326,17 @@ When this method is invoked, the user agent MUST execute the following algorithm
   1. Let |promise| be a new {{Promise}}.
   1. If {{StateMachine/Account State}} is [=unregistered=] or
       {{StateMachine/Session State}} is [=logged-out=]
-    1. <a for=Promise>Reject</a> |promise| and return |promise|
+    1. <a for=Promise>Reject</a> |promise| and return |promise|. TODO: add messages when rejecting
+        promises.
   1. Let the |revocation_endpoint| url be the relative url
         |manifest|["{{Manifest/revocation_endpoint}}"] of
         |provider|["{{FederatedIdentityProvider/url}}"]
     1. Fetch the |revocation_endpoint| with the [=Identity Provider=]'s
         cookies.  This request MUST NOT follow
         [[RFC7231#header.location|HTTP redirects]] and instead abort with an
-        error if there are any.
-    1. If the HTTP response code is not 2xx <a for=Promise>reject</a> |promise| and return |promise|.
+        error if there are any. See also [[#idp-api-revocation-endpoint]].
+    1. If the HTTP response code is not 204, <a for=Promise>reject</a> |promise| and return
+        |promise|.
     1. Set {{StateMachine/Account State}} to [=unregistered=] and {{StateMachine/Session State}} to
         [=logged-out=].
     1. <a for=Promise>Resolve</a> |promise| with |undefined| and return |promise|.
