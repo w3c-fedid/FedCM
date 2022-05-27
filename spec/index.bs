@@ -283,28 +283,28 @@ could be implemented.
   async function login() {
     const credential = getFederatedCredential();
 
-    // This will prompt when !credential[“approved”], but
-    // it won’t when credential[“approved”].
-    // If the user selects an account updates the credential["approved"]
+    // This will prompt when !credential["registered"], but
+    // it won’t when credential["registered"].
+    // If the user selects an account updates the credential["registered"]
     // state and stores any needed account information.
     return await credential.login({ nonce: "456" });
   }
 
   async function logout() {
     const credential = getFederatedCredential();
-    // This never prompts, rejects the promise in case !credential[“approved”]
+    // This never prompts, rejects the promise in case !credential["registered"]
     return credential.logout();
   }
 
   async function revoke() {
     const credential = getFederatedCredential();
-    // This never prompts, rejects the promise in case !credential[“approved”]
+    // This never prompts, rejects the promise in case !credential["registered"]
     return credential.revoke();
   }
 
   async function getFederatedCredential() {
     // This never prompts. A FederatedCredential object will always be returned.
-    // The object will be either approved or unapproved and store information
+    // The object will be either registered or unregistered and store information
     // on if the user should be prompted based on the mediation flag.
     return await navigator.credentials.get({
       mediated: “optional”, // “optional” is the default
@@ -541,13 +541,12 @@ provides the main security boundary on the web.
 : <dfn>logged-in</dfn>
 :: An account is `logged-in` if the user has successfully signed into the account.
 
-: <dfn>approved</dfn>
-:: The account is `approved` if the user has approved the [=RP=] and [=IDP=]
-    communicating.
+: <dfn>registered</dfn>
+:: The account is `registered` if the user agent thinks that the user has registered an account in
+    the [=RP=] using the account from the [=IDP=].
 
-: <dfn>unapproved</dfn>
-:: The account is `unapproved` if the user has not approved the [=RP=] and
-    [=IDP=] communicating.
+: <dfn>unregistered</dfn>
+:: The account is `unregistered` if it's not registered.
 
 <!-- ============================================================ -->
 # High Level Design # {#high-level-design}
@@ -984,8 +983,8 @@ The user agent keepts track of the following state machine for each
 
 <dl dfn-type="argument" dfn-for="StateMachine">
     :   <dfn>Account State</dfn>
-    ::  Keeps track of whether the user has approved using the account in the [=RP=] or not.
-         Can be [=approved=] or [=unapproved=] (by default).
+    ::  Keeps track of whether the user has registered the account in the [=RP=] or not.
+         Can be [=registered=] or [=unregistered=] (by default).
     :   <dfn>Session State</dfn>
     ::  Keeps track of whether the user has an open or closed session.
          Can be [=logged-in=] or [=logged-out=] (by default).
@@ -1030,7 +1029,7 @@ dictionary FederatedIdentityProvider {
 };
 </xmp>
 
-The {{CredentialRequestOptions/mediation}} flag is currently not used.
+NOTE: The {{CredentialRequestOptions/mediation}} flag is currently not used.
 
 The {{CredentialRequestOptions/signal}} is used as an abort signal for the
 requests.
@@ -1050,7 +1049,7 @@ This specification overrides the {{FederatedCredential}}'s
  \[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</dfn></code>
 method.
 
-Each {{FederatedCredential}} has an associated <dfn>identityProvider</dfn>, a
+Each {{FederatedCredential}} has an associated <dfn>provider</dfn>, a
 {{FederatedIdentityProvider}}, which is initially null.
 
 This algorithm runs in parallel inside the [[CM#algorithm-request]] to request
@@ -1092,7 +1091,7 @@ When this method is invoked, the user agent MUST execute the following algorithm
   1. Let |provider| be |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"][0].
   1. Let |hint| be |provider|["{{FederatedIdentityProvider/hint}}"]
   1. Let |credential| be a new {{FederatedCredential}}.
-  1. Set |credential|'s <a>identityProvider</a> to |provider|.
+  1. Set |credential|'s <a>provider</a> to |provider|.
   1. Set |credential|'s {{Credential/id}} to |hint|.
   1. Return |credential|
 
@@ -1159,21 +1158,32 @@ dictionary FederatedTokens {
 When this method is invoked, the user agent MUST execute the following algorithm:
   1. Let |promise| be a new {{Promise}}.
   1. Request user consent by running the [=request consent=] algorithm.
-  1. If {{StateMachine/Account State}} is [=unapproved=] then <a for=Promise>Reject</a>
+  1. If {{StateMachine/Account State}} is [=unregistered=] then <a for=Promise>Reject</a>
       |promise| and return |promise|
   1. Return the result of running the [=create tokens=] algorithm.
 
 To <dfn>request consent</dfn>:
     1. Let |manifest| be the result of running the [=fetch the manifest=]
-        algorithm with <a>this</a>'s <a>identityProvider</a>.
+        algorithm with <a>this</a>'s <a>provider</a>.
     1. Let |accounts list| be the result of running the
         [=fetch the accounts list=] algorithm.
     1. Let |account| be the result of running the [=select an account=] from the
         |accounts list| algorithm.
     1. If |account| is null, return.
-    1. If the {{StateMachine/Account State}} is [=unapproved=] then run the
+    1. If the {{StateMachine/Account State}} is [=unregistered=] then run the
         [=sign-up=] algorithm for |account|, and return.
     1. Run the [=sign-in=] algorithm for |account|.
+
+To <dfn>fetch the accounts list</dfn>:
+    1. Let the |accounts_endpoint| url be the relative url
+        |manifest|["{{Manifest/accounts_endpoint}}"] of
+        |provider|["{{FederatedIdentityProvider/url}}"]
+    1. Let the |accounts list| be the result of fetching the |accounts_endpoint|
+        with the [=Identity Provider=]'s cookies.  This request MUST NOT follow
+        [[RFC7231#header.location|HTTP redirects]] and instead abort with an
+        error if there are any.
+        TODO: explain why we must not follow redirects in the security section.
+    1. Return the |accounts list|.
 
 To <dfn>sign-up</dfn> the user:
     1. Let |metadata| be the result of running the [=fetch the client metadata=]
@@ -1184,11 +1194,22 @@ To <dfn>sign-up</dfn> the user:
         |metadata|["terms_of_service_url"] link.
     1. Prompt the user to gather explicit intent to create an account. The user agent MAY use the
         [=Branding JSON=] to inform the style choices of its UI.
-    1. Set the account's {{StateMachine/Account State}} from [=unapproved=]
-        to [=approved=].
+    1. Set the account's {{StateMachine/Account State}} from [=unregistered=]
+        to [=registered=].
     1. Set the account's {{StateMachine/Session State}} from [=logged-out=]
         to [=logged-in=].
-    1. Set |credential|["id"] to |account|["id"}]
+
+To <dfn noexport>fetch the client metadata</dfn>:
+    1. Let the |client_metadata_endpoint| url be the relative url
+        |manifest|["{{Manifest/client_metadata_endpoint}}"] of
+        |provider|["{{FederatedIdentityProvider/url}}"]
+    1. Let the |policies| be the result of fetching the
+        |client_metadata_endpoint| with the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]]
+        header but without the [=Identity Provider=]'s cookies.  This request
+        MUST NOT follow [[RFC7231#header.location|HTTP redirects]] and instead
+        abort with
+        an error if there are any.
+    1. Return |policies|.
 
 To <dfn>select an account</dfn> from the accounts list:
     1. If |accounts list|'s [=list/size=] is 1:
@@ -1201,12 +1222,12 @@ To <dfn>select an account</dfn> from the accounts list:
     1. Return |account|
 
 To <dfn>sign-in</dfn> the user:
-    1. Assert that the {{StateMachine/Account State}} is [=approved=]
+    1. Assert that the {{StateMachine/Account State}} is [=registered=]
     1. Set the account's {{StateMachine/Session State}} from [=logged-out=] to
         [=logged-in=].
 
 To <dfn>create tokens</dfn>:
-    1. Assert {{StateMachine/Account State}} is [=approved=]
+    1. Assert {{StateMachine/Account State}} is [=registered=]
     1. Assert {{StateMachine/Session State}} is [=logged-in=]
     1. Let |request| be a new object
         1. Set |request|["account_id"] to |account|["{{accounts_endpoint_response_accounts/id}}"].
@@ -1227,6 +1248,14 @@ To <dfn>fetch the manifest</dfn> given a {{FederatedIdentityProvider}} |provider
         1. Let |manifestInSet| be the result of running [=check the root manifest=], passing |provider|.
         1. Let |manifest| be the result of running [=fetch the internal manifest=], passing |provider|.
     1. If |manifestInSet| is true, return |manifest|, otherwise abort with an error.
+
+NOTE: We use a two-tier manifest list in order to prevent the [=IDP=] to easily determine the [=RP=]
+that a user is visiting by encoding the information in the manifest path. We solve this issue by
+requiring a manifest list to be on the root of the [=IDP=]. The manifest itself can be anywhere, but
+it will not be used if the user agent does not find it in the manifest list. This allows the [=IDP=]
+to keep their actual manifest on an arbitary path while allowing the user agent to prevent manifest
+manipulation to fingerprint. See https://github.com/fedidcg/FedCM/issues/230 for more details on
+this attack.
 
 To <dfn>check the root manifest</dfn> given a {{FederatedIdentityProvider}} |provider|:
     1. Let |url| be |provider|'s {{FederatedIdentityProvider/url}}.
@@ -1263,29 +1292,6 @@ To <dfn>fetch the internal manifest</dfn> given a {{FederatedIdentityProvider}} 
         [[RFC7231#header.location|HTTP redirects]] and instead abort with an
         error if there are any.
 
-To <dfn>fetch the accounts list</dfn>:
-    1. Let the |accounts_endpoint| url be the relative url
-        |manifest|["{{Manifest/accounts_endpoint}}"] of
-        |provider|["{{FederatedIdentityProvider/url}}"]
-    1. Let the |accounts list| be the result of fetching the |accounts_endpoint|
-        with the [=Identity Provider=]'s cookies.  This request MUST NOT follow
-        [[RFC7231#header.location|HTTP redirects]] and instead abort with an
-        error if there are any.
-        TODO: explain why we must not follow redirects in the security section.
-    1. Return the |accounts list|
-
-To <dfn noexport>fetch the client metadata</dfn>:
-    1. Let the |client_metadata_endpoint| url be the relative url
-        |manifest|["{{Manifest/client_metadata_endpoint}}"] of
-        |provider|["{{FederatedIdentityProvider/url}}"]
-    1. Let the |policies| be the result of fetching the
-        |client_metadata_endpoint| with the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]]
-        header but without the [=Identity Provider=]'s cookies.  This request
-        MUST NOT follow [[RFC7231#header.location|HTTP redirects]] and instead
-        abort with
-        an error if there are any.
-    1. Return |policies|
-
 <!-- ============================================================ -->
 ## The Revocation API ## {#browser-api-revocation}
 <!-- ============================================================ -->
@@ -1319,7 +1325,7 @@ IDP; for example, it can be an email address.
 When this method is invoked, the user agent MUST execute the following algorithm:
 
   1. Let |promise| be a new {{Promise}}.
-  1. If {{StateMachine/Account State}} is [=unapproved=] or
+  1. If {{StateMachine/Account State}} is [=unregistered=] or
       {{StateMachine/Session State}} is [=logged-out=]
     1. <a for=Promise>Reject</a> |promise| and return |promise|
   1. Let the |revocation_endpoint| url be the relative url
@@ -1330,7 +1336,7 @@ When this method is invoked, the user agent MUST execute the following algorithm
         [[RFC7231#header.location|HTTP redirects]] and instead abort with an
         error if there are any.
     1. If the HTTP response code is not 2xx <a for=Promise>reject</a> |promise| and return |promise|.
-    1. Set {{StateMachine/Account State}} to [=unapproved=] and {{StateMachine/Session State}} to
+    1. Set {{StateMachine/Account State}} to [=unregistered=] and {{StateMachine/Session State}} to
         [=logged-out=].
     1. <a for=Promise>Resolve</a> |promise| with |undefined| and return |promise|.
 
@@ -1365,7 +1371,7 @@ partial interface FederatedCredential {
 When this method is invoked, the user agent MUST execute the following algorithm:
 
   1. Let |promise| be a new {{Promise}}
-  1. If {{StateMachine/Account State}} is [=unapproved=] then <a for=Promise>Reject</a>
+  1. If {{StateMachine/Account State}} is [=unregistered=] then <a for=Promise>Reject</a>
       |promise| and return |promise|.
   1. Set {{StateMachine/Session State}} to [=logged-out=]
   1. <a for=Promise>Resolve</a> |promise| and return |promise|.
@@ -1432,7 +1438,7 @@ When this method is invoked, the user agent MUST execute the following algorithm
         |request|'s {{FederatedCredentialLogoutRpsRequest/url}} and
         |request|'s {{FederatedCredentialLogoutRpsRequest/accountId}}
     1. If no matching |credential| continue
-    1. If the |credential| {{StateMachine/Account State}} is [=unapproved=] or
+    1. If the |credential| {{StateMachine/Account State}} is [=unregistered=] or
         {{StateMachine/Session State}} is [=logged-out=] continue
     1. POST to the |request|'s {{FederatedCredentialLogoutRpsRequest/url}} with the
         [=Relying Parties=] cookies.  This request MUST NOT follow
