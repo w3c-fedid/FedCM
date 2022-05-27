@@ -43,9 +43,11 @@ spec: credential-management-1; urlPrefix: https://w3c.github.io/webappsec-creden
         text: signal
         text: same-origin with its ancestors; url: same-origin-with-its-ancestors
 
-spec: html; urlPrefix: https://html.spec.whatwg.org/multipage/origin.html
+spec: html; urlPrefix: https://html.spec.whatwg.org/multipage/
     type: dfn
-        text: origin; for: html-origin-def; url: concept-origin
+        text: origin; for: html-origin-def; url: origin.html#concept-origin
+        text: Content-Type Metadata; url: urls-and-fetching.html#content-type
+
 
 spec: webidl; urlPrefix: https://webidl.spec.whatwg.org/
     for: Promise
@@ -1048,6 +1050,9 @@ This specification overrides the {{FederatedCredential}}'s
  \[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</dfn></code>
 method.
 
+Each {{FederatedCredential}} has an associated <dfn>identityProvider</dfn>, a
+{{FederatedIdentityProvider}}, which is initially null.
+
 This algorithm runs in parallel inside the [[CM#algorithm-request]] to request
 credentials and returns a set of {{FederatedCredential}} for the requested
 [=Identity Provider=]s.
@@ -1087,7 +1092,7 @@ When this method is invoked, the user agent MUST execute the following algorithm
   1. Let |provider| be |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"][0].
   1. Let |hint| be |provider|["{{FederatedIdentityProvider/hint}}"]
   1. Let |credential| be a new {{FederatedCredential}}.
-  1. Set |credential|'s {{FederatedCredential/provider}} to |provider|.
+  1. Set |credential|'s <a>identityProvider</a> to |provider|.
   1. Set |credential|'s {{Credential/id}} to |hint|.
   1. Return |credential|
 
@@ -1160,7 +1165,7 @@ When this method is invoked, the user agent MUST execute the following algorithm
 
 To <dfn>request consent</dfn>:
     1. Let |manifest| be the result of running the [=fetch the manifest=]
-        algorithm with this's {{FederatedCredential/provider}}.
+        algorithm with <a>this</a>'s <a>identityProvider</a>.
     1. Let |accounts list| be the result of running the
         [=fetch the accounts list=] algorithm.
     1. Let |account| be the result of running the [=select an account=] from the
@@ -1217,12 +1222,41 @@ To <dfn>create tokens</dfn>:
         * {{FederatedTokens/idToken}} as |tokens|["id_token"]
     1. <a for=Promise>Resolve</a> |promise| with |tokens| and return |promise|.
 
-To <dfn>fetch the manifest</dfn> configuration file:
+To <dfn>fetch the manifest</dfn> given a {{FederatedIdentityProvider}} |provider|:
+    1. In parallel, perform the following two steps:
+        1. Let |manifestInSet| be the result of running [=check the root manifest=], passing |provider|.
+        1. Let |manifest| be the result of running [=fetch the internal manifest=], passing |provider|.
+    1. If |manifestInSet| is true, return |manifest|, otherwise abort with an error.
+
+To <dfn>check the root manifest</dfn> given a {{FederatedIdentityProvider}} |provider|:
+    1. Let |url| be |provider|'s {{FederatedIdentityProvider/url}}.
+    1. Let |rootUrl| be a new [=/URL=].
+    1. Set |rootUrl|'s [=url/scheme=] to |url|'s [=url/scheme=].
+    1. Set |rootUrl|'s [=url/host=] to |url|'s [=url/host=].
+    1. Set |rootUrl|'s [=url/path=] to ".well-known/fedcm.json".
+    1. Let |request| be a new <a spec=fetch for=/>request</a> whose [=request/url=] is |rootUrl| and
+        [=request/redirect mode=] set to "error". TODO: what other fields need to be set?
+    1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
+        steps given a <a spec=fetch for=/>response</a> |response|:
+        1. If |response| is a [=network error=] or its [=response/status=] is not an [=ok status=],
+            return false.
+        1. If |response|'s [=Content-Type Metadata=] is not a [=JSON MIME Type=], return false.
+        1. Let |json| be the result of [=parse JSON bytes to an Infra value=] passing |response|'s
+            [=response/body=].
+        1. If |json| is a parsing exception, or if |json| is not an [=ordered map=], return false.
+        1. If |json|["provider_urls"] does not exist, or if it is not a [=list=], return false.
+        1. If the [=list/size=] of |json|["provider_urls"] is greater than 1, return false. TODO:
+            determine the right value, probably greater than 1.
+        1. If |json|["provider_urls"][0] is not a [=string=], return false.
+        1. Return true if |json|["provider_urls"][0] [=string/is=] equal to |provider|'s
+            {{FederatedIdentityProvider/url}}, otherwise return false.
+
+To <dfn>fetch the internal manifest</dfn> given a {{FederatedIdentityProvider}} |provider|:
     1. Run a [[!CSP]] check with a [[CSP#directive-connect-src|connect-src]]
-        directive on the URL passed as this's {{FederatedCredential/provider}}["url"]
+        directive on the URL passed as |provider|'s {{FederatedIdentityProvider/url}}
         and return if the check fails.
     1. Let the |manifest url| be the file "fedcm.json" relative to the directory
-        prefix passed as |provider|["{{FederatedIdentityProvider/url}}"]
+        prefix passed as |provider|'s {{FederatedIdentityProvider/url}}.
     1. Return the result of fetching the |manifest url| with the
         [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]] header but without the
         [=Identity Provider=]'s cookies.  This request MUST NOT follow
