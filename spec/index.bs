@@ -85,10 +85,6 @@ dl.domintro dt code {
 <script src="js/webfont.js"></script>
 <script src="js/svgbob.js"></script>
 
-<script>
-alert("hi");
-</script>
-
 <!-- ============================================================ -->
 # Introduction # {#introduction}
 <!-- ============================================================ -->
@@ -116,6 +112,31 @@ In order to provide the federated identity primitives without the use of
 third-party cookies the API places the [=User Agent=] as a mediator between
 [=RPs=] and [=IDPs=]. This mediation requires user consent before permitting
 the [=RPs=] and [=IDPs=] to know about their connection to the user.
+
+<script type="text/svgbob">
+┌─────────────────────────────────┐       ┌─────────────────────────────────┐
+| ┌─────────────────────────────┐ |       | ┌─────────────────────────────┐ |
+| | "https://rp.example"        | |       | | "https://rp.example"        | |
+| └─────────────────────────────┘ |       | └─────────────────────────────┘ |
+| ┌─────────────────────────────┐ |       | ┌─────────────────────────────┐ |
+| |                             | |       | |                             | |
+| |   Welcome to my website!    | |       | |  Welcome to my website!     | |
+| |                             | |       | |                             | |
+| |                             | |       | |                             | |
+| +─────────────────────────────+ |       | +─────────────────────────────+ |
+| |       Choose an account     | |       | |    Sign-in to rp.example    | |
+| |   to sign-in to rp.example  | |       | |      with idp.example?      | |
+| |                             | |       | |                             | |
+| | ┌────┐                      | |       | | ┌────┐                      | |
+| | | :) |  John Doe            | |  ──►  | | | :) |  John Doe            | |
+| | └────┘  john@email.com      | |       | | └────┘  john@email.com      | |
+| | ┌────┐                      | |       | |                             | |
+| | | :] |  John Doe            | |       | | ┌─────────────────────────┐ | |
+| | └────┘  john.doe@work.com   | |       | | |    Continue as John     | | |
+| |                             | |       | | └─────────────────────────┘ | |
+| └─────────────────────────────┘ |       | └─────────────────────────────┘ |
+└─────────────────────────────────┘       └─────────────────────────────────┘
+</script>
 
 The specification leans heavily on changes in the [=User Agent=] and [=IDP=]
 and minimally on the [=RP=]. The FedCM API provides a way to authenticate,
@@ -568,11 +589,39 @@ The [[#idp-api]] and the [[#rp-api]] defines a set of HTTP APIs that cooperating
 [=IDP=]s and [=IDP=]s exposes as well as the entry points in the [[#browser-api]]
 that they can use.
 
-<div class='image'>
-<pre class=include-raw>
-path: img/mock43.svg
-</pre>
-</div>
+<script type="text/svgbob">
+
+┌───────────┐                  ┌───────────┐                      ┌───────────┐
+│           │                  │           │                      │           │
+│  Relying  │                  │   User    │                      │  Identity │
+│   Party   │                  │   Agent   │                      │  Provider │
+│           │                  │           │                      │           │
+│           │                  │           │                      │           │
+│           │   ┌──────────► *-+ Login     │     ┌────────────► *-+ fedcm.json│
+│           │   │              │           │     │                │           │
+│           │   │              │           │     │                │           │
+│           │   ├──────────► *-+ Logout    │     ├────────────► *-+ Accounts  │
+│           │   │              │           │     │                │           │
+│           │   │              │           │     │                │           │
+│           │   ├──────────► *-+ Revoke    │     ├────────────► *-+ Metadata  │
+│           │   │              │           │     │                │           │
+│           │   │              │           │     │                │           │
+│           │   │              │           │     ├────────────► *-+ Revoke    │
+│           │   │              │           │     │                │           │
+│           │   │              │           │     │                │           │
+│           │   │              │           │     ├────────────► *-+ Token     │
+│           │   │              │           │     │                │           │
+│ ┌───────┐ │   │              │ ┌───────┐ │     │                │ ┌───────┐ │
+│ │ JS    ├─┼───┘     ┌────────┼─┤ HTTP  ├─┼─────┘       ┌────────┼─┤ JS    │ │
+│ └───────┘ │         │        │ └───────┘ │             │        │ └───────┘ │
+│           │         │        │           │             │        │           │
+│           │         │        │ Authorize +-*  ◄────────┤        │           │
+│           │         │        │           │             │        │           │
+│    Logout +-*  ◄────┘        │           │             │        │           │
+│           │                  │    Logout +-*  ◄────────┘        │           │
+│           │                  │           │                      │           │
+└───────────┘                  └───────────┘                      └───────────┘
+</script>
 
 The user agent intermediates in such a matter that makes it impractical for the
 API to be used for tracking purposes, while preserving the functionality of
