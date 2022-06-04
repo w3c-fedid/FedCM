@@ -590,7 +590,6 @@ The [[#idp-api]] and the [[#rp-api]] defines a set of HTTP APIs that cooperating
 that they can use.
 
 <script type="text/svgbob">
-
 ┌───────────┐                  ┌───────────┐                      ┌───────────┐
 │           │                  │           │                      │           │
 │  Relying  │                  │   User    │                      │  Identity │
@@ -626,6 +625,61 @@ that they can use.
 The user agent intermediates in such a matter that makes it impractical for the
 API to be used for tracking purposes, while preserving the functionality of
 identity federation.
+
+<script type="text/svgbob">
+      User                            Relying                        Identity
+      Agent                           Party                          Provider
+
+        |                               |                               |
+        |<------------------------------| "credential.login()"          |
+        |                               |                               |
+        | "GET /.well-known/fedcm.json" |                               |
+        |-------------------------------------------------------------->| 
+        |<--------------------------------------------------------------| "{"
+        |                               |                               |   "provider_urls: [ ... ]"
+        |                               |                               | "}"
+        |                               |                               |
+        | "GET /fedcm.json"             |                               |
+        |-------------------------------------------------------------->| 
+        |<--------------------------------------------------------------| "{"
+        |                               |                               |   "id_token_endpoint: ...,"
+        |                               |                               |   "accounts_endpoint: ...,"
+        |                               |                               |   "client_metadata_endpoint: ...,"
+        |                               |                               |   "revocation_endpoint: ...,"
+        |                               |                               |   "branding: ...,"
+        |                               |                               | "}"
+        | "GET client_metadata.php"     | "client_id"                   |
+        |-------------------------------------------------------------->| 
+        |<--------------------------------------------------------------| "{"
+        |                               |                               |   "terms_of_service_url: ...,"
+        |                               |                               |   "privacy_policy_url: ...,"
+        |                               |                               | "}"
+        |                               |                               |
+        |                               |                               |
+        | "GET accounts.php"            | "cookies"                     |
+        |-------------------------------------------------------------->| 
+        |<--------------------------------------------------------------| "{"
+        |                               |                               |   "accounts: [ ... ]"
+    +---|                               |                               | "}"
+    |   |                               |                               |
+    |   | "choose account"              |                               |
+    |   |                               |                               |
+    +-->|                               | "client_id"                   |
+        |                               | "cookies"                     |
+        | "POST token.php"              | "account_id"                  |
+        |-------------------------------------------------------------->| 
+        |<--------------------------------------------------------------| "{"
+        |                               |                               |   "id_token: ...,"
+        |                               |                               | "}"
+        |                               |                               |
+        |                               |                               |
+        |                               |                               |
+        |------------------------------>| "{ id_token }"                |
+        |                               |                               |
+        |                               |                               |
+       -+-                             -+-                             -+-
+</script>
+
 
 This document defines the APIs in the following order:
 
