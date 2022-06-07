@@ -1518,7 +1518,66 @@ Note: go over how we are planning to deal with backwards compatibility.
 # Security # {#security}
 <!-- ============================================================ -->
 
-Note: go over security.
+This section provides a few of the security considerations for the FedCM API. Note that there is a
+separate section for [[#privacy]] considerations.
+
+<!-- ============================================================ -->
+## Network requests ## {#network-requests}
+<!-- ============================================================ -->
+
+The FedCM API introduces the ability for a site to ask the browser to execute a few different
+network requests. It is important for the browser to execute these in such a way that it does not
+accidentally leak sensitive information about the user to the site using FedCM. The diagram in the
+[explainer](https://github.com/fedidcg/FedCM/blob/main/explainer.md#http-api) has information about
+how these network requests are performed.
+
+* The manifest fetch is safe because it is performed without cookies, client id, or referrer. Thus,
+    anyone could perform this fetch, and the information contained therein is considered public.
+
+* The accounts are fetched with cookies from the [=IDP=]. This in theory is a new power that the
+    [=RP=] gains that it would not have otherwise. Note however that this browser fetch is performed
+    without showing the result to the [=RP=]. Therefore, the [=RP=] gains nothing from this fetch
+    until the user actually consents on signing in with an account, and at that point the [=IDP=]
+    chooses what to share with the [=RP=]. Preventing too many of these fetches may be important,
+    but [=IDP=]s are already expected to protect against DoS attacks. In addition, the user agent
+    should only allow one FedCM flow per page at any given moment, immediately rejecting any
+    attempts to start another one. Since a FedCM flow can only be terminated when the user interacts
+    or after a long timer, the number of fetches performed is not a concern. The [=IDP=] does learn
+    a lot about the user from this fetch, but this is discussed in detail in the [[#privacy]]
+    section.
+
+* The client metadata fetch is performed without cookies from the [=IDP=] but with a client id and a
+    referrer. This allows the [=IDP=] to communicate the relevant [=Privacy Policy=] and [=Terms of
+    Service=] to the user agent, in case they need to be displayed. Again, the [=RP=] gains nothing
+    from this fetch, and the [=RP=] could already perform this fetch if it wanted to since it
+    involves no cookies from the [=IDP=].
+
+* The token and revocation fetches expose the most: they are peformed with cookies, client id, and
+    referrer. The former is gated on the user interacting with the user agent UI, and enables the
+    [=IDP=] to communicate to the [=RP=] the information required to perform a federated
+    signin/signup. It is not possible for the [=RP=] or the [=IDP=] to force this fetch to happen,
+    as the user agent cannot be spoofed or otherwise tricked. The later can only be performed once a
+    token has been created, but does not require user interaction. That said, performing this fetch
+    does not provide any new information to the [=RP=] or the [=IDP=]. Its purpose is only to make
+    bookkeeping easier, as at this point both the [=RP=] and the [=IDP=] have information about the
+    user. The revocation obviously requires collaboration from both parties: a malicious [=RP=]
+    cannot sign the user out of their accounts on other [=RP=]s.
+
+<!-- ============================================================ -->
+## UI faking {#ui-faking}
+<!-- ============================================================ -->
+
+The FedCM API introduces new user agent UI, and the user agent may choose to show the UI entirely
+on top of the page's contents, if anything because the page was the one responsible for this UI.
+This introduces a potential concern of a malicious site to try to replicate the FedCM UI. This is
+not possible because the FedCM UI requires knowledge of the user accounts within the [=IDP=]. If
+this is a malicious site, it would not know the user accounts, otherwise the user is already
+compromised. In addition, the FedCM UI does not prompt the user to provide additional information
+such as username or password. Thus, UI attempting to retrieve sensitive information from the user
+would be noticeably different from the FedCM UI. Finally, because the FedCM UI can only be queried
+from the top-level frame (or potentially from an iframe with explicit permission from the top-level
+frame), the priviledged UI surface is only shown when the top-level frame wants it so. A sneaky
+iframe cannot force the FedCM UI to occlude important content from the main page.
 
 <!-- ============================================================ -->
 # Privacy # {#privacy}
