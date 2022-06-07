@@ -6,7 +6,6 @@ Explainer: [explainer.md](explainer.md)
 
 Work-in-progress specification: <https://fedidcg.github.io/FedCM/>
 
-
 ## Introduction
 
 As the web has evolved there have been ongoing privacy-oriented changes
