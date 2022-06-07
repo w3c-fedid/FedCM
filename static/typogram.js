@@ -114,7 +114,7 @@ async function svgbob(url) {
 
 document.addEventListener("DOMContentLoaded", async function() {
   //const convert_string = await svgbob("https://cdn.jsdelivr.net/npm/svgbob-wasm@0.4.1-a0/svgbob_wasm_bg.wasm");
-  const convert_string = await svgbob("typogram.wasm");
+  const convert_string = await svgbob("/FedCM/static/typogram.wasm");
   document.querySelectorAll("script[type='text/typogram']").forEach((script) => {
     const source = script.innerHTML;
     const dest = document.createElement("svg");
