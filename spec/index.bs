@@ -81,7 +81,7 @@ dl.domintro dt code {
 </style>
 
 <script src="https://fedidcg.github.io/FedCM/static/underscore-min.js"></script>
-<script src="https://fedidcg.github.io/FedCM/static/raphael.min.js"></script>   
+<script src="https://fedidcg.github.io/FedCM/static/raphael.min.js"></script>
 <script src="https://fedidcg.github.io/FedCM/static/webfont.js"></script>
 <script src="https://fedidcg.github.io/FedCM/static/typogram.js"></script>
 
@@ -458,6 +458,11 @@ provides the main security boundary on the web.
     * [[OIDC-Connect-Core#Authentication]]
     * [[SAML-Glossary]]
 
+: <dfn>client id</dfn>
+:: Each [=IDP=] assigns to each [=RP=] a [=client id=] to uniquely identify the [=RP=]. Note that
+    this ID is dependent on both the [=IDP=] and the [=RP=], but the [=client id=] of an [=RP=] only
+    needs to be unique with respect to any other [=client id=] within the same [=IDP=].
+
 : <dfn>directed identifier</dfn>
 :: A [=user identifier=] that that is unique for each [=site=] the user visits. A
     goal of anti-tracking policy is to promote [=user identifiers=] to become
@@ -590,7 +595,6 @@ The [[#idp-api]] and the [[#rp-api]] defines a set of HTTP APIs that cooperating
 that they can use.
 
 <script type="text/typogram">
-
 ┌───────────┐                  ┌───────────┐                      ┌───────────┐
 │           │                  │           │                      │           │
 │  Relying  │                  │   User    │                      │  Identity │
@@ -627,6 +631,71 @@ The user agent intermediates in such a matter that makes it impractical for the
 API to be used for tracking purposes, while preserving the functionality of
 identity federation.
 
+<script type="text/typogram">
+    Relying                         User                           Identity
+    Party                           Agent                          Provider
+
+      |                               |                               |
+      | "credential.login()"          |                               |
+      |------------------------------>|                               |
+      |                               |                               |
+      |                               | "GET /.well-known/fedcm.json" |
+      |                               |------------------------------>|
+      |                               |<------------------------------| "{"
+      |                               |                               |   "provider_urls: [ ... ]"
+      |                               |                               | "}"
+      |                               |                               |
+      |                               | "GET /fedcm.json"             |
+      |                               |------------------------------>|
+      |                               |<------------------------------| "{"
+      |                               |                               |   "id_token_endpoint: ...,"
+      |                               |                               |   "accounts_endpoint: ...,"
+      |                               |                               |   "client_metadata_endpoint: ...,"
+      |                               |                               |   "revocation_endpoint: ...,"
+      |                               |                               |   "branding: ...,"
+      |                               |                               | "}"
+      |                               |                               |
+      |                               | "GET client_metadata.php"     |
+      |                               | "client_id"                   |
+      |                               |------------------------------>|
+      |                               |<------------------------------| "{"
+      |                               |                               |   "terms_of_service_url: ...,"
+      |                               |                               |   "privacy_policy_url: ...,"
+      |                               |                               | "}"
+      |                               |                               |
+      |                               |                               |
+      |                               | "GET accounts.php"            |
+      |                               | "cookies"                     |
+      |                               |------------------------------>|
+      |                               |<------------------------------| "{"
+      |                               |                               |   "accounts: [ ... ]"
+      |                               |                               | "}"
+      |                               |                               |
+      |                               |                               |
+      |                     +---------+                               |
+      |                     |         |                               |
+      |                     |         |                               |
+      |                     |         | "account chooser"             |
+      |                     |         |                               |
+      |                     |         |                               |
+      |                     +-------->|                               |
+      |                               |                               |
+      |                               |                               |
+      |                               |                               |
+      |                               | "POST token.php"              |
+      |                               | "client_id, cookies, account" |
+      |                               |------------------------------>|
+      |                               |<------------------------------| "{"
+      |                               |                               |   "id_token: ...,"
+      |                               |                               | "}"
+      |                "{ id_token }" |                               |
+      |<------------------------------|                               |
+      |                               |                               |
+      |                               |                               |
+     -+-                             -+-                             -+-
+</script>
+
+
 This document defines the APIs in the following order:
 
 1. The [[#idp-api]]
@@ -658,8 +727,8 @@ The manifest discovery endpoint is fetched:
 
 (a) **without** cookies,
 (b) **with** a special [[#Sec-FedCM-CSRF]] header,
-(c) **without** a [[RFC7231#header.referer|Referer]] header, and
-(c) **without** following [[RFC7231#header.location|HTTP redirects]].
+(c) **without** a [[RFC9110#header.referer|Referer]] header, and
+(c) **without** following [[RFC9110#header.location|HTTP redirects]].
 
 For example:
 
@@ -672,7 +741,9 @@ Sec-FedCM-CSRF: ?1
 ```
 </div>
 
-The file is parsed expecting the following properties:
+The file is parsed expecting [=Manifest=] JSON object.
+
+The <dfn>Manifest</dfn> JSON object has the following properties:
 
 <dl dfn-type="argument" dfn-for="Manifest">
     :   <dfn>accounts_endpoint</dfn> (required)
@@ -752,8 +823,8 @@ The accounts list endpoint provides the list of accounts the user has at the [=I
 The accounts list endpoint is fetched
 (a) **with** [=IDP=] cookies,
 (b) **with** a special [[#Sec-FedCM-CSRF]] header,
-(c) **without** a [[RFC7231#header.referer|Referer]] header, and
-(d) **without** following [[RFC7231#header.location|HTTP redirects]].
+(c) **without** a [[RFC9110#header.referer|Referer]] header, and
+(d) **without** following [[RFC9110#header.location|HTTP redirects]].
 
 For example:
 
@@ -786,7 +857,7 @@ Every <dfn>Account JSON</dfn> is expected to have the following properties:
     :   <dfn>given_name</dfn> (optional)
     ::  The user's given name.
     :   <dfn>approved_clients</dfn> (optional)
-    ::  A list of [=RP=]s (in the form of Client IDs) this account is already registered with. Used in the [=sign-up=] to allow the [=IDP=] to control whether to show the [=Privacy Policy=] and the [=Terms of Service=].
+    ::  A list of [=RP=]s (in the form of [=Client ID=]s) this account is already registered with. Used in the [=sign-up=] to allow the [=IDP=] to control whether to show the [=Privacy Policy=] and the [=Terms of Service=].
 </dl>
 
 For example:
@@ -822,10 +893,10 @@ The client metadata endpoint provides metadata about [=RP=]s.
 The client medata endpoint is fetched
 (a) **without** cookies,
 (b) **with** a special [[#Sec-FedCM-CSRF]] header,
-(c) **with** a [[RFC7231#header.referer|Referer]] header indicating the [=RP=]'s origin
+(c) **with** a [[RFC9110#header.referer|Referer]] header indicating the [=RP=]'s origin
     (as if [[referrer-policy#referrer-policy-strict-origin|Referer-Policy: strict-origin]]
     was in use), and
-(d) **without** following [[RFC7231#header.location|HTTP redirects]].
+(d) **without** following [[RFC9110#header.location|HTTP redirects]].
 
 The user agent also passes the **client_id**.
 
@@ -870,23 +941,23 @@ The ID Token endpoint is responsible for [=minting=] a new [=id token=] for the 
 The ID Token endpoint is fetched
 (a) as a **POST** request,
 (b) **with** [=IDP=] cookies,
-(c) **with** a [[RFC7231#header.referer|Referer]] header indicating the [=RP=]'s origin
+(c) **with** a [[RFC9110#header.referer|Referer]] header indicating the [=RP=]'s origin
     (as if [[referrer-policy#referrer-policy-strict-origin|Referer-Policy: strict-origin]]
     was in use),
 (d) **with** a special [[#Sec-FedCM-CSRF]] header, and
-(e) **without** following [[RFC7231#header.location|HTTP redirects]].
+(e) **without** following [[RFC9110#header.location|HTTP redirects]].
 
 It will also contain the following parameters in the request body `application/x-www-form-urlencoded`:
 
 <dl dfn-type="argument" dfn-for="id_token_endpoint_request">
     :   <dfn>client_id</dfn>
-    ::  The [=RP=]'s client it
+    ::  The [=RP=]'s [=client id=].
     :   <dfn>nonce</dfn>
     ::  The request nonce
     :   <dfn>account_id</dfn>
     ::  The account identifier that was selected.
-    :   <dfn>consent_acquired</dfn>
-    ::  Whether the [=privacy policy=] and the [=terms of service=] were displayed to the user.
+    :   <dfn>disclosure_text_shown</dfn>
+    ::  Whether the user agent has explicitly shown to the user what specific information the [=IDP=] intends to share with the [=RP=] (e.g. "idp.example will share your name, email.... with rp.example"), used by the [=sign-up=] algorithm for new users but not by the [=sign-in=] algorithm for returning users.
 </dl>
 
 For example:
@@ -899,7 +970,7 @@ Referer: https://rp.example/
 Content-Type: application/x-www-form-urlencoded
 Cookie: 0x23223
 Sec-FedCM-CSRF: ?1
-account_id=123&client_id=client1234&nonce=Ct60bD&consent_acquired=true
+account_id=123&client_id=client1234&nonce=Ct60bD&disclosure_text_shown=true
 ```
 </div>
 
@@ -925,23 +996,23 @@ For example:
 <!-- ============================================================ -->
 
 The revocation endpoint is responsible for revoking all [=id token=]s for the
-specified client ID for the user.
+specified [=client id=] for the user.
 
 The request is made:
 
 (a) as a **POST** request,
 (b) **with** [=IDP=] cookies,
 (c) **with** a special [[#Sec-FedCM-CSRF]] header,
-(d) **with** a [[RFC7231#header.referer|Referer]] header indicating the [=RP=]'s origin
+(d) **with** a [[RFC9110#header.referer|Referer]] header indicating the [=RP=]'s origin
     (as if [[referrer-policy#referrer-policy-strict-origin|Referer-Policy: strict-origin]]
     was in use), and
-(e) **without** following [[RFC7231#header.location|HTTP redirects]].
+(e) **without** following [[RFC9110#header.location|HTTP redirects]].
 
 It will also contain the following parameters in the request body `application/x-www-form-urlencoded`:
 
 <dl dfn-type="argument" dfn-for="revocation_endpoint_request">
     :   <dfn>client_id</dfn>
-    :: The [=RP=]'s client id
+    :: The [=RP=]'s [=client id=].
     :   <dfn>hint</dfn>
     :: The hint provided to the JS call.
 </dl>
@@ -1096,7 +1167,7 @@ requests.
     :   <dfn>url</dfn>
     ::  The URL of the identity provider.
     :   <dfn>clientId</dfn>
-    ::  The client ID provided to the [=RP=] out of band by the [=IDP=]
+    ::  The [=client id=] provided to the [=RP=] out of band by the [=IDP=]
     :   <dfn>hint</dfn>
     ::  Optional `accountId` hint. Maybe used by the UA when displaying the
          account chooser dialog.
@@ -1238,7 +1309,7 @@ To <dfn>fetch the accounts list</dfn>:
         |provider|["{{FederatedIdentityProvider/url}}"]
     1. Let the |accounts list| be the result of fetching the |accounts_endpoint|
         with the [=Identity Provider=]'s cookies.  This request MUST NOT follow
-        [[RFC7231#header.location|HTTP redirects]] and instead abort with an
+        [[RFC9110#header.location|HTTP redirects]] and instead abort with an
         error if there are any. See also [[#idp-api-accounts-endpoint]].
         TODO: explain why we must not follow redirects in the security section.
     1. Return the |accounts list|.
@@ -1251,7 +1322,7 @@ To <dfn>sign-up</dfn> the user with a given |account|:
         then display the |metadata|["{{client_metadata_endpoint_response/privacy_policy_url}}"] link.
     1. If |metadata|["terms_of_service_url"] is defined and
         the provider["{{FederatedIdentityProvider/clientId}}"] is not in the list of |account|["{{accounts_endpoint_response_accounts/approved_clients}}"]
-	then display the |metadata|["{{client_metadata_endpoint_response/terms_of_service_url}}"] link.
+	      then display the |metadata|["{{client_metadata_endpoint_response/terms_of_service_url}}"] link.
     1. Prompt the user to gather explicit intent to create an account. The user agent MAY use the
         [=Branding JSON=] to inform the style choices of its UI.
     1. Set the account's {{StateMachine/Account State}} from [=unregistered=]
@@ -1266,7 +1337,7 @@ To <dfn noexport>fetch the client metadata</dfn>:
     1. Let the |policies| be the result of fetching the
         |client_metadata_endpoint| with the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]]
         header but without the [=Identity Provider=]'s cookies.  This request
-        MUST NOT follow [[RFC7231#header.location|HTTP redirects]] and instead
+        MUST NOT follow [[RFC9110#header.location|HTTP redirects]] and instead
         abort with an error if there are any. See also [[#idp-api-client-id-metadata-endpoint]].
     1. Return |policies|.
 
@@ -1300,7 +1371,7 @@ To <dfn>create tokens</dfn>:
         * {{FederatedTokens/idToken}} as |tokens|["id_token"]
     1. <a for=Promise>Resolve</a> |promise| with |tokens| and return |promise|.
 
-To <dfn>fetch the manifest</dfn> given a {{FederatedIdentityProvider}} |provider|:
+The <dfn>fetch the manifest</dfn> algorithm accepts a {{FederatedIdentityProvider}} |provider| and returns a [=Manifest=] object:
     1. In parallel, perform the following two steps:
         1. Let |manifestInSet| be the result of running [=check the root manifest=], passing
             |provider|.
@@ -1316,7 +1387,7 @@ to keep their actual manifest on an arbitary path while allowing the user agent 
 manipulation to fingerprint. See https://github.com/fedidcg/FedCM/issues/230 for more details on
 this attack.
 
-To <dfn>check the root manifest</dfn> given a {{FederatedIdentityProvider}} |provider|:
+The <dfn>check the root manifest</dfn> accepts a {{FederatedIdentityProvider}} |provider| and whether the manifest is included in the manifest list:
     1. Let |url| be |provider|'s {{FederatedIdentityProvider/url}}.
     1. Let |rootUrl| be a new [=/URL=].
     1. Set |rootUrl|'s [=url/scheme=] to |url|'s [=url/scheme=].
@@ -1339,16 +1410,17 @@ To <dfn>check the root manifest</dfn> given a {{FederatedIdentityProvider}} |pro
         1. Return true if |json|["provider_urls"][0] [=string/is=] equal to |provider|'s
             {{FederatedIdentityProvider/url}}, otherwise return false.
 
-To <dfn>fetch the internal manifest</dfn> given a {{FederatedIdentityProvider}} |provider|:
+The <dfn>fetch the internal manifest</dfn> algorithm accepts a {{FederatedIdentityProvider}} |provider| and returns a [=Manifest=]:
     1. Run a [[!CSP]] check with a [[CSP#directive-connect-src|connect-src]]
         directive on the URL passed as |provider|'s {{FederatedIdentityProvider/url}}
         and return if the check fails.
     1. Let the |manifest url| be the file "fedcm.json" relative to the directory
         prefix passed as |provider|'s {{FederatedIdentityProvider/url}}.
-    1. Return the result of fetching the |manifest url| with the
-        [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]] header but without the
-        [=Identity Provider=]'s cookies.  This request MUST NOT follow
-        [[RFC7231#header.location|HTTP redirects]] and instead abort with an
+    1. Return the result of fetching the |manifest url| and parsing it into a [=Manifest=].
+        TODO: specify how the fetching and the parsing works.
+        The fetch MUST be done with the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]] header but
+	      without the [=Identity Provider=]'s cookies. This request MUST NOT follow
+        [[RFC9110#header.location|HTTP redirects]] and instead abort with an
         error if there are any.
 
 <!-- ============================================================ -->
@@ -1393,7 +1465,7 @@ When this method is invoked, the user agent MUST execute the following algorithm
         |provider|["{{FederatedIdentityProvider/url}}"]
     1. Fetch the |revocation_endpoint| with the [=Identity Provider=]'s
         cookies.  This request MUST NOT follow
-        [[RFC7231#header.location|HTTP redirects]] and instead abort with an
+        [[RFC9110#header.location|HTTP redirects]] and instead abort with an
         error if there are any. See also [[#idp-api-revocation-endpoint]].
     1. If the HTTP response code is not 204, <a for=Promise>reject</a> |promise| and return
         |promise|.
@@ -1503,7 +1575,7 @@ When this method is invoked, the user agent MUST execute the following algorithm
         {{StateMachine/Session State}} is [=logged-out=] continue
     1. POST to the |request|'s {{FederatedCredentialLogoutRpsRequest/url}} with the
         [=Relying Parties=] cookies.  This request MUST NOT follow
-        [[RFC7231#header.location|HTTP redirects]] and instead abort the request.
+        [[RFC9110#header.location|HTTP redirects]] and instead abort the request.
     1. Set the |credential| {{StateMachine/Session State}} to [=logged-out=]
   1. <a for=Promise>Resolve</a> |promise| with |undefined| and return |promise|.
 
@@ -1526,13 +1598,29 @@ separate section for [[#privacy]] considerations.
 <!-- ============================================================ -->
 
 The FedCM API introduces the ability for a site to ask the browser to execute a few different
-network requests. It is important for the browser to execute these in such a way that it does not
-accidentally leak sensitive information about the user to the site using FedCM. The diagram in the
-[explainer](https://github.com/fedidcg/FedCM/blob/main/explainer.md#http-api) has information about
-how these network requests are performed.
+network requests, as shown in the [[#high-level-design]] section. It is important for the browser to
+execute these in such a way that it does not accidentally leak sensitive information about the user
+to the site using FedCM. The following table has information about the network requests performed:
 
-* The manifest fetch is safe because it is performed without cookies, client id, or referrer. Thus,
-    anyone could perform this fetch, and the information contained therein is considered public.
+<script type="text/typogram">
+┌──────────────────────────┬─────────┬───────────┬──────────┐
+│ Endpoint                 │ Cookies │ Client_id │ Referrer │
+├──────────────────────────┼─────────┼───────────┼──────────┤
+│ fedcm.json               │  no     │  no       │  no      │
+├──────────────────────────┼─────────┼───────────┼──────────┤
+│ accounts_endpoint        │  yes    │  no       │  no      │
+├──────────────────────────┼─────────┼───────────┼──────────┤
+│ token_endpoint           │  yes    │  yes      │  yes     │
+├──────────────────────────┼─────────┼───────────┼──────────┤
+│ client_metadata_endpoint │  no     │  yes      │  yes     │
+├──────────────────────────┼─────────┼───────────┼──────────┤
+│ revocation_endpoint      │  yes    │  yes      │  yes     │
+└──────────────────────────┴─────────┴───────────┴──────────┘
+</script>
+
+* The manifest fetch is safe because it is performed without cookies, [=client id=], or referrer.
+    Thus, anyone could perform this fetch, and the information contained therein is considered
+    public.
 
 * The accounts are fetched with cookies from the [=IDP=]. This in theory is a new power that the
     [=RP=] gains that it would not have otherwise. Note however that this browser fetch is performed
@@ -1546,15 +1634,15 @@ how these network requests are performed.
     a lot about the user from this fetch, but this is discussed in detail in the [[#privacy]]
     section.
 
-* The client metadata fetch is performed without cookies from the [=IDP=] but with a client id and a
-    referrer. This allows the [=IDP=] to communicate the relevant [=Privacy Policy=] and [=Terms of
-    Service=] to the user agent, in case they need to be displayed. Again, the [=RP=] gains nothing
-    from this fetch, and the [=RP=] could already perform this fetch if it wanted to since it
-    involves no cookies from the [=IDP=].
+* The client metadata fetch is performed without cookies from the [=IDP=] but with a [=client id=]
+    and a referrer. This allows the [=IDP=] to communicate the relevant [=Privacy Policy=] and
+    [=Terms of Service=] to the user agent, in case they need to be displayed. Again, the [=RP=]
+    gains nothing from this fetch, and the [=RP=] could already perform this fetch if it wanted to
+    since it involves no cookies from the [=IDP=].
 
-* The token and revocation fetches expose the most: they are peformed with cookies, client id, and
-    referrer. The former is gated on the user interacting with the user agent UI, and enables the
-    [=IDP=] to communicate to the [=RP=] the information required to perform a federated
+* The token and revocation fetches expose the most: they are peformed with cookies, [=client id=],
+    and referrer. The former is gated on the user interacting with the user agent UI, and enables
+    the [=IDP=] to communicate to the [=RP=] the information required to perform a federated
     signin/signup. It is not possible for the [=RP=] or the [=IDP=] to force this fetch to happen,
     as the user agent cannot be spoofed or otherwise tricked. The later can only be performed once a
     token has been created, but does not require user interaction. That said, performing this fetch
