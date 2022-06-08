@@ -786,7 +786,7 @@ Every <dfn>Account JSON</dfn> is expected to have the following properties:
     :   <dfn>given_name</dfn> (optional)
     ::  The user's given name.
     :   <dfn>approved_clients</dfn> (optional)
-    ::  A list of [=RP=]s (in the form of Client IDs) this account is already registered with.
+    ::  A list of [=RP=]s (in the form of Client IDs) this account is already registered with. Used in the [=sign-up=] to allow the [=IDP=] to control whether to show the [=Privacy Policy=] and the [=Terms of Service=].
 </dl>
 
 For example:
@@ -1243,13 +1243,15 @@ To <dfn>fetch the accounts list</dfn>:
         TODO: explain why we must not follow redirects in the security section.
     1. Return the |accounts list|.
 
-To <dfn>sign-up</dfn> the user:
+To <dfn>sign-up</dfn> the user with a given |account|:
     1. Let |metadata| be the result of running the [=fetch the client metadata=]
         algorithm.
-    1. If |metadata|["privacy_policy_url"] is defined then display the
-        |metadata|["privacy_policy_url"] link.
-    1. If |metadata|["terms_of_service_url"] is defined then display the
-        |metadata|["terms_of_service_url"] link.
+    1. If |metadata|["{{client_metadata_endpoint_response/privacy_policy_url}}"] is defined and
+        the provider["{{FederatedIdentityProvider/clientId}}"] is not in the list of |account|["{{accounts_endpoint_response_accounts/approved_clients}}"]
+        then display the |metadata|["{{client_metadata_endpoint_response/privacy_policy_url}}"] link.
+    1. If |metadata|["terms_of_service_url"] is defined and
+        the provider["{{FederatedIdentityProvider/clientId}}"] is not in the list of |account|["{{accounts_endpoint_response_accounts/approved_clients}}"]
+	then display the |metadata|["{{client_metadata_endpoint_response/terms_of_service_url}}"] link.
     1. Prompt the user to gather explicit intent to create an account. The user agent MAY use the
         [=Branding JSON=] to inform the style choices of its UI.
     1. Set the account's {{StateMachine/Account State}} from [=unregistered=]
