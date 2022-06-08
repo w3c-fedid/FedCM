@@ -2,7 +2,7 @@
 Title: Federated Credential Management API
 Shortname: FedCM
 Level: 1
-Status: CG-DRAFT
+Status: w3c/CG-DRAFT
 Group: fedidcg
 ED: https://fedidcg.github.io/FedCM/
 Repository: fedidcg/FedCM
@@ -81,7 +81,7 @@ dl.domintro dt code {
 </style>
 
 <script src="https://fedidcg.github.io/FedCM/static/underscore-min.js"></script>
-<script src="https://fedidcg.github.io/FedCM/static/raphael.min.js"></script>   
+<script src="https://fedidcg.github.io/FedCM/static/raphael.min.js"></script>
 <script src="https://fedidcg.github.io/FedCM/static/webfont.js"></script>
 <script src="https://fedidcg.github.io/FedCM/static/typogram.js"></script>
 
@@ -722,8 +722,8 @@ The manifest discovery endpoint is fetched:
 
 (a) **without** cookies,
 (b) **with** a special [[#Sec-FedCM-CSRF]] header,
-(c) **without** a [[RFC7231#header.referer|Referer]] header, and
-(c) **without** following [[RFC7231#header.location|HTTP redirects]].
+(c) **without** a [[RFC9110#header.referer|Referer]] header, and
+(c) **without** following [[RFC9110#header.location|HTTP redirects]].
 
 For example:
 
@@ -818,8 +818,8 @@ The accounts list endpoint provides the list of accounts the user has at the [=I
 The accounts list endpoint is fetched
 (a) **with** [=IDP=] cookies,
 (b) **with** a special [[#Sec-FedCM-CSRF]] header,
-(c) **without** a [[RFC7231#header.referer|Referer]] header, and
-(d) **without** following [[RFC7231#header.location|HTTP redirects]].
+(c) **without** a [[RFC9110#header.referer|Referer]] header, and
+(d) **without** following [[RFC9110#header.location|HTTP redirects]].
 
 For example:
 
@@ -888,10 +888,10 @@ The client metadata endpoint provides metadata about [=RP=]s.
 The client medata endpoint is fetched
 (a) **without** cookies,
 (b) **with** a special [[#Sec-FedCM-CSRF]] header,
-(c) **with** a [[RFC7231#header.referer|Referer]] header indicating the [=RP=]'s origin
+(c) **with** a [[RFC9110#header.referer|Referer]] header indicating the [=RP=]'s origin
     (as if [[referrer-policy#referrer-policy-strict-origin|Referer-Policy: strict-origin]]
     was in use), and
-(d) **without** following [[RFC7231#header.location|HTTP redirects]].
+(d) **without** following [[RFC9110#header.location|HTTP redirects]].
 
 The user agent also passes the **client_id**.
 
@@ -936,11 +936,11 @@ The ID Token endpoint is responsible for [=minting=] a new [=id token=] for the 
 The ID Token endpoint is fetched
 (a) as a **POST** request,
 (b) **with** [=IDP=] cookies,
-(c) **with** a [[RFC7231#header.referer|Referer]] header indicating the [=RP=]'s origin
+(c) **with** a [[RFC9110#header.referer|Referer]] header indicating the [=RP=]'s origin
     (as if [[referrer-policy#referrer-policy-strict-origin|Referer-Policy: strict-origin]]
     was in use),
 (d) **with** a special [[#Sec-FedCM-CSRF]] header, and
-(e) **without** following [[RFC7231#header.location|HTTP redirects]].
+(e) **without** following [[RFC9110#header.location|HTTP redirects]].
 
 It will also contain the following parameters in the request body `application/x-www-form-urlencoded`:
 
@@ -998,10 +998,10 @@ The request is made:
 (a) as a **POST** request,
 (b) **with** [=IDP=] cookies,
 (c) **with** a special [[#Sec-FedCM-CSRF]] header,
-(d) **with** a [[RFC7231#header.referer|Referer]] header indicating the [=RP=]'s origin
+(d) **with** a [[RFC9110#header.referer|Referer]] header indicating the [=RP=]'s origin
     (as if [[referrer-policy#referrer-policy-strict-origin|Referer-Policy: strict-origin]]
     was in use), and
-(e) **without** following [[RFC7231#header.location|HTTP redirects]].
+(e) **without** following [[RFC9110#header.location|HTTP redirects]].
 
 It will also contain the following parameters in the request body `application/x-www-form-urlencoded`:
 
@@ -1304,7 +1304,7 @@ To <dfn>fetch the accounts list</dfn>:
         |provider|["{{FederatedIdentityProvider/url}}"]
     1. Let the |accounts list| be the result of fetching the |accounts_endpoint|
         with the [=Identity Provider=]'s cookies.  This request MUST NOT follow
-        [[RFC7231#header.location|HTTP redirects]] and instead abort with an
+        [[RFC9110#header.location|HTTP redirects]] and instead abort with an
         error if there are any. See also [[#idp-api-accounts-endpoint]].
         TODO: explain why we must not follow redirects in the security section.
     1. Return the |accounts list|.
@@ -1317,7 +1317,7 @@ To <dfn>sign-up</dfn> the user with a given |account|:
         then display the |metadata|["{{client_metadata_endpoint_response/privacy_policy_url}}"] link.
     1. If |metadata|["terms_of_service_url"] is defined and
         the provider["{{FederatedIdentityProvider/clientId}}"] is not in the list of |account|["{{accounts_endpoint_response_accounts/approved_clients}}"]
-	then display the |metadata|["{{client_metadata_endpoint_response/terms_of_service_url}}"] link.
+	      then display the |metadata|["{{client_metadata_endpoint_response/terms_of_service_url}}"] link.
     1. Prompt the user to gather explicit intent to create an account. The user agent MAY use the
         [=Branding JSON=] to inform the style choices of its UI.
     1. Set the account's {{StateMachine/Account State}} from [=unregistered=]
@@ -1332,7 +1332,7 @@ To <dfn noexport>fetch the client metadata</dfn>:
     1. Let the |policies| be the result of fetching the
         |client_metadata_endpoint| with the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]]
         header but without the [=Identity Provider=]'s cookies.  This request
-        MUST NOT follow [[RFC7231#header.location|HTTP redirects]] and instead
+        MUST NOT follow [[RFC9110#header.location|HTTP redirects]] and instead
         abort with an error if there are any. See also [[#idp-api-client-id-metadata-endpoint]].
     1. Return |policies|.
 
@@ -1460,7 +1460,7 @@ When this method is invoked, the user agent MUST execute the following algorithm
         |provider|["{{FederatedIdentityProvider/url}}"]
     1. Fetch the |revocation_endpoint| with the [=Identity Provider=]'s
         cookies.  This request MUST NOT follow
-        [[RFC7231#header.location|HTTP redirects]] and instead abort with an
+        [[RFC9110#header.location|HTTP redirects]] and instead abort with an
         error if there are any. See also [[#idp-api-revocation-endpoint]].
     1. If the HTTP response code is not 204, <a for=Promise>reject</a> |promise| and return
         |promise|.
@@ -1570,7 +1570,7 @@ When this method is invoked, the user agent MUST execute the following algorithm
         {{StateMachine/Session State}} is [=logged-out=] continue
     1. POST to the |request|'s {{FederatedCredentialLogoutRpsRequest/url}} with the
         [=Relying Parties=] cookies.  This request MUST NOT follow
-        [[RFC7231#header.location|HTTP redirects]] and instead abort the request.
+        [[RFC9110#header.location|HTTP redirects]] and instead abort the request.
     1. Set the |credential| {{StateMachine/Session State}} to [=logged-out=]
   1. <a for=Promise>Resolve</a> |promise| with |undefined| and return |promise|.
 
