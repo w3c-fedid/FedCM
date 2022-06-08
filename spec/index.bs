@@ -736,7 +736,9 @@ Sec-FedCM-CSRF: ?1
 ```
 </div>
 
-The file is parsed expecting the following properties:
+The file is parsed expecting [=Manifest=] JSON object.
+
+The <dfn>Manifest</dfn> JSON object has the following properties:
 
 <dl dfn-type="argument" dfn-for="Manifest">
     :   <dfn>accounts_endpoint</dfn> (required)
@@ -1364,7 +1366,7 @@ To <dfn>create tokens</dfn>:
         * {{FederatedTokens/idToken}} as |tokens|["id_token"]
     1. <a for=Promise>Resolve</a> |promise| with |tokens| and return |promise|.
 
-To <dfn>fetch the manifest</dfn> given a {{FederatedIdentityProvider}} |provider|:
+The <dfn>fetch the manifest</dfn> algorithm accepts a {{FederatedIdentityProvider}} |provider| and returns a [=Manifest=] object:
     1. In parallel, perform the following two steps:
         1. Let |manifestInSet| be the result of running [=check the root manifest=], passing
             |provider|.
@@ -1380,7 +1382,7 @@ to keep their actual manifest on an arbitary path while allowing the user agent 
 manipulation to fingerprint. See https://github.com/fedidcg/FedCM/issues/230 for more details on
 this attack.
 
-To <dfn>check the root manifest</dfn> given a {{FederatedIdentityProvider}} |provider|:
+The <dfn>check the root manifest</dfn> accepts a {{FederatedIdentityProvider}} |provider| and whether the manifest is included in the manifest list:
     1. Let |url| be |provider|'s {{FederatedIdentityProvider/url}}.
     1. Let |rootUrl| be a new [=/URL=].
     1. Set |rootUrl|'s [=url/scheme=] to |url|'s [=url/scheme=].
@@ -1403,15 +1405,16 @@ To <dfn>check the root manifest</dfn> given a {{FederatedIdentityProvider}} |pro
         1. Return true if |json|["provider_urls"][0] [=string/is=] equal to |provider|'s
             {{FederatedIdentityProvider/url}}, otherwise return false.
 
-To <dfn>fetch the internal manifest</dfn> given a {{FederatedIdentityProvider}} |provider|:
+The <dfn>fetch the internal manifest</dfn> algorithm accepts a {{FederatedIdentityProvider}} |provider| and returns a [=Manifest=]:
     1. Run a [[!CSP]] check with a [[CSP#directive-connect-src|connect-src]]
         directive on the URL passed as |provider|'s {{FederatedIdentityProvider/url}}
         and return if the check fails.
     1. Let the |manifest url| be the file "fedcm.json" relative to the directory
         prefix passed as |provider|'s {{FederatedIdentityProvider/url}}.
-    1. Return the result of fetching the |manifest url| with the
-        [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]] header but without the
-        [=Identity Provider=]'s cookies.  This request MUST NOT follow
+    1. Return the result of fetching the |manifest url| and parsing it into a [=Manifest=].
+        TODO: specify how the fetching and the parsing works.
+        The fetch MUST be done with the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]] header but
+	without the [=Identity Provider=]'s cookies. This request MUST NOT follow
         [[RFC7231#header.location|HTTP redirects]] and instead abort with an
         error if there are any.
 
