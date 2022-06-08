@@ -6,7 +6,6 @@ Explainer: [explainer.md](explainer.md)
 
 Work-in-progress specification: <https://fedidcg.github.io/FedCM/>
 
-
 ## Introduction
 
 As the web has evolved there have been ongoing privacy-oriented changes
@@ -24,7 +23,6 @@ as they were the primitives provided by the web.
 
 The [explainer](explainer.md) and [spec](https://fedidcg.github.io/FedCM)
 provide a potential API and the rational behind how that API was designed.
-
 
 ## Contributing
 
@@ -59,7 +57,6 @@ There are several ways to contribute to the Federated Credential Management API.
    HOWTO and take a look at the
    [Relying Party API](https://fedidcg.github.io/FedCM/#rp-api) to see what is needed
    on the RP side.
-
 
 ## Code of Conduct
 
