@@ -1618,15 +1618,18 @@ to the site using FedCM. The following table has information about the network r
 └──────────────────────────┴─────────┴───────────┴──────────┘
 </script>
 
+For fetches that are sent with cookies, we actually consider them equivalent to first-party fetches,
+and hence include
+[SameSite](https://httpwg.org/http-extensions/draft-ietf-httpbis-rfc6265bis.html#name-the-samesite-attribute-2)=None
+cookies. This makes it easy for an [=IDP=] to adopt the FedCM API without introducing security
+issues on the API, since the [=RP=] cannot inspect the results from the fetches in any way.
+
 * The manifest fetch is safe because it is performed without cookies, [=client id=], or referrer.
     Thus, anyone could perform this fetch, and the information contained therein is considered
     public.
 
 * The accounts are fetched with cookies from the [=IDP=]. This in theory is a new power that the
-    [=RP=] gains that it would not have otherwise. Note however that this browser fetch is performed
-    without showing the result to the [=RP=]. Therefore, the [=RP=] gains nothing from this fetch
-    until the user actually consents on signing in with an account, and at that point the [=IDP=]
-    chooses what to share with the [=RP=]. Preventing too many of these fetches may be important,
+    [=RP=] gains that it would not have otherwise. Preventing too many of these fetches may be important,
     but [=IDP=]s are already expected to protect against DoS attacks. In addition, the user agent
     should only allow one FedCM flow per page at any given moment, immediately rejecting any
     attempts to start another one. Since a FedCM flow can only be terminated when the user interacts
@@ -1652,7 +1655,32 @@ to the site using FedCM. The following table has information about the network r
     cannot sign the user out of their accounts on other [=RP=]s.
 
 <!-- ============================================================ -->
-## UI faking {#ui-faking}
+## Content Security Policy ## {#content-security-policy}
+<!-- ============================================================ -->
+
+The first fetch triggered by the FedCM API is the manifest list, which is public. However, this one
+points to the actual internal manifest, so it is important to perform a [[!CSP]] check on this to
+prevent some sneaky script from introducing FedCM calls into the [=RP=]'s site. Afterwards, any
+subsequent fetches are same origin with respect to the internal manifest or at least dependent on
+the contents of the internal manifest, and hence do not require additional checks.
+
+The non-same-origin fetches include, for example, the brand icon. The user agent does not perform a
+[[!CSP]] check on these because they are directly specified from the manifest. In addition, the
+rendering of this image is performed by the user agent, and as such this image cannot affect the
+[=RP=] site nor can they be inspected by the [=RP=] in any way.
+
+<!-- ============================================================ -->
+## Sec-FedCM-CSRF ## {#sec-fedcm-csrf}
+<!-- ============================================================ -->
+
+The FedCM API introduces a bunch of endpoints on the [=IDP=], so these need to be protected from XSS
+attacks. In order to do so, the FedCM API introduces the [[#Sec-FedCM-CSRF]] header, a [=forbidden
+header name=]. An [=IDP=] is encouraged to check for this header in the requests it receives, which
+ensures that the request was initiated by the user agent, based on the FedCM API. A malicious actor
+cannot spam FedCM API calls, so this is sufficient protection for the new [=IDP=] endpoints.
+
+<!-- ============================================================ -->
+## UI faking ## {#ui-faking}
 <!-- ============================================================ -->
 
 The FedCM API introduces new user agent UI, and the user agent may choose to show the UI entirely
