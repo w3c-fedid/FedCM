@@ -714,10 +714,10 @@ by exposing a series of HTTP endpoints:
 ## Manifest List ## {#idp-api-manifest-list}
 <!-- ============================================================ -->
 
-We use a two-tier manifest list in order to prevent the [=IDP=] to easily determine the [=RP=]
+We use a two-tier [=manifest list=] in order to prevent the [=IDP=] to easily determine the [=RP=]
 that a user is visiting by encoding the information in the manifest path. We solve this issue by
-requiring a manifest list to be on the root of the [=IDP=]. The [=manifest=] itself can be anywhere, but
-it will not be used if the user agent does not find it in the manifest list. This allows the [=IDP=]
+requiring a [=manifest list=] to be on the root of the [=IDP=]. The [=manifest=] itself can be anywhere, but
+it will not be used if the user agent does not find it in the [=manifest list=]. This allows the [=IDP=]
 to keep their actual [=manifest=] on an arbitary path while allowing the user agent to prevent manifest
 manipulation to fingerprint.
 
@@ -727,7 +727,7 @@ The <dfn>Manifest List</dfn> has the following properties:
 
 <dl dfn-type="argument" dfn-for="Manifest List">
     :   <dfn>provider_urls</dfn> (required)
-    ::  An array of URL that points the supported [=manifests=].
+    ::  An [=list=] of URLs that points to supported [=manifests=].
 </dl>
 
 <!-- ============================================================ -->
@@ -1397,8 +1397,7 @@ The <dfn>fetch the manifest</dfn> algorithm accepts a {{FederatedIdentityProvide
 The <dfn>check the manifest list</dfn> accepts a {{FederatedIdentityProvider}} |provider| and returns whether the manifest is included in the manifest list:
     1. Let |response| be the result of the [=fetch the manifest list=] for the |provider|.
     1. Let |manifest list| be the result of running the [=parse the manifest list=] algorithm with the |response|.
-    1. Return true if |manifest list|["provider_urls"][0] [=string/is=] equal to |provider|'s
-        {{FederatedIdentityProvider/url}}, otherwise return false.
+    1. Return true if if any of the entries in the |manifest list| is equal to |provider|'s {{FederatedIdentityProvider/url}}.
 
 The <dfn>fetch the manifest list</dfn> algorithm accepts a {{FederatedIdentityProvider}} |provider| and returns a <a spec=fetch for=/>response</a>:
     1. Let |url| be |provider|'s {{FederatedIdentityProvider/url}}.
@@ -1408,7 +1407,7 @@ The <dfn>fetch the manifest list</dfn> algorithm accepts a {{FederatedIdentityPr
     1. Set |rootUrl|'s [=url/path=] to ".well-known/fedcm.json".
     1. Let |request| be a new <a spec=fetch for=/>request</a> whose [=request/url=] is |rootUrl| and
         [=request/redirect mode=] set to "error". TODO: what other fields need to be set?
-    1. Return the result o[=Fetch=]ing |request| with <a spec=fetch>processResponseConsumeBody</a>.
+    1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following steps given a <a spec=fetch for=/>response</a> |response|/
 
 The <dfn>parse the manifest list</dfn> algorithm accepts a <a spec=fetch for=/>response</a> and returns a [=Manifest List=] or false if it fails to parse it:
     1. If |response| is a [=network error=] or its [=response/status=] is not an [=ok status=],
@@ -1431,23 +1430,23 @@ The <dfn>fetch the manifest</dfn> algorithm accepts a {{FederatedIdentityProvide
         prefix passed as |provider|'s {{FederatedIdentityProvider/url}}.
     1. Let |request| be a new <a spec=fetch for=/>request</a> whose [=request/url=] is |rootUrl| and
         [=request/redirect mode=] set to "error". TODO: what other fields need to be set?
-    1. Let |response| be the result o[=Fetch=]ing |request| with <a spec=fetch>processResponseConsumeBody</a>.
+    1. Let |response| be the result of [=Fetch=]ing |request| with <a spec=fetch>processResponseConsumeBody</a>.
         The fetch MUST be done with the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]] header but
 	without the [=Identity Provider=]'s cookies. This request MUST NOT follow
         [[RFC7231#header.location|HTTP redirects]] and instead abort with an
         error if there are any.
     1. Return the result of the [=parse the manifest=] algorithm with the |response|.
 
-The <dfn>parse the manifest</dfn> algorithm accepts a <a spec=fetch for=/>response</a> and returns a [=Manifest=] or false if it fails to parse it:
+The <dfn>parse the manifest</dfn> algorithm accepts a <a spec=fetch for=/>response</a> and returns a [=Manifest=] or null if it fails to parse it:
     1. If |response| is a [=network error=] or its [=response/status=] is not an [=ok status=],
-        return false.
-    1. If |response|'s [=Content-Type Metadata=] is not a [=JSON MIME Type=], return false.
+        return null.
+    1. If |response|'s [=Content-Type Metadata=] is not a [=JSON MIME Type=], return null.
     1. Let |json| be the result of [=parse JSON bytes to an Infra value=] passing |response|'s
         [=response/body=].
-    1. If |json| is a parsing exception, or if |json| is not an [=ordered map=], return false.
-    1. If |json|["accounts_endpoint"] does not exist, or if it is not a [=string=], return false.
-    1. If |json|["client_metadata_endpoint"] does not exist, or if it is not a [=string=], return false.
-    1. If |json|["id_token_endpoint"] does not exist, or if it is not a [=string=], return false.
+    1. If |json| is a parsing exception, or if |json| is not an [=ordered map=], return null.
+    1. If |json|["accounts_endpoint"] does not exist, or if it is not a [=string=], return null.
+    1. If |json|["client_metadata_endpoint"] does not exist, or if it is not a [=string=], return null.
+    1. If |json|["id_token_endpoint"] does not exist, or if it is not a [=string=], return null.
     1. Let |result| be a new [=Manifest=] created from |json|.
     1. Return |result|.
 
