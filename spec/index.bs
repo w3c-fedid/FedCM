@@ -1597,13 +1597,15 @@ separate section for [[#privacy]] considerations.
 ## Content Security Policy ## {#content-security-policy}
 <!-- ============================================================ -->
 
-The first fetch triggered by the FedCM API is the manifest list, which is public. However, this one
-points to the actual internal manifest, so it is important to perform a [[!CSP]] check on this. This
-prevents a malicious script from introducing a FedCM prompt that is not desired by the [=RP=] or the
-user. That is, the [[!CSP]] would fail because the manifest would not be an origin allowed by the
-[=RP=], hence preventing the undesired FedCM UI from being shown. In addition, any subsequent
-fetches are same origin with respect to the internal manifest or at least dependent on the contents
-of the internal manifest, and hence do not require additional checks.
+The first fetches triggered by the FedCM API are the manifest list, which is public, and the
+internal manifest. Imagine a malicious script attempting to execute the FedCM API calls to a
+malicious [=IDP=], one which is not trusted by the [=RP=]. If the call is successful, this would
+introduce browser UI on the [=RP=] with sign in options into a malicious [=IDP=]. This malicious
+[=IDP=] could then attempt to trick the user. The protection against this attack is the [[!CSP]]
+check, which would fail because the manifest would not be an origin allowed by the [=RP=], hence
+preventing the undesired FedCM UI from being shown. Since any subsequent fetches are same origin
+with respect to the internal manifest or at least dependent on the contents of the internal
+manifest, they do not require additional checks.
 
 The non-same-origin fetches include, for example, the brand icon. The user agent does not perform a
 [[!CSP]] check on these because they are directly specified from the manifest. In addition, the
@@ -1618,25 +1620,29 @@ The FedCM API introduces several non-static endpoints on the [=IDP=], so these n
 from XSS attacks. In order to do so, the FedCM API introduces the [[#Sec-FedCM-CSRF]] header, a
 [=forbidden header name=]. The header cannot be set by random websites, so the [=IDP=] can be
 confident that the request was originated by the FedCM browser rather than sent by a websites trying
-to run an XSS attack. An [=IDP=] must to check for this header in the credentialed requests it receives,
-which ensures that the request was initiated by the user agent, based on the FedCM API. A malicious
-actor cannot spam FedCM API calls, so this is sufficient protection for the new [=IDP=] endpoints.
+to run an XSS attack. An [=IDP=] must to check for this header in the credentialed requests it
+receives, which ensures that the request was initiated by the user agent, based on the FedCM API. A
+malicious actor cannot spam FedCM API calls, so this is sufficient protection for the new [=IDP=]
+endpoints.
 
 <!-- ============================================================ -->
 ## Browser Surface Impersonation ## {#browser-surface-impersonation}
 <!-- ============================================================ -->
 
-The FedCM API introduces new (trusted) user agent UI, and the user agent may choose to show the UI entirely
-on top of the page's contents, if anything because the page was the one responsible for this UI.
-This introduces a potential concern of a malicious site to try to replicate the FedCM UI, gain the user's trust that the user is interacting with a trusted browser surface and gather information from the user that they would only give to the browser rather than the site (e.g. usernames/passwords of **another** site). This is
-not possible because the FedCM UI uses the metadata about the user accounts of the [=IDP=], which the website doesn't have access. If
-this is a malicious site, it would not know the user accounts, otherwise the user is already
-compromised. In addition, the FedCM UI does not prompt the user to provide additional information
-such as username or password. Thus, the website UI (e.g. iframes) attempting to retrieve sensitive information from the user
-would be noticeably different from the FedCM UI. Finally, because the FedCM UI can only be queried
-from the top-level frame (or potentially from an iframe with explicit permission from the top-level
-frame), the priviledged UI surface is only shown when the top-level frame wants it so. A sneaky
-iframe cannot force the FedCM UI to occlude important content from the main page.
+The FedCM API introduces new (trusted) user agent UI, and the user agent may choose to show the UI
+entirely on top of the page's contents, if anything because the page was the one responsible for
+this UI. This introduces a potential concern of a malicious site to try to replicate the FedCM UI,
+gain the user's trust that the user is interacting with a trusted browser surface, and gather
+information from the user that they would only give to the browser rather than the site (e.g.
+usernames/passwords of **another** site). This is not possible because the FedCM UI uses the
+metadata about the user accounts of the [=IDP=], which the website doesn't have access. If this is a
+malicious site, it would not know the user accounts, otherwise the user is already compromised. In
+addition, the FedCM UI does not prompt the user to provide additional information such as username
+or password. Thus, the website UI (e.g. iframes) attempting to retrieve sensitive information from
+the user would be noticeably different from the FedCM UI. Finally, because the FedCM UI can only be
+queried from the top-level frame (or potentially from an iframe with explicit permission from the
+top-level frame), the priviledged UI surface is only shown when the top-level frame wants it so. A
+sneaky iframe cannot force the FedCM UI to occlude important content from the main page.
 
 <!-- ============================================================ -->
 # Privacy # {#privacy}
@@ -1679,13 +1685,14 @@ for an [=IDP=] to adopt the FedCM API without introducing security issues on the
     id=], or referrer. Thus, anyone could perform this fetch, and the information contained therein
     is considered public.
 
-* The accounts fetch can't be used to track users because it is performed with cookies from the [=IDP=] but, importantly, without the [=client id=] or referrer. This in theory is a new power that the
-    [=RP=] gains that it would not have otherwise. Preventing too many of these fetches may be important,
-    but [=IDP=]s are already expected to protect against DoS attacks. In addition, the user agent
-    should only allow one FedCM flow per page at any given moment, immediately rejecting any
-    attempts to start another one. Since a FedCM flow can only be terminated when the user interacts
-    or after a long timer, the number of fetches performed is not a concern. The [=IDP=] does learn
-    a lot about the user from this fetch, but this is discussed in detail below.
+* The accounts fetch can't be used to track users because it is performed with cookies from the
+    [=IDP=] but, importantly, without the [=client id=] or referrer. This in theory is a new power
+    that the [=RP=] gains that it would not have otherwise. Preventing too many of these fetches may
+    be important, but [=IDP=]s are already expected to protect against DoS attacks. In addition, the
+    user agent should only allow one FedCM flow per page at any given moment, immediately rejecting
+    any attempts to start another one. Since a FedCM flow can only be terminated when the user
+    interacts or after a long timer, the number of fetches performed is not a concern. The [=IDP=]
+    does learn a lot about the user from this fetch, but this is discussed in detail below.
 
 * The client metadata fetch can't be used to track users too because it is performed without cookies
     from the [=IDP=], albeit with a [=client id=] and a referrer. This allows the [=IDP=] to
