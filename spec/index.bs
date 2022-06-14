@@ -1598,11 +1598,11 @@ separate section for [[#privacy]] considerations.
 <!-- ============================================================ -->
 
 The first fetches triggered by the FedCM API are the manifest list, which is public, and the
-internal manifest. Imagine a malicious script attempting to execute the FedCM API calls to a
+internal manifest. Imagine a malicious script included by (and running as) the [=RP=] attempting to execute the FedCM API calls to a
 malicious [=IDP=], one which is not trusted by the [=RP=]. If the call is successful, this would
 introduce browser UI on the [=RP=] with sign in options into a malicious [=IDP=]. This malicious
 [=IDP=] could then attempt to trick the user. The protection against this attack is the [[!CSP]]
-check, which would fail because the manifest would not be an origin allowed by the [=RP=], hence
+check, which would fail because the origin of the manifest of the malicious [=IDP=] would not be an origin included in the allowlist specified by the [[!CSP]] of the [=RP=], hence
 preventing the undesired FedCM UI from being shown. Since any subsequent fetches are same origin
 with respect to the internal manifest or at least dependent on the contents of the internal
 manifest, they do not require additional checks.
@@ -1637,8 +1637,8 @@ information from the user that they would only give to the browser rather than t
 usernames/passwords of **another** site). This is not possible because the FedCM UI uses the
 metadata about the user accounts of the [=IDP=], which the website doesn't have access. If this is a
 malicious site, it would not know the user accounts, otherwise the user is already compromised. In
-addition, the FedCM UI does not prompt the user to provide additional information such as username
-or password. Thus, the website UI (e.g. iframes) attempting to retrieve sensitive information from
+addition, the FedCM UI deliberately constructed to not prompt the user to provide additional information, such as username
+or password. Thus, an attacker trying to impersonate the browser using exclusively UI that is accessible to the content area (e.g. iframes) to attempt to retrieve sensitive information from
 the user would be noticeably different from the FedCM UI. Finally, because the FedCM UI can only be
 queried from the top-level frame (or potentially from an iframe with explicit permission from the
 top-level frame), the priviledged UI surface is only shown when the top-level frame wants it so. A
@@ -1654,7 +1654,7 @@ sneaky iframe cannot force the FedCM UI to occlude important content from the ma
 
 The FedCM API introduces the ability for a site to ask the browser to execute a few different
 network requests, as shown in the [[#high-level-design]] section. It is important for the browser to
-execute these in such a way that it does not accidentally leak sensitive information about the user
+execute these in such a way that it does not allow the user to be tracked (by an attacker impersonating an [=IDP=]) on
 to the site using FedCM. The following table has information about the network requests performed:
 
 <script type="text/typogram">
