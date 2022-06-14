@@ -458,6 +458,11 @@ provides the main security boundary on the web.
     * [[OIDC-Connect-Core#Authentication]]
     * [[SAML-Glossary]]
 
+: <dfn>client id</dfn>
+:: Each [=IDP=] assigns to each [=RP=] a [=client id=] to uniquely identify the [=RP=]. Note that
+    this ID is dependent on both the [=IDP=] and the [=RP=], but the [=client id=] of an [=RP=] only
+    needs to be unique with respect to any other [=client id=] within the same [=IDP=].
+
 : <dfn>directed identifier</dfn>
 :: A [=user identifier=] that that is unique for each [=site=] the user visits. A
     goal of anti-tracking policy is to promote [=user identifiers=] to become
@@ -635,13 +640,13 @@ identity federation.
       |------------------------------>|                               |
       |                               |                               |
       |                               | "GET /.well-known/fedcm.json" |
-      |                               |------------------------------>| 
+      |                               |------------------------------>|
       |                               |<------------------------------| "{"
       |                               |                               |   "provider_urls: [ ... ]"
       |                               |                               | "}"
       |                               |                               |
       |                               | "GET /fedcm.json"             |
-      |                               |------------------------------>| 
+      |                               |------------------------------>|
       |                               |<------------------------------| "{"
       |                               |                               |   "id_token_endpoint: ...,"
       |                               |                               |   "accounts_endpoint: ...,"
@@ -650,9 +655,9 @@ identity federation.
       |                               |                               |   "branding: ...,"
       |                               |                               | "}"
       |                               |                               |
-      |                               | "GET client_metadata.php"     | 
+      |                               | "GET client_metadata.php"     |
       |                               | "client_id"                   |
-      |                               |------------------------------>| 
+      |                               |------------------------------>|
       |                               |<------------------------------| "{"
       |                               |                               |   "terms_of_service_url: ...,"
       |                               |                               |   "privacy_policy_url: ...,"
@@ -661,7 +666,7 @@ identity federation.
       |                               |                               |
       |                               | "GET accounts.php"            |
       |                               | "cookies"                     |
-      |                               |------------------------------>| 
+      |                               |------------------------------>|
       |                               |<------------------------------| "{"
       |                               |                               |   "accounts: [ ... ]"
       |                               |                               | "}"
@@ -679,7 +684,7 @@ identity federation.
       |                               |                               |
       |                               | "POST token.php"              |
       |                               | "client_id, cookies, account" |
-      |                               |------------------------------>| 
+      |                               |------------------------------>|
       |                               |<------------------------------| "{"
       |                               |                               |   "id_token: ...,"
       |                               |                               | "}"
@@ -852,7 +857,7 @@ Every <dfn>Account JSON</dfn> is expected to have the following properties:
     :   <dfn>given_name</dfn> (optional)
     ::  The user's given name.
     :   <dfn>approved_clients</dfn> (optional)
-    ::  A list of [=RP=]s (in the form of Client IDs) this account is already registered with. Used in the [=sign-up=] to allow the [=IDP=] to control whether to show the [=Privacy Policy=] and the [=Terms of Service=].
+    ::  A list of [=RP=]s (in the form of [=Client ID=]s) this account is already registered with. Used in the [=sign-up=] to allow the [=IDP=] to control whether to show the [=Privacy Policy=] and the [=Terms of Service=].
 </dl>
 
 For example:
@@ -946,7 +951,7 @@ It will also contain the following parameters in the request body `application/x
 
 <dl dfn-type="argument" dfn-for="id_token_endpoint_request">
     :   <dfn>client_id</dfn>
-    ::  The [=RP=]'s client it
+    ::  The [=RP=]'s [=client id=].
     :   <dfn>nonce</dfn>
     ::  The request nonce
     :   <dfn>account_id</dfn>
@@ -991,7 +996,7 @@ For example:
 <!-- ============================================================ -->
 
 The revocation endpoint is responsible for revoking all [=id token=]s for the
-specified client ID for the user.
+specified [=client id=] for the user.
 
 The request is made:
 
@@ -1007,7 +1012,7 @@ It will also contain the following parameters in the request body `application/x
 
 <dl dfn-type="argument" dfn-for="revocation_endpoint_request">
     :   <dfn>client_id</dfn>
-    :: The [=RP=]'s client id
+    :: The [=RP=]'s [=client id=].
     :   <dfn>hint</dfn>
     :: The hint provided to the JS call.
 </dl>
@@ -1162,7 +1167,7 @@ requests.
     :   <dfn>url</dfn>
     ::  The URL of the identity provider.
     :   <dfn>clientId</dfn>
-    ::  The client ID provided to the [=RP=] out of band by the [=IDP=]
+    ::  The [=client id=] provided to the [=RP=] out of band by the [=IDP=]
     :   <dfn>hint</dfn>
     ::  Optional `accountId` hint. Maybe used by the UA when displaying the
          account chooser dialog.
@@ -1414,8 +1419,8 @@ The <dfn>fetch the internal manifest</dfn> algorithm accepts a {{FederatedIdenti
     1. Return the result of fetching the |manifest url| and parsing it into a [=Manifest=].
         TODO: specify how the fetching and the parsing works.
         The fetch MUST be done with the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]] header but
-	without the [=Identity Provider=]'s cookies. This request MUST NOT follow
-        [[RFC7231#header.location|HTTP redirects]] and instead abort with an
+        without the [=Identity Provider=]'s cookies. This request MUST NOT follow
+        [[RFC9110#header.location|HTTP redirects]] and instead abort with an
         error if there are any.
 
 <!-- ============================================================ -->
@@ -1585,11 +1590,134 @@ Note: go over how we are planning to deal with backwards compatibility.
 # Security # {#security}
 <!-- ============================================================ -->
 
-Note: go over security.
+This section provides a few of the security considerations for the FedCM API. Note that there is a
+separate section for [[#privacy]] considerations.
+
+<!-- ============================================================ -->
+## Content Security Policy ## {#content-security-policy}
+<!-- ============================================================ -->
+
+The first fetches triggered by the FedCM API are the manifest list, which is public, and the
+internal manifest. Imagine a malicious script included by (and running as) the [=RP=] attempting to
+execute the FedCM API calls to a malicious [=IDP=], one which is not trusted by the [=RP=]. If the
+call is successful, this would introduce browser UI on the [=RP=] with sign in options into a
+malicious [=IDP=]. This malicious[=IDP=] could then attempt to trick the user. The protection
+against this attack is the [[!CSP]] check, which would fail because the origin of the manifest of
+the malicious [=IDP=] would not be an origin included in the allowlist specified by the [[!CSP]] of
+the [=RP=], hence preventing the undesired FedCM UI from being shown. Since any subsequent fetches
+are same origin with respect to the internal manifest or at least dependent on the contents of the
+internal manifest, they do not require additional checks.
+
+The non-same-origin fetches include, for example, the brand icon. The user agent does not perform a
+[[!CSP]] check on these because they are directly specified from the manifest. In addition, the
+rendering of this image is performed by the user agent, and as such this image cannot affect the
+[=RP=] site nor can they be inspected by the [=RP=] in any way.
+
+<!-- ============================================================ -->
+## Sec-FedCM-CSRF ## {#sec-fedcm-csrf}
+<!-- ============================================================ -->
+
+The FedCM API introduces several non-static endpoints on the [=IDP=], so these need to be protected
+from XSS attacks. In order to do so, the FedCM API introduces the [[#Sec-FedCM-CSRF]] header, a
+[=forbidden header name=]. The header cannot be set by random websites, so the [=IDP=] can be
+confident that the request was originated by the FedCM browser rather than sent by a websites trying
+to run an XSS attack. An [=IDP=] must to check for this header in the credentialed requests it
+receives, which ensures that the request was initiated by the user agent, based on the FedCM API. A
+malicious actor cannot spam FedCM API calls, so this is sufficient protection for the new [=IDP=]
+endpoints.
+
+<!-- ============================================================ -->
+## Browser Surface Impersonation ## {#browser-surface-impersonation}
+<!-- ============================================================ -->
+
+The FedCM API introduces new (trusted) user agent UI, and the user agent may choose to show the UI
+entirely on top of the page's contents, if anything because the page was the one responsible for
+this UI. This introduces a potential concern of a malicious site to try to replicate the FedCM UI,
+gain the user's trust that the user is interacting with a trusted browser surface, and gather
+information from the user that they would only give to the browser rather than the site
+(e.g. usernames/passwords of **another** site). This is not possible because the FedCM UI uses the
+metadata about the user accounts of the [=IDP=], which the website doesn't have access. If this is
+a malicious site, it would not know the user accounts, otherwise the user is already compromised.
+In addition, the FedCM UI is deliberately constructed to not prompt the user to provide additional
+information, such as username or password. Thus, an attacker trying to impersonate the browser
+using exclusively UI that is accessible to the content area (e.g. iframes) to attempt to retrieve
+sensitive information from the user would be noticeably different from the FedCM UI. Finally,
+because the FedCM UI can only be queried from the top-level frame (or potentially from an iframe
+with explicit permission from the top-level frame), the priviledged UI surface is only shown when
+the top-level frame wants it so. A sneaky iframe cannot force the FedCM UI to occlude important
+content from the main page.
 
 <!-- ============================================================ -->
 # Privacy # {#privacy}
 <!-- ============================================================ -->
+
+<!-- ============================================================ -->
+## Network requests ## {#network-requests}
+<!-- ============================================================ -->
+
+The FedCM API introduces the ability for a site to ask the browser to execute a few different
+network requests, as shown in the [[#high-level-design]] section. It is important for the browser
+to execute these in such a way that it does not allow the user to be tracked (by an attacker
+impersonating an [=IDP=]) on to the site using FedCM. The following table has information about the
+network requests performed:
+
+<script type="text/typogram">
+┌──────────────────────────┬─────────┬───────────┬──────────┐
+│ Endpoint                 │ cookies │ client_id │ referrer │
+├──────────────────────────┼─────────┼───────────┼──────────┤
+│ fedcm.json               │  no     │  no       │  no      │
+├──────────────────────────┼─────────┼───────────┼──────────┤
+│ accounts_endpoint        │  yes    │  no       │  no      │
+├──────────────────────────┼─────────┼───────────┼──────────┤
+│ token_endpoint           │  yes    │  yes      │  yes     │
+├──────────────────────────┼─────────┼───────────┼──────────┤
+│ client_metadata_endpoint │  no     │  yes      │  yes     │
+├──────────────────────────┼─────────┼───────────┼──────────┤
+│ revocation_endpoint      │  yes    │  yes      │  yes     │
+└──────────────────────────┴─────────┴───────────┴──────────┘
+</script>
+
+For fetches that are sent with cookies, we actually consider them equivalent to first-party fetches,
+and hence include first-party cookies as if the resource was loaded as a first-party, e.g.
+regardless of the
+[SameSite](https://httpwg.org/http-extensions/draft-ietf-httpbis-rfc6265bis.html#name-the-samesite-attribute-2)
+value (which is used when a resource loaded as a third-party, not first-party). This makes it easy
+for an [=IDP=] to adopt the FedCM API without introducing security issues on the API, since the
+[=RP=] cannot inspect the results from the fetches in any way.
+
+TODO: explain why we disable following redirects.
+
+* The manifest fetch can't be used to track users because it is performed without cookies, [=client
+    id=], or referrer. Thus, anyone could perform this fetch, and the information contained therein
+    is considered public.
+
+* The accounts fetch can't be used to track users because it is performed with cookies from the
+    [=IDP=] but, importantly, without the [=client id=] or referrer. This in theory is a new power
+    that the [=RP=] gains that it would not have otherwise. Preventing too many of these fetches may
+    be important, but [=IDP=]s are already expected to protect against DoS attacks. In addition, the
+    user agent should only allow one FedCM flow per page at any given moment, immediately rejecting
+    any attempts to start another one. Since a FedCM flow can only be terminated when the user
+    interacts or after a long timer, the number of fetches performed is not a concern. The [=IDP=]
+    does learn a lot about the user from this fetch, but this is discussed in detail below.
+
+* The client metadata fetch can't be used to track users too because it is performed without cookies
+    from the [=IDP=], albeit with a [=client id=] and a referrer. This allows the [=IDP=] to
+    communicate the relevant [=Privacy Policy=] and [=Terms of Service=] to the user agent, in case
+    they need to be displayed. Again, besides possible timing attacks described here, the [=RP=]
+    gains nothing from this fetch, and the [=RP=] could already perform this fetch if it wanted to
+    since it involves no cookies from the [=IDP=].
+
+* By design, the token and revocation fetches expose the user at the website to the [=IDP=]: they
+    are peformed with cookies, [=client id=], and referrer. The former is gated on the user
+    interacting with the user agent UI, and enables the [=IDP=] to communicate to the [=RP=] the
+    information required to perform a federated signin/signup. It is not possible for the [=RP=] or
+    the [=IDP=] to force the token fetch to happen without user consent, as the user agent cannot be
+    spoofed or otherwise tricked. The later can only be performed once a token has been created, but
+    does not require user interaction. That said, performing this fetch does not provide any new
+    information to the [=RP=] or the [=IDP=]. Its purpose is only to make bookkeeping easier, as at
+    this point both the [=RP=] and the [=IDP=] have information about the user. The revocation
+    obviously requires collaboration from both parties: a malicious [=RP=] cannot sign the user out
+    of their accounts on other [=RP=]s.
 
 <!-- ============================================================ -->
 ## Privacy Threat Model ## {#privacy-threat-model}
