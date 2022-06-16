@@ -340,7 +340,7 @@ could be implemented.
       mediated: “optional”, // “optional” is the default
       federated: {
         providers: [{
-          url: "https://idp.example",
+          url: "https://idp.example/manifest.json",
           clientId: "123"
         }]
       }
@@ -377,7 +377,7 @@ could be implemented.
       mediation: "optional",
       federated: {
         providers: [{
-          url: "https://idp.example",
+          url: "https://idp.example/manifest.json",
           clientId: "123",
           hint: id
         }]
@@ -393,7 +393,7 @@ could be implemented.
       mediation: "required",
       federated: {
         providers: [{
-          url: "https://idp.example",
+          url: "https://idp.example/manifest.json",
           clientId: "123",
         }]
       }
@@ -419,7 +419,7 @@ could be implemented.
       mediation: "silent",
       federated: {
         providers: [{
-          url: "https://idp.example",
+          url: "https://idp.example/manifest.json",
           clientId: "123",
           hint: id,
         }]
@@ -601,7 +601,7 @@ that they can use.
 │   Party   │                  │   Agent   │                      │  Provider │
 │           │                  │           │                      │           │
 │           │                  │           │                      │           │
-│           │   ┌──────────► *-+ login     │     ┌────────────► *-+ fedcm.json│
+│           │   ┌──────────► *-+ login     │     ┌────────────► *-+ manifest  │
 │           │   │              │           │     │                │           │
 │           │   │              │           │     │                │           │
 │           │   ├──────────► *-+ logout    │     ├────────────► *-+ accounts  │
@@ -645,7 +645,7 @@ identity federation.
       |                               |                               |   "provider_urls: [ ... ]"
       |                               |                               | "}"
       |                               |                               |
-      |                               | "GET /fedcm.json"             |
+      |                               | "GET /manifest.json"          |
       |                               |------------------------------>|
       |                               |<------------------------------| "{"
       |                               |                               |   "id_token_endpoint: ...,"
@@ -719,9 +719,9 @@ by exposing a series of HTTP endpoints:
 ## Manifest ## {#idp-api-manifest}
 <!-- ============================================================ -->
 
-The manifest discovery endpoint is an endpoint located at the [=IDP=]'s
-`fedcm.json` file and serves as a discovery device to other endpoints provided
-by the [=IDP=].
+The manifest discovery endpoint is an endpoint
+which serves as a discovery device to other endpoints provided by the
+[=IDP=].
 
 The manifest discovery endpoint is fetched:
 
@@ -734,7 +734,7 @@ For example:
 
 <div class=example>
 ```http
-GET /fedcm.json HTTP/1.1
+GET /manifest.json HTTP/1.1
 Host: idp.example
 Accept: application/json
 Sec-FedCM-CSRF: ?1
@@ -1130,7 +1130,7 @@ FedCM API.
 const credential = await navigator.credentials.get({
   federated: {
     providers: [{
-      url: "https://idp.example",
+      url: "https://idp.example/manifest.json",
       clientId: "123",
       hint: "dan@example.com"
     }]
@@ -1414,9 +1414,8 @@ The <dfn>fetch the internal manifest</dfn> algorithm accepts a {{FederatedIdenti
     1. Run a [[!CSP]] check with a [[CSP#directive-connect-src|connect-src]]
         directive on the URL passed as |provider|'s {{FederatedIdentityProvider/url}}
         and return if the check fails.
-    1. Let the |manifest url| be the file "fedcm.json" relative to the directory
-        prefix passed as |provider|'s {{FederatedIdentityProvider/url}}.
-    1. Return the result of fetching the |manifest url| and parsing it into a [=Manifest=].
+    1. Return the result of fetching the |provider|'s {{FederatedIdentityProvider/url}}
+        and parsing it into a [=Manifest=].
         TODO: specify how the fetching and the parsing works.
         The fetch MUST be done with the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]] header but
         without the [=Identity Provider=]'s cookies. This request MUST NOT follow
@@ -1665,7 +1664,7 @@ network requests performed:
 ┌──────────────────────────┬─────────┬───────────┬──────────┐
 │ Endpoint                 │ cookies │ client_id │ referrer │
 ├──────────────────────────┼─────────┼───────────┼──────────┤
-│ fedcm.json               │  no     │  no       │  no      │
+│ manifest                 │  no     │  no       │  no      │
 ├──────────────────────────┼─────────┼───────────┼──────────┤
 │ accounts_endpoint        │  yes    │  no       │  no      │
 ├──────────────────────────┼─────────┼───────────┼──────────┤
