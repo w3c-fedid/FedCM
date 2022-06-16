@@ -109,7 +109,7 @@ The API provides the primitives needed to support federated identity when/where
 it depends on third-party cookies, from sign-in to sign-out and revocation.
 
 In order to provide the federated identity primitives without the use of
-third-party cookies the API places the [=User Agent=] as a mediator between
+third-party cookies the API places the [=user agent=] as a mediator between
 [=RPs=] and [=IDPs=]. This mediation requires user consent before permitting
 the [=RPs=] and [=IDPs=] to know about their connection to the user.
 
@@ -138,7 +138,7 @@ the [=RPs=] and [=IDPs=] to know about their connection to the user.
 └─────────────────────────────────┘       └─────────────────────────────────┘
 </script>
 
-The specification leans heavily on changes in the [=User Agent=] and [=IDP=]
+The specification leans heavily on changes in the [=user agent=] and [=IDP=]
 and minimally on the [=RP=]. The FedCM API provides a way to authenticate,
 fetch tokens, revoke the provided tokens, and allow for front-channel logout.
 
@@ -466,17 +466,7 @@ provides the main security boundary on the web.
 : <dfn>directed identifier</dfn>
 :: A [=user identifier=] that that is unique for each [=site=] the user visits. A
     goal of anti-tracking policy is to promote [=user identifiers=] to become
-    [=directed identifiers=]. See the [[#privacy-threat-model]] for more information.
-
-: <dfn>first party</dfn>
-:: The first-party for a user action is the [=party=] that controls the
-    [=origin=] of the [=top-level browsing context=] under which the action
-    happened. Intuitively, this is the owner of the domain in the browser's URL bar.
-
-    This differs from <a href="https://wiki.mozilla.org/Security/Anti_tracking_policy#Tracking_Definition">Mozilla's definition</a>
-    in that Mozilla defines other parties as first parties if the user can easily
-    discover which party it is and intends to interact with that party, for
-    example to allow sign-in widgets to be first-party.
+    [=directed identifiers=].
 
 : <dfn>global identifier</dfn>
 :: A string that identifies a particular [=user=] independent of which site
@@ -543,10 +533,6 @@ provides the main security boundary on the web.
 :: A set of [=origins=] that are all [=same site=] with each other. Note that
     there are problems ([[PSL-PROBLEMS]]) with using [=registrable domains=] as
     a logical boundary.
-
-: <dfn>third party</dfn>
-:: A third-party for a user action is any party that isn't the [=first party=]
-    or the user (the second party).
 
 : <df>unsanctioned tracking</dfn>
 :: [[UNSANCTIONED-TRACKING]]
@@ -764,7 +750,7 @@ consent prompt.
 
 Note: The branding preferences are deliberately designed to be high level
 / abstract (rather than opinionated about a specific UI structure), to
-enable different [=User Agents=] to offer different UI experiences and
+enable different [=user agents=] to offer different UI experiences and
 for them to evolve independently over time.
 
 It may have the following properties:
@@ -1650,6 +1636,43 @@ content from the main page.
 # Privacy # {#privacy}
 <!-- ============================================================ -->
 
+This section is intended to provide a comprehensive overview of the privacy risks associated with
+federated identity on the web for the purpose of measuring the privacy risks and benefits of
+proposed browser intermediation designs.
+
+<!-- ============================================================ -->
+## Principals ## {#privacy-principals}
+<!-- ============================================================ -->
+
+This section describes the three principals that would participate in an invocation of the API and
+expectations around their behavior.
+
+1. The [=user agent=] implements [[#browser-api]] and controls the execution contexts for the [=RP=]
+    and [=IDP=] content. The [=user agent=] is assumed to be trusted by the user, and transitively
+    trusted by the [=RP=] and [=IDP=].
+1. [=Relying Party=]s ([=RP=]s) are first-party websites that invoke the FedCM API for the purpose
+    of authenticating a user to their account or for requesting information about that user. Since
+    any site can invoke the API, [=RP=]s cannot necessarily be trusted to limit the user information
+    it collects or use that information in an acceptable way.
+1. [=Identity Provider=]s ([=IDP=]s) are third-party websites that are the target of a FedCM call to
+    attempt to fetch an ID token. Usually,the [=IDP=] has a higher level of trust than the [=RP=]
+    since it already has the user’s personal information, but it is possible that the [=IDP=] might
+    use the user’s information in non-approved ways. In addition, it is possible that the [=IDP=]
+    specified in the API call may not be an [=IDP=] the user knows about, or may not be a bona fide
+    [=IDP=] at all. In this case, it likely does not have personal user information in advance, but
+    it is also less trustworthy.
+
+Based on the above, the privacy discussion makes the following assumptions:
+
+1. It is not acceptable for the [=RP=] or for the [=IDP=] to learn that a specific user visited a
+    specific site, without any consent from the user.
+1. It is the [=user agent=]'s responsibility to determine when the user has consented for the
+    [=IDP=] to communicate with the [=RP=] in order to provide identification for the user.
+1. Once the [=user agent=] has determined that the user has provided consent to provide their
+    account information to the [=RP=], it is ok for the [=IDP=] and for the [=RP=] to learn
+    information about that specific user's account, as required to provide identification. The [=RP=]
+    should not learn about about any other user accounts.
+
 <!-- ============================================================ -->
 ## Network requests ## {#network-requests}
 <!-- ============================================================ -->
@@ -1719,131 +1742,40 @@ TODO: explain why we disable following redirects.
     of their accounts on other [=RP=]s.
 
 <!-- ============================================================ -->
-## Privacy Threat Model ## {#privacy-threat-model}
+## Attack Scenarios ## {#attack-scenarios}
 <!-- ============================================================ -->
 
-This section is intended to provide a comprehensive overview of the privacy
-risks associated with federated identity on the web for the purpose of
-measuring the privacy risks and benefits of proposed browser intermediation
-designs.
+This section describes the scenarios in which various agents might attempt to gain user information.
+It considers the possibilities when:
 
-See also:
+  * [[#attack-scenarios-by-rp|The RP is collecting information]],
+  * [[#attack-scenarios-by-idp|The IDP is collecting information]], or
+  * [[#attack-scenarios-by-idp-by-collusion|Both the RP and the IDP are colluding]].
 
-    * [[PRINCIPLES]]
-    * [[ETHICS]]
-    * [[SELF-REVIEW#threats]]
-    * [[PRIVACY-CONSIDERATIONS#privacy-threats]]
-    * [[RFC6973#section-5]]
-    * [[PRIVACY-MODEL]]
-    * [Editor’s Draft for a Web Privacy Threat Model](https://w3cping.github.io/privacy-threat-model/)
-    * [Security and Privacy Considerations for SAML V2.0](https://docs.oasis-open.org/security/saml/v2.0/saml-sec-consider-2.0-os.pdf)
+For the purposes of this section, a principal is considered to be participating in the collection of
+information if it directly or indirectly performs actions with the aim of realizing one of the above
+threats.
 
-<!-- ============================================================ -->
-### Principals ### {#privacy-threat-model-principals}
-<!-- ============================================================ -->
+Note: An example of indirect collusion would be an [=RP=] importing a script supplied by an [=IDP=]
+where the [=IDP=] intends to track users.
 
-This section describes the three principals that would participate in an
-invocation of the API and expectations around their behavior.
-
-1. The [=User Agent=] implements [[#browser-api]] and controls the execution
-    contexts for the [=RP=] and [=IDP=] content. The user agent is assumed to be
-    trusted by the user, and transitively trusted by the RP and IDP.
-1. [=Relying Party=]s ([=RP=]s) are [=first party=] websites that invoke the
-    FedCM API for the purpose of authenticating a user to their account or for
-    requesting information about that user. A well-behaving RP would only invoke
-    the API following a clear user signal -- typically, clicking a sign-in
-    button. Since any site can invoke the API, RPs cannot necessarily be trusted
-    to limit the user information it collects or use that information in an
-    acceptable way.
-1. [=Identity Provider=]s ([=IDP=]s) are [=third party=] websites that are the
-    target of a FedCM call to attempt to fetch an ID token. Usually the IDP has a
-    higher level of trust than the RP since it already has the user’s personal
-    information, but it is possible that the IDP might use the user’s information
-    in non-approved ways. It is possible that the IDP specified in the API call
-    may not be an IDP the user knows about, or may not be a bona fide IDP at all,
-    in which case it likely does not have personal user information in advance,
-    but also might be less accountable for its behavior.
+For the purpose of discussion, this document assumes that third-party cookies are **disabled** by
+default and are no longer effective for use in tracking mechanisms, and also some form of
+mitigations are implemented against ‘bounce tracking’ using link decoration or postMessage. Most of
+these scenarios consider how user tracking might happen **without** them. See also [[RFC7258]].
 
 <!-- ============================================================ -->
-### High-level threats ### {#privacy-threat-model-high-level-threats}
+## Out of Scope Attack Scenarios ## {#attack-scenarios}
 <!-- ============================================================ -->
 
-[[RFC6973]] describes the following high-level privacy threats, which the TAG
-has adopted into [[security-privacy-questionnaire#threats]]:
-
-: <dfn noexport>Surveillance</dfn>
-:: Surveillance is the observation or monitoring of an individual’s
-    communications or activities.
-
-: <dfn noexport>Stored Data Compromise</dfn>
-:: End systems that do not take adequate measures to secure stored data from
-    unauthorized or inappropriate access.
-
-: <dfn noexport>Intrusion</dfn>
-:: Intrusion consists of invasive acts that disturb or interrupt one’s life or
-    activities.
-
-: <dfn noexport>Misattribution</dfn>
-:: Misattribution occurs when data or communications related to one individual
-    are attributed to another.
-
-: <dfn noexport>Correlation</dfn>
-:: Correlation is the combination of various pieces of information related to an
-    individual or that obtain that characteristic when combined.
-
-: <dfn noexport>Identification</dfn>
-:: Identification is the linking of information to a particular individual to
-    infer an individual’s identity or to allow the inference of an individual’s
-    identity.
-
-: <dfn noexport>Secondary Use</dfn>
-:: Secondary use is the use of collected information about an individual without
-    the individual’s consent for a purpose different from that for which the
-    information was collected.
-
-: <dfn noexport>Disclosure</dfn>
-:: Disclosure is the revelation of information about an individual that affects
-    the way others judge the individual.
-
-: <dfn noexport>Exclusion</dfn>
-:: Exclusion is the failure to allow individuals to know about the data that
-    others have about them and to participate in its handling and use.
-
-These threats combine into the particular concrete threats we want web
-specifications to defend against, described in subsections here:
+The following are attack scenarios
 
 <!-- ============================================================ -->
-### Attack Scenarios ### {#attack-scenarios}
-<!-- ============================================================ -->
-
-This section describes the scenarios in which various agents might attempt to
-gain user information. It considers the possibilities when:
-    * [[#attack-scenarios-by-rp|The RP is collecting information]],
-    * [[#attack-scenarios-by-idp|The IDP is collecting information]], or
-    * [[#attack-scenarios-by-idp-by-collusion|Both the RP and the IDP are colluding]].
-
-For the purposes of this section, a principal is considered to be participating
-in the collection of information if it directly or indirectly performs actions
-with the aim of realizing one of the above threats.
-
-Note: An example of indirect collusion would be an RP importing a script
-supplied by an IDP where the IDP intends to track users.
-
-For the purpose of discussion this document assumes that third-party cookies
-are **disabled** by default and are no longer effective for use in tracking
-mechanisms, and also some form of mitigations are implemented against ‘bounce
-tracking’ using link decoration or postMessage. Most of these scenarios consider
-how user tracking might happen **without** them.
-
-See also:
-    1. [[RFC7258]]
-
-<!-- ============================================================ -->
-#### By the RP #### {#attack-scenarios-by-rp}
+### By the RP ### {#attack-scenarios-by-rp}
 <!-- ============================================================ -->
 
 <!-- ============================================================ -->
-##### Cross-Site Correlation ##### {#attack-scenarios-by-rp-cross-site-correlation}
+#### Cross-Site Correlation #### {#attack-scenarios-by-rp-cross-site-correlation}
 <!-- ============================================================ -->
 
 Related to:
@@ -1862,10 +1794,10 @@ to multiple relying parties, those relying parties can collaborate to build a
 profile of that user and their activity across collaborating sites.
 
 Sometimes this is referred to as [=joining=] since it amounts to a join of user
-ecords between the account databases of multiple RPs.
+records between the account databases of multiple RPs.
 
 This correlation and profile-building is outside the user’s control and entirely
-out of the [=User Agent=]’s or [=IDP=]’s view.
+out of the [=user agent=]’s or [=IDP=]’s view.
 
 <div class="image">
    <pre class=include-raw>
@@ -1899,7 +1831,7 @@ did not authorize, such as selling email addresses to a spam list.
 Spamming risk can exist even when using [=directed identifiers=].
 
 <!-- ============================================================ -->
-##### Same-Site Identification ##### {#attack-scenarios-by-rp-same-site-identification}
+#### Same-Site Identification #### {#attack-scenarios-by-rp-same-site-identification}
 <!-- ============================================================ -->
 
 Identification is the linking of information to a particular individual
@@ -1931,7 +1863,7 @@ See also:
    1. [[FINGERPRINTING-GUIDANCE]]
 
 <!-- ============================================================ -->
-##### Data Compromise ##### {#attack-scenarios-by-rp-data-compromise}
+#### Data Compromise #### {#attack-scenarios-by-rp-data-compromise}
 <!-- ============================================================ -->
 
 This attack scenario happens when the [=RP=] takes advantage of
@@ -1954,11 +1886,11 @@ See also:
     1. [[RFC6973#section-5.1.2]]
 
 <!-- ============================================================ -->
-#### By the IDP #### {#attack-scenarios-by-idp}
+### By the IDP ### {#attack-scenarios-by-idp}
 <!-- ============================================================ -->
 
 <!-- ============================================================ -->
-##### Secondary Use ##### {#attack-scenarios-by-idp-secondary-use}
+#### Secondary Use #### {#attack-scenarios-by-idp-secondary-use}
 <!-- ============================================================ -->
 
 Related to:
@@ -2003,7 +1935,7 @@ described in [[#attack-scenarios-by-idp-timing-attacks]].
 </div>
 
 <!-- ============================================================ -->
-##### Impersonation ##### {#attack-scenarios-by-idp-impersonation}
+#### Impersonation #### {#attack-scenarios-by-idp-impersonation}
 <!-- ============================================================ -->
 
 Since IDPs have unconstrained ability to issue ID tokens, they are capable
@@ -2022,11 +1954,11 @@ on the RP.
 </div>
 
 <!-- ============================================================ -->
-#### By Collusion #### {#attack-scenarios-by-idp-by-collusion}
+### By Collusion ### {#attack-scenarios-by-idp-by-collusion}
 <!-- ============================================================ -->
 
 <!-- ============================================================ -->
-##### Intrusion ##### {#attack-scenarios-by-idp-intrusion}
+#### Intrusion #### {#attack-scenarios-by-idp-intrusion}
 <!-- ============================================================ -->
 
    > From [[PRIVACY-THREAT-MODEL#hl-intrusion]]
@@ -2051,7 +1983,7 @@ See also:
     1. [[DESIGN-PRINCIPLES#safe-to-browse]]
 
 <!-- ============================================================ -->
-##### Back channel ##### {#attack-scenarios-by-idp-back-channel}
+#### Back channel #### {#attack-scenarios-by-idp-back-channel}
 <!-- ============================================================ -->
 
 This attack scenario happens when IDP exceed the user’s information sharing
@@ -2087,7 +2019,7 @@ invisible to the browser, in which case it could contain anything.
 </div>
 
 <!-- ============================================================ -->
-##### Timing Attacks ##### {#attack-scenarios-by-idp-timing-attacks}
+#### Timing Attacks #### {#attack-scenarios-by-idp-timing-attacks}
 <!-- ============================================================ -->
 
 The potential for IDPs profiling users based on their visits to RPs
@@ -2125,7 +2057,7 @@ See also:
 ## Mitigation Strategies ## {#mitigation-strategies}
 
 In this section we'll go over some strategies used in this specification to
-mitigate the [privacy threats](#privacy-threat-model).
+mitigate the privacy threats.
 
 ### Minimal Disclosure ### {#mitigation-minimal-disclosure}
 
@@ -2222,7 +2154,7 @@ See also:
 Mitigates:
     * [[#attack-scenarios-by-rp-cross-site-correlation]],
 
-The [=User Agent=] can mitigate [[#attack-scenarios-by-rp-cross-site-correlation]]
+The [=user agent=] can mitigate [[#attack-scenarios-by-rp-cross-site-correlation]]
 by inspecting the contents of the data exchange, and providing the necessary
 user controls.
 
@@ -2231,15 +2163,15 @@ whether it is a [=directed identifier=] or not (and warn the user proportionally
 
 #### Activation #### {#activation}
 
-The [=User Agent=] can mitigate [[#attack-scenarios-by-idp-intrusion]] by
+The [=user agent=] can mitigate [[#attack-scenarios-by-idp-intrusion]] by
 mediating the user controls and offering them proportionally to the intent of
 the user or the privacy risks involved.
 
-For example, a [=User Agent=] can choose to show a loud / disruptive modal
+For example, a [=user agent=] can choose to show a loud / disruptive modal
 mediated dialog when it has enough confidence of the user's intent or show a
 quiet / conservative UI hint when it doesn't.
 
-A [=User Agent=] could also choose to control disruption of the user's
+A [=user agent=] could also choose to control disruption of the user's
 experience based on the risks involved.
 
 For example, when a [=directed identifier=] is being exchanged it can be more
