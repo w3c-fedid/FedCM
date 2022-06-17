@@ -995,17 +995,11 @@ the [=RP=].
 The Browser API exposes APIs to [=RP=]s and [=IDP=]s to call and intermediates
 the exchange of the user's identity.
 
-For [=RP=]s, it allows them to:
+For [=RP=]s, it allows [=RP=]'s users to [[#use-cases-sign-up]] and
+[[#use-cases-sign-in]] with the [[#browser-api-rp-sign-in]] API.
 
-1. The [[#browser-api-sign-in]] allows [=RP=]'s users to [[#use-cases-sign-up]]
-    and [[#use-cases-sign-in]]
-
-For [=IDP=]s, it allows them to:
-
-1. The [[#browser-api-idp-sign-out]] API allows [=IDP=]s to
-    [[#use-cases-idp-sign-out]] of their accounts.
-1. The [[#browser-api-sign-in]] API allows [=IDP=]s to
-    [[#use-cases-sign-in]]
+For [=IDP=]s, it allows them to [[#use-cases-idp-sign-out]] the users
+of their [=RP=] accounts with the [[#browser-api-idp-sign-out]] API.
 
 The Browser API manages the lifecycle of the user's accounts and sessions with
 an internal [[#browser-api-state-machine]].
@@ -1034,21 +1028,11 @@ The user agent keepts track of the following state machine for each
 </dl>
 
 <!-- ============================================================ -->
-## The FederatedCredential Object ## {#browser-api-federated-credential}
+## The FederatedCredential Interface ## {#browser-api-federated-credential}
 <!-- ============================================================ -->
 
-The Sign-up and Sign-in APIs is used by the [=Relying Party=]s to ask the browser
-to intermediate the relationship with the [=Identity Provider=] and the
-provisioning of an [=id token=].
-
-NOTE: The [=Relying Party=] makes no delineation between Sign-up and Sign-in, but
-rather calls the same API indistinguishably.
-
-If all goes well, the [=Relying Party=] receives back a {{FederatedCredential}}
-which contains an [=id token=] in the form of a signed [[JWT]] which it can use to
-authenticate the user.
-
-The Sign-in API will request the [=id token=] to be [=minted=] by the IDP.
+This specification extends the existing {{FederatedCredential}}'s
+interface and internal algorithms to allow the exchange of the user's identity:
 
 <div class=example>
 ```js
@@ -1064,8 +1048,7 @@ const credential = await navigator.credentials.get({
 ```
 </div>
 
-This specification introduces a property to {{FederatedCredential}}
-interface that allows it to carry an [=id token=]:
+First, it extends the {{FederatedCredential}} interface to allow it to carry an [=id token=]:
 
 <xmp class=idl>
 [Exposed=Window, SecureContext]
@@ -1079,18 +1062,24 @@ partial interface FederatedCredential {
     ::  The minted ID token
 </dl>
 
-The most important parameter to the API call is the set of
-[=Identity Provider=]s that the [=Relying Party=] supports and has
-pre-registered with (i.e. it has a `clientId`).
+Second, this specification overrides the {{FederatedCredential}}'s
+<code><dfn for="FederatedCredential" method>
+ \[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</dfn></code>
+method, with the algorithm described in the [[#browser-api-rp-sign-in]] section.
 
-The set of [=Identity Provider=]s is an extension to the
-{{FederatedCredentialRequestOptions}} adding a list of {{FederatedIdentityProvider}}s:
+To support this extension, a {{FederatedIdentityProvider}} dictionary
+is introduced to the {{FederatedCredentialRequestOptions}}:
 
 <xmp class=idl>
 partial dictionary FederatedCredentialRequestOptions {
   sequence<(DOMString or FederatedIdentityProvider)> providers;
 };
+</xmp>
 
+Each {{FederatedIdentityProvider}} represents an [=Identity Provider=] that
+the [=Relying Party=] supports (e.g. that it has a pre-registration agreement with).
+
+<xmp class=idl>
 dictionary FederatedIdentityProvider {
   required USVString url;
   required USVString clientId;
@@ -1116,10 +1105,22 @@ requests.
          account chooser dialog.
 </dl>
 
-This specification overrides the {{FederatedCredential}}'s
-<code><dfn for="FederatedCredential" method>
- \[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</dfn></code>
-method.
+<!-- ============================================================ -->
+### RP Sign-in ### {#browser-api-rp-sign-in}
+<!-- ============================================================ -->
+
+The Sign-up and Sign-in APIs is used by the [=Relying Party=]s to ask the browser
+to intermediate the relationship with the [=Identity Provider=] and the
+provisioning of an [=id token=].
+
+NOTE: The [=Relying Party=] makes no delineation between Sign-up and Sign-in, but
+rather calls the same API indistinguishably.
+
+If all goes well, the [=Relying Party=] receives back a {{FederatedCredential}}
+which contains an [=id token=] in the form of a signed [[JWT]] which it can use to
+authenticate the user.
+
+The Sign-in API will request the [=id token=] to be [=minted=] by the IDP.
 
 Each {{FederatedCredential}} has an associated <dfn>provider</dfn>, a
 {{FederatedIdentityProvider}}, which is initially null.
