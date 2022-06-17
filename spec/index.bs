@@ -504,11 +504,6 @@ provides the main security boundary on the web.
 : <dfn>out-of-band</dfn>
 :: Outside of the user agent's context.
 
-: <dfn>party</dfn>
-:: Defined by [[tracking-dnt]] as "a natural person, a legal entity, or a set of
-    legal entities that share common owner(s), common controller(s), and a group
-    identity that is easily discoverable by a user."
-
 : <dfn>Relying Party</dfn>
 : <dfn>RP</dfn>
 : <dfn noexport>Website</dfn>
@@ -1297,7 +1292,6 @@ To <dfn>fetch the accounts list</dfn>:
         with the [=Identity Provider=]'s cookies.  This request MUST NOT follow
         [[RFC9110#header.location|HTTP redirects]] and instead abort with an
         error if there are any. See also [[#idp-api-accounts-endpoint]].
-        TODO: explain why we must not follow redirects in the security section.
     1. Return the |accounts list|.
 
 To <dfn>sign-up</dfn> the user with a given |account|:
@@ -1370,8 +1364,7 @@ that a user is visiting by encoding the information in the manifest path. We sol
 requiring a manifest list to be on the root of the [=IDP=]. The manifest itself can be anywhere, but
 it will not be used if the user agent does not find it in the manifest list. This allows the [=IDP=]
 to keep their actual manifest on an arbitary path while allowing the user agent to prevent manifest
-manipulation to fingerprint. See https://github.com/fedidcg/FedCM/issues/230 for more details on
-this attack.
+manipulation to fingerprint. See [[#manifest-fingerprinting]].
 
 The <dfn>check the root manifest</dfn> accepts a {{FederatedIdentityProvider}} |provider| and whether the manifest is included in the manifest list:
     1. Let |url| be |provider|'s {{FederatedIdentityProvider/url}}.
@@ -1665,7 +1658,11 @@ expectations around their behavior.
 Based on the above, the privacy discussion makes the following assumptions:
 
 1. It is not acceptable for the [=RP=] or for the [=IDP=] to learn that a specific user visited a
-    specific site, without any consent from the user.
+    specific site, without any consent from the user. That is, the user agent needs to protect the
+    pair (site, user identity) from the [=RP=] and the [=IDP=] until the user consents to sharing
+    that information with them. In particular, the [=RP=] should not know the user identity and the
+    [=IDP=] should not know the site that the user has visited before the FedCM flow is successfully
+    performed by the user.
 1. It is the [=user agent=]'s responsibility to determine when the user has consented for the
     [=IDP=] to communicate with the [=RP=] in order to provide identification for the user.
 1. Once the [=user agent=] has determined that the user has provided consent to provide their
@@ -1707,7 +1704,12 @@ value (which is used when a resource loaded as a third-party, not first-party). 
 for an [=IDP=] to adopt the FedCM API without introducing security issues on the API, since the
 [=RP=] cannot inspect the results from the fetches in any way.
 
-TODO: explain why we disable following redirects.
+We want to ensure that the FedCM fetches are all same-origin with respect to the provider specified
+by the [=RP=]. The reason for this is because fetches with cookies would use the cookies from the
+origin specified, so allowing arbitrary origins would introduce confusion and potential privacy
+issues with regards to which cookies are shared and with whom within the FedCM flow. The easiest way
+to ensure that all of these fetches remain same-origin is by disabling redirects and checking the
+origin of the fetched URLs.
 
 * The manifest fetch can't be used to track users because it is performed without cookies, [=client
     id=], or referrer. Thus, anyone could perform this fetch, and the information contained therein
@@ -1748,9 +1750,9 @@ TODO: explain why we disable following redirects.
 This section describes the scenarios in which various agents might attempt to gain user information.
 It considers the possibilities when:
 
-  * [[#attack-scenarios-by-rp|The RP is collecting information]],
-  * [[#attack-scenarios-by-idp|The IDP is collecting information]], or
-  * [[#attack-scenarios-by-idp-by-collusion|Both the RP and the IDP are colluding]].
+  * The RP is collecting information,
+  * The IDP is collecting information, or
+  * Both the RP and the IDP are colluding.
 
 For the purposes of this section, a principal is considered to be participating in the collection of
 information if it directly or indirectly performs actions with the aim of realizing one of the above
@@ -1765,39 +1767,164 @@ mitigations are implemented against ‘bounce tracking’ using link decoration 
 these scenarios consider how user tracking might happen **without** them. See also [[RFC7258]].
 
 <!-- ============================================================ -->
-## Out of Scope Attack Scenarios ## {#attack-scenarios}
+### Manifest Fingerprinting ### {#manifest-fingerprinting}
 <!-- ============================================================ -->
 
-The following are attack scenarios
+Suppose that the FedCM API did not have a two-tier manifest, and instead directly had a single manifest.
+This would introduce the following fingerprinting attack:
+
+<div class=example>
+```js
+// The following will fetch the manifest JSON file, which will know the origin of the RP :(
+const cred = await navigator.credentials.get({
+  federated: {
+    providers: [{
+      url: `https://idp.example/${window.location.href}`
+    }]
+  }
+});
+```
+</div>
+
+Here, the [=RP=] includes identifies itself when fetching the manifest from the [=IDP=]. This
+coupled with the credentialed fetches that the FedCM API performs would enable the [=IDP=] to easily
+track the website that the user is visiting, without requiring any consent from the user. Our
+solution to this problem is the two-tier manifest. We enforce a specificly named file at the root of
+the [=IDP=]'s domain to ensure that the file name does not introduce fingerprints about the [=RP=]
+being visited.
+
+The whole manifest could be in this location, but we instead choose to only point to the real
+manifest from there. This allows us to have flexibility in the future to allow a small constant
+number of manifests, should an [=IDP=] require this in the future, instead of just a single one. It
+also helps the [=IDP=]'s implementation because they any changes to the manifest are more likely to
+be performed on a file located anywhere, as opposed to the root of the domain, which may have more
+constraints in terms of ease of update.
 
 <!-- ============================================================ -->
-### By the RP ### {#attack-scenarios-by-rp}
+### Timing Attacks ### {#timing-attacks}
 <!-- ============================================================ -->
 
+In the timing attack, the [=RP=] and [=IDP=] collude to compute the (site, user identity) pair
+without the user's consent. This attack is not exact: there is room for error because it requires
+stitching together two separate pieces of information to track the user. However, it is important to
+mitigate this attack and ensure that it's economically infeasible to perform. In this attack, we
+assume that network requests do not have large fingerprinting vectors. These vary by [=user agent=]
+and are hard to eliminate entirely, but in general [=user agents=] are expected to address these
+over time. These bits of information tied to the network requests make the timing attack easier,
+making it more important to address.
+
+The attack is as follows:
+
+1. The [=RP=] logs the time at which it invokes the API, time A. The [=IDP=] may also learn this by
+    itself by marking the time in which it receives the fetch for the [=RP=]'s client metadata. Time
+    A is tied to the site.
+1. A credentialed request is sent to the [=IDP=] that does not explicitly identify the [=RP=]. The
+    [=IDP=] notes the time in which this request has arrived, time B. Time B is tied to the user
+    identity.
+1. The [=RP=] and [=IDP=] correlate time A and time B to find the (site, user identity) pair with
+    high probability. Note that fingerprinting can make the correlation more accurate.
+
+Note that this kind of correlation is already possible without FedCM by using simple cross-origin
+top-level navigations, but using FedCM for this purpose would worsen the problem if it improved
+timing resolution or if it was less visible to users.
+
+The [=user agent=] should mitigate this attack to protect users, in an interoperable way. The
+following are sample mitigations:
+
+* Any [=RP=]s or [=IDP=]s observed to be using this API to compromise user privacy in a deceptive or
+    abusive manner could be explicitly blocked from using it.
+* The [=user agent=] could detect trackers by noting alleged [=IDP=]s that do either of the following:
+    * Never show UI despite the FedCM API fetches being performed.
+    * Show a generic field such as 'Anonymous user'.
+    * Have an extremely low click-through rate.
+* The [=user agent=] could block the API from being called after the user has already expressed lack of interest in the
+    API because they did at least one of the following:
+    * Repeatedly ignored the FedCM API in the past in a similar scenario.
+    * Set some user setting to disable the FedCM API.
+    * Pressed some [=user agent=] UI to close the FedCM API's request for consent.
+* The [=user agent=] could gate the FedCM fetches on a user interaction so that the timing attack is only possible
+    once the user has expressed some interest in the API. Note that this may provide a poor user experience for users
+    that do want to use the API, and may also result in worse success metrics for the API.
+
 <!-- ============================================================ -->
-#### Cross-Site Correlation #### {#attack-scenarios-by-rp-cross-site-correlation}
+### Push Model ### {#push-model}
 <!-- ============================================================ -->
 
-Related to:
-    * [[PRIVACY-THREAT-MODEL#hl-recognition-cross-site]]
-    * [[PRIVACY-CONSIDERATIONS#privacy-threats| Privacy Considerations for Web Protocols: Correlation]]
-    * [[RFC6973#section-5.2.1|RFC6973: Correlation]]
+Another potential future mitigation for timing attacks is the push model. The current API is the
+'pull model': the API pulls the user accounts from the [=IDP=] every time they are needed by the
+FedCM API. In the push model, the [=IDP=] needs to tell the [=user agent=] that a user has signed in
+whenever this happens. This way, when the FedCM API is called, the [=user agent=] already knows the
+user accounts that the user can select from, and thus does not require any credentialed fetches to
+the [=IDP=] in order to show the UI. It would only be when the user consents that the [=IDP=] is
+notified, thus resolving the timing attack problem entirely.
 
-Correlation is the combination of various pieces of information related to an
-individual or that obtain that characteristic when combined.
+While the push model seems like an improvement for privacy, the current API does not follow this
+model for these reasons:
 
-This attack happens when multiple [=RP=]s collude to use their user's data to
-correlate them and build a richer profile.
+* It introduces a lot of complexity for the [=IDP=]s, as they now need to declare the user accounts
+    and keep them updated all the time. In particular, they need to be updated when a user logs out,
+    when they change name, etc.
+* It requires a lot of memory which is potentially wasted. The push model requires storing all of
+    the user accounts from all of the [=IDP=]s that a user is logged into, regardless of whether the
+    user ever uses the FedCM API or not. This means that all users pay the cost, and only some get
+    the reward.
 
-When a user willingly provides their full name, email address, phone number, etc,
-to multiple relying parties, those relying parties can collaborate to build a
-profile of that user and their activity across collaborating sites.
+<!-- ============================================================ -->
+### IDP Intrusion ### {#idp-intrusion}
+<!-- ============================================================ -->
 
-Sometimes this is referred to as [=joining=] since it amounts to a join of user
-records between the account databases of multiple RPs.
+   > From [[PRIVACY-THREAT-MODEL#hl-intrusion]]
+   >
+   > Privacy harms don't always come from a site learning things.
 
-This correlation and profile-building is outside the user’s control and entirely
-out of the [=user agent=]’s or [=IDP=]’s view.
+   > From [[RFC6973#section-5.1.3|RFC6973: Intrusion]]
+   >
+   > Intrusion consists of invasive acts that disturb or interrupt one's life or activities.
+   > Intrusion can thwart individuals' desires to be left alone, sap their time or attention, or
+   > interrupt their activities.
+
+In the context of federation, intrusion happens when an [=RP=] and an [=IDP=] are colluding to
+invasively and aggressively recommend the user to login disproportionally to the their intent. Much
+like unsolicited notifications, an [=RP=] can collude with an [=IDP=] to aggressively log users in.
+
+The [=user agent=] can mitigate this by mediating the user controls and offering them proportionally
+to the intent of the user or the privacy risks involved. For example, a [=user agent=] can choose to
+show a loud / disruptive modal mediated dialog when it has enough confidence of the user's intent or
+show a quiet / conservative UI hint when it doesn't.
+
+A [=user agent=] could also choose to control disruption of the user's experience based on the risks
+involved. For example, when a [=directed identifier=] is being exchanged it can be more confident of
+the unintended consequeces and offer a more aggressive user experience, whereas when global
+identifiers are exchanged a more conservative user experience.
+
+<div class="image">
+  <pre class=include-raw>
+  path: img/mock45.svg
+  </pre>
+</div>
+
+<!-- ============================================================ -->
+## Other Attack Scenarios ## {#other-attack-scenarios}
+<!-- ============================================================ -->
+
+The following are other attack scenarios considered but for which we do not have specific
+mitigations in this API. This is usually because the attacks rely on the user already providing user
+consent. Usually stopping such attacks would be very hard since the [=RP=] and [=IDP=] communication
+has been established. In addition, such attacks would still be possible when using regular login
+mechanisms. Still, they are worth mentioning as they showcase some risks users take when signing
+into [=RP=]s. In some cases, future mitigations are discussed.
+
+<!-- ============================================================ -->
+### Cross-Site Correlation ### {#attack-scenarios-by-rp-cross-site-correlation}
+<!-- ============================================================ -->
+
+This attack happens when multiple [=RP=]s collude to use their user's data to correlate them and
+build a richer profile. When a user willingly provides their full name, email address, phone number,
+etc, to multiple relying parties, those relying parties can collaborate to build a profile of that
+user and their activity across collaborating sites. Sometimes this is referred to as [=joining=]
+since it amounts to a join of user records between the account databases of multiple RPs. This
+correlation and profile-building is outside the user’s control and entirely out of the [=user
+agent=]’s or [=IDP=]’s view.
 
 <div class="image">
    <pre class=include-raw>
@@ -1818,34 +1945,37 @@ out of the [=user agent=]’s or [=IDP=]’s view.
     1. User is surprised that RP2 knows that they are shopping for wedding rings.
 </div>
 
-A generalization of [[#attack-scenarios-by-rp-cross-site-correlation]] is:
+The problem of RPs [=joining=] user data via back-channels is inherent to the proliferation of
+identifying user data. This can be solved by issuing [=directed identifiers=] that provide an
+effective handle to a user's identity with a given IDP that is unique and therefore cannot be
+correlated with other RPs. In the past, there have been schemes to accomplish this using one-way
+hashes of, for example, the user’s name, the [=IDP=], and the [=RP=].
 
-(<dfn noexport>RP Secondary Use</dfn>) Relying Party uses user information for
-purposes not authorized by the user:
-
-When the user agrees to allow the IDP to provide information to the RP,
-the consent is specific to certain purposes, such as sign-in and personalization.
-The RP might use that data for other purposes that the user would not expect and
-did not authorize, such as selling email addresses to a spam list.
-
-Spamming risk can exist even when using [=directed identifiers=].
+<div class="image">
+  <pre class=include-raw>
+  path: img/mock37.svg
+  </pre>
+</div>
 
 <!-- ============================================================ -->
-#### Same-Site Identification #### {#attack-scenarios-by-rp-same-site-identification}
+### Unauthorized Data Usage ### {#unauthorized-data-usage}
 <!-- ============================================================ -->
 
-Identification is the linking of information to a particular individual
-to infer an individual’s identity or to allow the inference of an
-individual’s identity.
+Another attack is when the Relying Party uses user information for purposes not authorized by the
+user. When the user agrees to allow the IDP to provide information to the RP, the consent is
+specific to certain purposes, such as sign-in and personalization. The RP might use that data for
+other purposes that the user would not expect and did not authorize, such as selling email addresses
+to a spam list. Spamming risk can exist even when using [=directed identifiers=].
 
-This attack happens when the Relying Party employs client state-based
-tracking to identify user.
+<!-- ============================================================ -->
+### RP Fingerprinting ### {#rp-fingerprinting}
+<!-- ============================================================ -->
 
-Any API that exposes any kind of client state to the web risk becoming a
-vector for fingerprinting or ‘supercookies’.
-
-This risk would be increased by any proposal for browser mediation that
-adds directly (or indirectly) detectable client state.
+This attack happens when the Relying Party employs client state-based tracking to identify user. Any
+API that exposes any kind of client state to the web risk becoming a vector for fingerprinting. The
+purpose of this API is for the user to provide identification to the [=RP=]. And the user should be
+able to rescind the access to that identification, for instance by logging out. However, a tracking
+[=RP=] could keep state to detect the user that was previously logged in:
 
 <div class="image">
 <pre class=include-raw>
@@ -1853,70 +1983,25 @@ path: img/mock5.svg
 </pre>
 </div>
 
-<div class='example'>
-For example, an RP can use the browser state of the FedCM to add bits of entropy
-and fingerprint the user.
-</div>
-
-See also:
-
-   1. [[FINGERPRINTING-GUIDANCE]]
-
 <!-- ============================================================ -->
-#### Data Compromise #### {#attack-scenarios-by-rp-data-compromise}
+### IDP fingerprinting ### {#idp-fingerprinting}
 <!-- ============================================================ -->
 
-This attack scenario happens when the [=RP=] takes advantage of
-inadequate measures (by the [=IDP=] or the UA) to secure stored data to
-obtain personal user information without their consent.
+Secondary use is the use of collected information about an individual without the individual's
+consent for a purpose different from that for which the information was collected. This attack
+happens when Identity Providers misuse the the information collected to enable sign-in for other
+purposes.
 
-This can happen if user consent mechanisms are missing, inadequate,
-or susceptible to bypass.
+Existing federation protocols require that the IDP know which service is requesting an ID token in
+order to allow identity federation. Identity providers can use this fact to build profiles of users
+across sites where the user has decided to use federation with the same account. This profile could
+be used, for example, to serve targeted advertisements to those users browsing on sites that the IDP
+controls.
 
-<div class="example">
-An RP can use clickjacking to trick the user into signing-into their site.
-</div>
-
-<div class="example">
-An RP can impersonate another RP to phish the user into signing-into their site.
-</div>
-
-See also:
-    1. [[PRIVACY-THREAT-MODEL#stored-data-compromise]]
-    1. [[RFC6973#section-5.1.2]]
-
-<!-- ============================================================ -->
-### By the IDP ### {#attack-scenarios-by-idp}
-<!-- ============================================================ -->
-
-<!-- ============================================================ -->
-#### Secondary Use #### {#attack-scenarios-by-idp-secondary-use}
-<!-- ============================================================ -->
-
-Related to:
-    * [[SELF-REVIEW#third-party-tracking]]
-
-Secondary use is the use of collected information about an individual
-without the individual's consent for a purpose different from that
-for which the information was collected.
-
-This attack happens when Identity Providers misuses the the information
-collected to enable sign-in for other purposes.
-
-Existing federation protocols require that the IDP know which service is
-requesting an ID token in order to allow identity federation (e.g. the IDP must
-know the OAuth `client_id`).
-
-Identity providers can use this fact to build profiles of users across sites
-where the user has decided to use federation with the same account. This profile
-could be used, for example, to serve targeted advertisements to those users
-browsing on sites that the IDP controls.
-
-This risk can exist even in the case where the IDP does not having pre-existing
-user account information (for instance, if it is not a _bona fide_ IDP), because
-FedCM requests sent to the IDP are credentialed. This is more likely to occur if
-the RP is colluding with the IDP to enable tracking; expanded variants are
-described in [[#attack-scenarios-by-idp-timing-attacks]].
+This risk can exist even in the case where the IDP does not having pre-existing user account
+information (for instance, if it is not a _bona fide_ IDP), because FedCM requests sent to the IDP
+are credentialed. This is more likely to occur if the RP is colluding with the IDP to enable
+tracking via [[#timing-attacks]].
 
 <div class="image">
     <pre class=include-raw>
@@ -1925,312 +2010,14 @@ described in [[#attack-scenarios-by-idp-timing-attacks]].
 </div>
 
 <div class='example'>
-    1. User signs into RP1 (which sells jewelry) with an IDP.
-    1. User signs into RP2 (which sells houses) with the same IDP.
-    1. User navigates to the IDP.
-    1. Because the IDP knows that the user has an account with RP1 and RP2, the
-        IDP can show ads about vacations for honeymoons.
-    1. The user is surprised that their IDP is aware of their plans to get
+    1. User signs into RP1 (which sells jewelry) with an [=IDP=].
+    1. User signs into RP2 (which sells houses) with the same [=IDP=].
+    1. User navigates to the [=IDP=].
+    1. Because the [=IDP=] knows that the user has an account with RP1 and RP2, the
+        [=IDP=] can show ads about vacations for honeymoons.
+    1. The user is surprised that their [=IDP=] is aware of their plans to get
         married.
 </div>
-
-<!-- ============================================================ -->
-#### Impersonation #### {#attack-scenarios-by-idp-impersonation}
-<!-- ============================================================ -->
-
-Since IDPs have unconstrained ability to issue ID tokens, they are capable
-of logging in to users’ federated accounts without user knowledge or action,
-impersonating the user and potentially gaining full access to the user's account
-on the RP.
-
-<div class="example">
-    1. User signs into RP1 (which is a online dating site) with an IDP.
-    1. An evil employee at IDP is an ex-spouse of the user.
-    1. The evil employee impersonates themselves as the User and gains access
-        to RP1
-    1. The evil employee looks at the user's dating history.
-    1. The user is surprised by their ex-spouse's knowledge of their recent
-        dating affairs.
-</div>
-
-<!-- ============================================================ -->
-### By Collusion ### {#attack-scenarios-by-idp-by-collusion}
-<!-- ============================================================ -->
-
-<!-- ============================================================ -->
-#### Intrusion #### {#attack-scenarios-by-idp-intrusion}
-<!-- ============================================================ -->
-
-   > From [[PRIVACY-THREAT-MODEL#hl-intrusion]]
-   >
-   > Privacy harms don't always come from a site learning things.
-
-   > From [[RFC6973#section-5.1.3|RFC6973: Intrusion]]
-   >
-   > Intrusion consists of invasive acts that disturb or interrupt one's
-   > life or activities.  Intrusion can thwart individuals' desires to be
-   > left alone, sap their time or attention, or interrupt their
-   > activities.
-
-In the context of federation, intrusion happens when an RP and an IDP
-are colluding to invasively and aggressively recommend the user to
-login disproportionally to the their intent.
-
-Much like unsolicited notifications, an [=RP=] can collude with an [=IDP=]
-to aggressively log users in.
-
-See also:
-    1. [[DESIGN-PRINCIPLES#safe-to-browse]]
-
-<!-- ============================================================ -->
-#### Back channel #### {#attack-scenarios-by-idp-back-channel}
-<!-- ============================================================ -->
-
-This attack scenario happens when IDP exceed the user’s information sharing
-permission.
-
-Existing federated identity protocols are clear on what information an RP
-is requesting, which the IDP can provide. While the browser can inspect
-the request and response and consider whether user permission has been
-granted for that transfer, it is difficult to know that there is no
-additional information embedded in the response. An example could be if
-the IDP encodes an identifier that could be used to load user-targeted
-advertisements on RP pages, which could be of value where the IDP has much
-more profiling information about the user.
-
-Another example is if identifying information is shared out-of-band,
-invisible to the browser, in which case it could contain anything.
-
-<div class="example">
-    1. User signs into RP1 (which sells jewelry) with an IDP, providing to RP1
-        their [=directed identifier=] email address SHA256(user + RP1)@email.example
-    1. User signs into RP2 (which sells houses) with an IDP, providing to RP2
-        their [=directed identifier=] email address SHA256(user + RP2)@email.example
-    1. User browses the collection of wedding rings in RP1.
-    1. Out of band, RP1 colludes with the IDP and exchanges
-        SHA256(user + RP1)@email.example to user@email.example.
-    1. RP1 tells RP2 that user@email.example is shopping for wedding rings
-    1. User browses the housing inventory in RP2.
-    1. Out of band, RP2 colludes with the IDP and exchanges
-        SHA256(user + RP2)@email.example to user@email.example.
-    1. RP2 uses the fact that the user is shopping for wedding rings in RP1 to
-        advertise and filters their housing inventory.
-    1. User is surprised that RP2 knows that they are shopping for wedding rings.
-</div>
-
-<!-- ============================================================ -->
-#### Timing Attacks #### {#attack-scenarios-by-idp-timing-attacks}
-<!-- ============================================================ -->
-
-The potential for IDPs profiling users based on their visits to RPs
-[[#attack-scenarios-by-idp-secondary-use]] can be partially mitigated by hiding
-the RP from the IDP until after the user has agreed to that tracking risk.
-
-However, there is residual risk in cases where the RP and IDP are colluding.
-
-If a credentialed request is sent to the IDP that does not explicitly identify
-the RP, either of the following would still allow tracking by the IDP (again,
-possibly not a _bona fide_ IDP that has existing knowledge of the user):
-
-* The RP controlling any field in the request that can be used to convey
-    identifying data in the request that the IDP could correlate to other
-    requests from other RPs;
-
-* The RP being able to provide fine-resolution timing information about
-    the request to the IDP out of band.
-
-The timing information can enable tracking in the following way:
-
-    1. The RP logs the time at which it invoked the API, and
-    1. The IDP logs the time at which it received a credentialed FedCM request
-        from the user, and later
-    1. They attempt to link the invocation and the request together using that
-        information.
-
-Notably, this is possible without FedCM using simple cross-origin top-level
-navigations, but using FedCM for this purpose would worsen the problem if it
-improved timing resolution or was less visible to users.
-
-See also:
-    1. [[DESIGN-PRINCIPLES#safe-to-browse]]
-
-## Mitigation Strategies ## {#mitigation-strategies}
-
-In this section we'll go over some strategies used in this specification to
-mitigate the privacy threats.
-
-### Minimal Disclosure ### {#mitigation-minimal-disclosure}
-
-There is a series of privacy threats that can be mitigated by disclosing the
-least amount of identifying information and limiting its use as much as
-possible. Two notable strategies are described in the sections below.
-
-#### Directed Identifiers #### {#mitigation-directed-identifiers}
-
-Mitigates:
-    * [[#attack-scenarios-by-rp-cross-site-correlation]]
-
-Note: directed, sharding, partitioning
-
-The problem of RPs joining user data via back-channels is inherent
-to the proliferation of identifying user data. This can be solved
-by issuing [=directed identifiers=] that provide an effective handle
-to a user's identity with a given IDP that is unique and therefore
-cannot be correlated with other RPs.
-
-In the past, there have been schemes to accomplish this using one-way
-hashes of, for example, the user’s name, the IDP and the RP.
-
-<div class="image">
-  <pre class=include-raw>
-  path: img/mock37.svg
-  </pre>
-</div>
-
-Note: this mitigation is not robust against [[#attack-scenarios-by-idp-back-channel]],
-or the [[#attack-scenarios-by-idp-secondary-use]]. Also, collaborating RPs might
-be able to defeat this mitigation by sharing the same CLIENT_ID, although
-possibly this could be detected and presumably would violate RP agreements with
-IDPs with [[#mitigation-pre-registration]].
-
-#### Self Presentation #### {#mitigation-self-presentation}
-
-Mitigates:
-    * [[#attack-scenarios-by-idp-secondary-use]] and
-    * [[#attack-scenarios-by-idp-timing-attacks]]
-
-Note: unbundling issuing from presentation
-
-Preventing tracking of users by the IDP is difficult because the RP has to be
-coded into the identity token for security reasons, to prevent reuse of the
-token. There have been cryptographic schemes developed to blind the IDP to the
-RP while still preventing token reuse in that way
-(see Mozilla’s [personas](https://wiki.mozilla.org/Identity/Persona_AAR)) but
-there are other valid uses that the IDP has for knowing the RP, such as fraud
-and abuse prevention.
-
-<div class="image">
-  <pre class=include-raw>
-  path: img/mock34.svg
-  </pre>
-</div>
-
-### Mediation ### {#mitigation-mediation}
-
-Mitigates:
-    * [[#attack-scenarios-by-rp-cross-site-correlation]],
-    * [[#attack-scenarios-by-rp-data-compromise]],
-    * [[#attack-scenarios-by-idp-timing-attacks]]
-    * [[#attack-scenarios-by-idp-intrusion]]
-
-IDPs, whom the user has entrusted with their personal data, are currently
-responsible for ensuring that the user consents to their information being
-shared. With browser mediation in place, the user agent might have to assume
-responsibility for ensuring the user understands what is being shared and that
-it is intentional. This is certainly the case if the browser is able to entirely
-intermediate the identity flow without showing any IDP web content, but also
-might be desirable if there are concerns that the IDP is not collecting consent
-in an adequate manner.
-
-Additionally, a consent prompt preceding the sharing of the RP’s request to the
-IDP can mitigate risks around IDP tracking of user visits to RPs.
-
-<div class="image">
-  <pre class=include-raw>
-  path: img/mock46.svg
-  </pre>
-</div>
-
-See also:
-  1. [[DESIGN-PRINCIPLES#consent]]
-  1. [[SELF-REVIEW#user-mediation]]
-  1. [[RFC6973#page-23]]
-  1. [[ETHICS|Ethical Principles]]: [[ETHICS#verify|The web must make it possible for people to verify the information they see]]
-  1. [[ETHICS|Ethical Principles]]: [[ETHICS#control|The web must enhance individuals' control and power]]
-  1. [[LEAST-POWER]]
-
-#### Verification #### {#mitigation-verification}
-
-Mitigates:
-    * [[#attack-scenarios-by-rp-cross-site-correlation]],
-
-The [=user agent=] can mitigate [[#attack-scenarios-by-rp-cross-site-correlation]]
-by inspecting the contents of the data exchange, and providing the necessary
-user controls.
-
-For example, it can inspect the email address that is being exchanged and verify
-whether it is a [=directed identifier=] or not (and warn the user proportionally).
-
-#### Activation #### {#activation}
-
-The [=user agent=] can mitigate [[#attack-scenarios-by-idp-intrusion]] by
-mediating the user controls and offering them proportionally to the intent of
-the user or the privacy risks involved.
-
-For example, a [=user agent=] can choose to show a loud / disruptive modal
-mediated dialog when it has enough confidence of the user's intent or show a
-quiet / conservative UI hint when it doesn't.
-
-A [=user agent=] could also choose to control disruption of the user's
-experience based on the risks involved.
-
-For example, when a [=directed identifier=] is being exchanged it can be more
-confident of the unintended consequeces and offer a more aggressive user
-experience, whereas when global identifiers are exchanged a more conservative
-user experience.
-
-<div class="image">
-  <pre class=include-raw>
-  path: img/mock45.svg
-  </pre>
-</div>
-
-See also:
-    * [Requiring user gesture to call WebAuthn API](https://github.com/w3c/webauthn/issues/1293)
-    * [Require user gesture to request notification permissions](https://github.com/wicg/interventions/issues/49)
-    * [WHATWG User Activation](https://html.spec.whatwg.org/multipage/interaction.html#tracking-user-activation)
-    * [Querying User Activation](https://github.com/dtapuska/useractivation)
-
-### Policy ### {#mitigation-policy}
-
-Mitigates:
-    * [[#attack-scenarios-by-idp-impersonation]],
-    * [[#attack-scenarios-by-idp-back-channel]]
-
-Beyond technical constraints, the browser can recognize explicit assertions by
-the IDP about the privacy characteristics it provides and rely on those
-assertions in order to guide the user appropriately. An example is a
-hypothetical case in which the IDP asserts it will only issue
-[=directed identifiers=] and will not provide identifying information to the
-RPs out of view of the browser. In that case the browser may not have to warn
-the user about sharing personalized information.
-
-### Denylists ### {#mitigation-denylists}
-
-Mitigates:
-    * Potentially all threats, but is subject to the likelihood of bad behavior
-        being detected, which for some might be difficult.
-
-Any RPs or IDPs observed to be using this API to compromise user privacy in a
-deceptive or abusive manner could be explicitly blocked from using it, or
-potentially added to the SafeBrowsing blocklist so that they cannot be loaded
-at all.
-
-### Pre-registration ### {#mitigation-pre-registration}
-
-Mitigates:
-    * [[#attack-scenarios-by-rp-data-compromise]],
-    * [[#attack-scenarios-by-rp-cross-site-correlation]]
-
-Currently, IDPs require that an RP pre-registers and agrees to specific terms
-before the IDP will issue an ID token to them.  This conflicts with
-[the previous mitigation](#mitigation-self-presentation), but can provide a
-measure of RP accountability.
-
-### 2FA ### {#mitigation-2fa}
-
-Mitigates:
-    * [[#attack-scenarios-by-idp-impersonation]],
 
 <!-- ====================================================================== -->
 # Extensibility # {#extensibility}
