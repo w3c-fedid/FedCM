@@ -315,6 +315,7 @@ could be implemented.
     // state and stores any needed account information.
     // The object will be either registered or unregistered and store information
     // on if the user should be prompted based on the mediation flag.
+    // TODO: the use of the mediation flag isn't fully speced out yet.
     return await navigator.credentials.get({
       mediated: “optional”, // “optional” is the default
       identity: {
@@ -981,14 +982,38 @@ the [=RP=].
 The Browser API exposes APIs to [=RP=]s and [=IDP=]s to call and intermediates
 the exchange of the user's identity.
 
-For [=RP=]s, it allows [=RP=]'s users to [[#use-cases-sign-up]] and
-[[#use-cases-sign-in]] with the [[#browser-api-rp-sign-in]] API.
+The Sign-up and Sign-in APIs is used by the [=Relying Party=]s to ask the browser
+to intermediate the relationship with the [=Identity Provider=] and the
+provisioning of an [=id token=].
 
-For [=IDP=]s, it allows them to [[#use-cases-idp-sign-out]] the users
-of their [=RP=] accounts with the [[#browser-api-idp-sign-out]] API.
+NOTE: The [=Relying Party=] makes no delineation between Sign-up and Sign-in, but
+rather calls the same API indistinguishably.
 
-The Browser API manages the lifecycle of the user's accounts and sessions with
-an internal [[#browser-api-state-machine]].
+If all goes well, the [=Relying Party=] receives back an {{IdentityCredential}}
+which contains an [=id token=] in the form of a signed [[JWT]] which it can use to
+authenticate the user.
+
+<div class=example>
+```js
+const credential = await navigator.credentials.get({
+  identity: {
+    providers: [{
+      url: "https://idp.example/manifest.json",
+      clientId: "123",
+      hint: "dan@example.com"
+    }]
+  }
+});
+```
+</div>
+
+To do so, this specification does three things:
+
+First, it introduces a new {{Credential}} type, called [[#browser-api-identity-credential-interface]].
+
+Second, it introduces an extension to [[#browser-api-credential-request-options]].
+
+Lastly, it overrides the default implementation of [[#browser-api-rp-sign-in]].
 
 <!-- ============================================================ -->
 ## The State Machine ## {#browser-api-state-machine}
@@ -1012,6 +1037,27 @@ The user agent keepts track of the following state machine for each
     ::  Keeps track of whether the user has an open or closed session.
          Can be [=logged-in=] or [=logged-out=] (by default).
 </dl>
+
+<!-- ============================================================ -->
+## The IdentityCredential Interface ## {#browser-api-identity-credential-interface}
+<!-- ============================================================ -->
+
+This specification introduces a new type of {{Credential}}, called an {{IdentityCredential}}:
+
+<pre class="idl">
+  [Exposed=Window, SecureContext]
+  interface IdentityCredential : Credential {
+    readonly attribute USVString? idToken;
+  };
+</pre>
+
+<dl dfn-type="argument" dfn-for="IdentityCredential">
+    :   <dfn>idToken</dfn>
+    ::  The minted ID token
+</dl>
+
+The main entrypoint in this specification is through the entrypoints exposed
+by the [[CM]] API.
 
 <!-- ============================================================ -->
 ## The CredentialRequestOptions ## {#browser-api-credential-request-options}
@@ -1054,71 +1100,15 @@ dictionary IdentityProvider {
     :   <dfn>clientId</dfn>
     ::  The [=client id=] provided to the [=RP=] out of band by the [=IDP=]
     :   <dfn>nonce</dfn>
-    ::  A random number of the choice of the [=RP=]
+    ::  A random number of the choice of the [=RP=]. TODO: expand on how this is intended to be used.
     :   <dfn>hint</dfn>
     ::  Optional `accountId` hint. Maybe used by the UA when displaying the
          account chooser dialog.
 </dl>
 
 <!-- ============================================================ -->
-## The IdentityCredential Interface ## {#browser-api-identity-credential-interface}
+## The <code><dfn for="IdentityCredential" method> [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</dfn></code> internal method ## {#browser-api-rp-sign-in}
 <!-- ============================================================ -->
-
-This specification introduces a new type of {{Credential}}, called an {{IdentityCredential}}:
-
-<pre class="idl">
-  [Exposed=Window, SecureContext]
-  interface IdentityCredential : Credential {
-    readonly attribute USVString? idToken;
-  };
-</pre>
-
-<dl dfn-type="argument" dfn-for="FederatedCredential">
-    :   <dfn>idToken</dfn>
-    ::  The minted ID token
-</dl>
-
-The main entrypoint in this specification is through the entrypoints exposed
-by the [[CM]] API.
-
-<div class=example>
-```js
-const credential = await navigator.credentials.get({
-  identity: {
-    providers: [{
-      url: "https://idp.example/manifest.json",
-      clientId: "123",
-      hint: "dan@example.com"
-    }]
-  }
-});
-```
-</div>
-
-To do so, it overrides the {{IdentityCredential}}'s
-<code><dfn for="IdentityCredential" method>
- \[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</dfn></code>
-method which runs the [[#browser-api-rp-sign-in]] algorithm.
-
-<!-- ============================================================ -->
-### RP Sign-in ### {#browser-api-rp-sign-in}
-<!-- ============================================================ -->
-
-The Sign-up and Sign-in APIs is used by the [=Relying Party=]s to ask the browser
-to intermediate the relationship with the [=Identity Provider=] and the
-provisioning of an [=id token=].
-
-NOTE: The [=Relying Party=] makes no delineation between Sign-up and Sign-in, but
-rather calls the same API indistinguishably.
-
-If all goes well, the [=Relying Party=] receives back a {{FederatedCredential}}
-which contains an [=id token=] in the form of a signed [[JWT]] which it can use to
-authenticate the user.
-
-The Sign-in API will request the [=id token=] to be [=minted=] by the IDP.
-
-Each {{IdentityCredential}} has an associated <dfn>provider</dfn>, an
-{{IdentityProvider}}, which is initially null.
 
 This algorithm runs in parallel inside the [[CM#algorithm-request]] to request
 credentials and returns a set of {{IdentityCredential}} for the requested
