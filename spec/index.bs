@@ -287,7 +287,7 @@ entries provided by the [=Identity Provider=].
 # Examples # {#examples}
 <!-- ============================================================ -->
 
-This specification extends the {{FederatedCredential}} type and internal
+This specification defines a new {{IdentityCredential}} type and internal
 algorithms to allow the exchange of identity between [=IDP=]s and [=RP=]s.
 When it succeeds, it returns to the [=RP=] a signed [=id token=] which the
 [=RP=] can use to authenticate the user.
@@ -317,7 +317,7 @@ could be implemented.
     // on if the user should be prompted based on the mediation flag.
     return await navigator.credentials.get({
       mediated: “optional”, // “optional” is the default
-      federated: {
+      identity: {
         providers: [{
           url: "https://idp.example/manifest.json",
           clientId: "123",
@@ -353,7 +353,7 @@ could be implemented.
     const id = ...; /* site gets stored id if available */
     const credential = await navigator.credentials.get({
       mediation: "optional",
-      federated: {
+      identity: {
         providers: [{
           url: "https://idp.example/manifest.json",
           clientId: "123",
@@ -369,7 +369,7 @@ could be implemented.
   async function multiLogin() {
     const credential = await navigator.credentials.get({
       mediation: "required",
-      federated: {
+      identity: {
         providers: [{
           url: "https://idp.example/manifest.json",
           clientId: "123",
@@ -385,7 +385,7 @@ could be implemented.
     const id = ...; /* site gets stored id if available */
     return navigator.credentials.get({
       mediation: "silent",
-      federated: {
+      identity: {
         providers: [{
           url: "https://idp.example/manifest.json",
           clientId: "123",
@@ -1028,16 +1028,29 @@ The user agent keepts track of the following state machine for each
 </dl>
 
 <!-- ============================================================ -->
-## The FederatedCredential Interface ## {#browser-api-federated-credential}
+## The CredentialRequestOptions ## {#browser-api-credential-request-options}
 <!-- ============================================================ -->
 
-This specification extends the existing {{FederatedCredential}}'s
-interface and internal algorithms to allow the exchange of the user's identity:
+This specification starts by introducing an extension to the
+{{CredentialRequestOptions}} object:
+
+<pre class="idl">
+  partial dictionary CredentialRequestOptions {
+    IdentityCredentialRequestOptions identity;
+  };
+</pre>
+
+The {{IdentityCredentialRequestOptions}} contains a list of
+{{IdentityProvider}}s that the [=Relying Party=] supports and has
+pre-registered with (i.e. it has a `clientId`).
+
+The main entrypoint in this specification is through the entrypoints exposed
+by the [[CM]] API.
 
 <div class=example>
 ```js
 const credential = await navigator.credentials.get({
-  federated: {
+  identity: {
     providers: [{
       url: "https://idp.example/manifest.json",
       clientId: "123",
@@ -1047,6 +1060,49 @@ const credential = await navigator.credentials.get({
 });
 ```
 </div>
+
+NOTE: The {{CredentialRequestOptions/mediation}} flag is currently not used.
+
+The {{CredentialRequestOptions/signal}} is used as an abort signal for the
+requests.
+
+<xmp class=idl>
+dictionary IdentityCredentialRequestOptions {
+  sequence<IdentityProvider> providers;
+};
+</xmp>
+
+Each {{FederatedIdentityProvider}} represents an [=Identity Provider=] that
+the [=Relying Party=] supports (e.g. that it has a pre-registration agreement with).
+
+<xmp class=idl>
+dictionary IdentityProvider {
+  required USVString url;
+  required USVString clientId;
+  USVString nonce;
+  USVString hint;
+};
+</xmp>
+
+
+<dl dfn-type="argument" dfn-for="IdentityProvider">
+    :   <dfn>url</dfn>
+    ::  The URL of the identity provider.
+    :   <dfn>clientId</dfn>
+    ::  The [=client id=] provided to the [=RP=] out of band by the [=IDP=]
+    :   <dfn>nonce</dfn>
+    ::  A random number of the choice of the [=RP=]
+    :   <dfn>hint</dfn>
+    ::  Optional `accountId` hint. Maybe used by the UA when displaying the
+         account chooser dialog.
+</dl>
+
+<!-- ============================================================ -->
+## The FederatedCredential Interface ## {#browser-api-federated-credential}
+<!-- ============================================================ -->
+
+This specification extends the existing {{FederatedCredential}}'s
+interface and internal algorithms to allow the exchange of the user's identity:
 
 First, it extends the {{FederatedCredential}} interface to allow it to carry an [=id token=]:
 
@@ -1070,40 +1126,22 @@ method, with the algorithm described in the [[#browser-api-rp-sign-in]] section.
 To support this extension, a {{FederatedIdentityProvider}} dictionary
 is introduced to the {{FederatedCredentialRequestOptions}}:
 
-<xmp class=idl>
-partial dictionary FederatedCredentialRequestOptions {
-  sequence<(DOMString or FederatedIdentityProvider)> providers;
-};
-</xmp>
+<!-- ============================================================ -->
+## The IdentityCredential Interface ## {#browser-api-identity-credential-interface}
+<!-- ============================================================ -->
 
-Each {{FederatedIdentityProvider}} represents an [=Identity Provider=] that
-the [=Relying Party=] supports (e.g. that it has a pre-registration agreement with).
+This specification introduces a new type of {{Credential}}, called an {{IdentityCredential}}:
 
-<xmp class=idl>
-dictionary FederatedIdentityProvider {
-  required USVString url;
-  required USVString clientId;
-  USVString nonce;
-  USVString hint;
-};
-</xmp>
+<pre class="idl">
+  [Exposed=Window, SecureContext]
+  interface IdentityCredential : Credential {
+  };
+</pre>
 
-NOTE: The {{CredentialRequestOptions/mediation}} flag is currently not used.
-
-The {{CredentialRequestOptions/signal}} is used as an abort signal for the
-requests.
-
-<dl dfn-type="argument" dfn-for="FederatedIdentityProvider">
-    :   <dfn>url</dfn>
-    ::  The URL of the identity provider.
-    :   <dfn>clientId</dfn>
-    ::  The [=client id=] provided to the [=RP=] out of band by the [=IDP=]
-    :   <dfn>nonce</dfn>
-    ::  A random number of the choice of the [=RP=]
-    :   <dfn>hint</dfn>
-    ::  Optional `accountId` hint. Maybe used by the UA when displaying the
-         account chooser dialog.
-</dl>
+It also overrides the {{IdentityCredential}}'s
+<code><dfn for="IdentityCredential" method>
+ \[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</dfn></code>
+method.
 
 <!-- ============================================================ -->
 ### RP Sign-in ### {#browser-api-rp-sign-in}
@@ -1122,16 +1160,16 @@ authenticate the user.
 
 The Sign-in API will request the [=id token=] to be [=minted=] by the IDP.
 
-Each {{FederatedCredential}} has an associated <dfn>provider</dfn>, a
-{{FederatedIdentityProvider}}, which is initially null.
+Each {{IdentityCredential}} has an associated <dfn>provider</dfn>, an
+{{IdentityProvider}}, which is initially null.
 
 This algorithm runs in parallel inside the [[CM#algorithm-request]] to request
-credentials and returns a set of {{FederatedCredential}} for the requested
+credentials and returns a set of {{IdentityCredential}} for the requested
 [=Identity Provider=]s.
 
 This [=internal method=] accepts three arguments:
 
-<dl dfn-type="argument" dfn-for="FederatedCredential/[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)">
+<dl dfn-type="argument" dfn-for="IdentityCredential/[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)">
     :   <dfn>origin</dfn>
     ::  This argument is the [=relevant settings object=]'s
          [=environment settings object/origin=], as determined by the
@@ -1140,8 +1178,8 @@ This [=internal method=] accepts three arguments:
          abstract operation.
     :   <dfn>options</dfn>
     ::  This argument is a {{CredentialRequestOptions}} object whose
-         <code>|options|.{{CredentialRequestOptions/federated}}</code> member
-         contains a {{FederatedCredentialRequestOptions}} object specifying the
+         <code>|options|.{{CredentialRequestOptions/identity}}</code> member
+         contains an {{IdentityCredentialRequestOptions}} object specifying the
          exchange options.
     :   <dfn>sameOriginWithAncestors</dfn>
     ::  This argument is a Boolean value which is [TRUE] if and only if the
@@ -1156,14 +1194,14 @@ When this method is invoked, the user agent MUST execute the following algorithm
 
       Note: This restriction aims to address the concern raised
       in [[Security-Origin-Confusion]].
-  1.  Assert: |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"] [=map/exists=].
-  1.  Assert: |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"] [=list/size=] is 1.
+  1.  Assert: |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"] [=map/exists=].
+  1.  Assert: |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"] [=list/size=] is 1.
 
        Note: At some point we would like to support choosing accounts from
        multiple [=Identity Provider=]s.
-  1. Let |provider| be |options|["{{CredentialRequestOptions/federated}}"]["{{FederatedCredentialRequestOptions/providers}}"][0].
-  1. Let |hint| be |provider|["{{FederatedIdentityProvider/hint}}"]
-  1. Let |credential| be a new {{FederatedCredential}}.
+  1. Let |provider| be |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"][0].
+  1. Let |hint| be |provider|["{{IdentityProvider/hint}}"]
+  1. Let |credential| be a new {{IdentityCredential}}.
   1. Set |credential|'s <a>provider</a> to |provider|.
   1. Set |credential|'s {{Credential/id}} to |hint|.
   1. Request user consent by running the [=request consent=] algorithm with the |provider|.
@@ -1172,7 +1210,7 @@ When this method is invoked, the user agent MUST execute the following algorithm
   1. Set |credential|'s {{FederatedCredential/idToken}} to |token|.
   1. return |credential|.
 
-To <dfn>request consent</dfn> given a |provider|:
+To <dfn>request consent</dfn>:
     1. Let |manifest| be the result of running the [=fetch the manifest=]
         algorithm with |provider|.
     1. Let |accounts list| be the result of running the
@@ -1187,7 +1225,7 @@ To <dfn>request consent</dfn> given a |provider|:
 To <dfn>fetch the accounts list</dfn>:
     1. Let the |accounts_endpoint| url be the relative url
         |manifest|["{{Manifest/accounts_endpoint}}"] of
-        |provider|["{{FederatedIdentityProvider/url}}"]
+        |provider|["{{IdentityProvider/url}}"]
     1. Let the |accounts list| be the result of fetching the |accounts_endpoint|
         with the [=Identity Provider=]'s cookies.  This request MUST NOT follow
         [[RFC9110#header.location|HTTP redirects]] and instead abort with an
@@ -1199,10 +1237,10 @@ To <dfn>sign-up</dfn> the user with a given |account|:
     1. Let |metadata| be the result of running the [=fetch the client metadata=]
         algorithm.
     1. If |metadata|["{{client_metadata_endpoint_response/privacy_policy_url}}"] is defined and
-        the provider["{{FederatedIdentityProvider/clientId}}"] is not in the list of |account|["{{accounts_endpoint_response_accounts/approved_clients}}"]
+        the provider["{{IdentityProvider/clientId}}"] is not in the list of |account|["{{accounts_endpoint_response_accounts/approved_clients}}"]
         then display the |metadata|["{{client_metadata_endpoint_response/privacy_policy_url}}"] link.
     1. If |metadata|["terms_of_service_url"] is defined and
-        the provider["{{FederatedIdentityProvider/clientId}}"] is not in the list of |account|["{{accounts_endpoint_response_accounts/approved_clients}}"]
+        the provider["{{IdentityProvider/clientId}}"] is not in the list of |account|["{{accounts_endpoint_response_accounts/approved_clients}}"]
 	      then display the |metadata|["{{client_metadata_endpoint_response/terms_of_service_url}}"] link.
     1. Prompt the user to gather explicit intent to create an account. The user agent MAY use the
         [=Branding JSON=] to inform the style choices of its UI.
@@ -1214,7 +1252,7 @@ To <dfn>sign-up</dfn> the user with a given |account|:
 To <dfn noexport>fetch the client metadata</dfn>:
     1. Let the |client_metadata_endpoint| url be the relative url
         |manifest|["{{Manifest/client_metadata_endpoint}}"] of
-        |provider|["{{FederatedIdentityProvider/url}}"]
+        |provider|["{{IdentityProvider/url}}"]
     1. Let the |policies| be the result of fetching the
         |client_metadata_endpoint| with the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]]
         header but without the [=Identity Provider=]'s cookies.  This request
@@ -1225,8 +1263,8 @@ To <dfn noexport>fetch the client metadata</dfn>:
 To <dfn>select an account</dfn> from the accounts list:
     1. If |accounts list|'s [=list/size=] is 1:
         1. Let |account| be |accounts list|[0] and return |account|
-    1. If this's {{FederatedCredential/provider}}["accountId"] is provided and
-        an account matches this's {{FederatedCredential/provider}}["accountId"] then return
+    1. If this's {{IdentityCredential/provider}}["accountId"] is provided and
+        an account matches this's {{IdentityCredential/provider}}["accountId"] then return
         |account|.
     1. Display an account chooser
     1. Let |account| be an account that the user manually selects from the
@@ -1243,13 +1281,13 @@ To <dfn>create tokens</dfn>:
     1. Assert {{StateMachine/Session State}} is [=logged-in=]
     1. Let |request| be a new object
         1. Set |request|["account_id"] to |account|["{{accounts_endpoint_response_accounts/id}}"].
-        1. Set |request|["client_id"] to |provider|["{{FederatedIdentityProvider/clientId}}"].
-        1. Set |request|["nonce"] to |provider|["{{FederatedIdentityProvider/nonce}}"].
+        1. Set |request|["client_id"] to |provider|["{{IdentityProvider/clientId}}"].
+        1. Set |request|["nonce"] to |request|["{{IdentityProvider/nonce}}"].
     1. Let |tokens| be the result of making a POST request described in
         [[#idp-api-id-token-endpoint]].
     1. Return |tokens|["id_token"].
 
-The <dfn>fetch the manifest</dfn> algorithm accepts a {{FederatedIdentityProvider}} |provider| and returns a [=Manifest=] object:
+The <dfn>fetch the manifest</dfn> algorithm accepts an {{IdentityProvider}} |provider| and returns a [=Manifest=] object:
     1. In parallel, perform the following two steps:
         1. Let |manifestInSet| be the result of running [=check the root manifest=], passing
             |provider|.
@@ -1265,8 +1303,8 @@ to keep their actual manifest on an arbitary path while allowing the user agent 
 manipulation to fingerprint. See https://github.com/fedidcg/FedCM/issues/230 for more details on
 this attack.
 
-The <dfn>check the root manifest</dfn> accepts a {{FederatedIdentityProvider}} |provider| and whether the manifest is included in the manifest list:
-    1. Let |url| be |provider|'s {{FederatedIdentityProvider/url}}.
+The <dfn>check the root manifest</dfn> accepts an {{IdentityProvider}} |provider| and whether the manifest is included in the manifest list:
+    1. Let |url| be |provider|'s {{IdentityProvider/url}}.
     1. Let |rootUrl| be a new [=/URL=].
     1. Set |rootUrl|'s [=url/scheme=] to |url|'s [=url/scheme=].
     1. Set |rootUrl|'s [=url/host=] to |url|'s [=url/host=]'s [=host/registrable domain=].
@@ -1286,13 +1324,13 @@ The <dfn>check the root manifest</dfn> accepts a {{FederatedIdentityProvider}} |
             determine the right value, probably greater than 1.
         1. If |json|["provider_urls"][0] is not a [=string=], return false.
         1. Return true if |json|["provider_urls"][0] [=string/is=] equal to |provider|'s
-            {{FederatedIdentityProvider/url}}, otherwise return false.
+            {{IdentityProvider/url}}, otherwise return false.
 
-The <dfn>fetch the internal manifest</dfn> algorithm accepts a {{FederatedIdentityProvider}} |provider| and returns a [=Manifest=]:
+The <dfn>fetch the internal manifest</dfn> algorithm accepts an {{IdentityProvider}} |provider| and returns a [=Manifest=]:
     1. Run a [[!CSP]] check with a [[CSP#directive-connect-src|connect-src]]
-        directive on the URL passed as |provider|'s {{FederatedIdentityProvider/url}}
+        directive on the URL passed as |provider|'s {{IdentityProvider/url}}
         and return if the check fails.
-    1. Return the result of fetching the |provider|'s {{FederatedIdentityProvider/url}}
+    1. Return the result of fetching the |provider|'s {{IdentityProvider/url}}
         and parsing it into a [=Manifest=].
         TODO: specify how the fetching and the parsing works.
         The fetch MUST be done with the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]] header but
@@ -1328,7 +1366,7 @@ path: img/mock31.svg
 
 <div class=example>
 ```js
-await FederatedCredential.logoutRPs([{
+await IdentityCredential.logoutRPs([{
     url: "https://rp1.example",
     accountId: "123"
   }, {
@@ -1338,18 +1376,18 @@ await FederatedCredential.logoutRPs([{
 ```
 </div>
 
-[=IDP=]s can call <code><a idl for="FederatedCredential" lt="logout()">FederatedCredential.logoutRPs(...)</a></code>
+[=IDP=]s can call <code><a idl for="IdentityCredential" lt="logout()">IdentityCredential.logoutRPs(...)</a></code>
 to log the user out of the [=RP=]s they are signed into.
 
 <xmp class=idl>
-dictionary FederatedCredentialLogoutRpsRequest {
+dictionary IdentityCredentialLogoutRpsRequest {
   required USVString url;
   required USVString accountId;
 };
 
 [Exposed=Window, SecureContext]
-partial interface FederatedCredential {
-  static Promise<undefined> logoutRPs(sequence<FederatedCredentialLogoutRpsRequest> logoutRequests);
+partial interface IdentityCredential {
+  static Promise<undefined> logoutRPs(sequence<IdentityCredentialLogoutRpsRequest> logoutRequests);
 };
 </xmp>
 
@@ -1358,12 +1396,12 @@ When this method is invoked, the user agent MUST execute the following algorithm
   1. Let |promise| be a new {{Promise}}.
   1. For each |request| in |logoutRequests|
     1. Let |credential| be a credential matching
-        |request|'s {{FederatedCredentialLogoutRpsRequest/url}} and
-        |request|'s {{FederatedCredentialLogoutRpsRequest/accountId}}
+        |request|'s {{IdentityCredentialLogoutRpsRequest/url}} and
+        |request|'s {{IdentityCredentialLogoutRpsRequest/accountId}}
     1. If no matching |credential| continue
     1. If the |credential| {{StateMachine/Account State}} is [=unregistered=] or
         {{StateMachine/Session State}} is [=logged-out=] continue
-    1. POST to the |request|'s {{FederatedCredentialLogoutRpsRequest/url}} with the
+    1. POST to the |request|'s {{IdentityCredentialLogoutRpsRequest/url}} with the
         [=Relying Parties=] cookies.  This request MUST NOT follow
         [[RFC9110#header.location|HTTP redirects]] and instead abort the request.
     1. Set the |credential| {{StateMachine/Session State}} to [=logged-out=]
