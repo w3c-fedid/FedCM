@@ -380,20 +380,6 @@ could be implemented.
     /* site stores credential id somewhere */
     return credential;
   }
-
-  async function getLoggedInCredential() {
-    const id = ...; /* site gets stored id if available */
-    return navigator.credentials.get({
-      mediation: "silent",
-      identity: {
-        providers: [{
-          url: "https://idp.example/manifest.json",
-          clientId: "123",
-          hint: id,
-        }]
-      }
-    });
-  }
   </script>
 </body>
 </html>
@@ -1044,6 +1030,54 @@ The {{IdentityCredentialRequestOptions}} contains a list of
 {{IdentityProvider}}s that the [=Relying Party=] supports and has
 pre-registered with (i.e. it has a `clientId`).
 
+<xmp class=idl>
+dictionary IdentityCredentialRequestOptions {
+  sequence<IdentityProvider> providers;
+};
+</xmp>
+
+Each {{IdentityProvider}} represents an [=Identity Provider=] that
+the [=Relying Party=] supports (e.g. that it has a pre-registration agreement with).
+
+<xmp class=idl>
+dictionary IdentityProvider {
+  required USVString url;
+  required USVString clientId;
+  USVString nonce;
+  USVString hint;
+};
+</xmp>
+
+<dl dfn-type="argument" dfn-for="IdentityProvider">
+    :   <dfn>url</dfn>
+    ::  The URL of the identity provider.
+    :   <dfn>clientId</dfn>
+    ::  The [=client id=] provided to the [=RP=] out of band by the [=IDP=]
+    :   <dfn>nonce</dfn>
+    ::  A random number of the choice of the [=RP=]
+    :   <dfn>hint</dfn>
+    ::  Optional `accountId` hint. Maybe used by the UA when displaying the
+         account chooser dialog.
+</dl>
+
+<!-- ============================================================ -->
+## The IdentityCredential Interface ## {#browser-api-identity-credential-interface}
+<!-- ============================================================ -->
+
+This specification introduces a new type of {{Credential}}, called an {{IdentityCredential}}:
+
+<pre class="idl">
+  [Exposed=Window, SecureContext]
+  interface IdentityCredential : Credential {
+    readonly attribute USVString? idToken;
+  };
+</pre>
+
+<dl dfn-type="argument" dfn-for="FederatedCredential">
+    :   <dfn>idToken</dfn>
+    ::  The minted ID token
+</dl>
+
 The main entrypoint in this specification is through the entrypoints exposed
 by the [[CM]] API.
 
@@ -1061,87 +1095,10 @@ const credential = await navigator.credentials.get({
 ```
 </div>
 
-NOTE: The {{CredentialRequestOptions/mediation}} flag is currently not used.
-
-The {{CredentialRequestOptions/signal}} is used as an abort signal for the
-requests.
-
-<xmp class=idl>
-dictionary IdentityCredentialRequestOptions {
-  sequence<IdentityProvider> providers;
-};
-</xmp>
-
-Each {{FederatedIdentityProvider}} represents an [=Identity Provider=] that
-the [=Relying Party=] supports (e.g. that it has a pre-registration agreement with).
-
-<xmp class=idl>
-dictionary IdentityProvider {
-  required USVString url;
-  required USVString clientId;
-  USVString nonce;
-  USVString hint;
-};
-</xmp>
-
-
-<dl dfn-type="argument" dfn-for="IdentityProvider">
-    :   <dfn>url</dfn>
-    ::  The URL of the identity provider.
-    :   <dfn>clientId</dfn>
-    ::  The [=client id=] provided to the [=RP=] out of band by the [=IDP=]
-    :   <dfn>nonce</dfn>
-    ::  A random number of the choice of the [=RP=]
-    :   <dfn>hint</dfn>
-    ::  Optional `accountId` hint. Maybe used by the UA when displaying the
-         account chooser dialog.
-</dl>
-
-<!-- ============================================================ -->
-## The FederatedCredential Interface ## {#browser-api-federated-credential}
-<!-- ============================================================ -->
-
-This specification extends the existing {{FederatedCredential}}'s
-interface and internal algorithms to allow the exchange of the user's identity:
-
-First, it extends the {{FederatedCredential}} interface to allow it to carry an [=id token=]:
-
-<xmp class=idl>
-[Exposed=Window, SecureContext]
-partial interface FederatedCredential {
-  readonly attribute USVString? idToken;
-};
-</xmp>
-
-<dl dfn-type="argument" dfn-for="FederatedCredential">
-    :   <dfn>idToken</dfn>
-    ::  The minted ID token
-</dl>
-
-Second, this specification overrides the {{FederatedCredential}}'s
-<code><dfn for="FederatedCredential" method>
- \[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</dfn></code>
-method, with the algorithm described in the [[#browser-api-rp-sign-in]] section.
-
-To support this extension, a {{FederatedIdentityProvider}} dictionary
-is introduced to the {{FederatedCredentialRequestOptions}}:
-
-<!-- ============================================================ -->
-## The IdentityCredential Interface ## {#browser-api-identity-credential-interface}
-<!-- ============================================================ -->
-
-This specification introduces a new type of {{Credential}}, called an {{IdentityCredential}}:
-
-<pre class="idl">
-  [Exposed=Window, SecureContext]
-  interface IdentityCredential : Credential {
-  };
-</pre>
-
-It also overrides the {{IdentityCredential}}'s
+To do so, it overrides the {{IdentityCredential}}'s
 <code><dfn for="IdentityCredential" method>
  \[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</dfn></code>
-method.
+method which runs the [[#browser-api-rp-sign-in]] algorithm.
 
 <!-- ============================================================ -->
 ### RP Sign-in ### {#browser-api-rp-sign-in}
@@ -1186,6 +1143,11 @@ This [=internal method=] accepts three arguments:
          caller's [=environment settings object=] is
          [=same-origin with its ancestors=]. It is [FALSE] if caller is cross-origin.
 </dl>
+
+NOTE: The {{CredentialRequestOptions/mediation}} flag is currently not used.
+
+The {{CredentialRequestOptions/signal}} is used as an abort signal for the
+requests.
 
 When this method is invoked, the user agent MUST execute the following algorithm:
 
