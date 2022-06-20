@@ -340,7 +340,7 @@ could be implemented.
       mediated: “optional”, // “optional” is the default
       federated: {
         providers: [{
-          url: "https://idp.example/manifest.json",
+          url: "https://idp.example/fedcm-config.json",
           clientId: "123"
         }]
       }
@@ -377,7 +377,7 @@ could be implemented.
       mediation: "optional",
       federated: {
         providers: [{
-          url: "https://idp.example/manifest.json",
+          url: "https://idp.example/fedcm-config.json",
           clientId: "123",
           hint: id
         }]
@@ -393,7 +393,7 @@ could be implemented.
       mediation: "required",
       federated: {
         providers: [{
-          url: "https://idp.example/manifest.json",
+          url: "https://idp.example/fedcm-config.json",
           clientId: "123",
         }]
       }
@@ -419,7 +419,7 @@ could be implemented.
       mediation: "silent",
       federated: {
         providers: [{
-          url: "https://idp.example/manifest.json",
+          url: "https://idp.example/fedcm-config.json",
           clientId: "123",
           hint: id,
         }]
@@ -636,16 +636,16 @@ identity federation.
     Party                           Agent                           Provider
 
       |                               |                                 |
-      | "credential.login()"          |                                 |
+      | "navigator.credentials.get()" |                                 |
       |------------------------------>|                                 |
       |                               |                                 |
-      |                               | "GET /.well-known/web-identity" |
+      |                               | "GET /.well-known/fedcm"        |
       |                               |-------------------------------->|
       |                               |<--------------------------------| "{"
       |                               |                                 |   "provider_urls: [ ... ]"
       |                               |                                 | "}"
       |                               |                                 |
-      |                               | "GET /manifest.json"            |
+      |                               | "GET /fedcm-config.json"        |
       |                               |-------------------------------->|
       |                               |<--------------------------------| "{"
       |                               |                                 |   "id_token_endpoint: ...,"
@@ -734,7 +734,7 @@ For example:
 
 <div class=example>
 ```http
-GET /manifest.json HTTP/1.1
+GET /fedcm-config.json HTTP/1.1
 Host: idp.example
 Accept: application/json
 Sec-FedCM-CSRF: ?1
@@ -1130,7 +1130,7 @@ FedCM API.
 const credential = await navigator.credentials.get({
   federated: {
     providers: [{
-      url: "https://idp.example/manifest.json",
+      url: "https://idp.example/fedcm-config.json",
       clientId: "123",
       hint: "dan@example.com"
     }]
