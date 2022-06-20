@@ -1637,7 +1637,7 @@ proposed browser intermediation designs.
 ## Principals ## {#privacy-principals}
 <!-- ============================================================ -->
 
-This section describes the three principals that would participate in an invocation of the API and
+This section describes the four principals that would participate in an invocation of the API and
 expectations around their behavior.
 
 1. The [=user agent=] implements [[#browser-api]] and controls the execution contexts for the [=RP=]
@@ -1648,21 +1648,28 @@ expectations around their behavior.
     any site can invoke the API, [=RP=]s cannot necessarily be trusted to limit the user information
     it collects or use that information in an acceptable way.
 1. [=Identity Provider=]s ([=IDP=]s) are third-party websites that are the target of a FedCM call to
-    attempt to fetch an [=id token=]. Usually,the [=IDP=] has a higher level of trust than the [=RP=]
-    since it already has the user’s personal information, but it is possible that the [=IDP=] might
-    use the user’s information in non-approved ways. In addition, it is possible that the [=IDP=]
-    specified in the API call may not be an [=IDP=] the user knows about, or may not be a bona fide
-    [=IDP=] at all. In this case, it likely does not have personal user information in advance, but
-    it is also less trustworthy.
+    attempt to fetch an [=id token=]. Usually,the [=IDP=] has a higher level of trust than the
+    [=RP=] since it already has the user’s personal information, but it is possible that the [=IDP=]
+    might use the user’s information in non-approved ways. In addition, it is possible that the
+    [=IDP=] specified in the API call may not be an [=IDP=] the user knows about, or may not be a
+    bona fide [=IDP=] at all. In this case, it likely does not have personal user information in
+    advance, but it is also less trustworthy.
+1. A tracker is a third-party website that is not an [=IDP=] but could consider using the FedCM API
+    exclusively for the purpose of tracking a user as they visit various websites. A tracker may be
+    injected by the [=RP=] with or without their knowledge, but they usually do not modify the UI of
+    the website, so could be hard to detect. A tracker that successfully adds tracking scripts for
+    users in various websites may then use this information for various purposes, such as selling
+    the information about the user. It should not be possible for trackers to use the FedCM API to
+    track users across the web.
 
 Based on the above, the privacy discussion makes the following assumptions:
 
-1. It is not acceptable for the [=RP=] or for the [=IDP=] to learn that a specific user visited a
-    specific site, without any consent from the user. That is, the user agent needs to protect the
-    pair (site, user identity) from the [=RP=] and the [=IDP=] until the user consents to sharing
-    that information with them. In particular, the [=RP=] should not know the user identity and the
-    [=IDP=] should not know the site that the user has visited before the FedCM flow is successfully
-    performed by the user.
+1. It is not acceptable for an [=RP=], [=IDP=], or tracker to learn that a specific user visited a
+    specific site, without any consent from the user. That is, the [=user agent=] needs to hide the
+    knowledge that a specific user identity visited a specific site from the [=RP=], [=IDP=], and
+    trackers. It may share this knowledge with the [=RP=] and [=IDP=] once the user consents. In
+    particular, the [=RP=] should not know the user identity and the [=IDP=] should not know the
+    site that the user has visited before the FedCM flow is successfully performed by the user.
 1. It is the [=user agent=]'s responsibility to determine when the user has consented for the
     [=IDP=] to communicate with the [=RP=] in order to provide identification for the user.
 1. Once the [=user agent=] has determined that the user has provided consent to provide their
@@ -1770,8 +1777,9 @@ these scenarios consider how user tracking might happen **without** them. See al
 ### Manifest Fingerprinting ### {#manifest-fingerprinting}
 <!-- ============================================================ -->
 
-Suppose that the FedCM API did not have a two-tier manifest, and instead directly had a single manifest.
-This would introduce the following fingerprinting attack:
+Suppose that the FedCM API did not have a two-tier manifest (see the [=fetch the manifest=]
+algorithm), and instead directly had a single manifest. This would introduce the following
+fingerprinting attack:
 
 <div class=example>
 ```js
@@ -1789,9 +1797,9 @@ const cred = await navigator.credentials.get({
 Here, the [=RP=] includes identifies itself when fetching the manifest from the [=IDP=]. This
 coupled with the credentialed fetches that the FedCM API performs would enable the [=IDP=] to easily
 track the website that the user is visiting, without requiring any consent from the user. Our
-mitigation to this problem is the two-tier manifest. We enforce a specificly named file at the root of
-the [=IDP=]'s domain to ensure that the file name does not introduce fingerprints about the [=RP=]
-being visited.
+mitigation to this problem is the two-tier manifest. We enforce a specifically named file at the
+root of the [=IDP=]'s domain to ensure that the file name does not introduce fingerprints about the
+[=RP=] being visited.
 
 The whole manifest could be in this location, but we instead choose to only point to the real
 manifest from there. This allows us to have flexibility in the future to allow a small constant
@@ -1804,70 +1812,78 @@ constraints in terms of ease of update.
 ### Timing Attacks ### {#timing-attacks}
 <!-- ============================================================ -->
 
-In the timing attack, the [=RP=] and [=IDP=] collude to allow the [=IDP=] to compute the ([=RP=]'s origin, [=IDP=]'s user identity) pair
-without the user's consent. This attack is not deterministic: there is room for statistical error because it requires
-stitching together two separate pieces of information to track the user. However, it is important to
-mitigate this attack and ensure that it's economically impractical to perform. In this attack, we
-assume that network requests do not have large fingerprinting vectors (e.g. IP addresses). These vary by [=user agent=]
-and are hard to eliminate entirely, but in general [=user agents=] are expected to address these
-over time. These bits of information tied to the network requests make the timing attack easier,
-making it more important to address.
+In the timing attack, the [=RP=] and [=IDP=] collude to allow the [=IDP=] to compute the ([=RP=]'s
+origin, [=IDP=]'s user identity) pair without the user's consent. This attack is not deterministic:
+there is room for statistical error because it requires stitching together two separate pieces of
+information to track the user. However, it is important to mitigate this attack and ensure that
+it's economically impractical to perform. In this attack, we assume that network requests do not
+have large fingerprinting vectors (e.g. IP addresses). These vary by [=user agent=] and are hard to
+eliminate entirely, but in general [=user agents=] are expected to address these over time. These
+bits of information tied to the network requests make the timing attack easier, making it more
+important to address.
 
 The attack is as follows:
 
-1. The [=RP=] logs the time at which it invokes the API, time A and sends it to the [=IDP=] to learn. 
-    itself by marking the time in which it receives the fetch for the [=RP=]'s client metadata. Time
-    A is tied to the site.
-1. A credentialed request is sent to the [=IDP=] that does not explicitly identify the [=RP=], but it is sent around a time that is close enough to the request above. The
-    [=IDP=] notes the time in which this request has arrived, time B. Time B is tied to the user
-    identity.
-1. The [=IDP=] correlates time A and time B to find the (site, user identity) pair with
-    high probability. Note that fingerprinting can make the correlation more accurate.
+1. The [=RP=] logs the time at which it invokes the API, time A and sends it to the [=IDP=] to
+    learn. itself by marking the time in which it receives the fetch for the [=RP=]'s client
+    metadata. Time A is tied to the site.
+1. A credentialed request is sent to the [=IDP=] that does not explicitly identify the [=RP=], but
+    it is sent around a time that is close enough to the request above. The [=IDP=] notes the time
+    in which this request has arrived, time B. Time B is tied to the user identity.
+1. The [=IDP=] correlates time A and time B to find the (site, user identity) pair with high
+    probability. Note that fingerprinting can make the correlation more accurate.
 
 Note that this kind of correlation is already possible without FedCM by using simple cross-origin
 top-level navigations, but using FedCM for this purpose would worsen the problem if it improved
-timing resolution or if it was less visible to users (e.g. the [=IDP=] could return empty accounts to the [=user agent=] to deliberately make no browser UI to be triggered, and hence make this attack invisible to the user).
+timing resolution or if it was less visible to users (e.g. the [=IDP=] could return empty accounts
+to the [=user agent=] to deliberately make no browser UI to be triggered, and hence make this attack
+invisible to the user).
 
 The [=user agent=] should mitigate this attack to protect users, in an interoperable way. The
 following are sample mitigations:
 
 * Any [=RP=]s or [=IDP=]s observed to be using this API to compromise user privacy in a deceptive or
     abusive manner could be explicitly blocked from using it.
-* The [=user agent=] could detect trackers by noting alleged [=IDP=]s that do either of the following:
+* The [=user agent=] could detect trackers by noting alleged [=IDP=]s that do either of the
+    following:
     * Never show UI despite the FedCM API fetches being performed.
-    * Provide generic user identification, such as 'Anonymous', or 'Guest' or 'Incognito' as the user's name.
-    * Have a suspiciously low click-through rate (e.g. most users don't recognize the value in using this [=IDP=]).
-* The [=user agent=] could block the API from being called after the user has already expressed lack of interest in the
-    API because they did at least one of the following:
+    * Provide generic user identification, such as 'Anonymous', or 'Guest' or 'Incognito' as the
+        user's name.
+    * Have a suspiciously low click-through rate (e.g. most users don't recognize the value in using
+        this [=IDP=]).
+* The [=user agent=] could block the API from being called after the user has already expressed lack
+    of interest in the API because they did at least one of the following:
     * Repeatedly ignored the FedCM API in the past in a similar scenario.
     * Provide user settings to disable the FedCM API.
     * Pressed some [=user agent=] UI to close the FedCM API's request for consent.
-* The [=user agent=] could gate the FedCM fetches on a user interaction so that the timing attack is only possible
-    once the user has expressed some interest in the API. Note that this may provide a poor user experience for users
-    that do want to use the API, and may also result in worse success metrics for the API.
+* The [=user agent=] could gate the FedCM fetches on a user interaction so that the timing attack is
+    only possible once the user has expressed some interest in the API. Note that this may provide a
+    poor user experience for users that do want to use the API, and may also result in worse success
+    metrics for the API.
 
 <!-- ============================================================ -->
 ### Push Model ### {#push-model}
 <!-- ============================================================ -->
 
-Another potential future mitigation for timing attacks is the push model. The current API is the
-'pull model': the API pulls the user accounts from the [=IDP=] every time they are needed by the
-FedCM API. In the push model, the [=IDP=] needs to tell the [=user agent=] that a user has signed in
-whenever this happens. This way, when the FedCM API is called, the [=user agent=] already knows the
-user accounts that the user can select from, and thus does not require any credentialed fetches to
-the [=IDP=] in order to show the UI. It would only be when the user consents that the [=IDP=] is
-notified, thus resolving the timing attack problem entirely.
+Another potential future mitigation for timing attacks is the [=push model=]. The current API is the
+<dfn>pull model</dfn>: the API pulls the user accounts from the [=IDP=] every time they are needed
+by the FedCM API. In the <dfn>push model</dfn>, the [=IDP=] needs to tell the [=user agent=] that a
+user has signed in whenever this happens. This way, when the FedCM API is called, the[=user agent=]
+already knows the user accounts that the user can select from, and thus does not require any
+credentialed fetches to the [=IDP=] in order to show the UI. It would only be when the user
+consents that the [=IDP=] is notified, thus resolving the timing attack problem entirely.
 
-While the push model seems like an improvement for privacy, the current API does not follow this
-model for these reasons:
+While the [=push model=] seems like an improvement for privacy, the current API uses the
+[=pull model=] for these reasons:
 
 * It introduces a lot of complexity for the [=IDP=]s, as they now need to declare the user accounts
     and keep them updated all the time. In particular, they need to be updated when a user logs out,
-    deletes their account or simply change name, etc. While those are not high-frequency changes (e.g. once every other year for each user), keeping them in sync is non-trivial.
-* It requires a lot of the [=IDP=]'s trust in [=user agent=] to protect all of their user's accounts. The push model requires storing all of
-    the user accounts from all of the [=IDP=]s that a user is logged into, regardless of whether the
-    user ever uses the FedCM API or not. This means that all users pay the cost, and only some get
-    the reward.
+    deletes their account or simply change name, etc. While those are not high-frequency changes
+    (e.g. once every other year for each user), keeping them in sync is non-trivial.
+* It requires a lot of the [=IDP=]'s trust in [=user agent=] to protect all of their user's
+    accounts. The push model requires storing all of the user accounts from all of the [=IDP=]s that
+    a user is logged into, regardless of whether the user ever uses the FedCM API or not. This means
+    that all users pay the cost, and only some get the reward.
 
 <!-- ============================================================ -->
 ### IDP Intrusion ### {#idp-intrusion}
@@ -1961,11 +1977,12 @@ hashes of, for example, the user’s name, the [=IDP=], and the [=RP=].
 ### Unauthorized Data Usage ### {#unauthorized-data-usage}
 <!-- ============================================================ -->
 
-Another attack is when the [=RP=] uses user information for purposes not authorized by the
-user. When the user agrees to allow the [=IDP=] to provide information to the [=RP=], the consent is
-specific to certain purposes, such as sign-in and personalization. The [=RP=] might use that data for
-other purposes that the user would not expect and did not authorize, such as selling email addresses
-to a spam list. Spamming risk can exist even when using [=directed identifiers=].
+Another attack is when the [=RP=] or [=IDP=] uses user information for purposes not authorized by
+the user. When the user agrees to allow the [=IDP=] to provide information to the [=RP=], the
+consent is specific to certain purposes, such as sign-in and personalization. For instance, the
+[=RP=] might use that data for other purposes that the user would not expect and did not authorize,
+such as selling email addresses to a spam list. Spamming risk can exist even when using
+[=directed identifiers=].
 
 <!-- ============================================================ -->
 ### RP Fingerprinting ### {#rp-fingerprinting}
@@ -1984,7 +2001,7 @@ path: img/mock5.svg
 </div>
 
 <!-- ============================================================ -->
-### IDP fingerprinting ### {#idp-fingerprinting}
+### Secondary Use ### {#secondary-use}
 <!-- ============================================================ -->
 
 Secondary use is the use of collected information about an individual without the individual's
