@@ -320,7 +320,7 @@ could be implemented.
       mediated: “optional”, // “optional” is the default
       identity: {
         providers: [{
-          url: "https://idp.example/manifest.json",
+          configURL: "https://idp.example/manifest.json",
           clientId: "123",
           nonce: "456"
         }]
@@ -356,7 +356,7 @@ could be implemented.
       mediation: "optional",
       identity: {
         providers: [{
-          url: "https://idp.example/manifest.json",
+          configURL: "https://idp.example/manifest.json",
           clientId: "123",
           hint: id,
           nonce: "456",
@@ -372,7 +372,7 @@ could be implemented.
       mediation: "required",
       identity: {
         providers: [{
-          url: "https://idp.example/manifest.json",
+          configURL: "https://idp.example/manifest.json",
           clientId: "123",
           nonce: "456",
         }]
@@ -1087,7 +1087,7 @@ the [=Relying Party=] supports (e.g. that it has a pre-registration agreement wi
 
 <xmp class=idl>
 dictionary IdentityProvider {
-  required USVString url;
+  required USVString configURL;
   required USVString clientId;
   USVString nonce;
   USVString hint;
@@ -1177,7 +1177,7 @@ To <dfn>request consent</dfn>:
 To <dfn>fetch the accounts list</dfn>:
     1. Let the |accounts_endpoint| url be the relative url
         |manifest|["{{Manifest/accounts_endpoint}}"] of
-        |provider|["{{IdentityProvider/url}}"]
+        |provider|["{{IdentityProvider/configURL}}"]
     1. Let the |accounts list| be the result of fetching the |accounts_endpoint|
         with the [=Identity Provider=]'s cookies.  This request MUST NOT follow
         [[RFC9110#header.location|HTTP redirects]] and instead abort with an
@@ -1204,7 +1204,7 @@ To <dfn>sign-up</dfn> the user with a given |account|:
 To <dfn noexport>fetch the client metadata</dfn>:
     1. Let the |client_metadata_endpoint| url be the relative url
         |manifest|["{{Manifest/client_metadata_endpoint}}"] of
-        |provider|["{{IdentityProvider/url}}"]
+        |provider|["{{IdentityProvider/configURL}}"]
     1. Let the |policies| be the result of fetching the
         |client_metadata_endpoint| with the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]]
         header but without the [=Identity Provider=]'s cookies.  This request
@@ -1256,7 +1256,7 @@ manipulation to fingerprint. See https://github.com/fedidcg/FedCM/issues/230 for
 this attack.
 
 The <dfn>check the root manifest</dfn> accepts an {{IdentityProvider}} |provider| and whether the manifest is included in the manifest list:
-    1. Let |url| be |provider|'s {{IdentityProvider/url}}.
+    1. Let |url| be |provider|'s {{IdentityProvider/configURL}}.
     1. Let |rootUrl| be a new [=/URL=].
     1. Set |rootUrl|'s [=url/scheme=] to |url|'s [=url/scheme=].
     1. Set |rootUrl|'s [=url/host=] to |url|'s [=url/host=]'s [=host/registrable domain=].
@@ -1276,13 +1276,13 @@ The <dfn>check the root manifest</dfn> accepts an {{IdentityProvider}} |provider
             determine the right value, probably greater than 1.
         1. If |json|["provider_urls"][0] is not a [=string=], return false.
         1. Return true if |json|["provider_urls"][0] [=string/is=] equal to |provider|'s
-            {{IdentityProvider/url}}, otherwise return false.
+            {{IdentityProvider/configURL}}, otherwise return false.
 
 The <dfn>fetch the internal manifest</dfn> algorithm accepts an {{IdentityProvider}} |provider| and returns a [=Manifest=]:
     1. Run a [[!CSP]] check with a [[CSP#directive-connect-src|connect-src]]
-        directive on the URL passed as |provider|'s {{IdentityProvider/url}}
+        directive on the URL passed as |provider|'s {{IdentityProvider/configURL}}
         and return if the check fails.
-    1. Return the result of fetching the |provider|'s {{IdentityProvider/url}}
+    1. Return the result of fetching the |provider|'s {{IdentityProvider/configURL}}
         and parsing it into a [=Manifest=].
         TODO: specify how the fetching and the parsing works.
         The fetch MUST be done with the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]] header but
