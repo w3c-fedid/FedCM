@@ -6,7 +6,7 @@
   <link href="https://www.w3.org/StyleSheets/TR/2021/cg-draft" rel="stylesheet">
   <meta content="Bikeshed version 37b7e7e68, updated Fri May 27 15:08:11 2022 -0700" name="generator">
   <link href="https://fedidcg.github.io/FedCM/" rel="canonical">
-  <meta content="96cd5455c31fe2ade8b7c47c56b673c713e9f148" name="document-revision">
+  <meta content="cc956a4d1470e3c5a5979d0a9d0b97019b356f20" name="document-revision">
 <style>
 dl.domintro dt {
     font-family: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
@@ -904,8 +904,8 @@ could be implemented.
 </pre>
    </div>
    <h2 class="heading settled" data-level="4" id="example-multiple-account"><span class="secno">4. </span><span class="content">Multiple Account Example</span><a class="self-link" href="#example-multiple-account"></a></h2>
-   <div class="example" id="example-cb1beee1">
-    <a class="self-link" href="#example-cb1beee1"></a> Example showing how a website allowing for multiple logged in accounts
+   <div class="example" id="example-a06b83ad">
+    <a class="self-link" href="#example-a06b83ad"></a> Example showing how a website allowing for multiple logged in accounts
 could be implemented. 
 <pre class="language-html highlight"><c- p>&lt;</c-><c- f>html</c-><c- p>></c->
 <c- p>&lt;</c-><c- f>head</c-><c- p>></c->
@@ -922,7 +922,7 @@ could be implemented.
       mediation<c- o>:</c-> <c- u>"optional"</c-><c- p>,</c->
       identity<c- o>:</c-> <c- p>{</c->
         providers<c- o>:</c-> <c- p>[{</c->
-          configURL<c- o>:</c-> <c- u>"https://idp.example/manifest.json"</c-><c- p>,</c->
+          configURL<c- o>:</c-> <c- u>"https://idp.example/config.json"</c-><c- p>,</c->
           clientId<c- o>:</c-> <c- u>"123"</c-><c- p>,</c->
           hint<c- o>:</c-> id<c- p>,</c->
           nonce<c- o>:</c-> <c- u>"456"</c-><c- p>,</c->
@@ -938,7 +938,7 @@ could be implemented.
       mediation<c- o>:</c-> <c- u>"required"</c-><c- p>,</c->
       identity<c- o>:</c-> <c- p>{</c->
         providers<c- o>:</c-> <c- p>[{</c->
-          configURL<c- o>:</c-> <c- u>"https://idp.example/manifest.json"</c-><c- p>,</c->
+          configURL<c- o>:</c-> <c- u>"https://idp.example/config.json"</c-><c- p>,</c->
           clientId<c- o>:</c-> <c- u>"123"</c-><c- p>,</c->
           nonce<c- o>:</c-> <c- u>"456"</c-><c- p>,</c->
         <c- p>}]</c->
@@ -1126,66 +1126,66 @@ intermediation of cooperating <a data-link-type="dfn" href="#idp" id="ref-for-id
 API to be used for tracking purposes, while preserving the functionality of
 identity federation.</p>
 <script type="text/typogram">
-    Relying                         User                           Identity
-    Party                           Agent                          Provider
+    Relying                         User                            Identity
+    Party                           Agent                           Provider
 
-      |                               |                               |
-      | "navigator.credentials.get()" |                               |
-      |------------------------------>|                               |
-      |                               |                               |
-      |                               | "GET /.well-known/fedcm.json" |
-      |                               |------------------------------>|
-      |                               |<------------------------------| "{"
-      |                               |                               |   "provider_urls: [ ... ]"
-      |                               |                               | "}"
-      |                               |                               |
-      |                               | "GET /manifest.json"          |
-      |                               |------------------------------>|
-      |                               |<------------------------------| "{"
-      |                               |                               |   "id_token_endpoint: ...,"
-      |                               |                               |   "accounts_endpoint: ...,"
-      |                               |                               |   "client_metadata_endpoint: ...,"
-      |                               |                               |   "branding: ...,"
-      |                               |                               | "}"
-      |                               |                               |
-      |                               | "GET client_metadata.php"     |
-      |                               | "client_id"                   |
-      |                               |------------------------------>|
-      |                               |<------------------------------| "{"
-      |                               |                               |   "terms_of_service_url: ...,"
-      |                               |                               |   "privacy_policy_url: ...,"
-      |                               |                               | "}"
-      |                               |                               |
-      |                               |                               |
-      |                               | "GET accounts.php"            |
-      |                               | "cookies"                     |
-      |                               |------------------------------>|
-      |                               |<------------------------------| "{"
-      |                               |                               |   "accounts: [ ... ]"
-      |                               |                               | "}"
-      |                               |                               |
-      |                               |                               |
-      |                     +---------+                               |
-      |                     |         |                               |
-      |                     |         |                               |
-      |                     |         | "account chooser"             |
-      |                     |         |                               |
-      |                     |         |                               |
-      |                     +-------->|                               |
-      |                               |                               |
-      |                               |                               |
-      |                               |                               |
-      |                               | "POST token.php"              |
-      |                               | "client_id, cookies, account" |
-      |                               |------------------------------>|
-      |                               |<------------------------------| "{"
-      |                               |                               |   "id_token: ...,"
-      |                               |                               | "}"
-      |                "{ id_token }" |                               |
-      |<------------------------------|                               |
-      |                               |                               |
-      |                               |                               |
-     -+-                             -+-                             -+-
+      |                               |                                 |
+      | "navigator.credentials.get()" |                                 |
+      |------------------------------>|                                 |
+      |                               |                                 |
+      |                               | "GET /.well-known/fedcm"        |
+      |                               |-------------------------------->|
+      |                               |<--------------------------------| "{"
+      |                               |                                 |   "provider_urls: [ ... ]"
+      |                               |                                 | "}"
+      |                               |                                 |
+      |                               | "GET /config.json"        |
+      |                               |-------------------------------->|
+      |                               |<--------------------------------| "{"
+      |                               |                                 |   "id_token_endpoint: ...,"
+      |                               |                                 |   "accounts_endpoint: ...,"
+      |                               |                                 |   "client_metadata_endpoint: ...,"
+      |                               |                                 |   "branding: ...,"
+      |                               |                                 | "}"
+      |                               |                                 |
+      |                               | "GET client_metadata.php"       |
+      |                               | "client_id"                     |
+      |                               |-------------------------------->|
+      |                               |<--------------------------------| "{"
+      |                               |                                 |   "terms_of_service_url: ...,"
+      |                               |                                 |   "privacy_policy_url: ...,"
+      |                               |                                 | "}"
+      |                               |                                 |
+      |                               |                                 |
+      |                               | "GET accounts.php"              |
+      |                               | "cookies"                       |
+      |                               |-------------------------------->|
+      |                               |<--------------------------------| "{"
+      |                               |                                 |   "accounts: [ ... ]"
+      |                               |                                 | "}"
+      |                               |                                 |
+      |                               |                                 |
+      |                     +---------+                                 |
+      |                     |         |                                 |
+      |                     |         |                                 |
+      |                     |         | "account chooser"               |
+      |                     |         |                                 |
+      |                     |         |                                 |
+      |                     +-------->|                                 |
+      |                               |                                 |
+      |                               |                                 |
+      |                               |                                 |
+      |                               | "POST token.php"                |
+      |                               | "client_id, cookies, account"   |
+      |                               |-------------------------------->|
+      |                               |<--------------------------------| "{"
+      |                               |                                 |   "id_token: ...,"
+      |                               |                                 | "}"
+      |                "{ id_token }" |                                 |
+      |<------------------------------|                                 |
+      |                               |                                 |
+      |                               |                                 |
+     -+-                             -+-                               -+-
 </script>
    <p>This document defines the APIs in the following order:</p>
    <ol>
@@ -1218,9 +1218,9 @@ which serves as a discovery device to other endpoints provided by the <a data-li
 (c) <strong>without</strong> a <a href="https://www.rfc-editor.org/rfc/rfc9110#header.referer">Referer</a> header, and
 (c) <strong>without</strong> following <a href="https://www.rfc-editor.org/rfc/rfc9110#header.location">HTTP redirects</a>.</p>
    <p>For example:</p>
-   <div class="example" id="example-fead2822">
-    <a class="self-link" href="#example-fead2822"></a> 
-<pre class="language-http highlight"><c- nf>GET</c-> <c- nn>/manifest.json</c-> <c- kr>HTTP</c-><c- o>/</c-><c- m>1.1</c->
+   <div class="example" id="example-2319f732">
+    <a class="self-link" href="#example-2319f732"></a> 
+<pre class="language-http highlight"><c- nf>GET</c-> <c- nn>/config.json</c-> <c- kr>HTTP</c-><c- o>/</c-><c- m>1.1</c->
 <c- e>Host</c-><c- o>:</c-> <c- l>idp.example</c->
 <c- e>Accept</c-><c- o>:</c-> <c- l>application/json</c->
 <c- e>Sec-FedCM-CSRF</c-><c- o>:</c-> <c- l>?1</c->
@@ -1742,7 +1742,7 @@ manipulation to fingerprint. See <a href="#manifest-fingerprinting">§ 11.3.1 
     <li data-md>
      <p>Set <var>rootUrl</var>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-host" id="ref-for-concept-url-host">host</a> to <var>url</var>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-host" id="ref-for-concept-url-host①">host</a>'s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#host-registrable-domain" id="ref-for-host-registrable-domain①">registrable domain</a>.</p>
     <li data-md>
-     <p>Set <var>rootUrl</var>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-path" id="ref-for-concept-url-path">path</a> to ".well-known/fedcm.json".</p>
+     <p>Set <var>rootUrl</var>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-path" id="ref-for-concept-url-path">path</a> to ".well-known/fedcm".</p>
     <li data-md>
      <p>Let <var>request</var> be a new <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-request" id="ref-for-concept-request">request</a> whose <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-request-url" id="ref-for-concept-request-url">url</a> is <var>rootUrl</var> and <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-request-redirect-mode" id="ref-for-concept-request-redirect-mode">redirect mode</a> set to "error". TODO: what other fields need to be set?</p>
     <li data-md>
