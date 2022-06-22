@@ -356,7 +356,7 @@ could be implemented.
       mediation: "optional",
       identity: {
         providers: [{
-          configURL: "https://idp.example/manifest.json",
+          configURL: "https://idp.example/config.json",
           clientId: "123",
           hint: id,
           nonce: "456",
@@ -372,7 +372,7 @@ could be implemented.
       mediation: "required",
       identity: {
         providers: [{
-          configURL: "https://idp.example/manifest.json",
+          configURL: "https://idp.example/config.json",
           clientId: "123",
           nonce: "456",
         }]
@@ -571,66 +571,66 @@ API to be used for tracking purposes, while preserving the functionality of
 identity federation.
 
 <script type="text/typogram">
-    Relying                         User                           Identity
-    Party                           Agent                          Provider
+    Relying                         User                            Identity
+    Party                           Agent                           Provider
 
-      |                               |                               |
-      | "navigator.credentials.get()" |                               |
-      |------------------------------>|                               |
-      |                               |                               |
-      |                               | "GET /.well-known/fedcm.json" |
-      |                               |------------------------------>|
-      |                               |<------------------------------| "{"
-      |                               |                               |   "provider_urls: [ ... ]"
-      |                               |                               | "}"
-      |                               |                               |
-      |                               | "GET /manifest.json"          |
-      |                               |------------------------------>|
-      |                               |<------------------------------| "{"
-      |                               |                               |   "id_token_endpoint: ...,"
-      |                               |                               |   "accounts_endpoint: ...,"
-      |                               |                               |   "client_metadata_endpoint: ...,"
-      |                               |                               |   "branding: ...,"
-      |                               |                               | "}"
-      |                               |                               |
-      |                               | "GET client_metadata.php"     |
-      |                               | "client_id"                   |
-      |                               |------------------------------>|
-      |                               |<------------------------------| "{"
-      |                               |                               |   "terms_of_service_url: ...,"
-      |                               |                               |   "privacy_policy_url: ...,"
-      |                               |                               | "}"
-      |                               |                               |
-      |                               |                               |
-      |                               | "GET accounts.php"            |
-      |                               | "cookies"                     |
-      |                               |------------------------------>|
-      |                               |<------------------------------| "{"
-      |                               |                               |   "accounts: [ ... ]"
-      |                               |                               | "}"
-      |                               |                               |
-      |                               |                               |
-      |                     +---------+                               |
-      |                     |         |                               |
-      |                     |         |                               |
-      |                     |         | "account chooser"             |
-      |                     |         |                               |
-      |                     |         |                               |
-      |                     +-------->|                               |
-      |                               |                               |
-      |                               |                               |
-      |                               |                               |
-      |                               | "POST token.php"              |
-      |                               | "client_id, cookies, account" |
-      |                               |------------------------------>|
-      |                               |<------------------------------| "{"
-      |                               |                               |   "id_token: ...,"
-      |                               |                               | "}"
-      |                "{ id_token }" |                               |
-      |<------------------------------|                               |
-      |                               |                               |
-      |                               |                               |
-     -+-                             -+-                             -+-
+      |                               |                                 |
+      | "navigator.credentials.get()" |                                 |
+      |------------------------------>|                                 |
+      |                               |                                 |
+      |                               | "GET /.well-known/fedcm"        |
+      |                               |-------------------------------->|
+      |                               |<--------------------------------| "{"
+      |                               |                                 |   "provider_urls: [ ... ]"
+      |                               |                                 | "}"
+      |                               |                                 |
+      |                               | "GET /config.json"        |
+      |                               |-------------------------------->|
+      |                               |<--------------------------------| "{"
+      |                               |                                 |   "id_token_endpoint: ...,"
+      |                               |                                 |   "accounts_endpoint: ...,"
+      |                               |                                 |   "client_metadata_endpoint: ...,"
+      |                               |                                 |   "branding: ...,"
+      |                               |                                 | "}"
+      |                               |                                 |
+      |                               | "GET client_metadata.php"       |
+      |                               | "client_id"                     |
+      |                               |-------------------------------->|
+      |                               |<--------------------------------| "{"
+      |                               |                                 |   "terms_of_service_url: ...,"
+      |                               |                                 |   "privacy_policy_url: ...,"
+      |                               |                                 | "}"
+      |                               |                                 |
+      |                               |                                 |
+      |                               | "GET accounts.php"              |
+      |                               | "cookies"                       |
+      |                               |-------------------------------->|
+      |                               |<--------------------------------| "{"
+      |                               |                                 |   "accounts: [ ... ]"
+      |                               |                                 | "}"
+      |                               |                                 |
+      |                               |                                 |
+      |                     +---------+                                 |
+      |                     |         |                                 |
+      |                     |         |                                 |
+      |                     |         | "account chooser"               |
+      |                     |         |                                 |
+      |                     |         |                                 |
+      |                     +-------->|                                 |
+      |                               |                                 |
+      |                               |                                 |
+      |                               |                                 |
+      |                               | "POST token.php"                |
+      |                               | "client_id, cookies, account"   |
+      |                               |-------------------------------->|
+      |                               |<--------------------------------| "{"
+      |                               |                                 |   "id_token: ...,"
+      |                               |                                 | "}"
+      |                "{ id_token }" |                                 |
+      |<------------------------------|                                 |
+      |                               |                                 |
+      |                               |                                 |
+     -+-                             -+-                               -+-
 </script>
 
 
@@ -671,7 +671,7 @@ For example:
 
 <div class=example>
 ```http
-GET /manifest.json HTTP/1.1
+GET /config.json HTTP/1.1
 Host: idp.example
 Accept: application/json
 Sec-FedCM-CSRF: ?1
@@ -1244,7 +1244,7 @@ The <dfn>check the root manifest</dfn> accepts an {{IdentityProvider}} |provider
     1. Let |rootUrl| be a new [=/URL=].
     1. Set |rootUrl|'s [=url/scheme=] to |url|'s [=url/scheme=].
     1. Set |rootUrl|'s [=url/host=] to |url|'s [=url/host=]'s [=host/registrable domain=].
-    1. Set |rootUrl|'s [=url/path=] to ".well-known/fedcm.json".
+    1. Set |rootUrl|'s [=url/path=] to ".well-known/fedcm".
     1. Let |request| be a new <a spec=fetch for=/>request</a> whose [=request/url=] is |rootUrl| and
         [=request/redirect mode=] set to "error". TODO: what other fields need to be set?
     1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
