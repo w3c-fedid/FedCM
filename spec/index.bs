@@ -292,9 +292,6 @@ algorithms to allow the exchange of identity between [=IDP=]s and [=RP=]s.
 When it succeeds, it returns to the [=RP=] a signed [=id token=] which the
 [=RP=] can use to authenticate the user.
 
-<!-- ============================================================ -->
-# Single Account Example # {#example-single-user}
-<!-- ============================================================ -->
 <div class=example>
 Example showing how a website allowing for a single logged in account
 could be implemented.
@@ -326,60 +323,6 @@ could be implemented.
         }]
       }
     });
-  }
-  </script>
-</body>
-</html>
-```
-</div>
-
-<!-- ============================================================ -->
-# Multiple Account Example # {#example-multiple-account}
-<!-- ============================================================ -->
-<div class=example>
-Example showing how a website allowing for multiple logged in accounts
-could be implemented.
-
-```html
-<html>
-<head>
-  <title>Welcome to my Website</title>
-</head>
-<body>
-  <button onclick="login()">Login with idp.example</button>
-  <button onclick="multiLogin()">Switch account</button>
-
-  <script>
-  async function login() {
-    const id = ...; /* site gets stored id if available */
-    const credential = await navigator.credentials.get({
-      mediation: "optional",
-      identity: {
-        providers: [{
-          configURL: "https://idp.example/config.json",
-          clientId: "123",
-          hint: id,
-          nonce: "456",
-        }]
-      }
-    });
-    /* site stores credential id somewhere */
-    return credential;
-  }
-
-  async function multiLogin() {
-    const credential = await navigator.credentials.get({
-      mediation: "required",
-      identity: {
-        providers: [{
-          configURL: "https://idp.example/config.json",
-          clientId: "123",
-          nonce: "456",
-        }]
-      }
-    });
-    /* site stores credential id somewhere */
-    return credential;
   }
   </script>
 </body>
@@ -986,7 +929,6 @@ const credential = await navigator.credentials.get({
     providers: [{
       url: "https://idp.example/manifest.json",
       clientId: "123",
-      hint: "dan@example.com"
     }]
   }
 });
@@ -1076,7 +1018,6 @@ dictionary IdentityProvider {
   required USVString configURL;
   required USVString clientId;
   USVString nonce;
-  USVString hint;
 };
 </xmp>
 
@@ -1087,9 +1028,6 @@ dictionary IdentityProvider {
     ::  The [=client id=] provided to the [=RP=] out of band by the [=IDP=]
     :   <dfn>nonce</dfn>
     ::  A random number of the choice of the [=RP=]. TODO: expand on how this is intended to be used.
-    :   <dfn>hint</dfn>
-    ::  Optional `accountId` hint. Maybe used by the UA when displaying the
-         account chooser dialog.
 </dl>
 
 <!-- ============================================================ -->
@@ -1138,10 +1076,8 @@ When this method is invoked, the user agent MUST execute the following algorithm
        Note: At some point we would like to support choosing accounts from
        multiple [=Identity Provider=]s.
   1. Let |provider| be |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"][0].
-  1. Let |hint| be |provider|["{{IdentityProvider/hint}}"]
   1. Let |credential| be a new {{IdentityCredential}}.
   1. Set |credential|'s <a>provider</a> to |provider|.
-  1. Set |credential|'s {{Credential/id}} to |hint|.
   1. Request user consent by running the [=request consent=] algorithm with the |provider|.
   1. If {{StateMachine/Account State}} is [=unregistered=] then return null.
   1. Let |token| be the result of running the [=create tokens=] algorithm.
@@ -1200,9 +1136,6 @@ To <dfn noexport>fetch the client metadata</dfn>:
 To <dfn>select an account</dfn> from the accounts list:
     1. If |accounts list|'s [=list/size=] is 1:
         1. Let |account| be |accounts list|[0] and return |account|
-    1. If this's |provider|["{{IdentityProvider/hint}}"] is provided and
-        an account matches this's  |account|["accountId"] then return
-        |account|.
     1. Display an account chooser
     1. Let |account| be an account that the user manually selects from the
         accounts chooser, or null if no account is selected.
