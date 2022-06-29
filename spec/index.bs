@@ -289,7 +289,7 @@ entries provided by the [=Identity Provider=].
 
 This specification defines a new {{IdentityCredential}} type and internal
 algorithms to allow the exchange of identity between [=IDP=]s and [=RP=]s.
-When it succeeds, it returns to the [=RP=] a signed [=id token=] which the
+When it succeeds, it returns to the [=RP=] a signed [=token=] which the
 [=RP=] can use to authenticate the user.
 
 <div class=example>
@@ -377,7 +377,7 @@ provides the main security boundary on the web.
 :: A use case specific API, as opposed to a [=low-level API=]. See also
     [high level vs low level](https://w3ctag.github.io/design-principles/#high-level-low-level).
 
-: <dfn>id token</dfn>
+: <dfn>token</dfn>
 :: TODO(goto): find existing definition.
 
 : <dfn>Identity Provider</dfn>
@@ -491,7 +491,7 @@ that they can use.
 │           │   │              │           │     ├────────────► *-+ client    │
 │           │   │              │           │     │                │ metadata  │
 │           │   │              │           │     │                │           │
-│           │   │              │           │     ├────────────► *-+ id_token  │
+│           │   │              │           │     ├────────────► *-+ token     │
 │           │   │              │           │     │                │           │
 │           │   │              │           │     │                │           │
 │           │   │              │           │     │                │           │
@@ -566,9 +566,9 @@ identity federation.
       |                               | "client_id, cookies, account"   |
       |                               |-------------------------------->|
       |                               |<--------------------------------| "{"
-      |                               |                                 |   "id_token: ...,"
+      |                               |                                 |   "token: ...,"
       |                               |                                 | "}"
-      |                "{ id_token }" |                                 |
+      |                "{ token }"    |                                 |
       |<------------------------------|                                 |
       |                               |                                 |
       |                               |                                 |
@@ -817,7 +817,7 @@ For example:
 ## ID Token ## {#idp-api-id-token-endpoint}
 <!-- ============================================================ -->
 
-The ID Token endpoint is responsible for [=minting=] a new [=id token=] for the user.
+The ID Token endpoint is responsible for [=minting=] a new [=token=] for the user.
 
 The ID Token endpoint is fetched
 (a) as a **POST** request,
@@ -858,8 +858,8 @@ account_id=123&client_id=client1234&nonce=Ct60bD&disclosure_text_shown=true
 The response is parsed as a JSON file expecting the following properties:
 
 <dl dfn-type="argument" dfn-for="id_token_endpoint_response">
-    :   <dfn>id_token</dfn>
-    ::  The resulting [=id token=].
+    :   <dfn>token</dfn>
+    ::  The resulting [=token=].
 </dl>
 
 For example:
@@ -867,7 +867,7 @@ For example:
 <div class=example>
 ```json
 {
-  "id_token" : "eyJC...J9.eyJzdWTE2...MjM5MDIyfQ.SflV_adQssw....5c"
+  "token" : "eyJC...J9.eyJzdWTE2...MjM5MDIyfQ.SflV_adQssw....5c"
 }
 ```
 </div>
@@ -917,13 +917,13 @@ the exchange of the user's identity.
 
 The Sign-up and Sign-in APIs are used by the [=Relying Party=]s to ask the browser
 to intermediate the relationship with the [=Identity Provider=] and the
-provisioning of an [=id token=].
+provisioning of a [=token=].
 
 NOTE: The [=Relying Party=] makes no delineation between Sign-up and Sign-in, but
 rather calls the same API indistinguishably.
 
 If all goes well, the [=Relying Party=] receives back an {{IdentityCredential}}
-which contains an [=id token=] in the form of a signed [[JWT]] which it can use to
+which contains a [=token=] in the form of a signed [[JWT]] which it can use to
 authenticate the user.
 
 <div class=example>
@@ -979,13 +979,14 @@ This specification introduces a new type of {{Credential}}, called an {{Identity
 <pre class="idl">
   [Exposed=Window, SecureContext]
   interface IdentityCredential : Credential {
-    readonly attribute USVString? idToken;
+    readonly attribute USVString? token;
   };
 </pre>
 
 <dl dfn-type="argument" dfn-for="IdentityCredential">
-    :   <dfn>idToken</dfn>
-    ::  The {{IdentityCredential/idToken}}'s attribute getter returns the value it is set to. It represents the minted ID token provided by the [=IDP=].
+    :   <dfn>token</dfn>
+    ::  The {{IdentityCredential/token}}'s attribute getter returns the value it is set to.
+        It represents the minted [=token=] provided by the [=IDP=].
 </dl>
 
 The main entrypoint in this specification is through the entrypoints exposed
@@ -1084,7 +1085,7 @@ When this method is invoked, the user agent MUST execute the following algorithm
   1. Request user consent by running the [=request consent=] algorithm with the |provider|.
   1. If {{StateMachine/Account State}} is [=unregistered=] then return null.
   1. Let |token| be the result of running the [=create tokens=] algorithm.
-  1. Set |credential|'s {{IdentityCredential/idToken}} to |token|.
+  1. Set |credential|'s {{IdentityCredential/token}} to |token|.
   1. return |credential|.
 
 To <dfn>request consent</dfn>:
@@ -1158,7 +1159,7 @@ To <dfn>create tokens</dfn>:
         1. Set |request|["nonce"] to |request|["{{IdentityProvider/nonce}}"].
     1. Let |tokens| be the result of making a POST request described in
         [[#idp-api-id-token-endpoint]].
-    1. Return |tokens|["id_token"].
+    1. Return |tokens|["token"].
 
 The <dfn>fetch the manifest</dfn> algorithm accepts an {{IdentityProvider}} |provider| and returns a [=Manifest=] object:
     1. In parallel, perform the following two steps:
@@ -1370,7 +1371,7 @@ expectations around their behavior.
     site can invoke the API, [=RP=]s cannot necessarily be trusted to limit the user information it
     collects or use that information in an acceptable way.
 1. [=Identity Provider=]s ([=IDP=]s) are third-party websites that are the target of a FedCM call to
-    attempt to fetch an [=id token=]. Usually,the [=IDP=] has a higher level of trust than the
+    attempt to fetch a [=token=]. Usually,the [=IDP=] has a higher level of trust than the
     [=RP=] since it already has the user’s personal information, but it is possible that the [=IDP=]
     might use the user’s information in non-approved ways. In addition, it is possible that the
     [=IDP=] specified in the API call may not be an [=IDP=] the user knows about. In this case, it
@@ -1732,7 +1733,7 @@ consent for a purpose different from that for which the information was collecte
 happens when [=IDP=]s misuse the the information collected to enable sign-in for other
 purposes.
 
-Existing federation protocols require that the [=IDP=] know which service is requesting an ID token
+Existing federation protocols require that the [=IDP=] know which service is requesting a [=token=]
 in order to allow identity federation. Identity providers can use this fact to build profiles of
 users across sites where the user has decided to use federation with the same account. This profile
 could be used, for example, to serve targeted advertisements to those users browsing on sites that
