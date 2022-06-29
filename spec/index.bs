@@ -401,7 +401,6 @@ provides the main security boundary on the web.
     [high level vs low level](https://w3ctag.github.io/design-principles/#high-level-low-level)
 
 : <dfn>minting</dfn>
-: <dfn>minted</dfn>
 :: The act of a new token being creating
 
 : <dfn>out-of-band</dfn>
@@ -428,7 +427,7 @@ provides the main security boundary on the web.
     * [[OIDC-Connect-Core]]
 
 : <dfn>site</dfn>
-:: A set of [=origins=] that are all [=same site=] with each other. Note that
+:: A set of [=origins=] that are all [=site/same site=] with each other. Note that
     there are problems ([[PSL-PROBLEMS]]) with using [=registrable domains=] as
     a logical boundary.
 
@@ -637,8 +636,7 @@ The <dfn>Manifest</dfn> JSON object has the following properties:
 </dl>
 
 The <dfn>Branding JSON</dfn> enables an [=IDP=] to express their branding
-preferences, which may be used by User Agents to customize the user agent
-consent prompt.
+preferences, which may be used by [=user agents=] to customize the consent prompt.
 
 Note: The branding preferences are deliberately designed to be high level
 / abstract (rather than opinionated about a specific UI structure), to
@@ -655,6 +653,12 @@ It may have the following properties:
     :   <dfn>icons</dfn> (optional)
     ::  A list of [=Icon JSON=] objects.
 </dl>
+
+Note: The branding preferences are deliberately designed to be high level
+/ abstract (rather than opinionated about a specific UI structure), to
+enable different [=user agents=] to offer different UI experiences and
+for them to evolve independently over time.
+
 
 The <dfn>Icon JSON</dfn> may have the following properties:
 
@@ -881,7 +885,7 @@ it is a [=forbidden header name=].
 # The Relying Party API # {#rp-api}
 <!-- ============================================================ -->
 
-[=RP=]'s expose a [[#rp-api-logout-endpoint]] to facilitate with [[#use-cases-idp-sign-out]].
+[=RPs=] expose a [[#rp-api-logout-endpoint]] to facilitate with [[#use-cases-idp-sign-out]].
 
 <!-- ============================================================ -->
 ## Logout ## {#rp-api-logout-endpoint}
@@ -927,7 +931,7 @@ authenticate the user.
 const credential = await navigator.credentials.get({
   identity: {
     providers: [{
-      url: "https://idp.example/manifest.json",
+      configURL: "https://idp.example/manifest.json",
       clientId: "123",
     }]
   }
@@ -1077,7 +1081,6 @@ When this method is invoked, the user agent MUST execute the following algorithm
        multiple [=Identity Provider=]s.
   1. Let |provider| be |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"][0].
   1. Let |credential| be a new {{IdentityCredential}}.
-  1. Set |credential|'s <a>provider</a> to |provider|.
   1. Request user consent by running the [=request consent=] algorithm with the |provider|.
   1. If {{StateMachine/Account State}} is [=unregistered=] then return null.
   1. Let |token| be the result of running the [=create tokens=] algorithm.
@@ -1311,7 +1314,7 @@ rendering of this image is performed by the user agent, and as such this image c
 [=RP=] site nor can they be inspected by the [=RP=] in any way.
 
 <!-- ============================================================ -->
-## Sec-FedCM-CSRF ## {#sec-fedcm-csrf}
+## Sec-FedCM-CSRF Header ## {#sec-fedcm-csrf-header}
 <!-- ============================================================ -->
 
 The FedCM API introduces several non-static endpoints on the [=IDP=], so these need to be protected
@@ -1565,7 +1568,7 @@ following are sample mitigations:
 * The [=user agent=] could detect [=trackers=] by noting alleged [=IDP=]s that do either of the
     following:
     * Never show UI despite the FedCM API fetches being performed.
-    * Provide generic user identification, such as 'Anonymous', or 'Guest' or 'Incognito' as the
+    * Provide generic user identification, such as "Anonymous", or "Guest" or "Incognito" as the
         user's name.
     * Have a suspiciously low click-through rate (e.g. most users don't recognize the value in using
         this [=IDP=]).
@@ -1785,14 +1788,6 @@ Note: write down the Acknowledgements section.
     "href": "https://w3c.github.io/webappsec-credential-management/",
     "title": "Credential Management"
   },
-  "ETHICS": {
-   "href": "https://www.w3.org/2001/tag/doc/ethical-web-principles",
-   "title": "W3C TAG Ethical Web Principles"
-  },
-  "FINGERPRINTING-GUIDANCE": {
-    "href": "https://w3c.github.io/fingerprinting-guidance/",
-    "title": "Mitigating Browser Fingerprinting in Web Specifications"
-  },
   "Front-Channel-Logout": {
     "authors": [ "M. Jones" ],
     "href": "https://openid.net/specs/openid-connect-frontchannel-1_0.html",
@@ -1808,26 +1803,9 @@ Note: write down the Acknowledgements section.
     "href": "https://datatracker.ietf.org/doc/html/rfc7519",
     "title": "JWT"
   },
-  "OAuth": {
-    "authors": ["D. Hardt"],
-    "href": "https://datatracker.ietf.org/doc/html/rfc6749",
-    "title": "OAuth"
-  },
   "OIDC-Connect-Core": {
     "href": "https://openid.net/specs/openid-connect-core-1_0.html",
     "title": "OIDC Connect Core"
-  },
-  "OpenID": {
-    "href": "https://openid.net/developers/specs/",
-    "title": "OpenID"
-  },
-  "PRINCIPLES": {
-    "href": "https://w3ctag.github.io/design-principles",
-    "title": "Web Platform Design Principles"
-  },
-  "PRIVACY-CONSIDERATIONS": {
-    "href": "https://w3c.github.io/privacy-considerations/",
-    "title": "Privacy Considerations for Web Protocols"
   },
   "PRIVACY-MODEL": {
     "href": "https://github.com/michaelkleber/privacy-model",
@@ -1842,17 +1820,9 @@ Note: write down the Acknowledgements section.
     "href": "https://github.com/sleevi/psl-problems",
     "title": "Public Suffix List Problems"
   },
-  "RFC6973": {
-    "href": "https://datatracker.ietf.org/doc/html/rfc6973",
-    "title": "Privacy Considerations for Internet Protocols"
-  },
   "RFC7258": {
     "href": "https://datatracker.ietf.org/doc/html/rfc7258",
     "title": "Pervasive Monitoring Is an Attack"
-  },
-  "SAML": {
-    "href": "http://saml.xml.org/saml-specifications",
-    "title": "SAML"
   },
   "SAML-Glossary": {
     "href": "https://docs.oasis-open.org/security/saml/v2.0/saml-glossary-2.0-os.pdf",
@@ -1861,10 +1831,6 @@ Note: write down the Acknowledgements section.
   "Security-Origin-Confusion": {
     "href": "https://w3c.github.io/webappsec-credential-management/#security-origin-confusion",
     "title": "Security Origin Confusion"
-  },
-  "SELF-REVIEW": {
-    "href": "https://www.w3.org/TR/security-privacy-questionnaire/",
-    "title": "Self-Review Questionnaire: Security and Privacy"
   }
 }
 </pre>
