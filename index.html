@@ -6,7 +6,7 @@
   <link href="https://www.w3.org/StyleSheets/TR/2021/cg-draft" rel="stylesheet">
   <meta content="Bikeshed version 37b7e7e68, updated Fri May 27 15:08:11 2022 -0700" name="generator">
   <link href="https://fedidcg.github.io/FedCM/" rel="canonical">
-  <meta content="ace72a643df472238d963e99505f7e2f5ba52bdc" name="document-revision">
+  <meta content="ba85307802907c8cfe6624935267e5eb41584399" name="document-revision">
 <style>
 dl.domintro dt {
     font-family: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
@@ -591,7 +591,7 @@ c-[il] { color: #000000 } /* Literal.Number.Integer.Long */
   <div class="head">
    <p data-fill-with="logo"><a class="logo" href="https://www.w3.org/"> <img alt="W3C" height="48" src="https://www.w3.org/StyleSheets/TR/2021/logos/W3C" width="72"> </a> </p>
    <h1 class="p-name no-ref" id="title">Federated Credential Management API</h1>
-   <p id="w3c-state"><a href="https://www.w3.org/standards/types#CG-DRAFT">Draft Community Group Report</a>, <time class="dt-updated" datetime="2022-06-28">28 June 2022</time></p>
+   <p id="w3c-state"><a href="https://www.w3.org/standards/types#CG-DRAFT">Draft Community Group Report</a>, <time class="dt-updated" datetime="2022-06-29">29 June 2022</time></p>
    <div data-fill-with="spec-metadata">
     <dl>
      <dt>This version:
@@ -690,7 +690,7 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
      <a href="#security"><span class="secno">8</span> <span class="content">Security</span></a>
      <ol class="toc">
       <li><a href="#content-security-policy"><span class="secno">8.1</span> <span class="content">Content Security Policy</span></a>
-      <li><a href="#sec-fedcm-csrf①"><span class="secno">8.2</span> <span class="content">Sec-FedCM-CSRF</span></a>
+      <li><a href="#sec-fedcm-csrf-header"><span class="secno">8.2</span> <span class="content">Sec-FedCM-CSRF Header</span></a>
       <li><a href="#browser-surface-impersonation"><span class="secno">8.3</span> <span class="content">Browser Surface Impersonation</span></a>
      </ol>
     <li>
@@ -968,7 +968,6 @@ bidder.</p>
     <dd data-md>
      <p>A general purpose API, as opposed to a <a data-link-type="dfn" href="#high-level-api" id="ref-for-high-level-api">high-level API</a>. See also <a href="https://w3ctag.github.io/design-principles/#high-level-low-level">high level vs low level</a></p>
     <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="minting">minting</dfn>
-    <dt data-md><dfn data-dfn-type="dfn" data-noexport id="minted">minted<a class="self-link" href="#minted"></a></dfn>
     <dd data-md>
      <p>The act of a new token being creating</p>
     <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="out-of-band">out-of-band</dfn>
@@ -1191,11 +1190,10 @@ which serves as a discovery device to other endpoints provided by the <a data-li
      <p>A set of <a data-link-type="dfn" href="#branding-json" id="ref-for-branding-json">Branding JSON</a> options.</p>
    </dl>
    <p>The <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="branding-json">Branding JSON</dfn> enables an <a data-link-type="dfn" href="#idp" id="ref-for-idp①⑤">IDP</a> to express their branding
-preferences, which may be used by User Agents to customize the user agent
-consent prompt.</p>
+preferences, which may be used by <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent②">user agents</a> to customize the consent prompt.</p>
    <p class="note" role="note"><span>Note:</span> The branding preferences are deliberately designed to be high level
 / abstract (rather than opinionated about a specific UI structure), to
-enable different <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent②">user agents</a> to offer different UI experiences and
+enable different <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent③">user agents</a> to offer different UI experiences and
 for them to evolve independently over time.</p>
    <p>It may have the following properties:</p>
    <dl>
@@ -1209,6 +1207,10 @@ for them to evolve independently over time.</p>
     <dd data-md>
      <p>A list of <a data-link-type="dfn" href="#icon-json" id="ref-for-icon-json">Icon JSON</a> objects.</p>
    </dl>
+   <p class="note" role="note"><span>Note:</span> The branding preferences are deliberately designed to be high level
+/ abstract (rather than opinionated about a specific UI structure), to
+enable different <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent④">user agents</a> to offer different UI experiences and
+for them to evolve independently over time.</p>
    <p>The <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="icon-json">Icon JSON</dfn> may have the following properties:</p>
    <dl>
     <dt data-md><dfn class="idl-code" data-dfn-for="manifest_branding_icons" data-dfn-type="argument" data-export id="dom-manifest_branding_icons-url"><code>url</code><a class="self-link" href="#dom-manifest_branding_icons-url"></a></dfn> (required)
@@ -1395,7 +1397,7 @@ account_id=123&amp;client_id=client1234&amp;nonce=Ct60bD&amp;disclosure_text_sho
 was initiated by the browser and not untrusted JavaScript because
 it is a <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#forbidden-header-name" id="ref-for-forbidden-header-name">forbidden header name</a>.</p>
    <h2 class="heading settled" data-level="6" id="rp-api"><span class="secno">6. </span><span class="content">The Relying Party API</span><a class="self-link" href="#rp-api"></a></h2>
-   <p><a data-link-type="dfn" href="#rp" id="ref-for-rp②④">RP</a>'s expose a <a href="#rp-api-logout-endpoint">§ 6.1 Logout</a> to facilitate with <a href="#use-cases-idp-sign-out">§ 1.1.3.2 IDP Sign-out</a>.</p>
+   <p><a data-link-type="dfn" href="#rp" id="ref-for-rp②④">RPs</a> expose a <a href="#rp-api-logout-endpoint">§ 6.1 Logout</a> to facilitate with <a href="#use-cases-idp-sign-out">§ 1.1.3.2 IDP Sign-out</a>.</p>
    <h3 class="heading settled" data-level="6.1" id="rp-api-logout-endpoint"><span class="secno">6.1. </span><span class="content">Logout</span><a class="self-link" href="#rp-api-logout-endpoint"></a></h3>
    <p>When <a data-link-type="dfn" href="#idp" id="ref-for-idp②③">IDP</a>s call the <a href="#browser-api-idp-sign-out">§ 7.4.1 IDP Sign-out</a> API, every <a data-link-type="dfn" href="#rp" id="ref-for-rp②⑤">RP</a> gets a
 chance to log the user out (e.g. clear cookies, clear local storage)
@@ -1419,12 +1421,12 @@ provisioning of an <a data-link-type="dfn" href="#id-token" id="ref-for-id-token
 rather calls the same API indistinguishably.</p>
    <p>If all goes well, the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party③⑨">Relying Party</a> receives back an <code class="idl"><a data-link-type="idl" href="#identitycredential" id="ref-for-identitycredential①">IdentityCredential</a></code> which contains an <a data-link-type="dfn" href="#id-token" id="ref-for-id-token④">id token</a> in the form of a signed <a data-link-type="biblio" href="https://datatracker.ietf.org/doc/html/rfc7519"><cite>JWT</cite></a> which it can use to
 authenticate the user.</p>
-   <div class="example" id="example-cf81e924">
-    <a class="self-link" href="#example-cf81e924"></a> 
+   <div class="example" id="example-899750f6">
+    <a class="self-link" href="#example-899750f6"></a> 
 <pre class="language-js highlight"><c- a>const</c-> credential <c- o>=</c-> <c- k>await</c-> navigator<c- p>.</c->credentials<c- p>.</c->get<c- p>({</c->
   identity<c- o>:</c-> <c- p>{</c->
     providers<c- o>:</c-> <c- p>[{</c->
-      url<c- o>:</c-> <c- u>"https://idp.example/manifest.json"</c-><c- p>,</c->
+      configURL<c- o>:</c-> <c- u>"https://idp.example/manifest.json"</c-><c- p>,</c->
       clientId<c- o>:</c-> <c- u>"123"</c-><c- p>,</c->
     <c- p>}]</c->
   <c- p>}</c->
@@ -1537,8 +1539,6 @@ requests.</p>
      <p>Let <var>provider</var> be <var>options</var>["<code class="idl"><a data-link-type="idl" href="#dom-credentialrequestoptions-identity" id="ref-for-dom-credentialrequestoptions-identity③">identity</a></code>"]["<code class="idl"><a data-link-type="idl" href="#dom-identitycredentialrequestoptions-providers" id="ref-for-dom-identitycredentialrequestoptions-providers②">providers</a></code>"][0].</p>
     <li data-md>
      <p>Let <var>credential</var> be a new <code class="idl"><a data-link-type="idl" href="#identitycredential" id="ref-for-identitycredential④">IdentityCredential</a></code>.</p>
-    <li data-md>
-     <p>Set <var>credential</var>’s <a data-link-type="dfn">provider</a> to <var>provider</var>.</p>
     <li data-md>
      <p>Request user consent by running the <a data-link-type="dfn" href="#request-consent" id="ref-for-request-consent">request consent</a> algorithm with the <var>provider</var>.</p>
     <li data-md>
@@ -1986,7 +1986,7 @@ are same origin with respect to the internal manifest or at least dependent on t
 internal manifest, they do not require additional checks.</p>
    <p>The non-same-origin fetches include, for example, the brand icon. The user agent does not perform a <a data-link-type="biblio" href="https://www.w3.org/TR/CSP3/"><cite>Content Security Policy Level 3</cite></a> check on these because they are directly specified from the manifest. In addition, the
 rendering of this image is performed by the user agent, and as such this image cannot affect the <a data-link-type="dfn" href="#rp" id="ref-for-rp④①">RP</a> site nor can they be inspected by the <a data-link-type="dfn" href="#rp" id="ref-for-rp④②">RP</a> in any way.</p>
-   <h3 class="heading settled" data-level="8.2" id="sec-fedcm-csrf①"><span class="secno">8.2. </span><span class="content">Sec-FedCM-CSRF</span><a class="self-link" href="#sec-fedcm-csrf①"></a></h3>
+   <h3 class="heading settled" data-level="8.2" id="sec-fedcm-csrf-header"><span class="secno">8.2. </span><span class="content">Sec-FedCM-CSRF Header</span><a class="self-link" href="#sec-fedcm-csrf-header"></a></h3>
    <p>The FedCM API introduces several non-static endpoints on the <a data-link-type="dfn" href="#idp" id="ref-for-idp③⑨">IDP</a>, so these need to be protected
 from XSS attacks. In order to do so, the FedCM API introduces the <a href="#Sec-FedCM-CSRF">§ 5.5 Sec-FedCM-CSRF</a> header, a <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#forbidden-header-name" id="ref-for-forbidden-header-name①">forbidden header name</a>. The header cannot be set by random websites, so the <a data-link-type="dfn" href="#idp" id="ref-for-idp④⓪">IDP</a> can be
 confident that the request was originated by the FedCM browser rather than sent by a websites trying
@@ -2019,7 +2019,7 @@ proposed browser intermediation designs.</p>
 expectations around their behavior.</p>
    <ol>
     <li data-md>
-     <p>The <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent③">user agent</a> implements <a href="#browser-api">§ 7 The Browser API</a> and controls the execution contexts for the <a data-link-type="dfn" href="#rp" id="ref-for-rp④③">RP</a> and <a data-link-type="dfn" href="#idp" id="ref-for-idp④④">IDP</a> content. The <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent④">user agent</a> is assumed to be trusted by the user, and transitively
+     <p>The <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent⑤">user agent</a> implements <a href="#browser-api">§ 7 The Browser API</a> and controls the execution contexts for the <a data-link-type="dfn" href="#rp" id="ref-for-rp④③">RP</a> and <a data-link-type="dfn" href="#idp" id="ref-for-idp④④">IDP</a> content. The <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent⑥">user agent</a> is assumed to be trusted by the user, and transitively
 trusted by the <a data-link-type="dfn" href="#rp" id="ref-for-rp④④">RP</a> and <a data-link-type="dfn" href="#idp" id="ref-for-idp④⑤">IDP</a>.</p>
     <li data-md>
      <p><a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④⑥">Relying Party</a>s (<a data-link-type="dfn" href="#rp" id="ref-for-rp④⑤">RP</a>s) are websites that invoke the FedCM API for the purpose of
@@ -2044,14 +2044,14 @@ for <a data-link-type="dfn" href="#tracker" id="ref-for-tracker③">trackers</a>
    <ol>
     <li data-md>
      <p>It is not acceptable for an <a data-link-type="dfn" href="#rp" id="ref-for-rp⑤⓪">RP</a>, <a data-link-type="dfn" href="#idp" id="ref-for-idp⑤②">IDP</a>, or <a data-link-type="dfn" href="#tracker" id="ref-for-tracker④">tracker</a> to learn that a specific user visited a
-specific site, without any consent from the user. That is, the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent⑤">user agent</a> needs to hide the
+specific site, without any consent from the user. That is, the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent⑦">user agent</a> needs to hide the
 knowledge that a specific user identity visited a specific site from the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑤①">RP</a>, <a data-link-type="dfn" href="#idp" id="ref-for-idp⑤③">IDP</a>, and <a data-link-type="dfn" href="#tracker" id="ref-for-tracker⑤">trackers</a>. It may share this knowledge with the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑤②">RP</a> and <a data-link-type="dfn" href="#idp" id="ref-for-idp⑤④">IDP</a> once the user consents. In
 particular, the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑤③">RP</a> should not know the user identity and the <a data-link-type="dfn" href="#idp" id="ref-for-idp⑤⑤">IDP</a> should not know the
 site that the user has visited before the FedCM flow gathers the user’s confirmation to do so.</p>
     <li data-md>
-     <p>It is the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent⑥">user agent</a>'s responsibility to determine when the user has consented for the <a data-link-type="dfn" href="#idp" id="ref-for-idp⑤⑥">IDP</a> to communicate with the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑤④">RP</a> in order to provide identification for the user.</p>
+     <p>It is the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent⑧">user agent</a>'s responsibility to determine when the user has consented for the <a data-link-type="dfn" href="#idp" id="ref-for-idp⑤⑥">IDP</a> to communicate with the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑤④">RP</a> in order to provide identification for the user.</p>
     <li data-md>
-     <p>Once the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent⑦">user agent</a> has determined that the user has provided consent to provide their
+     <p>Once the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent⑨">user agent</a> has determined that the user has provided consent to provide their
 account information to the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑤⑤">RP</a>, it is ok for the <a data-link-type="dfn" href="#idp" id="ref-for-idp⑤⑦">IDP</a> and for the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑤⑥">RP</a> to learn
 information about that specific user’s account, as required to provide identification. The <a data-link-type="dfn" href="#rp" id="ref-for-rp⑤⑦">RP</a> should not learn about about any other user accounts.</p>
    </ol>
@@ -2163,8 +2163,8 @@ origin, <a data-link-type="dfn" href="#idp" id="ref-for-idp⑧⓪">IDP</a>'s use
 there is room for statistical error because it requires stitching together two separate pieces of
 information to track the user. However, it is important to mitigate this attack and ensure that
 it’s economically impractical to perform. In this attack, we assume that network requests do not
-have large fingerprinting vectors (e.g. IP addresses). These vary by <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent⑧">user agent</a> and are hard to
-eliminate entirely, but in general <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent⑨">user agents</a> are expected to address these over time. These
+have large fingerprinting vectors (e.g. IP addresses). These vary by <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent①⓪">user agent</a> and are hard to
+eliminate entirely, but in general <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent①①">user agents</a> are expected to address these over time. These
 bits of information tied to the network requests make the timing attack easier, making it more
 important to address.</p>
    <p class="note" role="note"><span>Note:</span> this attack is described and discussed <a href="https://github.com/fedidcg/FedCM/issues/230#issuecomment-1089040953">here</a>.</p>
@@ -2185,29 +2185,29 @@ probability. Note that fingerprinting can make the correlation more accurate.</p
    <p>Note that this kind of correlation is already possible without FedCM by using simple cross-origin
 top-level navigations, but using FedCM for this purpose would worsen the problem if it improved
 timing resolution or if it was less visible to users (e.g. the <a data-link-type="dfn" href="#idp" id="ref-for-idp⑧⑤">IDP</a> could return empty accounts
-to the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent①⓪">user agent</a> to deliberately make no browser UI to be triggered, and hence make this attack
+to the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent①②">user agent</a> to deliberately make no browser UI to be triggered, and hence make this attack
 invisible to the user).</p>
-   <p>The <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent①①">user agent</a> should mitigate this attack to protect users, in an interoperable way. The
+   <p>The <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent①③">user agent</a> should mitigate this attack to protect users, in an interoperable way. The
 following are sample mitigations:</p>
    <ul>
     <li data-md>
      <p>Any <a data-link-type="dfn" href="#rp" id="ref-for-rp⑦⑤">RP</a>s or <a data-link-type="dfn" href="#idp" id="ref-for-idp⑧⑥">IDP</a>s observed to be using this API to compromise user privacy in a deceptive or
 abusive manner could be explicitly blocked from using it or put behind an interstitial.</p>
     <li data-md>
-     <p>The <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent①②">user agent</a> could detect <a data-link-type="dfn" href="#tracker" id="ref-for-tracker⑥">trackers</a> by noting alleged <a data-link-type="dfn" href="#idp" id="ref-for-idp⑧⑦">IDP</a>s that do either of the
+     <p>The <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent①④">user agent</a> could detect <a data-link-type="dfn" href="#tracker" id="ref-for-tracker⑥">trackers</a> by noting alleged <a data-link-type="dfn" href="#idp" id="ref-for-idp⑧⑦">IDP</a>s that do either of the
 following:</p>
      <ul>
       <li data-md>
        <p>Never show UI despite the FedCM API fetches being performed.</p>
       <li data-md>
-       <p>Provide generic user identification, such as <a class="property css" data-link-type="property">Anonymous</a>, or <a class="property css" data-link-type="property">Guest</a> or <a class="property css" data-link-type="property">Incognito</a> as the
+       <p>Provide generic user identification, such as "Anonymous", or "Guest" or "Incognito" as the
 user’s name.</p>
       <li data-md>
        <p>Have a suspiciously low click-through rate (e.g. most users don’t recognize the value in using
 this <a data-link-type="dfn" href="#idp" id="ref-for-idp⑧⑧">IDP</a>).</p>
      </ul>
     <li data-md>
-     <p>The <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent①③">user agent</a> could block the API or show a static interstitial after the user has already
+     <p>The <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent①⑤">user agent</a> could block the API or show a static interstitial after the user has already
 expressed lack of interest in the API because they did at least one of the following:</p>
      <ul>
       <li data-md>
@@ -2215,18 +2215,18 @@ expressed lack of interest in the API because they did at least one of the follo
       <li data-md>
        <p>Provide user settings to disable the FedCM API.</p>
       <li data-md>
-       <p>Pressed some <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent①④">user agent</a> UI to close the FedCM API’s request for consent.</p>
+       <p>Pressed some <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent①⑥">user agent</a> UI to close the FedCM API’s request for consent.</p>
      </ul>
     <li data-md>
-     <p>The <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent①⑤">user agent</a> could gate the FedCM fetches on a user interaction so that the timing attack is
+     <p>The <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent①⑦">user agent</a> could gate the FedCM fetches on a user interaction so that the timing attack is
 only possible once the user has expressed some interest in the API. Note that this may provide a
 poor user experience for users that do want to use the API, and may also result in worse success
 metrics for the API.</p>
    </ul>
    <h4 class="heading settled" data-level="9.3.3" id="push-model"><span class="secno">9.3.3. </span><span class="content">Push Model</span><a class="self-link" href="#push-model"></a></h4>
    <p>Another potential future mitigation for timing attacks is the <a data-link-type="dfn" href="#push-model①" id="ref-for-push-model①">push model</a>. The current API is the <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="pull-model">pull model</dfn>: the API pulls the user accounts from the <a data-link-type="dfn" href="#idp" id="ref-for-idp⑧⑨">IDP</a> every time they are needed
-by the FedCM API. In the <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="push-model①">push model</dfn>, the <a data-link-type="dfn" href="#idp" id="ref-for-idp⑨⓪">IDP</a> needs to tell the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent①⑥">user agent</a> that a
-user has signed in whenever this happens. This way, when the FedCM API is called, the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent①⑦">user agent</a> already knows the user accounts that the user can select from, and thus does not require any
+by the FedCM API. In the <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="push-model①">push model</dfn>, the <a data-link-type="dfn" href="#idp" id="ref-for-idp⑨⓪">IDP</a> needs to tell the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent①⑧">user agent</a> that a
+user has signed in whenever this happens. This way, when the FedCM API is called, the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent①⑨">user agent</a> already knows the user accounts that the user can select from, and thus does not require any
 credentialed fetches to the <a data-link-type="dfn" href="#idp" id="ref-for-idp⑨①">IDP</a> in order to show the UI. It would only be when the user
 consents that the <a data-link-type="dfn" href="#idp" id="ref-for-idp⑨②">IDP</a> is notified, thus resolving the timing attack problem entirely.</p>
    <p>While the <a data-link-type="dfn" href="#push-model①" id="ref-for-push-model①①">push model</a> seems like an improvement for privacy, the current API uses the <a data-link-type="dfn" href="#pull-model" id="ref-for-pull-model">pull model</a> for these reasons:</p>
@@ -2238,7 +2238,7 @@ deletes their account or simply change name, etc. A user can also use browser UX
 by clearing cookies. While those are not high-frequency changes (e.g. once every other year for
 each user), keeping them in sync is non-trivial.</p>
     <li data-md>
-     <p>It requires a lot of the <a data-link-type="dfn" href="#idp" id="ref-for-idp⑨④">IDP</a>'s trust in <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent①⑧">user agent</a> to protect all of their user’s
+     <p>It requires a lot of the <a data-link-type="dfn" href="#idp" id="ref-for-idp⑨④">IDP</a>'s trust in <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent②⓪">user agent</a> to protect all of their user’s
 accounts. The push model requires storing all of the user accounts from all of the <a data-link-type="dfn" href="#idp" id="ref-for-idp⑨⑤">IDP</a>s that
 a user is logged into, regardless of whether the user ever uses the FedCM API or not. This means
 that all users pay the cost, and only some get the reward.</p>
@@ -2249,7 +2249,7 @@ that all users pay the cost, and only some get the reward.</p>
     <p>Privacy harms don’t always come from a site learning things.</p>
    </blockquote>
    <blockquote>
-    <p>From <a href="https://datatracker.ietf.org/doc/html/rfc6973#section-5.1.3">RFC6973: Intrusion</a></p>
+    <p>From <a href="https://www.rfc-editor.org/rfc/rfc6973#section-5.1.3">RFC6973: Intrusion</a></p>
     <p>Intrusion consists of invasive acts that disturb or interrupt one’s life or activities.
 Intrusion can thwart individuals' desires to be left alone, sap their time or attention, or
 interrupt their activities.</p>
@@ -2257,11 +2257,11 @@ interrupt their activities.</p>
    <p>In the context of federation, intrusion happens when an <a data-link-type="dfn" href="#rp" id="ref-for-rp⑦⑥">RP</a> and an <a data-link-type="dfn" href="#idp" id="ref-for-idp⑨⑥">IDP</a> are colluding to
 invasively and aggressively recommend the user to login disproportionally to the their intent. Much
 like unsolicited notifications, an <a data-link-type="dfn" href="#rp" id="ref-for-rp⑦⑦">RP</a> can collude with an <a data-link-type="dfn" href="#idp" id="ref-for-idp⑨⑦">IDP</a> to aggressively log users in.</p>
-   <p>The <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent①⑨">user agent</a> can mitigate this by mediating the user controls and offering them proportionally
-to the intent of the user or the privacy risks involved. For example, a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent②⓪">user agent</a> can choose to
+   <p>The <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent②①">user agent</a> can mitigate this by mediating the user controls and offering them proportionally
+to the intent of the user or the privacy risks involved. For example, a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent②②">user agent</a> can choose to
 show a loud / disruptive modal mediated dialog when it has enough confidence of the user’s intent or
 show a quiet / conservative UI hint when it doesn’t.</p>
-   <p>A <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent②①">user agent</a> could also choose to control disruption of the user’s experience based on the risks
+   <p>A <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent②③">user agent</a> could also choose to control disruption of the user’s experience based on the risks
 involved. For example, when a <a data-link-type="dfn" href="#directed-identifier" id="ref-for-directed-identifier①">directed identifier</a> is being exchanged it can be more confident of
 the unintended consequeces and offer a more aggressive user experience, whereas when global
 identifiers are exchanged a more conservative user experience.</p>
@@ -2401,7 +2401,7 @@ into <a data-link-type="dfn" href="#rp" id="ref-for-rp⑦⑨">RP</a>s. In some c
 build a richer profile. When a user willingly provides their full name, email address, phone number,
 etc, to multiple relying parties, those relying parties can collaborate to build a profile of that
 user and their activity across collaborating sites. Sometimes this is referred to as <a data-link-type="dfn" href="#joining" id="ref-for-joining">joining</a> since it amounts to a join of user records between the account databases of multiple RPs. This
-correlation and profile-building is outside the user’s control and entirely out of the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent②②">user
+correlation and profile-building is outside the user’s control and entirely out of the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent②④">user
 agent</a>’s or <a data-link-type="dfn" href="#idp" id="ref-for-idp⑨⑨">IDP</a>’s view.</p>
    <div class="image">
     <svg height="100%" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:10;" version="1.1" viewBox="0 0 6000 4500" width="100%" xmlnsU0003Aserif="http://www.serif.com/" xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" space="preserve">
@@ -3157,7 +3157,6 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <li><a href="#dom-identitycredential-logoutrps">logoutRPs(logoutRequests)</a><span>, in § 7.4.1</span>
    <li><a href="#low-level-api">low-level API</a><span>, in § 3</span>
    <li><a href="#manifest">Manifest</a><span>, in § 5.1</span>
-   <li><a href="#minted">minted</a><span>, in § 3</span>
    <li><a href="#minting">minting</a><span>, in § 3</span>
    <li><a href="#dom-identityprovider-nonce">nonce</a><span>, in § 7.3</span>
    <li><a href="#out-of-band">out-of-band</a><span>, in § 3</span>
@@ -3291,7 +3290,7 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <a href="https://fetch.spec.whatwg.org/#forbidden-header-name">https://fetch.spec.whatwg.org/#forbidden-header-name</a><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-forbidden-header-name">5.5. Sec-FedCM-CSRF</a>
-    <li><a href="#ref-for-forbidden-header-name①">8.2. Sec-FedCM-CSRF</a>
+    <li><a href="#ref-for-forbidden-header-name①">8.2. Sec-FedCM-CSRF Header</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-concept-network-error">
@@ -3418,12 +3417,12 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <a href="https://infra.spec.whatwg.org/#user-agent">https://infra.spec.whatwg.org/#user-agent</a><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-user-agent">1. Introduction</a> <a href="#ref-for-user-agent①">(2)</a>
-    <li><a href="#ref-for-user-agent②">5.1. Manifest</a>
-    <li><a href="#ref-for-user-agent③">9.1. Principals</a> <a href="#ref-for-user-agent④">(2)</a> <a href="#ref-for-user-agent⑤">(3)</a> <a href="#ref-for-user-agent⑥">(4)</a> <a href="#ref-for-user-agent⑦">(5)</a>
-    <li><a href="#ref-for-user-agent⑧">9.3.2. Timing Attacks</a> <a href="#ref-for-user-agent⑨">(2)</a> <a href="#ref-for-user-agent①⓪">(3)</a> <a href="#ref-for-user-agent①①">(4)</a> <a href="#ref-for-user-agent①②">(5)</a> <a href="#ref-for-user-agent①③">(6)</a> <a href="#ref-for-user-agent①④">(7)</a> <a href="#ref-for-user-agent①⑤">(8)</a>
-    <li><a href="#ref-for-user-agent①⑥">9.3.3. Push Model</a> <a href="#ref-for-user-agent①⑦">(2)</a> <a href="#ref-for-user-agent①⑧">(3)</a>
-    <li><a href="#ref-for-user-agent①⑨">9.3.4. IDP Intrusion</a> <a href="#ref-for-user-agent②⓪">(2)</a> <a href="#ref-for-user-agent②①">(3)</a>
-    <li><a href="#ref-for-user-agent②②">9.4.1. Cross-Site Correlation</a>
+    <li><a href="#ref-for-user-agent②">5.1. Manifest</a> <a href="#ref-for-user-agent③">(2)</a> <a href="#ref-for-user-agent④">(3)</a>
+    <li><a href="#ref-for-user-agent⑤">9.1. Principals</a> <a href="#ref-for-user-agent⑥">(2)</a> <a href="#ref-for-user-agent⑦">(3)</a> <a href="#ref-for-user-agent⑧">(4)</a> <a href="#ref-for-user-agent⑨">(5)</a>
+    <li><a href="#ref-for-user-agent①⓪">9.3.2. Timing Attacks</a> <a href="#ref-for-user-agent①①">(2)</a> <a href="#ref-for-user-agent①②">(3)</a> <a href="#ref-for-user-agent①③">(4)</a> <a href="#ref-for-user-agent①④">(5)</a> <a href="#ref-for-user-agent①⑤">(6)</a> <a href="#ref-for-user-agent①⑥">(7)</a> <a href="#ref-for-user-agent①⑦">(8)</a>
+    <li><a href="#ref-for-user-agent①⑧">9.3.3. Push Model</a> <a href="#ref-for-user-agent①⑨">(2)</a> <a href="#ref-for-user-agent②⓪">(3)</a>
+    <li><a href="#ref-for-user-agent②①">9.3.4. IDP Intrusion</a> <a href="#ref-for-user-agent②②">(2)</a> <a href="#ref-for-user-agent②③">(3)</a>
+    <li><a href="#ref-for-user-agent②④">9.4.1. Cross-Site Correlation</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-json-mime-type">
@@ -3635,9 +3634,9 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <dt id="biblio-csp">[CSP]
    <dd>Mike West. <a href="https://www.w3.org/TR/CSP3/"><cite>Content Security Policy Level 3</cite></a>. 29 June 2021. WD. URL: <a href="https://www.w3.org/TR/CSP3/">https://www.w3.org/TR/CSP3/</a>
    <dt id="biblio-css-color-4">[CSS-COLOR-4]
-   <dd>Tab Atkins Jr.; Chris Lilley; Lea Verou. <a href="https://www.w3.org/TR/css-color-4/"><cite>CSS Color Module Level 4</cite></a>. 28 April 2022. WD. URL: <a href="https://www.w3.org/TR/css-color-4/">https://www.w3.org/TR/css-color-4/</a>
+   <dd>Tab Atkins Jr.; Chris Lilley; Lea Verou. <a href="https://www.w3.org/TR/css-color-4/"><cite>CSS Color Module Level 4</cite></a>. 28 June 2022. WD. URL: <a href="https://www.w3.org/TR/css-color-4/">https://www.w3.org/TR/css-color-4/</a>
    <dt id="biblio-css-color-5">[CSS-COLOR-5]
-   <dd>Chris Lilley; et al. <a href="https://www.w3.org/TR/css-color-5/"><cite>CSS Color Module Level 5</cite></a>. 28 April 2022. WD. URL: <a href="https://www.w3.org/TR/css-color-5/">https://www.w3.org/TR/css-color-5/</a>
+   <dd>Chris Lilley; et al. <a href="https://www.w3.org/TR/css-color-5/"><cite>CSS Color Module Level 5</cite></a>. 28 June 2022. WD. URL: <a href="https://www.w3.org/TR/css-color-5/">https://www.w3.org/TR/css-color-5/</a>
    <dt id="biblio-fetch">[FETCH]
    <dd>Anne van Kesteren. <a href="https://fetch.spec.whatwg.org/"><cite>Fetch Standard</cite></a>. Living Standard. URL: <a href="https://fetch.spec.whatwg.org/">https://fetch.spec.whatwg.org/</a>
    <dt id="biblio-html">[HTML]
@@ -3655,7 +3654,7 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <dt id="biblio-rfc2119">[RFC2119]
    <dd>S. Bradner. <a href="https://datatracker.ietf.org/doc/html/rfc2119"><cite>Key words for use in RFCs to Indicate Requirement Levels</cite></a>. March 1997. Best Current Practice. URL: <a href="https://datatracker.ietf.org/doc/html/rfc2119">https://datatracker.ietf.org/doc/html/rfc2119</a>
    <dt id="biblio-rfc6973">[RFC6973]
-   <dd><a href="https://datatracker.ietf.org/doc/html/rfc6973"><cite>Privacy Considerations for Internet Protocols</cite></a>. URL: <a href="https://datatracker.ietf.org/doc/html/rfc6973">https://datatracker.ietf.org/doc/html/rfc6973</a>
+   <dd>A. Cooper; et al. <a href="https://www.rfc-editor.org/rfc/rfc6973"><cite>Privacy Considerations for Internet Protocols</cite></a>. July 2013. Informational. URL: <a href="https://www.rfc-editor.org/rfc/rfc6973">https://www.rfc-editor.org/rfc/rfc6973</a>
    <dt id="biblio-rfc9110">[RFC9110]
    <dd>R. Fielding, Ed.; M. Nottingham, Ed.; J. Reschke, Ed.. <a href="https://www.rfc-editor.org/rfc/rfc9110"><cite>HTTP Semantics</cite></a>. June 2022. Internet Standard. URL: <a href="https://www.rfc-editor.org/rfc/rfc9110">https://www.rfc-editor.org/rfc/rfc9110</a>
    <dt id="biblio-url">[URL]
@@ -3808,7 +3807,7 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
     <li><a href="#ref-for-idp③①">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a> <a href="#ref-for-idp③②">(2)</a> <a href="#ref-for-idp③③">(3)</a>
     <li><a href="#ref-for-idp③④">7.4.1. IDP Sign-out</a>
     <li><a href="#ref-for-idp③⑤">8.1. Content Security Policy</a> <a href="#ref-for-idp③⑥">(2)</a> <a href="#ref-for-idp③⑦">(3)</a> <a href="#ref-for-idp③⑧">(4)</a>
-    <li><a href="#ref-for-idp③⑨">8.2. Sec-FedCM-CSRF</a> <a href="#ref-for-idp④⓪">(2)</a> <a href="#ref-for-idp④①">(3)</a> <a href="#ref-for-idp④②">(4)</a>
+    <li><a href="#ref-for-idp③⑨">8.2. Sec-FedCM-CSRF Header</a> <a href="#ref-for-idp④⓪">(2)</a> <a href="#ref-for-idp④①">(3)</a> <a href="#ref-for-idp④②">(4)</a>
     <li><a href="#ref-for-idp④③">8.3. Browser Surface Impersonation</a>
     <li><a href="#ref-for-idp④④">9.1. Principals</a> <a href="#ref-for-idp④⑤">(2)</a> <a href="#ref-for-idp④⑥">(3)</a> <a href="#ref-for-idp④⑦">(4)</a> <a href="#ref-for-idp④⑧">(5)</a> <a href="#ref-for-idp④⑨">(6)</a> <a href="#ref-for-idp⑤⓪">(7)</a> <a href="#ref-for-idp⑤①">(8)</a> <a href="#ref-for-idp⑤②">(9)</a> <a href="#ref-for-idp⑤③">(10)</a> <a href="#ref-for-idp⑤④">(11)</a> <a href="#ref-for-idp⑤⑤">(12)</a> <a href="#ref-for-idp⑤⑥">(13)</a> <a href="#ref-for-idp⑤⑦">(14)</a>
     <li><a href="#ref-for-idp⑤⑧">9.2. Network requests</a> <a href="#ref-for-idp⑤⑨">(2)</a> <a href="#ref-for-idp⑥⓪">(3)</a> <a href="#ref-for-idp⑥①">(4)</a> <a href="#ref-for-idp⑥②">(5)</a> <a href="#ref-for-idp⑥③">(6)</a> <a href="#ref-for-idp⑥④">(7)</a> <a href="#ref-for-idp⑥⑤">(8)</a> <a href="#ref-for-idp⑥⑥">(9)</a> <a href="#ref-for-idp⑥⑦">(10)</a> <a href="#ref-for-idp⑥⑧">(11)</a>
