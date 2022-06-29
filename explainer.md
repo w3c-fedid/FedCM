@@ -115,7 +115,7 @@ async function login() {
     mediated: “optional”, // “optional” is the default
     identity: {
       providers: [{
-        configURL: "https://idp.example/manifest.json",
+        configURL: "https://idp.example/fedcm.json",
         clientId: "123",
         nonce: "456"
       }]
@@ -191,7 +191,7 @@ const cred = await navigator.credentials.get({
   mediated: "optional", // "optional" is the default
   federated: {
     providers: [{
-      configURL: "https://idp.example",
+      configURL: "https://idp.example/fedcm.json",
       clientId: "123",
       nonce: "1234"
     }]
