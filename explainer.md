@@ -107,47 +107,17 @@ Features which are out-of-scope for the **current** version of FedCM, but are
 ## Example
 
 The following is an example of a website allowing a user to login with
-`idp.example`. The user is able to revoke tokens and logout of the site.
+`idp.example`.
 
 ```js
 async function login() {
-  const credential = getFederatedCredential();
-
-  // This will prompt when credential["approved"] is false , but
-  // it won’t when credential["approved"] is true.
-  //
-  // If credential["approved"] is false and mediation is silent will `reject`.
-  //
-  // If the user selects an account updates the credential["approved"]
-  // state and store any needed account information.
-  return await credential.login({ nonce: "456" });
-}
-
-async function logout() {
-  const credential = getFederatedCredential();
-  // This never prompts, rejects the promise in case credential["approved"]
-  // is false
-  return credential.logout();
-}
-
-async function revoke() {
-  const credential = getFederatedCredential();
-  // This never prompts, rejects the promise in case credential["approved"]
-  // is false
-  return credential.revoke();
-}
-
-async function getFederatedCredential() {
-  // This never prompts. A FederatedCredential object will always be returned.
-  //
-  // The object will be either approved or unapproved and store information
-  // on if the user should be prompted based on the mediation flag.
   return await navigator.credentials.get({
-    mediated: "optional",  // "optional" is the default
-    federated: {
+    mediated: “optional”, // “optional” is the default
+    identity: {
       providers: [{
-        url: "https://idp.example",
-        clientId: "123"
+        configURL: "https://idp.example/fedcm.json",
+        clientId: "123",
+        nonce: "456"
       }]
     }
   });
@@ -157,8 +127,6 @@ async function getFederatedCredential() {
 ## Key scenarios
 
   * [RP initiated login](#rp-initiated-login)
-  * [RP initiated logout](#rp-initiated-logout)
-  * [Revocation](#revocation)
   * [Personalized login buttons](#personalized-login-buttons)
   * [IDP initiated RP login](#idp-initiated-rp-login)
   * [Token creation](#token-creation)
@@ -174,30 +142,32 @@ IDP.
 
 ```
 ┌───────────┐                  ┌───────────┐                      ┌───────────┐
-│           │           Login  │           │           fedcm.json │           │
-│           │   ┌─────────────►x           │     ┌───────────────►x           │
+│           │                  │           │                      │           │
+│  Relying  │                  │   User    │                      │  Identity │
+│   Party   │                  │   Agent   │                      │  Provider │
+│           │                  │           │                      │           │
+│           │                  │           │                      │           │
+│           │   ┌──────────► *-+ Credential│     ┌────────────► *-+ manifest  │
+│           │   │              │ Manager   │     │                │           │
+│           │   ├              │ API       │     ├────────────► *-+ accounts  │
 │           │   │              │           │     │                │           │
-│           │   │       Logout │           │     │   Accounts API │           │
-│           │   ├─────────────►x           │     ├───────────────►x           │
+│           │   │              │           │     ├────────────► *-+ client    │
+│           │   │              │           │     │                │ metadata  │
 │           │   │              │           │     │                │           │
-│           │   │       Revoke │           │     │   Metadata API │           │
-│           │   ├─────────────►x           │     ├───────────────►x           │
-│  Relying  │   │              │   User    │     │                │ Identity  │
-│   Party   │   │              │   Agent   │     │     Revoke API │ Provider  │
-│           │   │              │           │     ├───────────────►x           │
+│           │   │              │           │     ├────────────► *-+ token     │
 │           │   │              │           │     │                │           │
-│           │   │              │           │     │      Token API │           │
-│           │   │              │           │     ├───────────────►x           │
+│           │   │              │           │     │                │           │
+│           │   │              │           │     │                │           │
 │           │   │              │           │     │                │           │
 │ ┌───────┐ │   │              │ ┌───────┐ │     │                │ ┌───────┐ │
-│ │ FedCM ├─┼───┘     ┌────────┼─┤ FedCM ├─┼─────┘       ┌────────┼─┤ FedCM │ │
+│ │ JS    ├─┼───┘     ┌────────┼─┤ HTTP  ├─┼─────┘       ┌────────┼─┤ JS    │ │
 │ └───────┘ │         │        │ └───────┘ │             │        │ └───────┘ │
 │           │         │        │           │             │        │           │
-│           │         │        │           x◄────────────┤        │           │
-│           │         │        │           │ Authorize   │        │           │
-│           x◄────────┘        │           │             │        │           │
-│           │ Logout API       │           x◄────────────┘        │           │
-│           │                  │           │ Logout               │           │
+│           │         │        │           │             │        │           │
+│           │         │        │           │             │        │           │
+│    logout +-*  ◄────┘        │ logoutRPs +-*  ◄────────┘        │           │
+│           │                  │           │                      │           │
+│           │                  │           │                      │           │
 └───────────┘                  └───────────┘                      └───────────┘
 ```
 
@@ -215,16 +185,21 @@ the user has consented to the authentication. The returned tokens can then be
 used as needed.
 
 ```js
+// If successful, returns a Promise containing an IdentityCredential |cred| object.
+// The token for logging in is in cred.token.
 const cred = await navigator.credentials.get({
   mediated: "optional", // "optional" is the default
   federated: {
     providers: [{
-      url: "https://idp.example",
-      clientId: "123"
+      configURL: "https://idp.example/fedcm.json",
+      clientId: "123",
+      nonce: "1234"
     }]
   }
 });
-const tokens = await cred.login({nonce: "1234"});
+if (cred) {
+  const token = cred.token;
+}
 ```
 
 The `login` method will call into the IDP's
@@ -232,61 +207,6 @@ The `login` method will call into the IDP's
 [Accounts Endpoint](#accounts_endpoint),
 [Client Metadata Endpoint](#client_metadata_endpoint) and
 [Token Endpoint](#token_endpoint).
-
-
-##### Mediation Values
-
-The `get` request for the `FederatedCredential` uses the `mediation` parameter
-to determine if and when to prompt the user.
-
-* `silent`: will attempt to return an existing credential, will never prompt
-   the user
-* `required`: will always prompt the user even if an existing credential could
-   be returned
-* `optional`: will attempt to return an existing credential, will prompt the
-   user if unable
-
-#### RP Initiated Logout
-
-Used for when the RP wishes to log the user out of their system. Used to clean
-up internal browser state.
-
-```js
-const cred = await navigator.credentials.get({
-  mediated: “silent”,
-  federated: {
-    providers: [{
-      url: "https://idp.example",
-      clientId: "123"
-    }]
-  }
-});
-
-cred.logout();
-```
-
-Does not call into the IDP API.
-
-#### Revocation
-
-Provides the capabilities for the RP to tell the IDP to destroy any token
-created for the RP.
-
-```js
-const cred = await navigator.credentials.get({
-  mediated: "silent",
-  federated: {
-    providers: [{
-      url: "https://idp.example",
-      clientId: "123"
-    }]
-  }
-});
-cred.revoke();
-```
-
-The `revoke` method will call into the IDP's
-[Revocation Endpoint](#revocation_endpoint).
 
 #### Personalized Login Buttons
 
