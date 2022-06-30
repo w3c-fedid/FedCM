@@ -6,7 +6,7 @@
   <link href="https://www.w3.org/StyleSheets/TR/2021/cg-draft" rel="stylesheet">
   <meta content="Bikeshed version 37b7e7e68, updated Fri May 27 15:08:11 2022 -0700" name="generator">
   <link href="https://fedidcg.github.io/FedCM/" rel="canonical">
-  <meta content="ba85307802907c8cfe6624935267e5eb41584399" name="document-revision">
+  <meta content="3c5c3e178a5f5f87ed8c4f09174417f4d754190e" name="document-revision">
 <style>
 dl.domintro dt {
     font-family: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
@@ -591,7 +591,7 @@ c-[il] { color: #000000 } /* Literal.Number.Integer.Long */
   <div class="head">
    <p data-fill-with="logo"><a class="logo" href="https://www.w3.org/"> <img alt="W3C" height="48" src="https://www.w3.org/StyleSheets/TR/2021/logos/W3C" width="72"> </a> </p>
    <h1 class="p-name no-ref" id="title">Federated Credential Management API</h1>
-   <p id="w3c-state"><a href="https://www.w3.org/standards/types#CG-DRAFT">Draft Community Group Report</a>, <time class="dt-updated" datetime="2022-06-29">29 June 2022</time></p>
+   <p id="w3c-state"><a href="https://www.w3.org/standards/types#CG-DRAFT">Draft Community Group Report</a>, <time class="dt-updated" datetime="2022-06-30">30 June 2022</time></p>
    <div data-fill-with="spec-metadata">
     <dl>
      <dt>This version:
@@ -864,7 +864,7 @@ entries provided by the <a data-link-type="dfn" href="#identity-provider" id="re
    <h2 class="heading settled" data-level="2" id="examples"><span class="secno">2. </span><span class="content">Examples</span><a class="self-link" href="#examples"></a></h2>
    <p>This specification defines a new <code class="idl"><a data-link-type="idl" href="#identitycredential" id="ref-for-identitycredential">IdentityCredential</a></code> type and internal
 algorithms to allow the exchange of identity between <a data-link-type="dfn" href="#idp" id="ref-for-idp③">IDP</a>s and <a data-link-type="dfn" href="#rp" id="ref-for-rp③">RP</a>s.
-When it succeeds, it returns to the <a data-link-type="dfn" href="#rp" id="ref-for-rp④">RP</a> a signed <a data-link-type="dfn" href="#id-token" id="ref-for-id-token">id token</a> which the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑤">RP</a> can use to authenticate the user.</p>
+When it succeeds, it returns to the <a data-link-type="dfn" href="#rp" id="ref-for-rp④">RP</a> a signed <a data-link-type="dfn" href="#token" id="ref-for-token">token</a> which the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑤">RP</a> can use to authenticate the user.</p>
    <div class="example" id="example-15cbad4c">
     <a class="self-link" href="#example-15cbad4c"></a> Example showing how a website allowing for a single logged in account
 could be implemented. 
@@ -943,7 +943,7 @@ becoming <a data-link-type="dfn" href="#global-identifier" id="ref-for-global-id
     <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="high-level-api">high-level API</dfn>
     <dd data-md>
      <p>A use case specific API, as opposed to a <a data-link-type="dfn" href="#low-level-api" id="ref-for-low-level-api">low-level API</a>. See also <a href="https://w3ctag.github.io/design-principles/#high-level-low-level">high level vs low level</a>.</p>
-    <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="id-token">id token</dfn>
+    <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="token">token</dfn>
     <dd data-md>
      <p>TODO(goto): find existing definition.</p>
     <dt data-md><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="identity-provider">Identity Provider</dfn>
@@ -1053,7 +1053,7 @@ intermediation of cooperating <a data-link-type="dfn" href="#idp" id="ref-for-id
 │           │   │              │           │     ├────────────► *-+ client    │
 │           │   │              │           │     │                │ metadata  │
 │           │   │              │           │     │                │           │
-│           │   │              │           │     ├────────────► *-+ id_token  │
+│           │   │              │           │     ├────────────► *-+ token     │
 │           │   │              │           │     │                │           │
 │           │   │              │           │     │                │           │
 │           │   │              │           │     │                │           │
@@ -1126,9 +1126,9 @@ identity federation.</p>
       |                               | "client_id, cookies, account"   |
       |                               |-------------------------------->|
       |                               |<--------------------------------| "{"
-      |                               |                                 |   "id_token: ...,"
+      |                               |                                 |   "token: ...,"
       |                               |                                 | "}"
-      |                "{ id_token }" |                                 |
+      |                "{ token }"    |                                 |
       |<------------------------------|                                 |
       |                               |                                 |
       |                               |                                 |
@@ -1343,7 +1343,7 @@ a vector graphic format (like SVG).</p>
 </pre>
    </div>
    <h3 class="heading settled" data-level="5.4" id="idp-api-id-token-endpoint"><span class="secno">5.4. </span><span class="content">ID Token</span><a class="self-link" href="#idp-api-id-token-endpoint"></a></h3>
-   <p>The ID Token endpoint is responsible for <a data-link-type="dfn" href="#minting" id="ref-for-minting">minting</a> a new <a data-link-type="dfn" href="#id-token" id="ref-for-id-token①">id token</a> for the user.</p>
+   <p>The ID Token endpoint is responsible for <a data-link-type="dfn" href="#minting" id="ref-for-minting">minting</a> a new <a data-link-type="dfn" href="#token" id="ref-for-token①">token</a> for the user.</p>
    <p>The ID Token endpoint is fetched
 (a) as a <strong>POST</strong> request,
 (b) <strong>with</strong> <a data-link-type="dfn" href="#idp" id="ref-for-idp②①">IDP</a> cookies,
@@ -1380,15 +1380,15 @@ account_id=123&amp;client_id=client1234&amp;nonce=Ct60bD&amp;disclosure_text_sho
    </div>
    <p>The response is parsed as a JSON file expecting the following properties:</p>
    <dl>
-    <dt data-md><dfn class="idl-code" data-dfn-for="id_token_endpoint_response" data-dfn-type="argument" data-export id="dom-id_token_endpoint_response-id_token"><code>id_token</code><a class="self-link" href="#dom-id_token_endpoint_response-id_token"></a></dfn>
+    <dt data-md><dfn class="idl-code" data-dfn-for="id_token_endpoint_response" data-dfn-type="argument" data-export id="dom-id_token_endpoint_response-token"><code>token</code><a class="self-link" href="#dom-id_token_endpoint_response-token"></a></dfn>
     <dd data-md>
-     <p>The resulting <a data-link-type="dfn" href="#id-token" id="ref-for-id-token②">id token</a>.</p>
+     <p>The resulting <a data-link-type="dfn" href="#token" id="ref-for-token②">token</a>.</p>
    </dl>
    <p>For example:</p>
-   <div class="example" id="example-e01ff354">
-    <a class="self-link" href="#example-e01ff354"></a> 
+   <div class="example" id="example-9a912242">
+    <a class="self-link" href="#example-9a912242"></a> 
 <pre class="language-json highlight"><c- p>{</c->
-  <c- f>"id_token"</c-> <c- p>:</c-> <c- u>"eyJC...J9.eyJzdWTE2...MjM5MDIyfQ.SflV_adQssw....5c"</c->
+  <c- f>"token"</c-> <c- p>:</c-> <c- u>"eyJC...J9.eyJzdWTE2...MjM5MDIyfQ.SflV_adQssw....5c"</c->
 <c- p>}</c->
 </pre>
    </div>
@@ -1416,10 +1416,10 @@ the <a data-link-type="dfn" href="#rp" id="ref-for-rp②⑧">RP</a>.</p>
 the exchange of the user’s identity.</p>
    <p>The Sign-up and Sign-in APIs are used by the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party③⑦">Relying Party</a>s to ask the browser
 to intermediate the relationship with the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②②">Identity Provider</a> and the
-provisioning of an <a data-link-type="dfn" href="#id-token" id="ref-for-id-token③">id token</a>.</p>
+provisioning of a <a data-link-type="dfn" href="#token" id="ref-for-token③">token</a>.</p>
    <p class="note" role="note"><span>NOTE:</span> The <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party③⑧">Relying Party</a> makes no delineation between Sign-up and Sign-in, but
 rather calls the same API indistinguishably.</p>
-   <p>If all goes well, the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party③⑨">Relying Party</a> receives back an <code class="idl"><a data-link-type="idl" href="#identitycredential" id="ref-for-identitycredential①">IdentityCredential</a></code> which contains an <a data-link-type="dfn" href="#id-token" id="ref-for-id-token④">id token</a> in the form of a signed <a data-link-type="biblio" href="https://datatracker.ietf.org/doc/html/rfc7519"><cite>JWT</cite></a> which it can use to
+   <p>If all goes well, the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party③⑨">Relying Party</a> receives back an <code class="idl"><a data-link-type="idl" href="#identitycredential" id="ref-for-identitycredential①">IdentityCredential</a></code> which contains a <a data-link-type="dfn" href="#token" id="ref-for-token④">token</a> in the form of a signed <a data-link-type="biblio" href="https://datatracker.ietf.org/doc/html/rfc7519"><cite>JWT</cite></a> which it can use to
 authenticate the user.</p>
    <div class="example" id="example-899750f6">
     <a class="self-link" href="#example-899750f6"></a> 
@@ -1459,13 +1459,14 @@ access to the appropriate browser capabilities.</p>
    <p>This specification introduces a new type of <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#credential" id="ref-for-credential①">Credential</a></code>, called an <code class="idl"><a data-link-type="idl" href="#identitycredential" id="ref-for-identitycredential②">IdentityCredential</a></code>:</p>
 <pre class="idl highlight def">[<a class="idl-code" data-link-type="extended-attribute" href="https://webidl.spec.whatwg.org/#Exposed" id="ref-for-Exposed"><c- g>Exposed</c-></a>=<c- n>Window</c->, <a class="idl-code" data-link-type="extended-attribute" href="https://webidl.spec.whatwg.org/#SecureContext" id="ref-for-SecureContext"><c- g>SecureContext</c-></a>]
 <c- b>interface</c-> <dfn class="dfn-paneled idl-code" data-dfn-type="interface" data-export id="identitycredential"><code><c- g>IdentityCredential</c-></code></dfn> : <a data-link-type="idl-name" href="https://w3c.github.io/webappsec-credential-management/#credential" id="ref-for-credential②"><c- n>Credential</c-></a> {
-  <c- b>readonly</c-> <c- b>attribute</c-> <a class="idl-code" data-link-type="interface" href="https://webidl.spec.whatwg.org/#idl-USVString" id="ref-for-idl-USVString"><c- b>USVString</c-></a>? <dfn class="dfn-paneled idl-code" data-dfn-for="IdentityCredential" data-dfn-type="attribute" data-export data-readonly data-type="USVString?" id="dom-identitycredential-idtoken"><code><c- g>idToken</c-></code></dfn>;
+  <c- b>readonly</c-> <c- b>attribute</c-> <a class="idl-code" data-link-type="interface" href="https://webidl.spec.whatwg.org/#idl-USVString" id="ref-for-idl-USVString"><c- b>USVString</c-></a>? <dfn class="dfn-paneled idl-code" data-dfn-for="IdentityCredential" data-dfn-type="attribute" data-export data-readonly data-type="USVString?" id="dom-identitycredential-token"><code><c- g>token</c-></code></dfn>;
 };
 </pre>
    <dl>
-    <dt data-md><dfn class="idl-code" data-dfn-for="IdentityCredential" data-dfn-type="argument" data-export id="dom-identitycredential-idtoken①"><code>idToken</code><a class="self-link" href="#dom-identitycredential-idtoken①"></a></dfn>
+    <dt data-md><dfn class="idl-code" data-dfn-for="IdentityCredential" data-dfn-type="argument" data-export id="dom-identitycredential-token①"><code>token</code><a class="self-link" href="#dom-identitycredential-token①"></a></dfn>
     <dd data-md>
-     <p>The <code class="idl"><a data-link-type="idl" href="#dom-identitycredential-idtoken" id="ref-for-dom-identitycredential-idtoken">idToken</a></code>'s attribute getter returns the value it is set to. It represents the minted ID token provided by the <a data-link-type="dfn" href="#idp" id="ref-for-idp②⑨">IDP</a>.</p>
+     <p>The <code class="idl"><a data-link-type="idl" href="#dom-identitycredential-token" id="ref-for-dom-identitycredential-token">token</a></code>'s attribute getter returns the value it is set to.
+It represents the minted <a data-link-type="dfn" href="#token" id="ref-for-token⑤">token</a> provided by the <a data-link-type="dfn" href="#idp" id="ref-for-idp②⑨">IDP</a>.</p>
    </dl>
    <p>The main entrypoint in this specification is through the entrypoints exposed
 by the <a data-link-type="biblio" href="https://w3c.github.io/webappsec-credential-management/"><cite>Credential Management</cite></a> API.</p>
@@ -1546,7 +1547,7 @@ requests.</p>
     <li data-md>
      <p>Let <var>token</var> be the result of running the <a data-link-type="dfn" href="#create-tokens" id="ref-for-create-tokens">create tokens</a> algorithm.</p>
     <li data-md>
-     <p>Set <var>credential</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identitycredential-idtoken" id="ref-for-dom-identitycredential-idtoken①">idToken</a></code> to <var>token</var>.</p>
+     <p>Set <var>credential</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identitycredential-token" id="ref-for-dom-identitycredential-token①">token</a></code> to <var>token</var>.</p>
     <li data-md>
      <p>return <var>credential</var>.</p>
    </ol>
@@ -1647,7 +1648,7 @@ accounts chooser, or null if no account is selected.</p>
     <li data-md>
      <p>Let <var>tokens</var> be the result of making a POST request described in <a href="#idp-api-id-token-endpoint">§ 5.4 ID Token</a>.</p>
     <li data-md>
-     <p>Return <var>tokens</var>["id_token"].</p>
+     <p>Return <var>tokens</var>["token"].</p>
    </ol>
    <p>The <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="fetch-the-manifest">fetch the manifest</dfn> algorithm accepts an <code class="idl"><a data-link-type="idl" href="#dictdef-identityprovider" id="ref-for-dictdef-identityprovider③">IdentityProvider</a></code> <var>provider</var> and returns a <a data-link-type="dfn" href="#manifest" id="ref-for-manifest①">Manifest</a> object:</p>
    <ol>
@@ -2028,7 +2029,7 @@ site can invoke the API, <a data-link-type="dfn" href="#rp" id="ref-for-rp④⑥
 collects or use that information in an acceptable way.</p>
     <li data-md>
      <p><a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider③①">Identity Provider</a>s (<a data-link-type="dfn" href="#idp" id="ref-for-idp④⑥">IDP</a>s) are third-party websites that are the target of a FedCM call to
-attempt to fetch an <a data-link-type="dfn" href="#id-token" id="ref-for-id-token⑤">id token</a>. Usually,the <a data-link-type="dfn" href="#idp" id="ref-for-idp④⑦">IDP</a> has a higher level of trust than the <a data-link-type="dfn" href="#rp" id="ref-for-rp④⑦">RP</a> since it already has the user’s personal information, but it is possible that the <a data-link-type="dfn" href="#idp" id="ref-for-idp④⑧">IDP</a> might use the user’s information in non-approved ways. In addition, it is possible that the <a data-link-type="dfn" href="#idp" id="ref-for-idp④⑨">IDP</a> specified in the API call may not be an <a data-link-type="dfn" href="#idp" id="ref-for-idp⑤⓪">IDP</a> the user knows about. In this case, it
+attempt to fetch a <a data-link-type="dfn" href="#token" id="ref-for-token⑥">token</a>. Usually,the <a data-link-type="dfn" href="#idp" id="ref-for-idp④⑦">IDP</a> has a higher level of trust than the <a data-link-type="dfn" href="#rp" id="ref-for-rp④⑦">RP</a> since it already has the user’s personal information, but it is possible that the <a data-link-type="dfn" href="#idp" id="ref-for-idp④⑧">IDP</a> might use the user’s information in non-approved ways. In addition, it is possible that the <a data-link-type="dfn" href="#idp" id="ref-for-idp④⑨">IDP</a> specified in the API call may not be an <a data-link-type="dfn" href="#idp" id="ref-for-idp⑤⓪">IDP</a> the user knows about. In this case, it
 likely does not have personal user information in advance.</p>
     <li data-md>
      <p>A <a data-link-type="dfn" href="#tracker" id="ref-for-tracker">tracker</a> is a third-party website that is not an <a data-link-type="dfn" href="#idp" id="ref-for-idp⑤①">IDP</a> but could abuse the FedCM API
@@ -2835,8 +2836,7 @@ able to rescind the access to that identification, for instance by logging out. 
 consent for a purpose different from that for which the information was collected. This attack
 happens when <a data-link-type="dfn" href="#idp" id="ref-for-idp①⓪④">IDP</a>s misuse the the information collected to enable sign-in for other
 purposes.</p>
-   <p>Existing federation protocols require that the <a data-link-type="dfn" href="#idp" id="ref-for-idp①⓪⑤">IDP</a> know which service is requesting an ID token
-in order to allow identity federation. Identity providers can use this fact to build profiles of
+   <p>Existing federation protocols require that the <a data-link-type="dfn" href="#idp" id="ref-for-idp①⓪⑤">IDP</a> know which service is requesting a <a data-link-type="dfn" href="#token" id="ref-for-token⑦">token</a> in order to allow identity federation. Identity providers can use this fact to build profiles of
 users across sites where the user has decided to use federation with the same account. This profile
 could be used, for example, to serve targeted advertisements to those users browsing on sites that
 the IDP controls.</p>
@@ -3149,8 +3149,6 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <li><a href="#identity-provider">Identity Provider</a><span>, in § 3</span>
    <li><a href="#dictdef-identityprovider">IdentityProvider</a><span>, in § 7.3</span>
    <li><a href="#idp">IDP</a><span>, in § 3</span>
-   <li><a href="#id-token">id token</a><span>, in § 3</span>
-   <li><a href="#dom-identitycredential-idtoken">idToken</a><span>, in § 7.2</span>
    <li><a href="#joining">joining</a><span>, in § 3</span>
    <li><a href="#logged-in">logged-in</a><span>, in § 3</span>
    <li><a href="#logged-out">logged-out</a><span>, in § 3</span>
@@ -3175,6 +3173,12 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <li><a href="#sign-up">sign-up</a><span>, in § 7.4</span>
    <li><a href="#site">site</a><span>, in § 3</span>
    <li><a href="#terms-of-service">Terms of Service</a><span>, in § 3</span>
+   <li>
+    token
+    <ul>
+     <li><a href="#dom-identitycredential-token">attribute for IdentityCredential</a><span>, in § 7.2</span>
+     <li><a href="#token">definition of</a><span>, in § 3</span>
+    </ul>
    <li><a href="#tracker">Tracker</a><span>, in § 3</span>
    <li><a href="#unregistered">unregistered</a><span>, in § 3</span>
    <li><a href="#dom-identitycredentiallogoutrpsrequest-url">url</a><span>, in § 7.4.1</span>
@@ -3686,7 +3690,7 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
   <h2 class="no-num no-ref heading settled" id="idl-index"><span class="content">IDL Index</span><a class="self-link" href="#idl-index"></a></h2>
 <pre class="idl highlight def">[<a class="idl-code" data-link-type="extended-attribute" href="https://webidl.spec.whatwg.org/#Exposed"><c- g>Exposed</c-></a>=<c- n>Window</c->, <a class="idl-code" data-link-type="extended-attribute" href="https://webidl.spec.whatwg.org/#SecureContext"><c- g>SecureContext</c-></a>]
 <c- b>interface</c-> <a href="#identitycredential"><code><c- g>IdentityCredential</c-></code></a> : <a data-link-type="idl-name" href="https://w3c.github.io/webappsec-credential-management/#credential"><c- n>Credential</c-></a> {
-  <c- b>readonly</c-> <c- b>attribute</c-> <a class="idl-code" data-link-type="interface" href="https://webidl.spec.whatwg.org/#idl-USVString"><c- b>USVString</c-></a>? <a data-readonly data-type="USVString?" href="#dom-identitycredential-idtoken"><code><c- g>idToken</c-></code></a>;
+  <c- b>readonly</c-> <c- b>attribute</c-> <a class="idl-code" data-link-type="interface" href="https://webidl.spec.whatwg.org/#idl-USVString"><c- b>USVString</c-></a>? <a data-readonly data-type="USVString?" href="#dom-identitycredential-token"><code><c- g>token</c-></code></a>;
 };
 
 <c- b>partial</c-> <c- b>dictionary</c-> <a class="idl-code" data-link-type="dictionary" href="https://w3c.github.io/webappsec-credential-management/#dictdef-credentialrequestoptions"><c- g>CredentialRequestOptions</c-></a> {
@@ -3761,13 +3765,15 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
     <li><a href="#ref-for-high-level-api">3. Terminology</a>
    </ul>
   </aside>
-  <aside class="dfn-panel" data-for="id-token">
-   <b><a href="#id-token">#id-token</a></b><b>Referenced in:</b>
+  <aside class="dfn-panel" data-for="token">
+   <b><a href="#token">#token</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-id-token">2. Examples</a>
-    <li><a href="#ref-for-id-token①">5.4. ID Token</a> <a href="#ref-for-id-token②">(2)</a>
-    <li><a href="#ref-for-id-token③">7. The Browser API</a> <a href="#ref-for-id-token④">(2)</a>
-    <li><a href="#ref-for-id-token⑤">9.1. Principals</a>
+    <li><a href="#ref-for-token">2. Examples</a>
+    <li><a href="#ref-for-token①">5.4. ID Token</a> <a href="#ref-for-token②">(2)</a>
+    <li><a href="#ref-for-token③">7. The Browser API</a> <a href="#ref-for-token④">(2)</a>
+    <li><a href="#ref-for-token⑤">7.2. The IdentityCredential Interface</a>
+    <li><a href="#ref-for-token⑥">9.1. Principals</a>
+    <li><a href="#ref-for-token⑦">9.4.4. Secondary Use</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="identity-provider">
@@ -4080,11 +4086,11 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
     <li><a href="#ref-for-identitycredential⑤">7.4.1. IDP Sign-out</a>
    </ul>
   </aside>
-  <aside class="dfn-panel" data-for="dom-identitycredential-idtoken">
-   <b><a href="#dom-identitycredential-idtoken">#dom-identitycredential-idtoken</a></b><b>Referenced in:</b>
+  <aside class="dfn-panel" data-for="dom-identitycredential-token">
+   <b><a href="#dom-identitycredential-token">#dom-identitycredential-token</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dom-identitycredential-idtoken">7.2. The IdentityCredential Interface</a>
-    <li><a href="#ref-for-dom-identitycredential-idtoken①">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a>
+    <li><a href="#ref-for-dom-identitycredential-token">7.2. The IdentityCredential Interface</a>
+    <li><a href="#ref-for-dom-identitycredential-token①">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="dom-credentialrequestoptions-identity">
