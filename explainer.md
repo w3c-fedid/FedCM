@@ -112,7 +112,7 @@ The following is an example of a website allowing a user to login with
 ```js
 async function login() {
   return await navigator.credentials.get({
-    mediated: “optional”, // “optional” is the default
+    mediated: "optional", // "optional" is the default
     identity: {
       providers: [{
         configURL: "https://idp.example/fedcm.json",
@@ -312,7 +312,7 @@ Optional cross-origin iframe support is needed because there are cases, such as
 learning management systems, where third-party content is embedded inside the LMS.
 That third-party content may embed other content as well, the embedded iframes
 need to be able to retrieve access tokens for the user in order to request resources.
-In this case, the `sameOriginAsAncestor` setting would not help as the embeddings are 
+In this case, the `sameOriginAsAncestor` setting would not help as the embeddings are
 specifically cross site. See [fedidcg/use-case-library issue #13](https://github.com/fedidcg/use-case-library/issues/13)
 for more context.
 
