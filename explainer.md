@@ -111,13 +111,17 @@ The following is an example of a website allowing a user to login with
 
 ```js
 async function login() {
+  // Prompt the user to select an account from the IDP to use for
+  // federated login within the RP. If resolved successfully, the Promise
+  // returns an IdentityCredential object from which the `token` can be
+  // extracted.
   return await navigator.credentials.get({
-    mediated: "optional", // "optional" is the default
+    mediation: "optional", // "optional" is the default
     identity: {
       providers: [{
         configURL: "https://idp.example/fedcm.json",
         clientId: "123",
-        nonce: "456"
+        nonce: random() // assume we have a method returning a random number
       }]
     }
   });
@@ -188,12 +192,12 @@ used as needed.
 // If successful, returns a Promise containing an IdentityCredential |cred| object.
 // The token for logging in is in cred.token.
 const cred = await navigator.credentials.get({
-  mediated: "optional", // "optional" is the default
+  mediation: "optional", // "optional" is the default
   federated: {
     providers: [{
       configURL: "https://idp.example/fedcm.json",
       clientId: "123",
-      nonce: "1234"
+      nonce: random()
     }]
   }
 });
@@ -260,7 +264,7 @@ There are multiple types of token which can be requested from the IDP.
 
 ```js
 const cred = await navigator.credentials.get({
-  mediated: "optional", // "optional" is the default
+  mediation: "optional", // "optional" is the default
   federated: {
     providers: [{
       url: "https://idp.example",
@@ -269,7 +273,7 @@ const cred = await navigator.credentials.get({
   }
 });
 const tokens = await cred.login({
-  nonce: "1234",
+  nonce: random(),
   tokens: ["access", "refresh", "id"],
   scopes: ["calendar.read", "profile"]
 });
