@@ -6,7 +6,7 @@
   <link href="https://www.w3.org/StyleSheets/TR/2021/cg-draft" rel="stylesheet">
   <meta content="Bikeshed version 37b7e7e68, updated Fri May 27 15:08:11 2022 -0700" name="generator">
   <link href="https://fedidcg.github.io/FedCM/" rel="canonical">
-  <meta content="6e0fd5c3e766aecec429e410e7d0c99beccebd11" name="document-revision">
+  <meta content="f9d5efca432709e3f676a09b53281922054cdd0a" name="document-revision">
 <style>
 dl.domintro dt {
     font-family: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
@@ -591,7 +591,7 @@ c-[il] { color: #000000 } /* Literal.Number.Integer.Long */
   <div class="head">
    <p data-fill-with="logo"><a class="logo" href="https://www.w3.org/"> <img alt="W3C" height="48" src="https://www.w3.org/StyleSheets/TR/2021/logos/W3C" width="72"> </a> </p>
    <h1 class="p-name no-ref" id="title">Federated Credential Management API</h1>
-   <p id="w3c-state"><a href="https://www.w3.org/standards/types#CG-DRAFT">Draft Community Group Report</a>, <time class="dt-updated" datetime="2022-07-01">1 July 2022</time></p>
+   <p id="w3c-state"><a href="https://www.w3.org/standards/types#CG-DRAFT">Draft Community Group Report</a>, <time class="dt-updated" datetime="2022-07-04">4 July 2022</time></p>
    <div data-fill-with="spec-metadata">
     <dl>
      <dt>This version:
@@ -865,8 +865,8 @@ entries provided by the <a data-link-type="dfn" href="#identity-provider" id="re
    <p>This specification defines a new <code class="idl"><a data-link-type="idl" href="#identitycredential" id="ref-for-identitycredential">IdentityCredential</a></code> type and internal
 algorithms to allow the exchange of identity between <a data-link-type="dfn" href="#idp" id="ref-for-idp③">IDP</a>s and <a data-link-type="dfn" href="#rp" id="ref-for-rp③">RP</a>s.
 When it succeeds, it returns to the <a data-link-type="dfn" href="#rp" id="ref-for-rp④">RP</a> a signed <a data-link-type="dfn" href="#token" id="ref-for-token">token</a> which the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑤">RP</a> can use to authenticate the user.</p>
-   <div class="example" id="example-15cbad4c">
-    <a class="self-link" href="#example-15cbad4c"></a> Example showing how a website allowing for a single logged in account
+   <div class="example" id="example-732e6adf">
+    <a class="self-link" href="#example-732e6adf"></a> Example showing how a website allowing for a single logged in account
 could be implemented. 
 <pre class="language-html highlight"><c- p>&lt;</c-><c- f>html</c-><c- p>></c->
 <c- p>&lt;</c-><c- f>head</c-><c- p>></c->
@@ -877,20 +877,17 @@ could be implemented.
 
   <c- p>&lt;</c-><c- f>script</c-><c- p>></c->
   <c- k>async</c-> <c- a>function</c-> login<c- p>()</c-> <c- p>{</c->
-    <c- c1>// This will prompt when !credential["registered"], but</c->
-    <c- c1>// it won’t when credential["registered"].</c->
-    <c- c1>// If the user selects an account updates the credential["registered"]</c->
-    <c- c1>// state and stores any needed account information.</c->
-    <c- c1>// The object will be either registered or unregistered and store information</c->
-    <c- c1>// on if the user should be prompted based on the mediation flag.</c->
-    <c- c1>// TODO: the use of the mediation flag isn’t fully speced out yet.</c->
+    <c- c1>// Prompt the user to select an account from the IDP to use for</c->
+    <c- c1>// federated login within the RP. If resolved successfully, the Promise</c->
+    <c- c1>// returns an IdentityCredential object from which the &lt;code data-opaque bs-autolink-syntax='`token`'>token&lt;/code> can be</c->
+    <c- c1>// extracted.</c->
     <c- k>return</c-> <c- k>await</c-> navigator<c- p>.</c->credentials<c- p>.</c->get<c- p>({</c->
-      mediated<c- o>:</c-> “optional”<c- p>,</c-> <c- c1>// “optional” is the default</c->
+      mediation<c- o>:</c-> <c- u>"optional"</c-><c- p>,</c-> <c- c1>// "optional" is the default</c->
       identity<c- o>:</c-> <c- p>{</c->
         providers<c- o>:</c-> <c- p>[{</c->
           configURL<c- o>:</c-> <c- u>"https://idp.example/manifest.json"</c-><c- p>,</c->
           clientId<c- o>:</c-> <c- u>"123"</c-><c- p>,</c->
-          nonce<c- o>:</c-> <c- u>"456"</c->
+          nonce<c- o>:</c-> random<c- p>()</c-> <c- c1>// assume we have a method returning a random number</c->
         <c- p>}]</c->
       <c- p>}</c->
     <c- p>});</c->
