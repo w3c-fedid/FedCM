@@ -306,20 +306,17 @@ could be implemented.
 
   <script>
   async function login() {
-    // This will prompt when !credential["registered"], but
-    // it won’t when credential["registered"].
-    // If the user selects an account updates the credential["registered"]
-    // state and stores any needed account information.
-    // The object will be either registered or unregistered and store information
-    // on if the user should be prompted based on the mediation flag.
-    // TODO: the use of the mediation flag isn't fully speced out yet.
+    // Prompt the user to select an account from the IDP to use for
+    // federated login within the RP. If resolved successfully, the Promise
+    // returns an IdentityCredential object from which the `token` can be
+    // extracted.
     return await navigator.credentials.get({
-      mediated: “optional”, // “optional” is the default
+      mediation: "optional", // "optional" is the default
       identity: {
         providers: [{
           configURL: "https://idp.example/manifest.json",
           clientId: "123",
-          nonce: "456"
+          nonce: random() // assume we have a method returning a random number
         }]
       }
     });
