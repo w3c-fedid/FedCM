@@ -306,20 +306,17 @@ could be implemented.
 
   <script>
   async function login() {
-    // This will prompt when !credential["registered"], but
-    // it won’t when credential["registered"].
-    // If the user selects an account updates the credential["registered"]
-    // state and stores any needed account information.
-    // The object will be either registered or unregistered and store information
-    // on if the user should be prompted based on the mediation flag.
-    // TODO: the use of the mediation flag isn't fully speced out yet.
+    // Prompt the user to select an account from the IDP to use for
+    // federated login within the RP. If resolved successfully, the Promise
+    // returns an IdentityCredential object from which the `token` can be
+    // extracted.
     return await navigator.credentials.get({
-      mediated: “optional”, // “optional” is the default
+      mediation: "optional", // "optional" is the default
       identity: {
         providers: [{
           configURL: "https://idp.example/manifest.json",
           clientId: "123",
-          nonce: "456"
+          nonce: random() // assume we have a method returning a random number
         }]
       }
     });
@@ -1026,12 +1023,14 @@ dictionary IdentityProvider {
 </xmp>
 
 <dl dfn-type="argument" dfn-for="IdentityProvider">
-    :   <dfn>url</dfn>
-    ::  The URL of the identity provider.
+    :   <dfn>configURL</dfn>
+    ::  The URL of the configuration file for the identity provider.
     :   <dfn>clientId</dfn>
     ::  The [=client id=] provided to the [=RP=] out of band by the [=IDP=]
     :   <dfn>nonce</dfn>
-    ::  A random number of the choice of the [=RP=]. TODO: expand on how this is intended to be used.
+    ::  A random number of the choice of the [=RP=]. It is generally used to associate a client
+        session with a [=token=] and to mitigate replay attacks. Therefore, this value should have
+        sufficient entropy such that it would be hard to guess.
 </dl>
 
 <!-- ============================================================ -->
