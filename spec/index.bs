@@ -37,7 +37,7 @@ spec: credential-management-1; urlPrefix: https://w3c.github.io/webappsec-creden
         type: method
             text: [[CollectFromCredentialStore]](origin, options, sameOriginWithAncestors)
             text: [[Create]](origin, options, sameOriginWithAncestors)
-            text: [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)
+            text: [[DiscoverFromExternalSource]]; url: algorithm-discover-creds
             text: [[Store]](credential, sameOriginWithAncestors)
     type: dfn
         text: signal
@@ -938,11 +938,12 @@ const credential = await navigator.credentials.get({
 
 To do so, this specification does three things:
 
-First, it introduces a new {{Credential}} type, called [[#browser-api-identity-credential-interface]].
+First, it introduces a new {{Credential}} type, called {{IdentityCredential}}.
 
-Second, it introduces an extension to [[#browser-api-credential-request-options]].
+Second, it introduces an extension to {{CredentialRequestOptions}}.
 
-Lastly, it overrides the default implementation of [[#browser-api-rp-sign-in]].
+Lastly, it overrides {{IdentityCredential}}'s implementation of
+    {{Credential/[[DiscoverFromExternalSource]]}}.
 
 <!-- ============================================================ -->
 ## The State Machine ## {#browser-api-state-machine}
@@ -1035,12 +1036,12 @@ dictionary IdentityProvider {
 </dl>
 
 <!-- ============================================================ -->
-## The <code><dfn for="IdentityCredential" method>\[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</dfn></code> internal method ## {#browser-api-rp-sign-in}
+## The <code>\[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</code> internal method ## {#browser-api-rp-sign-in}
 <!-- ============================================================ -->
 
-This algorithm runs in parallel inside the [[CM#algorithm-request]] to request
-credentials and returns a set of {{IdentityCredential}} for the requested
-[=Identity Provider=]s.
+The {{Credential/[[DiscoverFromExternalSource]]}} algorithm runs in parallel inside the
+[[CM#algorithm-request]] to request credentials and returns a set of {{IdentityCredential}} for the
+requested [=Identity Provider=]s.
 
 This [=internal method=] accepts three arguments:
 
@@ -1067,25 +1068,29 @@ NOTE: The {{CredentialRequestOptions/mediation}} flag is currently not used.
 The {{CredentialRequestOptions/signal}} is used as an abort signal for the
 requests.
 
-When this method is invoked, the user agent MUST execute the following algorithm:
+<div algorithm>
+    When the {{IdentityCredential}}'s
+    <dfn for="IdentityCredential" method>\[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</dfn>\
+    algorithm is invoked, the user agent MUST execute the following steps:
 
-  1.  If <var ignore>sameOriginWithAncestors</var> is `false`, return a
-      "{{NotAllowedError}}" {{DOMException}}.
+      1.  If <var ignore>sameOriginWithAncestors</var> is `false`, return a
+          "{{NotAllowedError}}" {{DOMException}}.
 
-      Note: This restriction aims to address the concern raised
-      in [[Security-Origin-Confusion]].
-  1.  Assert: |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"] [=map/exists=].
-  1.  Assert: |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"] [=list/size=] is 1.
+          Note: This restriction aims to address the concern raised
+          in [[Security-Origin-Confusion]].
+      1.  Assert: |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"] [=map/exists=].
+      1.  Assert: |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"] [=list/size=] is 1.
 
-       Note: At some point we would like to support choosing accounts from
-       multiple [=Identity Provider=]s.
-  1. Let |provider| be |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"][0].
-  1. Let |credential| be a new {{IdentityCredential}}.
-  1. Request user consent by running the [=request consent=] algorithm with the |provider|.
-  1. If {{StateMachine/Account State}} is [=unregistered=] then return null.
-  1. Let |token| be the result of running the [=create tokens=] algorithm.
-  1. Set |credential|'s {{IdentityCredential/token}} to |token|.
-  1. return |credential|.
+           Note: At some point we would like to support choosing accounts from
+           multiple [=Identity Provider=]s.
+      1. Let |provider| be |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"][0].
+      1. Let |credential| be a new {{IdentityCredential}}.
+      1. Request user consent by running the [=request consent=] algorithm with the |provider|.
+      1. If {{StateMachine/Account State}} is [=unregistered=] then return null.
+      1. Let |token| be the result of running the [=create tokens=] algorithm.
+      1. Set |credential|'s {{IdentityCredential/token}} to |token|.
+      1. return |credential|.
+</div>
 
 To <dfn>request consent</dfn>:
     1. Let |manifest| be the result of running the [=fetch the manifest=]
