@@ -448,14 +448,6 @@ provides the main security boundary on the web.
 :: The policies described at
     {{client_metadata_endpoint_response/terms_of_service_url}}.
 
-
-: <dfn>logged-out</dfn>
-:: An account is `logged-out` if the user has either not signed into the account
-    or has signed out.
-
-: <dfn>logged-in</dfn>
-:: An account is `logged-in` if the user has successfully signed into the account.
-
 : <dfn>registered</dfn>
 :: The account is `registered` if the user agent thinks that the user has registered an account in
     the [=RP=] using the account from the [=IDP=].
@@ -959,9 +951,12 @@ the following properties:
     ::  Keeps track of whether the user agent is aware that the user has registered an account in
          the [=RP=] or not.
          Can be [=registered=] or [=unregistered=] (by default).
-    :   <dfn>logged in state</dfn>
-    ::  Keeps track of whether the user appears to be logged into the [=RP=] with the account.
-         Can be [=logged-in=] or [=logged-out=] (by default).
+    :   <dfn>allows logout</dfn>
+    ::  Boolean which keeps track of whether the user agent would allow the |account| to be logged
+        out via {{IdentityCredential/logoutRPs()}}. It is initialized to false by default. Note that
+        this value being true does not imply that the user is logged in to the [=RP=] with the
+        account, it merely implies that {{IdentityCredential/logoutRPs()}} has not yet been called
+        on this account after the last successful {{IdentityCredential}} creation with this account.
 </dl>
 
 TODO: add an ASCII image to explain how the states fit into the algorithms.
@@ -1139,8 +1134,7 @@ To <dfn>sign-up</dfn> the user with a given |triple| of (|rpOrigin|, |idpOrigin|
     1. Let |accountState| be [=state machine map=][|triple|].
     1. Change |accountState|'s {{AccountState/registration state}} from [=unregistered=] to
         [=registered=].
-    1. Change |accountState|'s {{AccountState/logged in state}} from [=logged-out=] to
-        [=logged-in=].
+    1. Change |accountState|'s {{AccountState/allows logout}} from false to true.
 </div>
 
 <div algorithm>
@@ -1170,16 +1164,15 @@ To <dfn>select an account</dfn> from the accounts list:
 To <dfn>sign-in</dfn> the user with a given |triple| of (|rpOrigin|, |idpOrigin|, |account|):
     1. Let |accountState| be [=state machine map=][|triple|].
     1. Assert that |accountState|'s {{AccountState/registration state}} is [=registered=]
-    1. Change |accountState|'s {{AccountState/logged in state}} from [=logged-out=] to
-        [=logged-in=].
+    1. Change |accountState|'s {{AccountState/allows logout}} from false to true.
 </div>
 
 <div algorithm>
 To <dfn>create tokens</dfn> given an [=AccountState=] |accountState|, a {{USVString}} |accountId|,
     and an {{IdentityProvider}} |provider|:
-    1. Assert |accountState|'s {{AccountState/registration state}} is [=registered=]
-    1. Assert |accountState|'s {{AccountState/logged in state}} is [=logged-in=]
-    1. Let |request| be a new object
+    1. Assert |accountState|'s {{AccountState/registration state}} is [=registered=].
+    1. Assert |accountState|'s {{AccountState/allows logout}} is true.
+    1. Let |request| be a new object.
         1. Set |request|["account_id"] to |accountId|.
         1. Set |request|["client_id"] to |provider|'s {{IdentityProvider/clientId}}.
         1. Set |request|["nonce"] to |provider|'s {{IdentityProvider/nonce}}.
@@ -1305,11 +1298,11 @@ When this method is invoked, the user agent MUST execute the following algorithm
     1. If [=state machine map=][|triple|] does not exist, continue.
     1. Let |accountState| be [=state machine map=][|triple|].
     1. If the |accountState|'s {{AccountState/registration state}} is [=unregistered=] or
-        |accountState|'s {{AccountState/logged in state}} is [=logged-out=], continue.
+        |accountState|'s {{AccountState/allows logout}} is false, continue.
     1. POST to the |request|'s {{IdentityCredentialLogoutRpsRequest/url}} with the
         [=Relying Parties=] cookies.  This request MUST NOT follow
         [[RFC9110#header.location|HTTP redirects]] and instead abort the request.
-    1. Set the |accountState| {{AccountState/logged in state}} to [=logged-out=]
+    1. Set the |accountState| {{AccountState/allows logout}} to false.
   1. <a for=Promise>Resolve</a> |promise| with |undefined| and return |promise|.
 
 
