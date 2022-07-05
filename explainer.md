@@ -192,7 +192,7 @@ the user has consented to the authentication. The returned tokens can then be
 used as needed.
 
 ```js
-let nonce = random()
+let nonce = random();
 // If successful, returns a Promise containing an IdentityCredential |cred| object.
 // The token for logging in is in cred.token.
 const cred = await navigator.credentials.get({
@@ -276,7 +276,7 @@ const cred = await navigator.credentials.get({
     }]
   }
 });
-let nonce = random()
+let nonce = random();
 const tokens = await cred.login({
   nonce: nonce,
   tokens: ["access", "refresh", "id"],
