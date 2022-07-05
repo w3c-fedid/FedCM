@@ -6,7 +6,7 @@
   <link href="https://www.w3.org/StyleSheets/TR/2021/cg-draft" rel="stylesheet">
   <meta content="Bikeshed version 37b7e7e68, updated Fri May 27 15:08:11 2022 -0700" name="generator">
   <link href="https://fedidcg.github.io/FedCM/" rel="canonical">
-  <meta content="97690b64f22a07a8ff72a50f8b710af16e7e3f48" name="document-revision">
+  <meta content="61211a1f14d8aefb8927794fa2f7a68c4bebd4ba" name="document-revision">
 <style>
 dl.domintro dt {
     font-family: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
@@ -397,6 +397,17 @@ c-[vg] { color: #0077aa } /* Name.Variable.Global */
 c-[vi] { color: #0077aa } /* Name.Variable.Instance */
 c-[il] { color: #000000 } /* Literal.Number.Integer.Long */
 </style>
+<style>/* style-var-click-highlighting */
+
+    var { cursor: pointer; }
+    var.selected0 { background-color: #F4D200; box-shadow: 0 0 0 2px #F4D200; }
+    var.selected1 { background-color: #FF87A2; box-shadow: 0 0 0 2px #FF87A2; }
+    var.selected2 { background-color: #96E885; box-shadow: 0 0 0 2px #96E885; }
+    var.selected3 { background-color: #3EEED2; box-shadow: 0 0 0 2px #3EEED2; }
+    var.selected4 { background-color: #EACFB6; box-shadow: 0 0 0 2px #EACFB6; }
+    var.selected5 { background-color: #82DDFF; box-shadow: 0 0 0 2px #82DDFF; }
+    var.selected6 { background-color: #FFBCF2; box-shadow: 0 0 0 2px #FFBCF2; }
+    </style>
 <style>/* style-darkmode */
 
 @media (prefers-color-scheme: dark) {
@@ -680,7 +691,7 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
       <li><a href="#browser-api-identity-credential-interface"><span class="secno">7.2</span> <span class="content">The IdentityCredential Interface</span></a>
       <li><a href="#browser-api-credential-request-options"><span class="secno">7.3</span> <span class="content">The CredentialRequestOptions</span></a>
       <li>
-       <a href="#browser-api-rp-sign-in"><span class="secno">7.4</span> <span class="content">The <code><span><code>[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</code></span></code> internal method</span></a>
+       <a href="#browser-api-rp-sign-in"><span class="secno">7.4</span> <span class="content">The <code>[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</code> internal method</span></a>
        <ol class="toc">
         <li><a href="#browser-api-idp-sign-out"><span class="secno">7.4.1</span> <span class="content">IDP Sign-out</span></a>
        </ol>
@@ -1431,9 +1442,9 @@ authenticate the user.</p>
 </pre>
    </div>
    <p>To do so, this specification does three things:</p>
-   <p>First, it introduces a new <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#credential" id="ref-for-credential">Credential</a></code> type, called <a href="#browser-api-identity-credential-interface">§ 7.2 The IdentityCredential Interface</a>.</p>
-   <p>Second, it introduces an extension to <a href="#browser-api-credential-request-options">§ 7.3 The CredentialRequestOptions</a>.</p>
-   <p>Lastly, it overrides the default implementation of <a href="#browser-api-rp-sign-in">§ 7.4 The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a>.</p>
+   <p>First, it introduces a new <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#credential" id="ref-for-credential">Credential</a></code> type, called <code class="idl"><a data-link-type="idl" href="#identitycredential" id="ref-for-identitycredential②">IdentityCredential</a></code>.</p>
+   <p>Second, it introduces an extension to <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dictdef-credentialrequestoptions" id="ref-for-dictdef-credentialrequestoptions">CredentialRequestOptions</a></code>.</p>
+   <p>Lastly, it overrides <code class="idl"><a data-link-type="idl" href="#identitycredential" id="ref-for-identitycredential③">IdentityCredential</a></code>'s implementation of <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#algorithm-discover-creds" id="ref-for-algorithm-discover-creds">[[DiscoverFromExternalSource]]</a></code>.</p>
    <h3 class="heading settled" data-level="7.1" id="browser-api-state-machine"><span class="secno">7.1. </span><span class="content">The State Machine</span><a class="self-link" href="#browser-api-state-machine"></a></h3>
    <p>Internally, the FedCM API manages a set of <var>credential</var>s which are associated
 with an <a data-link-type="dfn" href="#rp" id="ref-for-rp③⓪">RP</a> and <a data-link-type="dfn" href="#idp" id="ref-for-idp②⑧">IDP</a> pair. Those <var>credential</var> objects have different
@@ -1453,7 +1464,7 @@ access to the appropriate browser capabilities.</p>
  Can be <a data-link-type="dfn" href="#logged-in" id="ref-for-logged-in">logged-in</a> or <a data-link-type="dfn" href="#logged-out" id="ref-for-logged-out">logged-out</a> (by default).</p>
    </dl>
    <h3 class="heading settled" data-level="7.2" id="browser-api-identity-credential-interface"><span class="secno">7.2. </span><span class="content">The IdentityCredential Interface</span><a class="self-link" href="#browser-api-identity-credential-interface"></a></h3>
-   <p>This specification introduces a new type of <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#credential" id="ref-for-credential①">Credential</a></code>, called an <code class="idl"><a data-link-type="idl" href="#identitycredential" id="ref-for-identitycredential②">IdentityCredential</a></code>:</p>
+   <p>This specification introduces a new type of <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#credential" id="ref-for-credential①">Credential</a></code>, called an <code class="idl"><a data-link-type="idl" href="#identitycredential" id="ref-for-identitycredential④">IdentityCredential</a></code>:</p>
 <pre class="idl highlight def">[<a class="idl-code" data-link-type="extended-attribute" href="https://webidl.spec.whatwg.org/#Exposed" id="ref-for-Exposed"><c- g>Exposed</c-></a>=<c- n>Window</c->, <a class="idl-code" data-link-type="extended-attribute" href="https://webidl.spec.whatwg.org/#SecureContext" id="ref-for-SecureContext"><c- g>SecureContext</c-></a>]
 <c- b>interface</c-> <dfn class="dfn-paneled idl-code" data-dfn-type="interface" data-export id="identitycredential"><code><c- g>IdentityCredential</c-></code></dfn> : <a data-link-type="idl-name" href="https://w3c.github.io/webappsec-credential-management/#credential" id="ref-for-credential②"><c- n>Credential</c-></a> {
   <c- b>readonly</c-> <c- b>attribute</c-> <a class="idl-code" data-link-type="interface" href="https://webidl.spec.whatwg.org/#idl-USVString" id="ref-for-idl-USVString"><c- b>USVString</c-></a>? <dfn class="dfn-paneled idl-code" data-dfn-for="IdentityCredential" data-dfn-type="attribute" data-export data-readonly data-type="USVString?" id="dom-identitycredential-token"><code><c- g>token</c-></code></dfn>;
@@ -1468,8 +1479,8 @@ It represents the minted <a data-link-type="dfn" href="#token" id="ref-for-token
    <p>The main entrypoint in this specification is through the entrypoints exposed
 by the <a data-link-type="biblio" href="https://w3c.github.io/webappsec-credential-management/"><cite>Credential Management</cite></a> API.</p>
    <h3 class="heading settled" data-level="7.3" id="browser-api-credential-request-options"><span class="secno">7.3. </span><span class="content">The CredentialRequestOptions</span><a class="self-link" href="#browser-api-credential-request-options"></a></h3>
-   <p>This specification starts by introducing an extension to the <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dictdef-credentialrequestoptions" id="ref-for-dictdef-credentialrequestoptions">CredentialRequestOptions</a></code> object:</p>
-<pre class="idl highlight def"><c- b>partial</c-> <c- b>dictionary</c-> <a class="idl-code" data-link-type="dictionary" href="https://w3c.github.io/webappsec-credential-management/#dictdef-credentialrequestoptions" id="ref-for-dictdef-credentialrequestoptions①"><c- g>CredentialRequestOptions</c-></a> {
+   <p>This specification starts by introducing an extension to the <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dictdef-credentialrequestoptions" id="ref-for-dictdef-credentialrequestoptions①">CredentialRequestOptions</a></code> object:</p>
+<pre class="idl highlight def"><c- b>partial</c-> <c- b>dictionary</c-> <a class="idl-code" data-link-type="dictionary" href="https://w3c.github.io/webappsec-credential-management/#dictdef-credentialrequestoptions" id="ref-for-dictdef-credentialrequestoptions②"><c- g>CredentialRequestOptions</c-></a> {
   <a data-link-type="idl-name" href="#dictdef-identitycredentialrequestoptions" id="ref-for-dictdef-identitycredentialrequestoptions"><c- n>IdentityCredentialRequestOptions</c-></a> <dfn class="dfn-paneled idl-code" data-dfn-for="CredentialRequestOptions" data-dfn-type="dict-member" data-export data-type="IdentityCredentialRequestOptions " id="dom-credentialrequestoptions-identity"><code><c- g>identity</c-></code></dfn>;
 };
 </pre>
@@ -1500,9 +1511,9 @@ the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④�
 session with a <a data-link-type="dfn" href="#token" id="ref-for-token⑥">token</a> and to mitigate replay attacks. Therefore, this value should have
 sufficient entropy such that it would be hard to guess.</p>
    </dl>
-   <h3 class="heading settled" data-level="7.4" id="browser-api-rp-sign-in"><span class="secno">7.4. </span><span class="content">The <code><dfn class="idl-code" data-dfn-for="IdentityCredential" data-dfn-type="method" data-export id="dom-identitycredential-discoverfromexternalsource-slot"><code>[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</code><a class="self-link" href="#dom-identitycredential-discoverfromexternalsource-slot"></a></dfn></code> internal method</span><a class="self-link" href="#browser-api-rp-sign-in"></a></h3>
-   <p>This algorithm runs in parallel inside the <a href="https://w3c.github.io/webappsec-credential-management/#algorithm-request">Credential Management § algorithm-request</a> to request
-credentials and returns a set of <code class="idl"><a data-link-type="idl" href="#identitycredential" id="ref-for-identitycredential③">IdentityCredential</a></code> for the requested <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②④">Identity Provider</a>s.</p>
+   <h3 class="heading settled" data-level="7.4" id="browser-api-rp-sign-in"><span class="secno">7.4. </span><span class="content">The <code>[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</code> internal method</span><a class="self-link" href="#browser-api-rp-sign-in"></a></h3>
+   <p>The <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#algorithm-discover-creds" id="ref-for-algorithm-discover-creds①">[[DiscoverFromExternalSource]]</a></code> algorithm runs in parallel inside the <a href="https://w3c.github.io/webappsec-credential-management/#algorithm-request">Credential Management § algorithm-request</a> to request credentials and returns a set of <code class="idl"><a data-link-type="idl" href="#identitycredential" id="ref-for-identitycredential⑤">IdentityCredential</a></code> for the
+requested <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②④">Identity Provider</a>s.</p>
    <p>This <a data-link-type="dfn" href="https://tc39.github.io/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots" id="ref-for-sec-ordinary-object-internal-methods-and-internal-slots">internal method</a> accepts three arguments:</p>
    <dl>
     <dt data-md><dfn class="idl-code" data-dfn-for="IdentityCredential/[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)" data-dfn-type="argument" data-export id="dom-identitycredential-discoverfromexternalsource-origin-options-sameoriginwithancestors-origin"><code>origin</code><a class="self-link" href="#dom-identitycredential-discoverfromexternalsource-origin-options-sameoriginwithancestors-origin"></a></dfn>
@@ -1511,7 +1522,7 @@ credentials and returns a set of <code class="idl"><a data-link-type="idl" href=
  calling <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dom-credentialscontainer-get" id="ref-for-dom-credentialscontainer-get">get()</a></code> implementation, i.e., <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#credentialscontainer" id="ref-for-credentialscontainer">CredentialsContainer</a></code>'s <a data-link-type="abstract-op" href="https://w3c.github.io/webappsec-credential-management/#abstract-opdef-request-a-credential" id="ref-for-abstract-opdef-request-a-credential">Request a <code>Credential</code></a> abstract operation.</p>
     <dt data-md><dfn class="idl-code" data-dfn-for="IdentityCredential/[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)" data-dfn-type="argument" data-export id="dom-identitycredential-discoverfromexternalsource-origin-options-sameoriginwithancestors-options"><code>options</code><a class="self-link" href="#dom-identitycredential-discoverfromexternalsource-origin-options-sameoriginwithancestors-options"></a></dfn>
     <dd data-md>
-     <p>This argument is a <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dictdef-credentialrequestoptions" id="ref-for-dictdef-credentialrequestoptions②">CredentialRequestOptions</a></code> object whose <code><var>options</var>.<code class="idl"><a data-link-type="idl" href="#dom-credentialrequestoptions-identity" id="ref-for-dom-credentialrequestoptions-identity">identity</a></code></code> member
+     <p>This argument is a <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dictdef-credentialrequestoptions" id="ref-for-dictdef-credentialrequestoptions③">CredentialRequestOptions</a></code> object whose <code><var>options</var>.<code class="idl"><a data-link-type="idl" href="#dom-credentialrequestoptions-identity" id="ref-for-dom-credentialrequestoptions-identity">identity</a></code></code> member
  contains an <code class="idl"><a data-link-type="idl" href="#dictdef-identitycredentialrequestoptions" id="ref-for-dictdef-identitycredentialrequestoptions②">IdentityCredentialRequestOptions</a></code> object specifying the
  exchange options.</p>
     <dt data-md><dfn class="idl-code" data-dfn-for="IdentityCredential/[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)" data-dfn-type="argument" data-export id="dom-identitycredential-discoverfromexternalsource-origin-options-sameoriginwithancestors-sameoriginwithancestors"><code>sameOriginWithAncestors</code><a class="self-link" href="#dom-identitycredential-discoverfromexternalsource-origin-options-sameoriginwithancestors-sameoriginwithancestors"></a></dfn>
@@ -1522,34 +1533,37 @@ credentials and returns a set of <code class="idl"><a data-link-type="idl" href=
    <p class="note" role="note"><span>NOTE:</span> The <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dom-credentialrequestoptions-mediation" id="ref-for-dom-credentialrequestoptions-mediation">mediation</a></code> flag is currently not used.</p>
    <p>The <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dom-credentialrequestoptions-signal" id="ref-for-dom-credentialrequestoptions-signal">signal</a></code> is used as an abort signal for the
 requests.</p>
-   <p>When this method is invoked, the user agent MUST execute the following algorithm:</p>
-   <ol>
-    <li data-md>
-     <p>If <var>sameOriginWithAncestors</var> is <code>false</code>, return a
+   <div class="algorithm" data-algorithm="[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)" data-algorithm-for="IdentityCredential">
+     When the <code class="idl"><a data-link-type="idl" href="#identitycredential" id="ref-for-identitycredential⑥">IdentityCredential</a></code>'s <dfn class="idl-code" data-dfn-for="IdentityCredential" data-dfn-type="method" data-export id="dom-identitycredential-discoverfromexternalsource-slot"><code>[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</code><a class="self-link" href="#dom-identitycredential-discoverfromexternalsource-slot"></a></dfn>\
+    algorithm is invoked, the user agent MUST execute the following steps: 
+    <ol>
+     <li data-md>
+      <p>If <var>sameOriginWithAncestors</var> is <code>false</code>, return a
   "<code class="idl"><a data-link-type="idl" href="https://webidl.spec.whatwg.org/#notallowederror" id="ref-for-notallowederror">NotAllowedError</a></code>" <code class="idl"><a data-link-type="idl" href="https://webidl.spec.whatwg.org/#idl-DOMException" id="ref-for-idl-DOMException">DOMException</a></code>.</p>
-     <p class="note" role="note"><span>Note:</span> This restriction aims to address the concern raised
+      <p class="note" role="note"><span>Note:</span> This restriction aims to address the concern raised
   in <a data-link-type="biblio" href="https://w3c.github.io/webappsec-credential-management/#security-origin-confusion"><cite>Security Origin Confusion</cite></a>.</p>
-    <li data-md>
-     <p class="assertion">Assert: <var>options</var>["<code class="idl"><a data-link-type="idl" href="#dom-credentialrequestoptions-identity" id="ref-for-dom-credentialrequestoptions-identity①">identity</a></code>"]["<code class="idl"><a data-link-type="idl" href="#dom-identitycredentialrequestoptions-providers" id="ref-for-dom-identitycredentialrequestoptions-providers">providers</a></code>"] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists">exists</a>.</p>
-    <li data-md>
-     <p class="assertion">Assert: <var>options</var>["<code class="idl"><a data-link-type="idl" href="#dom-credentialrequestoptions-identity" id="ref-for-dom-credentialrequestoptions-identity②">identity</a></code>"]["<code class="idl"><a data-link-type="idl" href="#dom-identitycredentialrequestoptions-providers" id="ref-for-dom-identitycredentialrequestoptions-providers①">providers</a></code>"] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size" id="ref-for-list-size">size</a> is 1.</p>
-     <p class="note" role="note"><span>Note:</span> At some point we would like to support choosing accounts from
+     <li data-md>
+      <p class="assertion">Assert: <var>options</var>["<code class="idl"><a data-link-type="idl" href="#dom-credentialrequestoptions-identity" id="ref-for-dom-credentialrequestoptions-identity①">identity</a></code>"]["<code class="idl"><a data-link-type="idl" href="#dom-identitycredentialrequestoptions-providers" id="ref-for-dom-identitycredentialrequestoptions-providers">providers</a></code>"] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists">exists</a>.</p>
+     <li data-md>
+      <p class="assertion">Assert: <var>options</var>["<code class="idl"><a data-link-type="idl" href="#dom-credentialrequestoptions-identity" id="ref-for-dom-credentialrequestoptions-identity②">identity</a></code>"]["<code class="idl"><a data-link-type="idl" href="#dom-identitycredentialrequestoptions-providers" id="ref-for-dom-identitycredentialrequestoptions-providers①">providers</a></code>"] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size" id="ref-for-list-size">size</a> is 1.</p>
+      <p class="note" role="note"><span>Note:</span> At some point we would like to support choosing accounts from
    multiple <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②⑤">Identity Provider</a>s.</p>
-    <li data-md>
-     <p>Let <var>provider</var> be <var>options</var>["<code class="idl"><a data-link-type="idl" href="#dom-credentialrequestoptions-identity" id="ref-for-dom-credentialrequestoptions-identity③">identity</a></code>"]["<code class="idl"><a data-link-type="idl" href="#dom-identitycredentialrequestoptions-providers" id="ref-for-dom-identitycredentialrequestoptions-providers②">providers</a></code>"][0].</p>
-    <li data-md>
-     <p>Let <var>credential</var> be a new <code class="idl"><a data-link-type="idl" href="#identitycredential" id="ref-for-identitycredential④">IdentityCredential</a></code>.</p>
-    <li data-md>
-     <p>Request user consent by running the <a data-link-type="dfn" href="#request-consent" id="ref-for-request-consent">request consent</a> algorithm with the <var>provider</var>.</p>
-    <li data-md>
-     <p>If <code class="idl"><a data-link-type="idl" href="#dom-statemachine-account-state" id="ref-for-dom-statemachine-account-state">Account State</a></code> is <a data-link-type="dfn" href="#unregistered" id="ref-for-unregistered①">unregistered</a> then return null.</p>
-    <li data-md>
-     <p>Let <var>token</var> be the result of running the <a data-link-type="dfn" href="#create-tokens" id="ref-for-create-tokens">create tokens</a> algorithm.</p>
-    <li data-md>
-     <p>Set <var>credential</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identitycredential-token" id="ref-for-dom-identitycredential-token①">token</a></code> to <var>token</var>.</p>
-    <li data-md>
-     <p>return <var>credential</var>.</p>
-   </ol>
+     <li data-md>
+      <p>Let <var>provider</var> be <var>options</var>["<code class="idl"><a data-link-type="idl" href="#dom-credentialrequestoptions-identity" id="ref-for-dom-credentialrequestoptions-identity③">identity</a></code>"]["<code class="idl"><a data-link-type="idl" href="#dom-identitycredentialrequestoptions-providers" id="ref-for-dom-identitycredentialrequestoptions-providers②">providers</a></code>"][0].</p>
+     <li data-md>
+      <p>Let <var>credential</var> be a new <code class="idl"><a data-link-type="idl" href="#identitycredential" id="ref-for-identitycredential⑦">IdentityCredential</a></code>.</p>
+     <li data-md>
+      <p>Request user consent by running the <a data-link-type="dfn" href="#request-consent" id="ref-for-request-consent">request consent</a> algorithm with the <var>provider</var>.</p>
+     <li data-md>
+      <p>If <code class="idl"><a data-link-type="idl" href="#dom-statemachine-account-state" id="ref-for-dom-statemachine-account-state">Account State</a></code> is <a data-link-type="dfn" href="#unregistered" id="ref-for-unregistered①">unregistered</a> then return null.</p>
+     <li data-md>
+      <p>Let <var>token</var> be the result of running the <a data-link-type="dfn" href="#create-tokens" id="ref-for-create-tokens">create tokens</a> algorithm.</p>
+     <li data-md>
+      <p>Set <var>credential</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identitycredential-token" id="ref-for-dom-identitycredential-token①">token</a></code> to <var>token</var>.</p>
+     <li data-md>
+      <p>return <var>credential</var>.</p>
+    </ol>
+   </div>
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="request-consent">request consent</dfn>:</p>
    <ol>
     <li data-md>
@@ -1943,7 +1957,7 @@ through an <a href="#use-cases-explicit-sign-in">§ 1.1.2.2 Explicit Sign-in</
 };
 
 [<a class="idl-code" data-link-type="extended-attribute" href="https://webidl.spec.whatwg.org/#Exposed" id="ref-for-Exposed①"><c- g>Exposed</c-></a>=<c- n>Window</c->, <a class="idl-code" data-link-type="extended-attribute" href="https://webidl.spec.whatwg.org/#SecureContext" id="ref-for-SecureContext①"><c- g>SecureContext</c-></a>]
-<c- b>partial</c-> <c- b>interface</c-> <a class="idl-code" data-link-type="interface" href="#identitycredential" id="ref-for-identitycredential⑤"><c- g>IdentityCredential</c-></a> {
+<c- b>partial</c-> <c- b>interface</c-> <a class="idl-code" data-link-type="interface" href="#identitycredential" id="ref-for-identitycredential⑧"><c- g>IdentityCredential</c-></a> {
   <c- b>static</c-> <a class="idl-code" data-link-type="interface" href="https://webidl.spec.whatwg.org/#idl-promise" id="ref-for-idl-promise"><c- b>Promise</c-></a>&lt;<a class="idl-code" data-link-type="interface" href="https://webidl.spec.whatwg.org/#idl-undefined" id="ref-for-idl-undefined"><c- b>undefined</c-></a>> <dfn class="dfn-paneled idl-code" data-dfn-for="IdentityCredential" data-dfn-type="method" data-export data-lt="logoutRPs(logoutRequests)" id="dom-identitycredential-logoutrps"><code><c- g>logoutRPs</c-></code></dfn>(<a data-link-type="dfn" href="https://webidl.spec.whatwg.org/#idl-sequence" id="ref-for-idl-sequence①"><c- b>sequence</c-></a>&lt;<a data-link-type="idl-name" href="#dictdef-identitycredentiallogoutrpsrequest" id="ref-for-dictdef-identitycredentiallogoutrpsrequest"><c- n>IdentityCredentialLogoutRpsRequest</c-></a>> <dfn class="idl-code" data-dfn-for="IdentityCredential/logoutRPs(logoutRequests)" data-dfn-type="argument" data-export id="dom-identitycredential-logoutrps-logoutrequests-logoutrequests"><code><c- g>logoutRequests</c-></code><a class="self-link" href="#dom-identitycredential-logoutrps-logoutrequests-logoutrequests"></a></dfn>);
 };
 </pre>
@@ -3201,8 +3215,9 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
   <aside class="dfn-panel" data-for="term-for-dictdef-credentialrequestoptions">
    <a href="https://w3c.github.io/webappsec-credential-management/#dictdef-credentialrequestoptions">https://w3c.github.io/webappsec-credential-management/#dictdef-credentialrequestoptions</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dictdef-credentialrequestoptions">7.3. The CredentialRequestOptions</a> <a href="#ref-for-dictdef-credentialrequestoptions①">(2)</a>
-    <li><a href="#ref-for-dictdef-credentialrequestoptions②">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a>
+    <li><a href="#ref-for-dictdef-credentialrequestoptions">7. The Browser API</a>
+    <li><a href="#ref-for-dictdef-credentialrequestoptions①">7.3. The CredentialRequestOptions</a> <a href="#ref-for-dictdef-credentialrequestoptions②">(2)</a>
+    <li><a href="#ref-for-dictdef-credentialrequestoptions③">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-credentialscontainer">
@@ -3215,6 +3230,13 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <a href="https://w3c.github.io/webappsec-credential-management/#abstract-opdef-request-a-credential">https://w3c.github.io/webappsec-credential-management/#abstract-opdef-request-a-credential</a><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-abstract-opdef-request-a-credential">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="term-for-algorithm-discover-creds">
+   <a href="https://w3c.github.io/webappsec-credential-management/#algorithm-discover-creds">https://w3c.github.io/webappsec-credential-management/#algorithm-discover-creds</a><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-algorithm-discover-creds">7. The Browser API</a>
+    <li><a href="#ref-for-algorithm-discover-creds①">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-dom-credentialscontainer-get">
@@ -3538,6 +3560,7 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
      <li><span class="dfn-paneled" id="term-for-dictdef-credentialrequestoptions">CredentialRequestOptions</span>
      <li><span class="dfn-paneled" id="term-for-credentialscontainer">CredentialsContainer</span>
      <li><span class="dfn-paneled" id="term-for-abstract-opdef-request-a-credential">Request a Credential</span>
+     <li><span class="dfn-paneled" id="term-for-algorithm-discover-creds">[[DiscoverFromExternalSource]]</span>
      <li><span class="dfn-paneled" id="term-for-dom-credentialscontainer-get">get()</span>
      <li><span class="dfn-paneled" id="term-for-dom-credentialrequestoptions-mediation">mediation</span>
      <li><span class="dfn-paneled" id="term-for-same-origin-with-its-ancestors">same-origin with its ancestors</span>
@@ -4080,10 +4103,10 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <b><a href="#identitycredential">#identitycredential</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-identitycredential">2. Examples</a>
-    <li><a href="#ref-for-identitycredential①">7. The Browser API</a>
-    <li><a href="#ref-for-identitycredential②">7.2. The IdentityCredential Interface</a>
-    <li><a href="#ref-for-identitycredential③">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a> <a href="#ref-for-identitycredential④">(2)</a>
-    <li><a href="#ref-for-identitycredential⑤">7.4.1. IDP Sign-out</a>
+    <li><a href="#ref-for-identitycredential①">7. The Browser API</a> <a href="#ref-for-identitycredential②">(2)</a> <a href="#ref-for-identitycredential③">(3)</a>
+    <li><a href="#ref-for-identitycredential④">7.2. The IdentityCredential Interface</a>
+    <li><a href="#ref-for-identitycredential⑤">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a> <a href="#ref-for-identitycredential⑥">(2)</a> <a href="#ref-for-identitycredential⑦">(3)</a>
+    <li><a href="#ref-for-identitycredential⑧">7.4.1. IDP Sign-out</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="dom-identitycredential-token">
@@ -4293,3 +4316,87 @@ document.body.addEventListener("click", function(e) {
 
 });
 </script>
+<script>/* script-var-click-highlighting */
+
+    document.addEventListener("click", e=>{
+        if(e.target.nodeName == "VAR") {
+            highlightSameAlgoVars(e.target);
+        }
+    });
+    {
+        const indexCounts = new Map();
+        const indexNames = new Map();
+        function highlightSameAlgoVars(v) {
+            // Find the algorithm container.
+            let algoContainer = null;
+            let searchEl = v;
+            while(algoContainer == null && searchEl != document.body) {
+                searchEl = searchEl.parentNode;
+                if(searchEl.hasAttribute("data-algorithm")) {
+                    algoContainer = searchEl;
+                }
+            }
+
+            // Not highlighting document-global vars,
+            // too likely to be unrelated.
+            if(algoContainer == null) return;
+
+            const algoName = algoContainer.getAttribute("data-algorithm");
+            const varName = getVarName(v);
+            const addClass = !v.classList.contains("selected");
+            let highlightClass = null;
+            if(addClass) {
+                const index = chooseHighlightIndex(algoName, varName);
+                indexCounts.get(algoName)[index] += 1;
+                indexNames.set(algoName+"///"+varName, index);
+                highlightClass = nameFromIndex(index);
+            } else {
+                const index = previousHighlightIndex(algoName, varName);
+                indexCounts.get(algoName)[index] -= 1;
+                highlightClass = nameFromIndex(index);
+            }
+
+            // Find all same-name vars, and toggle their class appropriately.
+            for(const el of algoContainer.querySelectorAll("var")) {
+                if(getVarName(el) == varName) {
+                    el.classList.toggle("selected", addClass);
+                    el.classList.toggle(highlightClass, addClass);
+                }
+            }
+        }
+        function getVarName(el) {
+            return el.textContent.replace(/(\s|\xa0)+/, " ").trim();
+        }
+        function chooseHighlightIndex(algoName, varName) {
+            let indexes = null;
+            if(indexCounts.has(algoName)) {
+                indexes = indexCounts.get(algoName);
+            } else {
+                // 7 classes right now
+                indexes = [0,0,0,0,0,0,0];
+                indexCounts.set(algoName, indexes);
+            }
+
+            // If the element was recently unclicked,
+            // *and* that color is still unclaimed,
+            // give it back the same color.
+            const lastIndex = previousHighlightIndex(algoName, varName);
+            if(indexes[lastIndex] === 0) return lastIndex;
+
+            // Find the earliest index with the lowest count.
+            const minCount = Math.min.apply(null, indexes);
+            let index = null;
+            for(var i = 0; i < indexes.length; i++) {
+                if(indexes[i] == minCount) {
+                    return i;
+                }
+            }
+        }
+        function previousHighlightIndex(algoName, varName) {
+            return indexNames.get(algoName+"///"+varName);
+        }
+        function nameFromIndex(index) {
+            return "selected" + index;
+        }
+    }
+    </script>
