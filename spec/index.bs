@@ -305,7 +305,11 @@ could be implemented.
   <button onclick="login()">Login with idp.example</button>
 
   <script>
+  let nonce;
   async function login() {
+    // Assume we have a method returning a random number. Store the value in a variable which can
+    // later be used to check against the value in the token returned.
+    nonce = random();
     // Prompt the user to select an account from the IDP to use for
     // federated login within the RP. If resolved successfully, the Promise
     // returns an IdentityCredential object from which the `token` can be
@@ -316,7 +320,7 @@ could be implemented.
         providers: [{
           configURL: "https://idp.example/manifest.json",
           clientId: "123",
-          nonce: random() // assume we have a method returning a random number
+          nonce: nonce
         }]
       }
     });

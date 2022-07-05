@@ -110,7 +110,11 @@ The following is an example of a website allowing a user to login with
 `idp.example`.
 
 ```js
+let nonce;
 async function login() {
+  // Assume we have a method returning a random number. Store the value in a variable which can
+  // later be used to check against the value in the token returned.
+  nonce = random();
   // Prompt the user to select an account from the IDP to use for
   // federated login within the RP. If resolved successfully, the Promise
   // returns an IdentityCredential object from which the `token` can be
@@ -121,8 +125,7 @@ async function login() {
       providers: [{
         configURL: "https://idp.example/fedcm.json",
         clientId: "123",
-        nonce: random() // assume we have a method returning a random number
-      }]
+        nonce: nonce
     }
   });
 }
@@ -189,6 +192,7 @@ the user has consented to the authentication. The returned tokens can then be
 used as needed.
 
 ```js
+let nonce = random()
 // If successful, returns a Promise containing an IdentityCredential |cred| object.
 // The token for logging in is in cred.token.
 const cred = await navigator.credentials.get({
@@ -197,7 +201,7 @@ const cred = await navigator.credentials.get({
     providers: [{
       configURL: "https://idp.example/fedcm.json",
       clientId: "123",
-      nonce: random()
+      nonce: nonce
     }]
   }
 });
@@ -272,8 +276,9 @@ const cred = await navigator.credentials.get({
     }]
   }
 });
+let nonce = random()
 const tokens = await cred.login({
-  nonce: random(),
+  nonce: nonce,
   tokens: ["access", "refresh", "id"],
   scopes: ["calendar.read", "profile"]
 });
