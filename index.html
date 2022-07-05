@@ -6,7 +6,7 @@
   <link href="https://www.w3.org/StyleSheets/TR/2021/cg-draft" rel="stylesheet">
   <meta content="Bikeshed version 37b7e7e68, updated Fri May 27 15:08:11 2022 -0700" name="generator">
   <link href="https://fedidcg.github.io/FedCM/" rel="canonical">
-  <meta content="f9d5efca432709e3f676a09b53281922054cdd0a" name="document-revision">
+  <meta content="97690b64f22a07a8ff72a50f8b710af16e7e3f48" name="document-revision">
 <style>
 dl.domintro dt {
     font-family: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
@@ -591,7 +591,7 @@ c-[il] { color: #000000 } /* Literal.Number.Integer.Long */
   <div class="head">
    <p data-fill-with="logo"><a class="logo" href="https://www.w3.org/"> <img alt="W3C" height="48" src="https://www.w3.org/StyleSheets/TR/2021/logos/W3C" width="72"> </a> </p>
    <h1 class="p-name no-ref" id="title">Federated Credential Management API</h1>
-   <p id="w3c-state"><a href="https://www.w3.org/standards/types#CG-DRAFT">Draft Community Group Report</a>, <time class="dt-updated" datetime="2022-07-04">4 July 2022</time></p>
+   <p id="w3c-state"><a href="https://www.w3.org/standards/types#CG-DRAFT">Draft Community Group Report</a>, <time class="dt-updated" datetime="2022-07-05">5 July 2022</time></p>
    <div data-fill-with="spec-metadata">
     <dl>
      <dt>This version:
@@ -1488,15 +1488,17 @@ the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④�
 };
 </pre>
    <dl>
-    <dt data-md><dfn class="idl-code" data-dfn-for="IdentityProvider" data-dfn-type="argument" data-export id="dom-identityprovider-url"><code>url</code><a class="self-link" href="#dom-identityprovider-url"></a></dfn>
+    <dt data-md><dfn class="idl-code" data-dfn-for="IdentityProvider" data-dfn-type="argument" data-export id="dom-identityprovider-configurl①"><code>configURL</code><a class="self-link" href="#dom-identityprovider-configurl①"></a></dfn>
     <dd data-md>
-     <p>The URL of the identity provider.</p>
+     <p>The URL of the configuration file for the identity provider.</p>
     <dt data-md><dfn class="idl-code" data-dfn-for="IdentityProvider" data-dfn-type="argument" data-export id="dom-identityprovider-clientid①"><code>clientId</code><a class="self-link" href="#dom-identityprovider-clientid①"></a></dfn>
     <dd data-md>
      <p>The <a data-link-type="dfn" href="#client-id" id="ref-for-client-id⑤">client id</a> provided to the <a data-link-type="dfn" href="#rp" id="ref-for-rp③③">RP</a> out of band by the <a data-link-type="dfn" href="#idp" id="ref-for-idp③⓪">IDP</a></p>
     <dt data-md><dfn class="idl-code" data-dfn-for="IdentityProvider" data-dfn-type="argument" data-export id="dom-identityprovider-nonce①"><code>nonce</code><a class="self-link" href="#dom-identityprovider-nonce①"></a></dfn>
     <dd data-md>
-     <p>A random number of the choice of the <a data-link-type="dfn" href="#rp" id="ref-for-rp③④">RP</a>. TODO: expand on how this is intended to be used.</p>
+     <p>A random number of the choice of the <a data-link-type="dfn" href="#rp" id="ref-for-rp③④">RP</a>. It is generally used to associate a client
+session with a <a data-link-type="dfn" href="#token" id="ref-for-token⑥">token</a> and to mitigate replay attacks. Therefore, this value should have
+sufficient entropy such that it would be hard to guess.</p>
    </dl>
    <h3 class="heading settled" data-level="7.4" id="browser-api-rp-sign-in"><span class="secno">7.4. </span><span class="content">The <code><dfn class="idl-code" data-dfn-for="IdentityCredential" data-dfn-type="method" data-export id="dom-identitycredential-discoverfromexternalsource-slot"><code>[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</code><a class="self-link" href="#dom-identitycredential-discoverfromexternalsource-slot"></a></dfn></code> internal method</span><a class="self-link" href="#browser-api-rp-sign-in"></a></h3>
    <p>This algorithm runs in parallel inside the <a href="https://w3c.github.io/webappsec-credential-management/#algorithm-request">Credential Management § algorithm-request</a> to request
@@ -2026,7 +2028,7 @@ site can invoke the API, <a data-link-type="dfn" href="#rp" id="ref-for-rp④⑥
 collects or use that information in an acceptable way.</p>
     <li data-md>
      <p><a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider③①">Identity Provider</a>s (<a data-link-type="dfn" href="#idp" id="ref-for-idp④⑥">IDP</a>s) are third-party websites that are the target of a FedCM call to
-attempt to fetch a <a data-link-type="dfn" href="#token" id="ref-for-token⑥">token</a>. Usually,the <a data-link-type="dfn" href="#idp" id="ref-for-idp④⑦">IDP</a> has a higher level of trust than the <a data-link-type="dfn" href="#rp" id="ref-for-rp④⑦">RP</a> since it already has the user’s personal information, but it is possible that the <a data-link-type="dfn" href="#idp" id="ref-for-idp④⑧">IDP</a> might use the user’s information in non-approved ways. In addition, it is possible that the <a data-link-type="dfn" href="#idp" id="ref-for-idp④⑨">IDP</a> specified in the API call may not be an <a data-link-type="dfn" href="#idp" id="ref-for-idp⑤⓪">IDP</a> the user knows about. In this case, it
+attempt to fetch a <a data-link-type="dfn" href="#token" id="ref-for-token⑦">token</a>. Usually,the <a data-link-type="dfn" href="#idp" id="ref-for-idp④⑦">IDP</a> has a higher level of trust than the <a data-link-type="dfn" href="#rp" id="ref-for-rp④⑦">RP</a> since it already has the user’s personal information, but it is possible that the <a data-link-type="dfn" href="#idp" id="ref-for-idp④⑧">IDP</a> might use the user’s information in non-approved ways. In addition, it is possible that the <a data-link-type="dfn" href="#idp" id="ref-for-idp④⑨">IDP</a> specified in the API call may not be an <a data-link-type="dfn" href="#idp" id="ref-for-idp⑤⓪">IDP</a> the user knows about. In this case, it
 likely does not have personal user information in advance.</p>
     <li data-md>
      <p>A <a data-link-type="dfn" href="#tracker" id="ref-for-tracker">tracker</a> is a third-party website that is not an <a data-link-type="dfn" href="#idp" id="ref-for-idp⑤①">IDP</a> but could abuse the FedCM API
@@ -2833,7 +2835,7 @@ able to rescind the access to that identification, for instance by logging out. 
 consent for a purpose different from that for which the information was collected. This attack
 happens when <a data-link-type="dfn" href="#idp" id="ref-for-idp①⓪④">IDP</a>s misuse the the information collected to enable sign-in for other
 purposes.</p>
-   <p>Existing federation protocols require that the <a data-link-type="dfn" href="#idp" id="ref-for-idp①⓪⑤">IDP</a> know which service is requesting a <a data-link-type="dfn" href="#token" id="ref-for-token⑦">token</a> in order to allow identity federation. Identity providers can use this fact to build profiles of
+   <p>Existing federation protocols require that the <a data-link-type="dfn" href="#idp" id="ref-for-idp①⓪⑤">IDP</a> know which service is requesting a <a data-link-type="dfn" href="#token" id="ref-for-token⑧">token</a> in order to allow identity federation. Identity providers can use this fact to build profiles of
 users across sites where the user has decided to use federation with the same account. This profile
 could be used, for example, to serve targeted advertisements to those users browsing on sites that
 the IDP controls.</p>
@@ -3635,7 +3637,7 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <dt id="biblio-csp">[CSP]
    <dd>Mike West. <a href="https://www.w3.org/TR/CSP3/"><cite>Content Security Policy Level 3</cite></a>. 29 June 2021. WD. URL: <a href="https://www.w3.org/TR/CSP3/">https://www.w3.org/TR/CSP3/</a>
    <dt id="biblio-css-color-4">[CSS-COLOR-4]
-   <dd>Tab Atkins Jr.; Chris Lilley; Lea Verou. <a href="https://www.w3.org/TR/css-color-4/"><cite>CSS Color Module Level 4</cite></a>. 28 June 2022. WD. URL: <a href="https://www.w3.org/TR/css-color-4/">https://www.w3.org/TR/css-color-4/</a>
+   <dd>Tab Atkins Jr.; Chris Lilley; Lea Verou. <a href="https://www.w3.org/TR/css-color-4/"><cite>CSS Color Module Level 4</cite></a>. 5 July 2022. CR. URL: <a href="https://www.w3.org/TR/css-color-4/">https://www.w3.org/TR/css-color-4/</a>
    <dt id="biblio-css-color-5">[CSS-COLOR-5]
    <dd>Chris Lilley; et al. <a href="https://www.w3.org/TR/css-color-5/"><cite>CSS Color Module Level 5</cite></a>. 28 June 2022. WD. URL: <a href="https://www.w3.org/TR/css-color-5/">https://www.w3.org/TR/css-color-5/</a>
    <dt id="biblio-fetch">[FETCH]
@@ -3769,8 +3771,9 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
     <li><a href="#ref-for-token①">5.4. ID Token</a> <a href="#ref-for-token②">(2)</a>
     <li><a href="#ref-for-token③">7. The Browser API</a> <a href="#ref-for-token④">(2)</a>
     <li><a href="#ref-for-token⑤">7.2. The IdentityCredential Interface</a>
-    <li><a href="#ref-for-token⑥">9.1. Principals</a>
-    <li><a href="#ref-for-token⑦">9.4.4. Secondary Use</a>
+    <li><a href="#ref-for-token⑥">7.3. The CredentialRequestOptions</a>
+    <li><a href="#ref-for-token⑦">9.1. Principals</a>
+    <li><a href="#ref-for-token⑧">9.4.4. Secondary Use</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="identity-provider">
