@@ -731,7 +731,9 @@ Every <dfn>Account JSON</dfn> is expected to have the following properties:
     :   <dfn>given_name</dfn> (optional)
     ::  The user's given name.
     :   <dfn>approved_clients</dfn> (optional)
-    ::  A list of [=RP=]s (in the form of [=Client ID=]s) this account is already registered with. Used in the [=sign-up=] to allow the [=IDP=] to control whether to show the [=Privacy Policy=] and the [=Terms of Service=].
+    ::  A list of [=RP=]s (in the form of [=Client ID=]s) this account is already registered with.
+        Used in the [=request consent to sign-up=] to allow the [=IDP=] to control whether to show
+        the [=Privacy Policy=] and the [=Terms of Service=].
 </dl>
 
 For example:
@@ -831,7 +833,10 @@ It will also contain the following parameters in the request body `application/x
     :   <dfn>account_id</dfn>
     ::  The account identifier that was selected.
     :   <dfn>disclosure_text_shown</dfn>
-    ::  Whether the user agent has explicitly shown to the user what specific information the [=IDP=] intends to share with the [=RP=] (e.g. "idp.example will share your name, email.... with rp.example"), used by the [=sign-up=] algorithm for new users but not by the [=sign-in=] algorithm for returning users.
+    ::  Whether the user agent has explicitly shown to the user what specific information the
+        [=IDP=] intends to share with the [=RP=] (e.g. "idp.example will share your name, email...
+        with rp.example"), used by the [=request consent to sign-up=] algorithm for new users but
+        not by the [=sign-in=] algorithm for returning users.
 </dl>
 
 For example:
@@ -1097,7 +1102,8 @@ To <dfn>request consent</dfn>, given an {{IdentityProvider}} |provider|:
         1. Let |accountState| be the result of running the [=compute account state=] algorithm
             given |provider| and |account|.
         1. If |accountState|'s {{AccountState/registration state}} is [=unregistered=] then run the
-            [=sign-up=] algorithm with |account|, |accountState|, |manifest|, and |provider|.
+            [=request consent to sign-up=] algorithm with |account|, |accountState|, |manifest|, and
+            |provider|.
         1. Otherwise, show a dialog to request user consent to sign in via |account|.
         1. If the user consents, run the [=sign-in=] algorithm with |accountState|.
     1. Otherwise:
@@ -1107,22 +1113,22 @@ To <dfn>request consent</dfn>, given an {{IdentityProvider}} |provider|:
         1. Let |accountState| be the result of running the [=compute account state=] algorithm
             given |provider| and |account|.
         1. If |accountState|'s {{AccountState/registration state}} is [=unregistered=] then run the
-            [=sign-up=] algorithm with |account|, |accountState|, |manifest|, and |provider|.
+            [=request consent to sign-up=] algorithm with |account|, |accountState|, |manifest|, and
+            |provider|.
         1. Otherwise, run the [=sign-in=] algorithm with |accountState|.
     1. If |accountState|'s {{AccountState/registration state}} is [=unregistered=] then return null.
     1. Let |token| be the result of running the [=create tokens=] algorithm with |accountState|,
         |account|'s {{account_json/id}}, and |provider|.
     1. Let |credential| be a new {{IdentityCredential}}.
     1. Set |credential|'s {{IdentityCredential/token}} to |token|.
-    1. return |credential|.
+    1. Return |credential|.
 </div>
 
 <div algorithm>
 To <dfn>compute account state</dfn> given an {{IdentityProvider}} |provider| and an
     [=Account JSON=] |account|, run the following steps:
     1. Let |idpURL| be |provider|'s {{IdentityProvider/configURL}}.
-    1. Let |idpOrigin| be the [=origin=] corresponding to |idpURL|. TODO: specify how to go from
-        string to [=origin=].
+    1. Let |idpOrigin| be the [=origin=] corresponding to |idpURL|.
     1. Let |rpOrigin| be [=this=]'s [=Document/origin=].
     1. Let |accountId| be |account|'s {{account_json/id}}.
     1. Let |triple| be (|rpOrigin|, |idpOrigin|, |accountId|).
@@ -1148,8 +1154,9 @@ To <dfn>fetch the accounts list</dfn> given a [=Manifest=] |manifest| and an {{I
 Issue: the [=fetch the accounts list=] algorithm needs to use [=fetch=] appropriately.
 
 <div algorithm>
-To <dfn>sign-up</dfn> the user with a given [=Account JSON=] |account|, an [=AccountState=]
-    |accountState|, a [=Manifest=] |manifest|, and an {{IdentityProvider}} |provider|:
+To <dfn>request consent to sign-up</dfn> the user with a given [=Account JSON=] |account|, an
+    [=AccountState=] |accountState|, a [=Manifest=] |manifest|, and an {{IdentityProvider}}
+    |provider|:
     1. Let |metadata| be the result of running the [=fetch the client metadata=]
         algorithm with |manifest| and |provider|.
     1. If |metadata|["{{client_metadata_endpoint_response/privacy_policy_url}}"] is defined and
@@ -1320,7 +1327,6 @@ When this method is invoked, the user agent MUST execute the following algorithm
   1. For each |request| in |logoutRequests|
     1. Let |rpOrigin| be [=this=]'s [=Document/origin=].
     1. Let |idpOrigin| be |request|'s {{IdentityCredentialLogoutRpsRequest/url}}'s [=origin=].
-        TODO: origin from string.
     1. Let |account| be |request|'s {{IdentityCredentialLogoutRpsRequest/accountId}}.
     1. Let |triple| be (|rpOrigin|, |idpOrigin|, |account|).
     1. If [=state machine map=][|triple|] does not exist, continue.
