@@ -8,12 +8,11 @@ in functionality and bug fixes since this is under development.
 
 ## Available functionality
 
-As of February 2022, Chrome supports the mediation-oriented flow on Android.
+As of July 2022, Chrome supports the mediation-oriented flow on Android.
 
 From the Relying Party (RP):
 
-* `navigator.credentials.get()`: Sign-up and sign-in.
-* `FederatedCredential.revoke()`: Revoke an account that's already signed up.
+* `navigator.credentials.get()`: Sign-up and sign-in. Prompts the user to pick an account.
 
 From the Identity Provider (IdP):
 
@@ -51,15 +50,26 @@ if sign-up status persistence is not desired.
 
 ### Feature detection
 
-In order to determine whether the FedCM API is available, run the following JS
-snippet:
+In order to determine whether the FedCM API is available, we have two feature
+detection scripts. To feature-detect on Chrome versions before 105.0.5170.0, run
+the following JS snippet:
 
 ```js
 // Feature detection: Since `FederatedCredential` is already available in Chrome
 // for the old Credential Management API, additional
 // `FederatedCredential.prototype.login` check is required.
-function isFedCMEnabled() {
+function isOldFedCMEnabled() {
   return !(!window.FederatedCredential || !FederatedCredential.prototype.login);
+}
+console.log(isOldFedCMEnabled() ? "FedCM is available" : "FedCM is not available");
+```
+
+As of Chrome 105.0.5170.0 or later, we use IdentityCredential, which is not an
+interface previously used so feature detection becomes:
+
+```js
+function isFedCMEnabled() {
+  return !!window.IdentityCredential;
 }
 console.log(isFedCMEnabled() ? "FedCM is available" : "FedCM is not available");
 ```
@@ -76,7 +86,7 @@ defined on other types of pages.
 ```js
 async function login() {
   try {
-    if (!isFedCMEnabled()) {
+    if (!isOldFedCMEnabled() && !isFedCMEnabled()) {
       return;
     }
 
@@ -226,8 +236,6 @@ features continue to work that currently rely on third-party cookies. So far the
 only implemented proposal is an API for Logout.
 
 ### Logout API
-
-*The Logout API is not implemeted yet as of December 2021.*
 
 The Logout API, `FederatedCredential.logoutRPs()` which is being explored as a way
 to preserve OIDC front-channel logout and SAML Single Signout with loss of
