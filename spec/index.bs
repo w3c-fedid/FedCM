@@ -1083,15 +1083,17 @@ requests.
 
            Note: At some point we would like to support choosing accounts from
            multiple [=Identity Provider=]s.
-      1. Let |provider| be |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"][0].
-      1. Let |credential| be the result of running the [=potentially create IdentityCredential=]
-          algorithm with |provider|.
-      1. If |credential| is null, run {{setTimeout}} passing a [=task=] which throws a
-          {{NetworkError}}, after a timeout of 120 seconds.
+      1. Run {{setTimeout}} passing a [=task=] which throws a {{NetworkError}}, after a timeout of
+          120 seconds.
 
           Note: the purpose of having a timer here is to avoid leaking the reason causing this
           method to return null. If there was no such timer, the developer could easily infer
           whether the user has an account with the [=IDP=] or not, or whether the user closed the UI without providing consent to share the [=IDP=] account information with the [=RP=].
+      1. Let |provider| be |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"][0].
+      1. Let |credential| be the result of running the [=potentially create IdentityCredential=]
+          algorithm with |provider|.
+      1. If |credential| is null, wait for the task that throws a {{NetworkError}}, otherwise return
+          |credential|.
 </div>
 
 <div algorithm>
