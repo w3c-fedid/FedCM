@@ -1320,32 +1320,32 @@ await IdentityCredential.logoutRPs([{
 signed into.
 
 <xmp class=idl>
-dictionary IdentityCredentialLogoutRpsRequest {
+dictionary IdentityCredentialLogoutRPsRequest {
   required USVString url;
   required USVString accountId;
 };
 
 [Exposed=Window, SecureContext]
 partial interface IdentityCredential {
-  static Promise<undefined> logoutRPs(sequence<IdentityCredentialLogoutRpsRequest> logoutRequests);
+  static Promise<undefined> logoutRPs(sequence<IdentityCredentialLogoutRPsRequest> logoutRequests);
 };
 </xmp>
 
 <div algorithm=logoutRPs>
 When the {{IdentityCredential/logoutRPs()}} method is invoked given a [=list=] of
-{{IdentityCredentialLogoutRpsRequest}}s |logoutRequests|, the user agent MUST execute the following
+{{IdentityCredentialLogoutRPsRequest}}s |logoutRequests|, the user agent MUST execute the following
 steps:
     1. Let |promise| be a new {{Promise}}.
     1. For each |request| in |logoutRequests|
       1. Let |rpOrigin| be [=this=]'s [=Document/origin=].
-      1. Let |idpOrigin| be |request|'s {{IdentityCredentialLogoutRpsRequest/url}}'s [=origin=].
-      1. Let |account| be |request|'s {{IdentityCredentialLogoutRpsRequest/accountId}}.
+      1. Let |idpOrigin| be |request|'s {{IdentityCredentialLogoutRPsRequest/url}}'s [=origin=].
+      1. Let |account| be |request|'s {{IdentityCredentialLogoutRPsRequest/accountId}}.
       1. Let |triple| be (|rpOrigin|, |idpOrigin|, |account|).
       1. If [=state machine map=][|triple|] does not exist, continue.
       1. Let |accountState| be [=state machine map=][|triple|].
       1. If the |accountState|'s {{AccountState/registration state}} is [=unregistered=] or
           |accountState|'s {{AccountState/allows logout}} is false, continue.
-      1. POST to the |request|'s {{IdentityCredentialLogoutRpsRequest/url}} with the
+      1. POST to the |request|'s {{IdentityCredentialLogoutRPsRequest/url}} with the
           [=Relying Parties=] cookies.  This request MUST NOT follow
           [[RFC9110#header.location|HTTP redirects]] and instead abort the request.
       1. Set the |accountState| {{AccountState/allows logout}} to false.
