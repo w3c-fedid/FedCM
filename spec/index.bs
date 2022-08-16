@@ -1065,6 +1065,11 @@ This [=internal method=] accepts three arguments:
     ::  This argument is a Boolean value which is [TRUE] if and only if the
          caller's [=environment settings object=] is
          [=same-origin with its ancestors=]. It is [FALSE] if caller is cross-origin.
+
+        Note: Invocation of this [=internal method=] indicates that it was allowed by
+        [=permissions policy=], which is evaluated at the [[!CREDENTIAL-MANAGEMENT-1]] level.
+        See [[#permissions-policy-integration]]. As such, |sameOriginWithAncestors| is unused.
+
 </dl>
 
 NOTE: The {{CredentialRequestOptions/mediation}} flag is currently not used.
@@ -1077,11 +1082,6 @@ requests.
     <dfn for="IdentityCredential" method>\[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</dfn>\
     algorithm is invoked, the user agent MUST execute the following steps:
 
-      1.  If <var ignore>sameOriginWithAncestors</var> is `false`, throw a
-          "{{NotAllowedError}}" {{DOMException}}.
-
-          Note: This restriction aims to address the concern raised
-          in [[Security-Origin-Confusion]].
       1.  Assert: |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"] [=map/exists=].
       1.  Assert: |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"] [=list/size=] is 1.
 
@@ -1358,6 +1358,27 @@ steps:
 <!-- ============================================================ -->
 
 Note: go over how we are planning to deal with backwards compatibility.
+
+<!-- ============================================================ -->
+# Permissions Policy Integration # {#permissions-policy-integration}
+<!-- ============================================================ -->
+
+FedCM defines a [=policy-controlled feature=] identified by the string `"identity-credential-get"`.
+Its [=default allowlist=] is `"self"`.
+
+A {{Document}}’s [=Document/permissions policy=] determines whether any content
+in that document is allowed to obtain a credential object using the [[#browser-api|Browser API]].
+Attempting to invoke <code><a idl for="CredentialsContainer" lt="get()">navigator.credentials.get({identity:..., ...})</a></code>
+in documents that are not [=allowed to use=] the `"identity-credential-get"` feature will result
+in [=a promise rejected with=] a "{{NotAllowedError}}" {{DOMException}}.
+
+This restriction can be controlled using the mechanisms described in [[PERMISSIONS-POLICY]].
+
+Note: Algorithms specified in [[!CREDENTIAL-MANAGEMENT-1]] perform the actual
+permissions policy evaluation. This is because such policy evaluation needs to
+occur when there is access to the [=current settings object=]. The [=internal method=]s
+modified by this specification do not have such access since they are invoked [=in parallel=]
+by {{CredentialsContainer}}'s <a abstract-op>Request a `Credential`</a> abstract operation.
 
 <!-- ============================================================ -->
 # Security # {#security}
@@ -1879,6 +1900,10 @@ Note: write down the Acknowledgements section.
   "OIDC-Connect-Core": {
     "href": "https://openid.net/specs/openid-connect-core-1_0.html",
     "title": "OIDC Connect Core"
+  },
+  "PERMISSIONS-POLICY": {
+    "href": "https://w3c.github.io/webappsec-permissions-policy",
+    "title": "Permissions Policy"
   },
   "PRIVACY-MODEL": {
     "href": "https://github.com/michaelkleber/privacy-model",
