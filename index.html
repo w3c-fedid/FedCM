@@ -4,9 +4,9 @@
   <title>Federated Credential Management API</title>
   <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport">
   <link href="https://www.w3.org/StyleSheets/TR/2021/cg-draft" rel="stylesheet">
-  <meta content="Bikeshed version e8a706a4b, updated Fri Jul 15 11:08:03 2022 -0700" name="generator">
+  <meta content="Bikeshed version 44af0bf3e, updated Fri Jul 29 17:05:16 2022 -0700" name="generator">
   <link href="https://fedidcg.github.io/FedCM/" rel="canonical">
-  <meta content="f702fa14811066066ac9d2f325c4e9a27c8eca64" name="document-revision">
+  <meta content="9c05a0849edbe9e7acd07c6c428f333dbb7d16df" name="document-revision">
 <style>
 dl.domintro dt {
     font-family: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
@@ -602,7 +602,7 @@ c-[il] { color: #000000 } /* Literal.Number.Integer.Long */
   <div class="head">
    <p data-fill-with="logo"><a class="logo" href="https://www.w3.org/"> <img alt="W3C" height="48" src="https://www.w3.org/StyleSheets/TR/2021/logos/W3C" width="72"> </a> </p>
    <h1 class="p-name no-ref" id="title">Federated Credential Management API</h1>
-   <p id="w3c-state"><a href="https://www.w3.org/standards/types#CG-DRAFT">Draft Community Group Report</a>, <time class="dt-updated" datetime="2022-07-21">21 July 2022</time></p>
+   <p id="w3c-state"><a href="https://www.w3.org/standards/types#CG-DRAFT">Draft Community Group Report</a>, <time class="dt-updated" datetime="2022-08-16">16 August 2022</time></p>
    <div data-fill-with="spec-metadata">
     <dl>
      <dt>This version:
@@ -698,37 +698,38 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
        </ol>
       <li><a href="#browser-api-backwards-compatibility"><span class="secno">7.5</span> <span class="content">Backwards Compatibility</span></a>
      </ol>
+    <li><a href="#permissions-policy-integration"><span class="secno">8</span> <span class="content">Permissions Policy Integration</span></a>
     <li>
-     <a href="#security"><span class="secno">8</span> <span class="content">Security</span></a>
+     <a href="#security"><span class="secno">9</span> <span class="content">Security</span></a>
      <ol class="toc">
-      <li><a href="#content-security-policy"><span class="secno">8.1</span> <span class="content">Content Security Policy</span></a>
-      <li><a href="#sec-fedcm-csrf-header"><span class="secno">8.2</span> <span class="content">Sec-FedCM-CSRF Header</span></a>
-      <li><a href="#browser-surface-impersonation"><span class="secno">8.3</span> <span class="content">Browser Surface Impersonation</span></a>
+      <li><a href="#content-security-policy"><span class="secno">9.1</span> <span class="content">Content Security Policy</span></a>
+      <li><a href="#sec-fedcm-csrf-header"><span class="secno">9.2</span> <span class="content">Sec-FedCM-CSRF Header</span></a>
+      <li><a href="#browser-surface-impersonation"><span class="secno">9.3</span> <span class="content">Browser Surface Impersonation</span></a>
      </ol>
     <li>
-     <a href="#privacy"><span class="secno">9</span> <span class="content">Privacy</span></a>
+     <a href="#privacy"><span class="secno">10</span> <span class="content">Privacy</span></a>
      <ol class="toc">
-      <li><a href="#privacy-principals"><span class="secno">9.1</span> <span class="content">Principals</span></a>
-      <li><a href="#network-requests"><span class="secno">9.2</span> <span class="content">Network requests</span></a>
+      <li><a href="#privacy-principals"><span class="secno">10.1</span> <span class="content">Principals</span></a>
+      <li><a href="#network-requests"><span class="secno">10.2</span> <span class="content">Network requests</span></a>
       <li>
-       <a href="#attack-scenarios"><span class="secno">9.3</span> <span class="content">Attack Scenarios</span></a>
+       <a href="#attack-scenarios"><span class="secno">10.3</span> <span class="content">Attack Scenarios</span></a>
        <ol class="toc">
-        <li><a href="#manifest-fingerprinting"><span class="secno">9.3.1</span> <span class="content">Manifest Fingerprinting</span></a>
-        <li><a href="#timing-attacks"><span class="secno">9.3.2</span> <span class="content">Timing Attacks</span></a>
-        <li><a href="#push-model-mitigation"><span class="secno">9.3.3</span> <span class="content">Push Model</span></a>
-        <li><a href="#idp-intrusion"><span class="secno">9.3.4</span> <span class="content">IDP Intrusion</span></a>
+        <li><a href="#manifest-fingerprinting"><span class="secno">10.3.1</span> <span class="content">Manifest Fingerprinting</span></a>
+        <li><a href="#timing-attacks"><span class="secno">10.3.2</span> <span class="content">Timing Attacks</span></a>
+        <li><a href="#push-model-mitigation"><span class="secno">10.3.3</span> <span class="content">Push Model</span></a>
+        <li><a href="#idp-intrusion"><span class="secno">10.3.4</span> <span class="content">IDP Intrusion</span></a>
        </ol>
       <li>
-       <a href="#other-attack-scenarios"><span class="secno">9.4</span> <span class="content">Other Attack Scenarios</span></a>
+       <a href="#other-attack-scenarios"><span class="secno">10.4</span> <span class="content">Other Attack Scenarios</span></a>
        <ol class="toc">
-        <li><a href="#attack-scenarios-by-rp-cross-site-correlation"><span class="secno">9.4.1</span> <span class="content">Cross-Site Correlation</span></a>
-        <li><a href="#unauthorized-data-usage"><span class="secno">9.4.2</span> <span class="content">Unauthorized Data Usage</span></a>
-        <li><a href="#rp-fingerprinting"><span class="secno">9.4.3</span> <span class="content">RP Fingerprinting</span></a>
-        <li><a href="#secondary-use"><span class="secno">9.4.4</span> <span class="content">Secondary Use</span></a>
+        <li><a href="#attack-scenarios-by-rp-cross-site-correlation"><span class="secno">10.4.1</span> <span class="content">Cross-Site Correlation</span></a>
+        <li><a href="#unauthorized-data-usage"><span class="secno">10.4.2</span> <span class="content">Unauthorized Data Usage</span></a>
+        <li><a href="#rp-fingerprinting"><span class="secno">10.4.3</span> <span class="content">RP Fingerprinting</span></a>
+        <li><a href="#secondary-use"><span class="secno">10.4.4</span> <span class="content">Secondary Use</span></a>
        </ol>
      </ol>
-    <li><a href="#extensibility"><span class="secno">10</span> <span class="content">Extensibility</span></a>
-    <li><a href="#acknowledgements"><span class="secno">11</span> <span class="content">Acknowledgements</span></a>
+    <li><a href="#extensibility"><span class="secno">11</span> <span class="content">Extensibility</span></a>
+    <li><a href="#acknowledgements"><span class="secno">12</span> <span class="content">Acknowledgements</span></a>
     <li>
      <a href="#w3c-conformance"><span class="secno"></span> <span class="content">Conformance</span></a>
      <ol class="toc">
@@ -1535,6 +1536,8 @@ requested <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity
     <dd data-md>
      <p>This argument is a Boolean value which is <code>true</code> if and only if the
  caller’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/webappapis.html#environment-settings-object" id="ref-for-environment-settings-object">environment settings object</a> is <a data-link-type="dfn" href="https://w3c.github.io/webappsec-credential-management/#same-origin-with-its-ancestors" id="ref-for-same-origin-with-its-ancestors">same-origin with its ancestors</a>. It is <code>false</code> if caller is cross-origin.</p>
+     <p class="note" role="note"><span>Note:</span> Invocation of this <a data-link-type="dfn" href="https://tc39.github.io/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots" id="ref-for-sec-ordinary-object-internal-methods-and-internal-slots①">internal method</a> indicates that it was allowed by <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/dom.html#concept-document-permissions-policy" id="ref-for-concept-document-permissions-policy">permissions policy</a>, which is evaluated at the <a data-link-type="biblio" href="https://w3c.github.io/webappsec-credential-management/"><cite>Credential Management Level 1</cite></a> level.
+See <a href="#permissions-policy-integration">§ 8 Permissions Policy Integration</a>. As such, <var>sameOriginWithAncestors</var> is unused.</p>
    </dl>
    <p class="note" role="note"><span>NOTE:</span> The <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dom-credentialrequestoptions-mediation" id="ref-for-dom-credentialrequestoptions-mediation">mediation</a></code> flag is currently not used.</p>
    <p>The <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dom-credentialrequestoptions-signal" id="ref-for-dom-credentialrequestoptions-signal">signal</a></code> is used as an abort signal for the
@@ -1543,11 +1546,6 @@ requests.</p>
      When the <code class="idl"><a data-link-type="idl" href="#identitycredential" id="ref-for-identitycredential⑦">IdentityCredential</a></code>'s <dfn class="idl-code" data-dfn-for="IdentityCredential" data-dfn-type="method" data-export id="dom-identitycredential-discoverfromexternalsource-slot"><code>[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</code><a class="self-link" href="#dom-identitycredential-discoverfromexternalsource-slot"></a></dfn>\
     algorithm is invoked, the user agent MUST execute the following steps: 
     <ol>
-     <li data-md>
-      <p>If <var>sameOriginWithAncestors</var> is <code>false</code>, throw a
-  "<code class="idl"><a data-link-type="idl" href="https://webidl.spec.whatwg.org/#notallowederror" id="ref-for-notallowederror">NotAllowedError</a></code>" <code class="idl"><a data-link-type="idl" href="https://webidl.spec.whatwg.org/#idl-DOMException" id="ref-for-idl-DOMException">DOMException</a></code>.</p>
-      <p class="note" role="note"><span>Note:</span> This restriction aims to address the concern raised
-  in <a data-link-type="biblio" href="https://w3c.github.io/webappsec-credential-management/#security-origin-confusion"><cite>Security Origin Confusion</cite></a>.</p>
      <li data-md>
       <p class="assertion">Assert: <var>options</var>["<code class="idl"><a data-link-type="idl" href="#dom-credentialrequestoptions-identity" id="ref-for-dom-credentialrequestoptions-identity①">identity</a></code>"]["<code class="idl"><a data-link-type="idl" href="#dom-identitycredentialrequestoptions-providers" id="ref-for-dom-identitycredentialrequestoptions-providers">providers</a></code>"] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists">exists</a>.</p>
      <li data-md>
@@ -1753,7 +1751,7 @@ manually selects from the accounts chooser, or null if no account is selected.</
    <p class="note" role="note"><span>NOTE:</span> We use a two-tier manifest list in order to prevent the <a data-link-type="dfn" href="#idp" id="ref-for-idp③③">IDP</a> to easily determine the <a data-link-type="dfn" href="#rp" id="ref-for-rp③⑥">RP</a> that a user is visiting by encoding the information in the manifest path. We solve this issue by
 requiring a manifest list to be on the root of the <a data-link-type="dfn" href="#idp" id="ref-for-idp③④">IDP</a>. The manifest itself can be anywhere, but
 it will not be used if the user agent does not find it in the manifest list. This allows the <a data-link-type="dfn" href="#idp" id="ref-for-idp③⑤">IDP</a> to keep their actual manifest on an arbitary path while allowing the user agent to prevent manifest
-manipulation to fingerprint. See <a href="#manifest-fingerprinting">§ 9.3.1 Manifest Fingerprinting</a>.</p>
+manipulation to fingerprint. See <a href="#manifest-fingerprinting">§ 10.3.1 Manifest Fingerprinting</a>.</p>
    <p>The <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="check-the-root-manifest">check the root manifest</dfn> accepts an <code class="idl"><a data-link-type="idl" href="#dictdef-identityprovider" id="ref-for-dictdef-identityprovider①⓪">IdentityProvider</a></code> <var>provider</var> and whether the manifest is included in the manifest list:</p>
    <ol>
     <li data-md>
@@ -2066,10 +2064,22 @@ steps:
    </div>
    <h3 class="heading settled" data-level="7.5" id="browser-api-backwards-compatibility"><span class="secno">7.5. </span><span class="content">Backwards Compatibility</span><a class="self-link" href="#browser-api-backwards-compatibility"></a></h3>
    <p class="note" role="note"><span>Note:</span> go over how we are planning to deal with backwards compatibility.</p>
-   <h2 class="heading settled" data-level="8" id="security"><span class="secno">8. </span><span class="content">Security</span><a class="self-link" href="#security"></a></h2>
+   <h2 class="heading settled" data-level="8" id="permissions-policy-integration"><span class="secno">8. </span><span class="content">Permissions Policy Integration</span><a class="self-link" href="#permissions-policy-integration"></a></h2>
+   <p>FedCM defines a <a data-link-type="dfn" href="https://w3c.github.io/webappsec-permissions-policy/#policy-controlled-feature" id="ref-for-policy-controlled-feature">policy-controlled feature</a> identified by the string <code>"identity-credential-get"</code>.
+Its <a data-link-type="dfn" href="https://w3c.github.io/webappsec-permissions-policy/#default-allowlist" id="ref-for-default-allowlist">default allowlist</a> is <code>"self"</code>.</p>
+   <p>A <code class="idl"><a data-link-type="idl" href="https://dom.spec.whatwg.org/#document" id="ref-for-document">Document</a></code>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/dom.html#concept-document-permissions-policy" id="ref-for-concept-document-permissions-policy①">permissions policy</a> determines whether any content
+in that document is allowed to obtain a credential object using the <a href="#browser-api">Browser API</a>.
+Attempting to invoke <code><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dom-credentialscontainer-get" id="ref-for-dom-credentialscontainer-get①">navigator.credentials.get({identity:..., ...})</a></code> in documents that are not <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/iframe-embed-object.html#allowed-to-use" id="ref-for-allowed-to-use">allowed to use</a> the <code>"identity-credential-get"</code> feature will result
+in <a data-link-type="dfn" href="https://webidl.spec.whatwg.org/#a-promise-rejected-with" id="ref-for-a-promise-rejected-with">a promise rejected with</a> a "<code class="idl"><a data-link-type="idl" href="https://webidl.spec.whatwg.org/#notallowederror" id="ref-for-notallowederror">NotAllowedError</a></code>" <code class="idl"><a data-link-type="idl" href="https://webidl.spec.whatwg.org/#idl-DOMException" id="ref-for-idl-DOMException">DOMException</a></code>.</p>
+   <p>This restriction can be controlled using the mechanisms described in <a data-link-type="biblio" href="https://w3c.github.io/webappsec-permissions-policy"><cite>Permissions Policy</cite></a>.</p>
+   <p class="note" role="note"><span>Note:</span> Algorithms specified in <a data-link-type="biblio" href="https://w3c.github.io/webappsec-credential-management/"><cite>Credential Management Level 1</cite></a> perform the actual
+permissions policy evaluation. This is because such policy evaluation needs to
+occur when there is access to the <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/webappapis.html#current-settings-object" id="ref-for-current-settings-object">current settings object</a>. The <a data-link-type="dfn" href="https://tc39.github.io/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots" id="ref-for-sec-ordinary-object-internal-methods-and-internal-slots②">internal method</a>s
+modified by this specification do not have such access since they are invoked <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/infrastructure.html#in-parallel" id="ref-for-in-parallel">in parallel</a> by <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#credentialscontainer" id="ref-for-credentialscontainer①">CredentialsContainer</a></code>'s <a data-link-type="abstract-op" href="https://w3c.github.io/webappsec-credential-management/#abstract-opdef-request-a-credential" id="ref-for-abstract-opdef-request-a-credential①">Request a <code>Credential</code></a> abstract operation.</p>
+   <h2 class="heading settled" data-level="9" id="security"><span class="secno">9. </span><span class="content">Security</span><a class="self-link" href="#security"></a></h2>
    <p>This section provides a few of the security considerations for the FedCM API. Note that there is a
-separate section for <a href="#privacy">§ 9 Privacy</a> considerations.</p>
-   <h3 class="heading settled" data-level="8.1" id="content-security-policy"><span class="secno">8.1. </span><span class="content">Content Security Policy</span><a class="self-link" href="#content-security-policy"></a></h3>
+separate section for <a href="#privacy">§ 10 Privacy</a> considerations.</p>
+   <h3 class="heading settled" data-level="9.1" id="content-security-policy"><span class="secno">9.1. </span><span class="content">Content Security Policy</span><a class="self-link" href="#content-security-policy"></a></h3>
    <p>The first fetches triggered by the FedCM API are the manifest list, which is public, and the
 internal manifest. Imagine a malicious script included by (and running as) the <a data-link-type="dfn" href="#rp" id="ref-for-rp③⑧">RP</a> attempting to
 execute the FedCM API calls to a malicious <a data-link-type="dfn" href="#idp" id="ref-for-idp③⑦">IDP</a>, one which is not trusted by the <a data-link-type="dfn" href="#rp" id="ref-for-rp③⑨">RP</a>. If the
@@ -2082,14 +2092,14 @@ are same origin with respect to the internal manifest or at least dependent on t
 internal manifest, they do not require additional checks.</p>
    <p>The non-same-origin fetches include, for example, the brand icon. The user agent does not perform a <a data-link-type="biblio" href="https://w3c.github.io/webappsec-csp/"><cite>Content Security Policy Level 3</cite></a> check on these because they are directly specified from the manifest. In addition, the
 rendering of this image is performed by the user agent, and as such this image cannot affect the <a data-link-type="dfn" href="#rp" id="ref-for-rp④②">RP</a> site nor can they be inspected by the <a data-link-type="dfn" href="#rp" id="ref-for-rp④③">RP</a> in any way.</p>
-   <h3 class="heading settled" data-level="8.2" id="sec-fedcm-csrf-header"><span class="secno">8.2. </span><span class="content">Sec-FedCM-CSRF Header</span><a class="self-link" href="#sec-fedcm-csrf-header"></a></h3>
+   <h3 class="heading settled" data-level="9.2" id="sec-fedcm-csrf-header"><span class="secno">9.2. </span><span class="content">Sec-FedCM-CSRF Header</span><a class="self-link" href="#sec-fedcm-csrf-header"></a></h3>
    <p>The FedCM API introduces several non-static endpoints on the <a data-link-type="dfn" href="#idp" id="ref-for-idp④①">IDP</a>, so these need to be protected
 from XSS attacks. In order to do so, the FedCM API introduces the <a href="#Sec-FedCM-CSRF">§ 5.5 Sec-FedCM-CSRF</a> header, a <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#forbidden-header-name" id="ref-for-forbidden-header-name①">forbidden header name</a>. The header cannot be set by random websites, so the <a data-link-type="dfn" href="#idp" id="ref-for-idp④②">IDP</a> can be
 confident that the request was originated by the FedCM browser rather than sent by a websites trying
 to run an XSS attack. An <a data-link-type="dfn" href="#idp" id="ref-for-idp④③">IDP</a> must to check for this header in the credentialed requests it
 receives, which ensures that the request was initiated by the user agent, based on the FedCM API. A
 malicious actor cannot spam FedCM API calls, so this is sufficient protection for the new <a data-link-type="dfn" href="#idp" id="ref-for-idp④④">IDP</a> endpoints.</p>
-   <h3 class="heading settled" data-level="8.3" id="browser-surface-impersonation"><span class="secno">8.3. </span><span class="content">Browser Surface Impersonation</span><a class="self-link" href="#browser-surface-impersonation"></a></h3>
+   <h3 class="heading settled" data-level="9.3" id="browser-surface-impersonation"><span class="secno">9.3. </span><span class="content">Browser Surface Impersonation</span><a class="self-link" href="#browser-surface-impersonation"></a></h3>
    <p>The FedCM API introduces new (trusted) user agent UI, and the user agent may choose to show the UI
 entirely on top of the page’s contents, if anything because the page was the one responsible for
 this UI. This introduces a potential concern of a malicious site to try to replicate the FedCM UI,
@@ -2106,11 +2116,11 @@ because the FedCM UI can only be queried from the top-level frame (or potentiall
 with explicit permission from the top-level frame), the priviledged UI surface is only shown when
 the top-level frame wants it so. A sneaky iframe cannot force the FedCM UI to occlude important
 content from the main page.</p>
-   <h2 class="heading settled" data-level="9" id="privacy"><span class="secno">9. </span><span class="content">Privacy</span><a class="self-link" href="#privacy"></a></h2>
+   <h2 class="heading settled" data-level="10" id="privacy"><span class="secno">10. </span><span class="content">Privacy</span><a class="self-link" href="#privacy"></a></h2>
    <p>This section is intended to provide a comprehensive overview of the privacy risks associated with
 federated identity on the web for the purpose of measuring the privacy risks and benefits of
 proposed browser intermediation designs.</p>
-   <h3 class="heading settled" data-level="9.1" id="privacy-principals"><span class="secno">9.1. </span><span class="content">Principals</span><a class="self-link" href="#privacy-principals"></a></h3>
+   <h3 class="heading settled" data-level="10.1" id="privacy-principals"><span class="secno">10.1. </span><span class="content">Principals</span><a class="self-link" href="#privacy-principals"></a></h3>
    <p>This section describes the four principals that would participate in an invocation of the API and
 expectations around their behavior.</p>
    <ol>
@@ -2151,7 +2161,7 @@ site that the user has visited before the FedCM flow gathers the user’s confir
 account information to the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑤⑥">RP</a>, it is ok for the <a data-link-type="dfn" href="#idp" id="ref-for-idp⑤⑨">IDP</a> and for the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑤⑦">RP</a> to learn
 information about that specific user’s account, as required to provide identification. The <a data-link-type="dfn" href="#rp" id="ref-for-rp⑤⑧">RP</a> should not learn about about any other user accounts.</p>
    </ol>
-   <h3 class="heading settled" data-level="9.2" id="network-requests"><span class="secno">9.2. </span><span class="content">Network requests</span><a class="self-link" href="#network-requests"></a></h3>
+   <h3 class="heading settled" data-level="10.2" id="network-requests"><span class="secno">10.2. </span><span class="content">Network requests</span><a class="self-link" href="#network-requests"></a></h3>
    <p>The FedCM API introduces the ability for a site to ask the browser to execute a few different
 network requests, as shown in the <a href="#high-level-design">§ 4 High Level Design</a> section. It is important for the browser
 to execute these in such a way that it does not allow the user to be tracked (by an attacker
@@ -2206,7 +2216,7 @@ information required to perform a federated signin/signup. It is not possible fo
 the <a data-link-type="dfn" href="#idp" id="ref-for-idp⑦⓪">IDP</a> to force the token fetch to happen without user consent, as the user agent cannot be
 spoofed or otherwise tricked.</p>
    </ul>
-   <h3 class="heading settled" data-level="9.3" id="attack-scenarios"><span class="secno">9.3. </span><span class="content">Attack Scenarios</span><a class="self-link" href="#attack-scenarios"></a></h3>
+   <h3 class="heading settled" data-level="10.3" id="attack-scenarios"><span class="secno">10.3. </span><span class="content">Attack Scenarios</span><a class="self-link" href="#attack-scenarios"></a></h3>
    <p>This section describes the scenarios in which various agents might attempt to gain user information.
 It considers the possibilities when:</p>
    <ul>
@@ -2225,7 +2235,7 @@ threats.</p>
 default and are no longer effective for use in tracking mechanisms, and also some form of
 mitigations are implemented against ‘bounce tracking’ using link decoration or postMessage. Most of
 these scenarios consider how user tracking might happen <strong>without</strong> them. See also <a data-link-type="biblio" href="https://datatracker.ietf.org/doc/html/rfc7258"><cite>Pervasive Monitoring Is an Attack</cite></a>.</p>
-   <h4 class="heading settled" data-level="9.3.1" id="manifest-fingerprinting"><span class="secno">9.3.1. </span><span class="content">Manifest Fingerprinting</span><a class="self-link" href="#manifest-fingerprinting"></a></h4>
+   <h4 class="heading settled" data-level="10.3.1" id="manifest-fingerprinting"><span class="secno">10.3.1. </span><span class="content">Manifest Fingerprinting</span><a class="self-link" href="#manifest-fingerprinting"></a></h4>
    <p>Suppose that the FedCM API did not have a two-tier manifest (see the <a data-link-type="dfn" href="#fetch-the-manifest" id="ref-for-fetch-the-manifest①">fetch the manifest</a> algorithm), and instead directly had a single manifest. This would introduce the following
 fingerprinting attack:</p>
    <div class="example" id="example-7d1ae81c">
@@ -2253,7 +2263,7 @@ number of manifests, should an <a data-link-type="dfn" href="#idp" id="ref-for-i
 also helps the <a data-link-type="dfn" href="#idp" id="ref-for-idp⑦⑨">IDP</a>'s implementation because they any changes to the manifest are more likely to
 be performed on a file located anywhere, as opposed to the root of the domain, which may have more
 constraints in terms of ease of update.</p>
-   <h4 class="heading settled" data-level="9.3.2" id="timing-attacks"><span class="secno">9.3.2. </span><span class="content">Timing Attacks</span><a class="self-link" href="#timing-attacks"></a></h4>
+   <h4 class="heading settled" data-level="10.3.2" id="timing-attacks"><span class="secno">10.3.2. </span><span class="content">Timing Attacks</span><a class="self-link" href="#timing-attacks"></a></h4>
    <p>In the timing attack, the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑦①">RP</a> and <a data-link-type="dfn" href="#idp" id="ref-for-idp⑧⓪">IDP</a> collude to allow the <a data-link-type="dfn" href="#idp" id="ref-for-idp⑧①">IDP</a> to compute the (<a data-link-type="dfn" href="#rp" id="ref-for-rp⑦②">RP</a>'s
 origin, <a data-link-type="dfn" href="#idp" id="ref-for-idp⑧②">IDP</a>'s user identity) pair without the user’s consent. This attack is not deterministic:
 there is room for statistical error because it requires stitching together two separate pieces of
@@ -2319,7 +2329,7 @@ only possible once the user has expressed some interest in the API. Note that th
 poor user experience for users that do want to use the API, and may also result in worse success
 metrics for the API.</p>
    </ul>
-   <h4 class="heading settled" data-level="9.3.3" id="push-model-mitigation"><span class="secno">9.3.3. </span><span class="content">Push Model</span><a class="self-link" href="#push-model-mitigation"></a></h4>
+   <h4 class="heading settled" data-level="10.3.3" id="push-model-mitigation"><span class="secno">10.3.3. </span><span class="content">Push Model</span><a class="self-link" href="#push-model-mitigation"></a></h4>
    <p>Another potential future mitigation for timing attacks is the <a data-link-type="dfn" href="#push-model" id="ref-for-push-model">push model</a>. The current API is the <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="pull-model">pull model</dfn>: the API pulls the user accounts from the <a data-link-type="dfn" href="#idp" id="ref-for-idp⑨①">IDP</a> every time they are needed
 by the FedCM API. In the <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="push-model">push model</dfn>, the <a data-link-type="dfn" href="#idp" id="ref-for-idp⑨②">IDP</a> needs to tell the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent②①">user agent</a> that a
 user has signed in whenever this happens. This way, when the FedCM API is called, the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent②②">user agent</a> already knows the user accounts that the user can select from, and thus does not require any
@@ -2339,7 +2349,7 @@ accounts. The push model requires storing all of the user accounts from all of t
 a user is logged into, regardless of whether the user ever uses the FedCM API or not. This means
 that all users pay the cost, and only some get the reward.</p>
    </ul>
-   <h4 class="heading settled" data-level="9.3.4" id="idp-intrusion"><span class="secno">9.3.4. </span><span class="content">IDP Intrusion</span><a class="self-link" href="#idp-intrusion"></a></h4>
+   <h4 class="heading settled" data-level="10.3.4" id="idp-intrusion"><span class="secno">10.3.4. </span><span class="content">IDP Intrusion</span><a class="self-link" href="#idp-intrusion"></a></h4>
    <blockquote>
     <p>From <a href="https://w3cping.github.io/privacy-threat-model/#hl-intrusion">Target Privacy Threat Model § hl-intrusion</a></p>
     <p>Privacy harms don’t always come from a site learning things.</p>
@@ -2485,14 +2495,14 @@ identifiers are exchanged a more conservative user experience.</p>
      </defs>
     </svg>
    </div>
-   <h3 class="heading settled" data-level="9.4" id="other-attack-scenarios"><span class="secno">9.4. </span><span class="content">Other Attack Scenarios</span><a class="self-link" href="#other-attack-scenarios"></a></h3>
+   <h3 class="heading settled" data-level="10.4" id="other-attack-scenarios"><span class="secno">10.4. </span><span class="content">Other Attack Scenarios</span><a class="self-link" href="#other-attack-scenarios"></a></h3>
    <p>The following are other attack scenarios considered but for which we do not <strong>currently</strong> have specific
 mitigations in this API, but would ideally like to see addressed in future revisions of this API. This is usually because the attacks rely on the user already providing user
 consent. Usually stopping such attacks would be very hard since the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑦⑨">RP</a> and <a data-link-type="dfn" href="#idp" id="ref-for-idp①⓪⓪">IDP</a> communication
 has been established. In addition, such attacks would still be possible when using regular login
 mechanisms. Still, they are worth mentioning as they showcase some risks users take when signing
 into <a data-link-type="dfn" href="#rp" id="ref-for-rp⑧⓪">RP</a>s. In some cases, future mitigations are discussed.</p>
-   <h4 class="heading settled" data-level="9.4.1" id="attack-scenarios-by-rp-cross-site-correlation"><span class="secno">9.4.1. </span><span class="content">Cross-Site Correlation</span><a class="self-link" href="#attack-scenarios-by-rp-cross-site-correlation"></a></h4>
+   <h4 class="heading settled" data-level="10.4.1" id="attack-scenarios-by-rp-cross-site-correlation"><span class="secno">10.4.1. </span><span class="content">Cross-Site Correlation</span><a class="self-link" href="#attack-scenarios-by-rp-cross-site-correlation"></a></h4>
    <p>This attack happens when multiple <a data-link-type="dfn" href="#rp" id="ref-for-rp⑧①">RP</a>s collude to use their user’s data to correlate them and
 build a richer profile. When a user willingly provides their full name, email address, phone number,
 etc, to multiple relying parties, those relying parties can collaborate to build a profile of that
@@ -2867,12 +2877,12 @@ unique, and hence it would not be possible to correlate these with other <a data
      </defs>
     </svg>
    </div>
-   <h4 class="heading settled" data-level="9.4.2" id="unauthorized-data-usage"><span class="secno">9.4.2. </span><span class="content">Unauthorized Data Usage</span><a class="self-link" href="#unauthorized-data-usage"></a></h4>
+   <h4 class="heading settled" data-level="10.4.2" id="unauthorized-data-usage"><span class="secno">10.4.2. </span><span class="content">Unauthorized Data Usage</span><a class="self-link" href="#unauthorized-data-usage"></a></h4>
    <p>Another attack is when the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑧⑥">RP</a> or <a data-link-type="dfn" href="#idp" id="ref-for-idp①⓪④">IDP</a> uses user information for purposes not authorized by
 the user. When the user agrees to allow the <a data-link-type="dfn" href="#idp" id="ref-for-idp①⓪⑤">IDP</a> to provide information to the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑧⑦">RP</a>, the
 consent is specific to certain purposes, such as sign-in and personalization. For instance, the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑧⑧">RP</a> might use that data for other purposes that the user would not expect and did not authorize,
 such as selling email addresses to a spam list. Spamming risk can exist even when using <a data-link-type="dfn" href="#directed-identifier" id="ref-for-directed-identifier③">directed identifiers</a>.</p>
-   <h4 class="heading settled" data-level="9.4.3" id="rp-fingerprinting"><span class="secno">9.4.3. </span><span class="content">RP Fingerprinting</span><a class="self-link" href="#rp-fingerprinting"></a></h4>
+   <h4 class="heading settled" data-level="10.4.3" id="rp-fingerprinting"><span class="secno">10.4.3. </span><span class="content">RP Fingerprinting</span><a class="self-link" href="#rp-fingerprinting"></a></h4>
    <p>This attack happens when the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑧⑨">RP</a> employs client state-based tracking to identify user. Any
 API that exposes any kind of client state to the web risk becoming a vector for fingerprinting. The
 purpose of this API is for the user to provide identification to the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑨⓪">RP</a>. And the user should be
@@ -2926,7 +2936,7 @@ able to rescind the access to that identification, for instance by logging out. 
      </defs>
     </svg>
    </div>
-   <h4 class="heading settled" data-level="9.4.4" id="secondary-use"><span class="secno">9.4.4. </span><span class="content">Secondary Use</span><a class="self-link" href="#secondary-use"></a></h4>
+   <h4 class="heading settled" data-level="10.4.4" id="secondary-use"><span class="secno">10.4.4. </span><span class="content">Secondary Use</span><a class="self-link" href="#secondary-use"></a></h4>
    <p>Secondary use is the use of collected information about an individual without the individual’s
 consent for a purpose different from that for which the information was collected. This attack
 happens when <a data-link-type="dfn" href="#idp" id="ref-for-idp①⓪⑥">IDP</a>s misuse the the information collected to enable sign-in for other
@@ -2936,7 +2946,7 @@ users across sites where the user has decided to use federation with the same ac
 could be used, for example, to serve targeted advertisements to those users browsing on sites that
 the IDP controls.</p>
    <p>This risk can exist even in the case where the <a data-link-type="dfn" href="#idp" id="ref-for-idp①⓪⑧">IDP</a> does not having pre-existing user account
-information (for instance, if it is not a _bona fide_ IDP), because FedCM requests sent to the <a data-link-type="dfn" href="#idp" id="ref-for-idp①⓪⑨">IDP</a> are credentialed. This is more likely to occur if the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑨②">RP</a> is colluding with the <a data-link-type="dfn" href="#idp" id="ref-for-idp①①⓪">IDP</a> to enable tracking via <a href="#timing-attacks">§ 9.3.2 Timing Attacks</a>.</p>
+information (for instance, if it is not a _bona fide_ IDP), because FedCM requests sent to the <a data-link-type="dfn" href="#idp" id="ref-for-idp①⓪⑨">IDP</a> are credentialed. This is more likely to occur if the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑨②">RP</a> is colluding with the <a data-link-type="dfn" href="#idp" id="ref-for-idp①①⓪">IDP</a> to enable tracking via <a href="#timing-attacks">§ 10.3.2 Timing Attacks</a>.</p>
    <div class="image">
     <svg height="100%" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:10;" version="1.1" viewBox="0 0 10667 8000" width="100%" xmlnsU0003Aserif="http://www.serif.com/" xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" space="preserve">
      <g transform="matrix(8.33333,0,0,8.33333,0,0)">
@@ -3166,9 +3176,9 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
      </defs>
     </svg>
    </div>
-   <h2 class="heading settled" data-level="10" id="extensibility"><span class="secno">10. </span><span class="content">Extensibility</span><a class="self-link" href="#extensibility"></a></h2>
+   <h2 class="heading settled" data-level="11" id="extensibility"><span class="secno">11. </span><span class="content">Extensibility</span><a class="self-link" href="#extensibility"></a></h2>
    <p class="note" role="note"><span>Note:</span> go over the extensibility mechanisms.</p>
-   <h2 class="heading settled" data-level="11" id="acknowledgements"><span class="secno">11. </span><span class="content">Acknowledgements</span><a class="self-link" href="#acknowledgements"></a></h2>
+   <h2 class="heading settled" data-level="12" id="acknowledgements"><span class="secno">12. </span><span class="content">Acknowledgements</span><a class="self-link" href="#acknowledgements"></a></h2>
    <p class="note" role="note"><span>Note:</span> write down the Acknowledgements section.</p>
   </main>
   <div data-fill-with="conformance">
@@ -3256,8 +3266,8 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <li><a href="#potentially-create-identitycredential">potentially create IdentityCredential</a><span>, in § 7.4</span>
    <li><a href="#privacy-policy">Privacy Policy</a><span>, in § 3</span>
    <li><a href="#dom-identitycredentialrequestoptions-providers">providers</a><span>, in § 7.3</span>
-   <li><a href="#pull-model">pull model</a><span>, in § 9.3.3</span>
-   <li><a href="#push-model">push model</a><span>, in § 9.3.3</span>
+   <li><a href="#pull-model">pull model</a><span>, in § 10.3.3</span>
+   <li><a href="#push-model">push model</a><span>, in § 10.3.3</span>
    <li><a href="#registered">registered</a><span>, in § 3</span>
    <li><a href="#relying-party">Relying Party</a><span>, in § 3</span>
    <li><a href="#request-consent-to-sign-up">request consent to sign-up</a><span>, in § 7.4</span>
@@ -3301,12 +3311,14 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <a href="https://w3c.github.io/webappsec-credential-management/#credentialscontainer">https://w3c.github.io/webappsec-credential-management/#credentialscontainer</a><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-credentialscontainer">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a>
+    <li><a href="#ref-for-credentialscontainer①">8. Permissions Policy Integration</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-abstract-opdef-request-a-credential">
    <a href="https://w3c.github.io/webappsec-credential-management/#abstract-opdef-request-a-credential">https://w3c.github.io/webappsec-credential-management/#abstract-opdef-request-a-credential</a><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-abstract-opdef-request-a-credential">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a>
+    <li><a href="#ref-for-abstract-opdef-request-a-credential①">8. Permissions Policy Integration</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-algorithm-discover-creds">
@@ -3320,6 +3332,7 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <a href="https://w3c.github.io/webappsec-credential-management/#dom-credentialscontainer-get">https://w3c.github.io/webappsec-credential-management/#dom-credentialscontainer-get</a><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-dom-credentialscontainer-get">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a>
+    <li><a href="#ref-for-dom-credentialscontainer-get①">8. Permissions Policy Integration</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-dom-credentialrequestoptions-mediation">
@@ -3370,6 +3383,12 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
     <li><a href="#ref-for-funcdef-rgb">5.1. Manifest</a>
    </ul>
   </aside>
+  <aside class="dfn-panel" data-for="term-for-document">
+   <a href="https://dom.spec.whatwg.org/#document">https://dom.spec.whatwg.org/#document</a><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-document">8. Permissions Policy Integration</a>
+   </ul>
+  </aside>
   <aside class="dfn-panel" data-for="term-for-concept-document-origin">
    <a href="https://dom.spec.whatwg.org/#concept-document-origin">https://dom.spec.whatwg.org/#concept-document-origin</a><b>Referenced in:</b>
    <ul>
@@ -3380,7 +3399,8 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
   <aside class="dfn-panel" data-for="term-for-sec-ordinary-object-internal-methods-and-internal-slots">
    <a href="https://tc39.github.io/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots">https://tc39.github.io/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-sec-ordinary-object-internal-methods-and-internal-slots">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a>
+    <li><a href="#ref-for-sec-ordinary-object-internal-methods-and-internal-slots">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a> <a href="#ref-for-sec-ordinary-object-internal-methods-and-internal-slots①">(2)</a>
+    <li><a href="#ref-for-sec-ordinary-object-internal-methods-and-internal-slots②">8. Permissions Policy Integration</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-concept-response-body">
@@ -3399,7 +3419,7 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <a href="https://fetch.spec.whatwg.org/#forbidden-header-name">https://fetch.spec.whatwg.org/#forbidden-header-name</a><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-forbidden-header-name">5.5. Sec-FedCM-CSRF</a>
-    <li><a href="#ref-for-forbidden-header-name①">8.2. Sec-FedCM-CSRF Header</a>
+    <li><a href="#ref-for-forbidden-header-name①">9.2. Sec-FedCM-CSRF Header</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-concept-network-error">
@@ -3450,16 +3470,34 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
     <li><a href="#ref-for-concept-request-url">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a>
    </ul>
   </aside>
+  <aside class="dfn-panel" data-for="term-for-allowed-to-use">
+   <a href="https://html.spec.whatwg.org/multipage/iframe-embed-object.html#allowed-to-use">https://html.spec.whatwg.org/multipage/iframe-embed-object.html#allowed-to-use</a><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-allowed-to-use">8. Permissions Policy Integration</a>
+   </ul>
+  </aside>
   <aside class="dfn-panel" data-for="term-for-content-type">
    <a href="https://html.spec.whatwg.org/multipage/urls-and-fetching.html#content-type">https://html.spec.whatwg.org/multipage/urls-and-fetching.html#content-type</a><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-content-type">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a>
    </ul>
   </aside>
+  <aside class="dfn-panel" data-for="term-for-current-settings-object">
+   <a href="https://html.spec.whatwg.org/multipage/webappapis.html#current-settings-object">https://html.spec.whatwg.org/multipage/webappapis.html#current-settings-object</a><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-current-settings-object">8. Permissions Policy Integration</a>
+   </ul>
+  </aside>
   <aside class="dfn-panel" data-for="term-for-environment-settings-object">
    <a href="https://html.spec.whatwg.org/multipage/webappapis.html#environment-settings-object">https://html.spec.whatwg.org/multipage/webappapis.html#environment-settings-object</a><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-environment-settings-object">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="term-for-in-parallel">
+   <a href="https://html.spec.whatwg.org/multipage/infrastructure.html#in-parallel">https://html.spec.whatwg.org/multipage/infrastructure.html#in-parallel</a><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-in-parallel">8. Permissions Policy Integration</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-concept-origin">
@@ -3469,6 +3507,13 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
     <li><a href="#ref-for-concept-origin②">7.1. The State Machine</a> <a href="#ref-for-concept-origin③">(2)</a>
     <li><a href="#ref-for-concept-origin④">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a>
     <li><a href="#ref-for-concept-origin⑤">7.4.1. IDP Sign-out</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="term-for-concept-document-permissions-policy">
+   <a href="https://html.spec.whatwg.org/multipage/dom.html#concept-document-permissions-policy">https://html.spec.whatwg.org/multipage/dom.html#concept-document-permissions-policy</a><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-concept-document-permissions-policy">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a>
+    <li><a href="#ref-for-concept-document-permissions-policy①">8. Permissions Policy Integration</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-relevant-settings-object">
@@ -3558,11 +3603,11 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
     <li><a href="#ref-for-user-agent">1. Introduction</a> <a href="#ref-for-user-agent①">(2)</a>
     <li><a href="#ref-for-user-agent②">5.1. Manifest</a> <a href="#ref-for-user-agent③">(2)</a> <a href="#ref-for-user-agent④">(3)</a> <a href="#ref-for-user-agent⑤">(4)</a> <a href="#ref-for-user-agent⑥">(5)</a>
     <li><a href="#ref-for-user-agent⑦">7.1. The State Machine</a>
-    <li><a href="#ref-for-user-agent⑧">9.1. Principals</a> <a href="#ref-for-user-agent⑨">(2)</a> <a href="#ref-for-user-agent①⓪">(3)</a> <a href="#ref-for-user-agent①①">(4)</a> <a href="#ref-for-user-agent①②">(5)</a>
-    <li><a href="#ref-for-user-agent①③">9.3.2. Timing Attacks</a> <a href="#ref-for-user-agent①④">(2)</a> <a href="#ref-for-user-agent①⑤">(3)</a> <a href="#ref-for-user-agent①⑥">(4)</a> <a href="#ref-for-user-agent①⑦">(5)</a> <a href="#ref-for-user-agent①⑧">(6)</a> <a href="#ref-for-user-agent①⑨">(7)</a> <a href="#ref-for-user-agent②⓪">(8)</a>
-    <li><a href="#ref-for-user-agent②①">9.3.3. Push Model</a> <a href="#ref-for-user-agent②②">(2)</a> <a href="#ref-for-user-agent②③">(3)</a>
-    <li><a href="#ref-for-user-agent②④">9.3.4. IDP Intrusion</a> <a href="#ref-for-user-agent②⑤">(2)</a> <a href="#ref-for-user-agent②⑥">(3)</a>
-    <li><a href="#ref-for-user-agent②⑦">9.4.1. Cross-Site Correlation</a>
+    <li><a href="#ref-for-user-agent⑧">10.1. Principals</a> <a href="#ref-for-user-agent⑨">(2)</a> <a href="#ref-for-user-agent①⓪">(3)</a> <a href="#ref-for-user-agent①①">(4)</a> <a href="#ref-for-user-agent①②">(5)</a>
+    <li><a href="#ref-for-user-agent①③">10.3.2. Timing Attacks</a> <a href="#ref-for-user-agent①④">(2)</a> <a href="#ref-for-user-agent①⑤">(3)</a> <a href="#ref-for-user-agent①⑥">(4)</a> <a href="#ref-for-user-agent①⑦">(5)</a> <a href="#ref-for-user-agent①⑧">(6)</a> <a href="#ref-for-user-agent①⑨">(7)</a> <a href="#ref-for-user-agent②⓪">(8)</a>
+    <li><a href="#ref-for-user-agent②①">10.3.3. Push Model</a> <a href="#ref-for-user-agent②②">(2)</a> <a href="#ref-for-user-agent②③">(3)</a>
+    <li><a href="#ref-for-user-agent②④">10.3.4. IDP Intrusion</a> <a href="#ref-for-user-agent②⑤">(2)</a> <a href="#ref-for-user-agent②⑥">(3)</a>
+    <li><a href="#ref-for-user-agent②⑦">10.4.1. Cross-Site Correlation</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-map-getting-the-values">
@@ -3575,6 +3620,18 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <a href="https://mimesniff.spec.whatwg.org/#json-mime-type">https://mimesniff.spec.whatwg.org/#json-mime-type</a><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-json-mime-type">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="term-for-default-allowlist">
+   <a href="https://w3c.github.io/webappsec-permissions-policy/#default-allowlist">https://w3c.github.io/webappsec-permissions-policy/#default-allowlist</a><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-default-allowlist">8. Permissions Policy Integration</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="term-for-policy-controlled-feature">
+   <a href="https://w3c.github.io/webappsec-permissions-policy/#policy-controlled-feature">https://w3c.github.io/webappsec-permissions-policy/#policy-controlled-feature</a><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-policy-controlled-feature">8. Permissions Policy Integration</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-concept-url-host">
@@ -3611,7 +3668,7 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
   <aside class="dfn-panel" data-for="term-for-idl-DOMException">
    <a href="https://webidl.spec.whatwg.org/#idl-DOMException">https://webidl.spec.whatwg.org/#idl-DOMException</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-idl-DOMException">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a>
+    <li><a href="#ref-for-idl-DOMException">8. Permissions Policy Integration</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-Exposed">
@@ -3630,7 +3687,7 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
   <aside class="dfn-panel" data-for="term-for-notallowederror">
    <a href="https://webidl.spec.whatwg.org/#notallowederror">https://webidl.spec.whatwg.org/#notallowederror</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-notallowederror">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a>
+    <li><a href="#ref-for-notallowederror">8. Permissions Policy Integration</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-idl-promise">
@@ -3653,6 +3710,12 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
     <li><a href="#ref-for-idl-USVString①">7.3. The CredentialRequestOptions</a> <a href="#ref-for-idl-USVString②">(2)</a> <a href="#ref-for-idl-USVString③">(3)</a>
     <li><a href="#ref-for-idl-USVString④">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a>
     <li><a href="#ref-for-idl-USVString⑤">7.4.1. IDP Sign-out</a> <a href="#ref-for-idl-USVString⑥">(2)</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="term-for-a-promise-rejected-with">
+   <a href="https://webidl.spec.whatwg.org/#a-promise-rejected-with">https://webidl.spec.whatwg.org/#a-promise-rejected-with</a><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-a-promise-rejected-with">8. Permissions Policy Integration</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-resolve">
@@ -3712,6 +3775,7 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <li>
     <a data-link-type="biblio">[DOM]</a> defines the following terms:
     <ul>
+     <li><span class="dfn-paneled" id="term-for-document">Document</span>
      <li><span class="dfn-paneled" id="term-for-concept-document-origin">origin</span>
     </ul>
    <li>
@@ -3737,9 +3801,13 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <li>
     <a data-link-type="biblio">[HTML]</a> defines the following terms:
     <ul>
+     <li><span class="dfn-paneled" id="term-for-allowed-to-use">allowed to use</span>
      <li><span class="dfn-paneled" id="term-for-content-type">content-type metadata</span>
+     <li><span class="dfn-paneled" id="term-for-current-settings-object">current settings object</span>
      <li><span class="dfn-paneled" id="term-for-environment-settings-object">environment settings object</span>
+     <li><span class="dfn-paneled" id="term-for-in-parallel">in parallel</span>
      <li><span class="dfn-paneled" id="term-for-concept-origin">origin <small>(for html-origin-def)</small></span>
+     <li><span class="dfn-paneled" id="term-for-concept-document-permissions-policy">permissions policy</span>
      <li><span class="dfn-paneled" id="term-for-relevant-settings-object">relevant settings object</span>
      <li><span class="dfn-paneled" id="term-for-concept-site-same-site">same site</span>
      <li><span class="dfn-paneled" id="term-for-dom-settimeout">setTimeout</span>
@@ -3766,6 +3834,12 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
      <li><span class="dfn-paneled" id="term-for-json-mime-type">json mime type</span>
     </ul>
    <li>
+    <a data-link-type="biblio">[PERMISSIONS-POLICY]</a> defines the following terms:
+    <ul>
+     <li><span class="dfn-paneled" id="term-for-default-allowlist">default allowlist</span>
+     <li><span class="dfn-paneled" id="term-for-policy-controlled-feature">policy-controlled feature</span>
+    </ul>
+   <li>
     <a data-link-type="biblio">[URL]</a> defines the following terms:
     <ul>
      <li><span class="dfn-paneled" id="term-for-concept-url-host">host</span>
@@ -3784,6 +3858,7 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
      <li><span class="dfn-paneled" id="term-for-idl-promise">Promise</span>
      <li><span class="dfn-paneled" id="term-for-SecureContext">SecureContext</span>
      <li><span class="dfn-paneled" id="term-for-idl-USVString">USVString</span>
+     <li><span class="dfn-paneled" id="term-for-a-promise-rejected-with">a promise rejected with</span>
      <li><span class="dfn-paneled" id="term-for-resolve">resolve</span>
      <li><span class="dfn-paneled" id="term-for-idl-sequence">sequence</span>
      <li><span class="dfn-paneled" id="term-for-this">this</span>
@@ -3817,6 +3892,8 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <dd>Gordon P. Hemsley. <a href="https://mimesniff.spec.whatwg.org/"><cite>MIME Sniffing Standard</cite></a>. Living Standard. URL: <a href="https://mimesniff.spec.whatwg.org/">https://mimesniff.spec.whatwg.org/</a>
    <dt id="biblio-oidc-connect-core">[OIDC-Connect-Core]
    <dd><a href="https://openid.net/specs/openid-connect-core-1_0.html"><cite>OIDC Connect Core</cite></a>. URL: <a href="https://openid.net/specs/openid-connect-core-1_0.html">https://openid.net/specs/openid-connect-core-1_0.html</a>
+   <dt id="biblio-permissions-policy">[PERMISSIONS-POLICY]
+   <dd><a href="https://w3c.github.io/webappsec-permissions-policy"><cite>Permissions Policy</cite></a>. URL: <a href="https://w3c.github.io/webappsec-permissions-policy">https://w3c.github.io/webappsec-permissions-policy</a>
    <dt id="biblio-privacy-threat-model">[PRIVACY-THREAT-MODEL]
    <dd><a href="https://w3cping.github.io/privacy-threat-model/"><cite>Target Privacy Threat Model</cite></a>. URL: <a href="https://w3cping.github.io/privacy-threat-model/">https://w3cping.github.io/privacy-threat-model/</a>
    <dt id="biblio-referrer-policy-1">[REFERRER-POLICY-1]
@@ -3848,8 +3925,6 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <dd><a href="https://datatracker.ietf.org/doc/html/rfc7258"><cite>Pervasive Monitoring Is an Attack</cite></a>. URL: <a href="https://datatracker.ietf.org/doc/html/rfc7258">https://datatracker.ietf.org/doc/html/rfc7258</a>
    <dt id="biblio-saml-glossary">[SAML-Glossary]
    <dd><a href="https://docs.oasis-open.org/security/saml/v2.0/saml-glossary-2.0-os.pdf"><cite>SAML glossary</cite></a>. URL: <a href="https://docs.oasis-open.org/security/saml/v2.0/saml-glossary-2.0-os.pdf">https://docs.oasis-open.org/security/saml/v2.0/saml-glossary-2.0-os.pdf</a>
-   <dt id="biblio-security-origin-confusion">[Security-Origin-Confusion]
-   <dd><a href="https://w3c.github.io/webappsec-credential-management/#security-origin-confusion"><cite>Security Origin Confusion</cite></a>. URL: <a href="https://w3c.github.io/webappsec-credential-management/#security-origin-confusion">https://w3c.github.io/webappsec-credential-management/#security-origin-confusion</a>
    <dt id="biblio-unsanctioned-tracking">[UNSANCTIONED-TRACKING]
    <dd>Mark Nottingham. <a href="http://www.w3.org/2001/tag/doc/unsanctioned-tracking/"><cite>Unsanctioned Web Tracking</cite></a>. 17 July 2015. TAG Finding. URL: <a href="http://www.w3.org/2001/tag/doc/unsanctioned-tracking/">http://www.w3.org/2001/tag/doc/unsanctioned-tracking/</a>
   </dl>
@@ -3911,16 +3986,16 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
     <li><a href="#ref-for-client-id③">5.2. Accounts List</a>
     <li><a href="#ref-for-client-id④">5.4. ID Token</a>
     <li><a href="#ref-for-client-id⑤">7.3. The CredentialRequestOptions</a>
-    <li><a href="#ref-for-client-id⑥">9.2. Network requests</a> <a href="#ref-for-client-id⑦">(2)</a> <a href="#ref-for-client-id⑧">(3)</a> <a href="#ref-for-client-id⑨">(4)</a>
+    <li><a href="#ref-for-client-id⑥">10.2. Network requests</a> <a href="#ref-for-client-id⑦">(2)</a> <a href="#ref-for-client-id⑧">(3)</a> <a href="#ref-for-client-id⑨">(4)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="directed-identifier">
    <b><a href="#directed-identifier">#directed-identifier</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-directed-identifier">3. Terminology</a>
-    <li><a href="#ref-for-directed-identifier①">9.3.4. IDP Intrusion</a>
-    <li><a href="#ref-for-directed-identifier②">9.4.1. Cross-Site Correlation</a>
-    <li><a href="#ref-for-directed-identifier③">9.4.2. Unauthorized Data Usage</a>
+    <li><a href="#ref-for-directed-identifier①">10.3.4. IDP Intrusion</a>
+    <li><a href="#ref-for-directed-identifier②">10.4.1. Cross-Site Correlation</a>
+    <li><a href="#ref-for-directed-identifier③">10.4.2. Unauthorized Data Usage</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="global-identifier">
@@ -3943,8 +4018,8 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
     <li><a href="#ref-for-token③">7. The Browser API</a> <a href="#ref-for-token④">(2)</a>
     <li><a href="#ref-for-token⑤">7.2. The IdentityCredential Interface</a>
     <li><a href="#ref-for-token⑥">7.3. The CredentialRequestOptions</a>
-    <li><a href="#ref-for-token⑦">9.1. Principals</a>
-    <li><a href="#ref-for-token⑧">9.4.4. Secondary Use</a>
+    <li><a href="#ref-for-token⑦">10.1. Principals</a>
+    <li><a href="#ref-for-token⑧">10.4.4. Secondary Use</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="identity-provider">
@@ -3962,7 +4037,7 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
     <li><a href="#ref-for-identity-provider②③">7.3. The CredentialRequestOptions</a>
     <li><a href="#ref-for-identity-provider②④">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a> <a href="#ref-for-identity-provider②⑤">(2)</a> <a href="#ref-for-identity-provider②⑥">(3)</a> <a href="#ref-for-identity-provider②⑦">(4)</a> <a href="#ref-for-identity-provider②⑧">(5)</a>
     <li><a href="#ref-for-identity-provider②⑨">7.4.1. IDP Sign-out</a> <a href="#ref-for-identity-provider③⓪">(2)</a>
-    <li><a href="#ref-for-identity-provider③①">9.1. Principals</a>
+    <li><a href="#ref-for-identity-provider③①">10.1. Principals</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="idp">
@@ -3983,33 +4058,33 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
     <li><a href="#ref-for-idp③⓪">7.3. The CredentialRequestOptions</a>
     <li><a href="#ref-for-idp③①">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a> <a href="#ref-for-idp③②">(2)</a> <a href="#ref-for-idp③③">(3)</a> <a href="#ref-for-idp③④">(4)</a> <a href="#ref-for-idp③⑤">(5)</a>
     <li><a href="#ref-for-idp③⑥">7.4.1. IDP Sign-out</a>
-    <li><a href="#ref-for-idp③⑦">8.1. Content Security Policy</a> <a href="#ref-for-idp③⑧">(2)</a> <a href="#ref-for-idp③⑨">(3)</a> <a href="#ref-for-idp④⓪">(4)</a>
-    <li><a href="#ref-for-idp④①">8.2. Sec-FedCM-CSRF Header</a> <a href="#ref-for-idp④②">(2)</a> <a href="#ref-for-idp④③">(3)</a> <a href="#ref-for-idp④④">(4)</a>
-    <li><a href="#ref-for-idp④⑤">8.3. Browser Surface Impersonation</a>
-    <li><a href="#ref-for-idp④⑥">9.1. Principals</a> <a href="#ref-for-idp④⑦">(2)</a> <a href="#ref-for-idp④⑧">(3)</a> <a href="#ref-for-idp④⑨">(4)</a> <a href="#ref-for-idp⑤⓪">(5)</a> <a href="#ref-for-idp⑤①">(6)</a> <a href="#ref-for-idp⑤②">(7)</a> <a href="#ref-for-idp⑤③">(8)</a> <a href="#ref-for-idp⑤④">(9)</a> <a href="#ref-for-idp⑤⑤">(10)</a> <a href="#ref-for-idp⑤⑥">(11)</a> <a href="#ref-for-idp⑤⑦">(12)</a> <a href="#ref-for-idp⑤⑧">(13)</a> <a href="#ref-for-idp⑤⑨">(14)</a>
-    <li><a href="#ref-for-idp⑥⓪">9.2. Network requests</a> <a href="#ref-for-idp⑥①">(2)</a> <a href="#ref-for-idp⑥②">(3)</a> <a href="#ref-for-idp⑥③">(4)</a> <a href="#ref-for-idp⑥④">(5)</a> <a href="#ref-for-idp⑥⑤">(6)</a> <a href="#ref-for-idp⑥⑥">(7)</a> <a href="#ref-for-idp⑥⑦">(8)</a> <a href="#ref-for-idp⑥⑧">(9)</a> <a href="#ref-for-idp⑥⑨">(10)</a> <a href="#ref-for-idp⑦⓪">(11)</a>
-    <li><a href="#ref-for-idp⑦①">9.3. Attack Scenarios</a> <a href="#ref-for-idp⑦②">(2)</a> <a href="#ref-for-idp⑦③">(3)</a> <a href="#ref-for-idp⑦④">(4)</a>
-    <li><a href="#ref-for-idp⑦⑤">9.3.1. Manifest Fingerprinting</a> <a href="#ref-for-idp⑦⑥">(2)</a> <a href="#ref-for-idp⑦⑦">(3)</a> <a href="#ref-for-idp⑦⑧">(4)</a> <a href="#ref-for-idp⑦⑨">(5)</a>
-    <li><a href="#ref-for-idp⑧⓪">9.3.2. Timing Attacks</a> <a href="#ref-for-idp⑧①">(2)</a> <a href="#ref-for-idp⑧②">(3)</a> <a href="#ref-for-idp⑧③">(4)</a> <a href="#ref-for-idp⑧④">(5)</a> <a href="#ref-for-idp⑧⑤">(6)</a> <a href="#ref-for-idp⑧⑥">(7)</a> <a href="#ref-for-idp⑧⑦">(8)</a> <a href="#ref-for-idp⑧⑧">(9)</a> <a href="#ref-for-idp⑧⑨">(10)</a> <a href="#ref-for-idp⑨⓪">(11)</a>
-    <li><a href="#ref-for-idp⑨①">9.3.3. Push Model</a> <a href="#ref-for-idp⑨②">(2)</a> <a href="#ref-for-idp⑨③">(3)</a> <a href="#ref-for-idp⑨④">(4)</a> <a href="#ref-for-idp⑨⑤">(5)</a> <a href="#ref-for-idp⑨⑥">(6)</a> <a href="#ref-for-idp⑨⑦">(7)</a>
-    <li><a href="#ref-for-idp⑨⑧">9.3.4. IDP Intrusion</a> <a href="#ref-for-idp⑨⑨">(2)</a>
-    <li><a href="#ref-for-idp①⓪⓪">9.4. Other Attack Scenarios</a>
-    <li><a href="#ref-for-idp①⓪①">9.4.1. Cross-Site Correlation</a> <a href="#ref-for-idp①⓪②">(2)</a> <a href="#ref-for-idp①⓪③">(3)</a>
-    <li><a href="#ref-for-idp①⓪④">9.4.2. Unauthorized Data Usage</a> <a href="#ref-for-idp①⓪⑤">(2)</a>
-    <li><a href="#ref-for-idp①⓪⑥">9.4.4. Secondary Use</a> <a href="#ref-for-idp①⓪⑦">(2)</a> <a href="#ref-for-idp①⓪⑧">(3)</a> <a href="#ref-for-idp①⓪⑨">(4)</a> <a href="#ref-for-idp①①⓪">(5)</a> <a href="#ref-for-idp①①①">(6)</a> <a href="#ref-for-idp①①②">(7)</a> <a href="#ref-for-idp①①③">(8)</a> <a href="#ref-for-idp①①④">(9)</a> <a href="#ref-for-idp①①⑤">(10)</a> <a href="#ref-for-idp①①⑥">(11)</a> <a href="#ref-for-idp①①⑦">(12)</a> <a href="#ref-for-idp①①⑧">(13)</a>
+    <li><a href="#ref-for-idp③⑦">9.1. Content Security Policy</a> <a href="#ref-for-idp③⑧">(2)</a> <a href="#ref-for-idp③⑨">(3)</a> <a href="#ref-for-idp④⓪">(4)</a>
+    <li><a href="#ref-for-idp④①">9.2. Sec-FedCM-CSRF Header</a> <a href="#ref-for-idp④②">(2)</a> <a href="#ref-for-idp④③">(3)</a> <a href="#ref-for-idp④④">(4)</a>
+    <li><a href="#ref-for-idp④⑤">9.3. Browser Surface Impersonation</a>
+    <li><a href="#ref-for-idp④⑥">10.1. Principals</a> <a href="#ref-for-idp④⑦">(2)</a> <a href="#ref-for-idp④⑧">(3)</a> <a href="#ref-for-idp④⑨">(4)</a> <a href="#ref-for-idp⑤⓪">(5)</a> <a href="#ref-for-idp⑤①">(6)</a> <a href="#ref-for-idp⑤②">(7)</a> <a href="#ref-for-idp⑤③">(8)</a> <a href="#ref-for-idp⑤④">(9)</a> <a href="#ref-for-idp⑤⑤">(10)</a> <a href="#ref-for-idp⑤⑥">(11)</a> <a href="#ref-for-idp⑤⑦">(12)</a> <a href="#ref-for-idp⑤⑧">(13)</a> <a href="#ref-for-idp⑤⑨">(14)</a>
+    <li><a href="#ref-for-idp⑥⓪">10.2. Network requests</a> <a href="#ref-for-idp⑥①">(2)</a> <a href="#ref-for-idp⑥②">(3)</a> <a href="#ref-for-idp⑥③">(4)</a> <a href="#ref-for-idp⑥④">(5)</a> <a href="#ref-for-idp⑥⑤">(6)</a> <a href="#ref-for-idp⑥⑥">(7)</a> <a href="#ref-for-idp⑥⑦">(8)</a> <a href="#ref-for-idp⑥⑧">(9)</a> <a href="#ref-for-idp⑥⑨">(10)</a> <a href="#ref-for-idp⑦⓪">(11)</a>
+    <li><a href="#ref-for-idp⑦①">10.3. Attack Scenarios</a> <a href="#ref-for-idp⑦②">(2)</a> <a href="#ref-for-idp⑦③">(3)</a> <a href="#ref-for-idp⑦④">(4)</a>
+    <li><a href="#ref-for-idp⑦⑤">10.3.1. Manifest Fingerprinting</a> <a href="#ref-for-idp⑦⑥">(2)</a> <a href="#ref-for-idp⑦⑦">(3)</a> <a href="#ref-for-idp⑦⑧">(4)</a> <a href="#ref-for-idp⑦⑨">(5)</a>
+    <li><a href="#ref-for-idp⑧⓪">10.3.2. Timing Attacks</a> <a href="#ref-for-idp⑧①">(2)</a> <a href="#ref-for-idp⑧②">(3)</a> <a href="#ref-for-idp⑧③">(4)</a> <a href="#ref-for-idp⑧④">(5)</a> <a href="#ref-for-idp⑧⑤">(6)</a> <a href="#ref-for-idp⑧⑥">(7)</a> <a href="#ref-for-idp⑧⑦">(8)</a> <a href="#ref-for-idp⑧⑧">(9)</a> <a href="#ref-for-idp⑧⑨">(10)</a> <a href="#ref-for-idp⑨⓪">(11)</a>
+    <li><a href="#ref-for-idp⑨①">10.3.3. Push Model</a> <a href="#ref-for-idp⑨②">(2)</a> <a href="#ref-for-idp⑨③">(3)</a> <a href="#ref-for-idp⑨④">(4)</a> <a href="#ref-for-idp⑨⑤">(5)</a> <a href="#ref-for-idp⑨⑥">(6)</a> <a href="#ref-for-idp⑨⑦">(7)</a>
+    <li><a href="#ref-for-idp⑨⑧">10.3.4. IDP Intrusion</a> <a href="#ref-for-idp⑨⑨">(2)</a>
+    <li><a href="#ref-for-idp①⓪⓪">10.4. Other Attack Scenarios</a>
+    <li><a href="#ref-for-idp①⓪①">10.4.1. Cross-Site Correlation</a> <a href="#ref-for-idp①⓪②">(2)</a> <a href="#ref-for-idp①⓪③">(3)</a>
+    <li><a href="#ref-for-idp①⓪④">10.4.2. Unauthorized Data Usage</a> <a href="#ref-for-idp①⓪⑤">(2)</a>
+    <li><a href="#ref-for-idp①⓪⑥">10.4.4. Secondary Use</a> <a href="#ref-for-idp①⓪⑦">(2)</a> <a href="#ref-for-idp①⓪⑧">(3)</a> <a href="#ref-for-idp①⓪⑨">(4)</a> <a href="#ref-for-idp①①⓪">(5)</a> <a href="#ref-for-idp①①①">(6)</a> <a href="#ref-for-idp①①②">(7)</a> <a href="#ref-for-idp①①③">(8)</a> <a href="#ref-for-idp①①④">(9)</a> <a href="#ref-for-idp①①⑤">(10)</a> <a href="#ref-for-idp①①⑥">(11)</a> <a href="#ref-for-idp①①⑦">(12)</a> <a href="#ref-for-idp①①⑧">(13)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="tracker">
    <b><a href="#tracker">#tracker</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-tracker">9.1. Principals</a> <a href="#ref-for-tracker①">(2)</a> <a href="#ref-for-tracker②">(3)</a> <a href="#ref-for-tracker③">(4)</a> <a href="#ref-for-tracker④">(5)</a> <a href="#ref-for-tracker⑤">(6)</a>
-    <li><a href="#ref-for-tracker⑥">9.3.2. Timing Attacks</a>
+    <li><a href="#ref-for-tracker">10.1. Principals</a> <a href="#ref-for-tracker①">(2)</a> <a href="#ref-for-tracker②">(3)</a> <a href="#ref-for-tracker③">(4)</a> <a href="#ref-for-tracker④">(5)</a> <a href="#ref-for-tracker⑤">(6)</a>
+    <li><a href="#ref-for-tracker⑥">10.3.2. Timing Attacks</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="joining">
    <b><a href="#joining">#joining</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-joining">9.4.1. Cross-Site Correlation</a> <a href="#ref-for-joining①">(2)</a>
+    <li><a href="#ref-for-joining">10.4.1. Cross-Site Correlation</a> <a href="#ref-for-joining①">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="low-level-api">
@@ -4048,7 +4123,7 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
     <li><a href="#ref-for-relying-party③⑦">7. The Browser API</a> <a href="#ref-for-relying-party③⑧">(2)</a> <a href="#ref-for-relying-party③⑨">(3)</a>
     <li><a href="#ref-for-relying-party④⓪">7.3. The CredentialRequestOptions</a> <a href="#ref-for-relying-party④①">(2)</a>
     <li><a href="#ref-for-relying-party④②">7.4.1. IDP Sign-out</a> <a href="#ref-for-relying-party④③">(2)</a> <a href="#ref-for-relying-party④④">(3)</a> <a href="#ref-for-relying-party④⑤">(4)</a>
-    <li><a href="#ref-for-relying-party④⑥">9.1. Principals</a>
+    <li><a href="#ref-for-relying-party④⑥">10.1. Principals</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="rp">
@@ -4068,18 +4143,18 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
     <li><a href="#ref-for-rp③③">7.3. The CredentialRequestOptions</a> <a href="#ref-for-rp③④">(2)</a>
     <li><a href="#ref-for-rp③⑤">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a> <a href="#ref-for-rp③⑥">(2)</a>
     <li><a href="#ref-for-rp③⑦">7.4.1. IDP Sign-out</a>
-    <li><a href="#ref-for-rp③⑧">8.1. Content Security Policy</a> <a href="#ref-for-rp③⑨">(2)</a> <a href="#ref-for-rp④⓪">(3)</a> <a href="#ref-for-rp④①">(4)</a> <a href="#ref-for-rp④②">(5)</a> <a href="#ref-for-rp④③">(6)</a>
-    <li><a href="#ref-for-rp④④">9.1. Principals</a> <a href="#ref-for-rp④⑤">(2)</a> <a href="#ref-for-rp④⑥">(3)</a> <a href="#ref-for-rp④⑦">(4)</a> <a href="#ref-for-rp④⑧">(5)</a> <a href="#ref-for-rp④⑨">(6)</a> <a href="#ref-for-rp⑤⓪">(7)</a> <a href="#ref-for-rp⑤①">(8)</a> <a href="#ref-for-rp⑤②">(9)</a> <a href="#ref-for-rp⑤③">(10)</a> <a href="#ref-for-rp⑤④">(11)</a> <a href="#ref-for-rp⑤⑤">(12)</a> <a href="#ref-for-rp⑤⑥">(13)</a> <a href="#ref-for-rp⑤⑦">(14)</a> <a href="#ref-for-rp⑤⑧">(15)</a>
-    <li><a href="#ref-for-rp⑤⑨">9.2. Network requests</a> <a href="#ref-for-rp⑥⓪">(2)</a> <a href="#ref-for-rp⑥①">(3)</a> <a href="#ref-for-rp⑥②">(4)</a> <a href="#ref-for-rp⑥③">(5)</a> <a href="#ref-for-rp⑥④">(6)</a> <a href="#ref-for-rp⑥⑤">(7)</a>
-    <li><a href="#ref-for-rp⑥⑥">9.3. Attack Scenarios</a> <a href="#ref-for-rp⑥⑦">(2)</a> <a href="#ref-for-rp⑥⑧">(3)</a>
-    <li><a href="#ref-for-rp⑥⑨">9.3.1. Manifest Fingerprinting</a> <a href="#ref-for-rp⑦⓪">(2)</a>
-    <li><a href="#ref-for-rp⑦①">9.3.2. Timing Attacks</a> <a href="#ref-for-rp⑦②">(2)</a> <a href="#ref-for-rp⑦③">(3)</a> <a href="#ref-for-rp⑦④">(4)</a> <a href="#ref-for-rp⑦⑤">(5)</a> <a href="#ref-for-rp⑦⑥">(6)</a>
-    <li><a href="#ref-for-rp⑦⑦">9.3.4. IDP Intrusion</a> <a href="#ref-for-rp⑦⑧">(2)</a>
-    <li><a href="#ref-for-rp⑦⑨">9.4. Other Attack Scenarios</a> <a href="#ref-for-rp⑧⓪">(2)</a>
-    <li><a href="#ref-for-rp⑧①">9.4.1. Cross-Site Correlation</a> <a href="#ref-for-rp⑧②">(2)</a> <a href="#ref-for-rp⑧③">(3)</a> <a href="#ref-for-rp⑧④">(4)</a> <a href="#ref-for-rp⑧⑤">(5)</a>
-    <li><a href="#ref-for-rp⑧⑥">9.4.2. Unauthorized Data Usage</a> <a href="#ref-for-rp⑧⑦">(2)</a> <a href="#ref-for-rp⑧⑧">(3)</a>
-    <li><a href="#ref-for-rp⑧⑨">9.4.3. RP Fingerprinting</a> <a href="#ref-for-rp⑨⓪">(2)</a> <a href="#ref-for-rp⑨①">(3)</a>
-    <li><a href="#ref-for-rp⑨②">9.4.4. Secondary Use</a> <a href="#ref-for-rp⑨③">(2)</a> <a href="#ref-for-rp⑨④">(3)</a>
+    <li><a href="#ref-for-rp③⑧">9.1. Content Security Policy</a> <a href="#ref-for-rp③⑨">(2)</a> <a href="#ref-for-rp④⓪">(3)</a> <a href="#ref-for-rp④①">(4)</a> <a href="#ref-for-rp④②">(5)</a> <a href="#ref-for-rp④③">(6)</a>
+    <li><a href="#ref-for-rp④④">10.1. Principals</a> <a href="#ref-for-rp④⑤">(2)</a> <a href="#ref-for-rp④⑥">(3)</a> <a href="#ref-for-rp④⑦">(4)</a> <a href="#ref-for-rp④⑧">(5)</a> <a href="#ref-for-rp④⑨">(6)</a> <a href="#ref-for-rp⑤⓪">(7)</a> <a href="#ref-for-rp⑤①">(8)</a> <a href="#ref-for-rp⑤②">(9)</a> <a href="#ref-for-rp⑤③">(10)</a> <a href="#ref-for-rp⑤④">(11)</a> <a href="#ref-for-rp⑤⑤">(12)</a> <a href="#ref-for-rp⑤⑥">(13)</a> <a href="#ref-for-rp⑤⑦">(14)</a> <a href="#ref-for-rp⑤⑧">(15)</a>
+    <li><a href="#ref-for-rp⑤⑨">10.2. Network requests</a> <a href="#ref-for-rp⑥⓪">(2)</a> <a href="#ref-for-rp⑥①">(3)</a> <a href="#ref-for-rp⑥②">(4)</a> <a href="#ref-for-rp⑥③">(5)</a> <a href="#ref-for-rp⑥④">(6)</a> <a href="#ref-for-rp⑥⑤">(7)</a>
+    <li><a href="#ref-for-rp⑥⑥">10.3. Attack Scenarios</a> <a href="#ref-for-rp⑥⑦">(2)</a> <a href="#ref-for-rp⑥⑧">(3)</a>
+    <li><a href="#ref-for-rp⑥⑨">10.3.1. Manifest Fingerprinting</a> <a href="#ref-for-rp⑦⓪">(2)</a>
+    <li><a href="#ref-for-rp⑦①">10.3.2. Timing Attacks</a> <a href="#ref-for-rp⑦②">(2)</a> <a href="#ref-for-rp⑦③">(3)</a> <a href="#ref-for-rp⑦④">(4)</a> <a href="#ref-for-rp⑦⑤">(5)</a> <a href="#ref-for-rp⑦⑥">(6)</a>
+    <li><a href="#ref-for-rp⑦⑦">10.3.4. IDP Intrusion</a> <a href="#ref-for-rp⑦⑧">(2)</a>
+    <li><a href="#ref-for-rp⑦⑨">10.4. Other Attack Scenarios</a> <a href="#ref-for-rp⑧⓪">(2)</a>
+    <li><a href="#ref-for-rp⑧①">10.4.1. Cross-Site Correlation</a> <a href="#ref-for-rp⑧②">(2)</a> <a href="#ref-for-rp⑧③">(3)</a> <a href="#ref-for-rp⑧④">(4)</a> <a href="#ref-for-rp⑧⑤">(5)</a>
+    <li><a href="#ref-for-rp⑧⑥">10.4.2. Unauthorized Data Usage</a> <a href="#ref-for-rp⑧⑦">(2)</a> <a href="#ref-for-rp⑧⑧">(3)</a>
+    <li><a href="#ref-for-rp⑧⑨">10.4.3. RP Fingerprinting</a> <a href="#ref-for-rp⑨⓪">(2)</a> <a href="#ref-for-rp⑨①">(3)</a>
+    <li><a href="#ref-for-rp⑨②">10.4.4. Secondary Use</a> <a href="#ref-for-rp⑨③">(2)</a> <a href="#ref-for-rp⑨④">(3)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="session">
@@ -4122,7 +4197,7 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <ul>
     <li><a href="#ref-for-privacy-policy">5.2. Accounts List</a>
     <li><a href="#ref-for-privacy-policy①">5.3. Client Metadata</a>
-    <li><a href="#ref-for-privacy-policy②">9.2. Network requests</a>
+    <li><a href="#ref-for-privacy-policy②">10.2. Network requests</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="terms-of-service">
@@ -4130,7 +4205,7 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <ul>
     <li><a href="#ref-for-terms-of-service">5.2. Accounts List</a>
     <li><a href="#ref-for-terms-of-service①">5.3. Client Metadata</a>
-    <li><a href="#ref-for-terms-of-service②">9.2. Network requests</a>
+    <li><a href="#ref-for-terms-of-service②">10.2. Network requests</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="registered">
@@ -4367,7 +4442,7 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <b><a href="#fetch-the-manifest">#fetch-the-manifest</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-fetch-the-manifest">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a>
-    <li><a href="#ref-for-fetch-the-manifest①">9.3.1. Manifest Fingerprinting</a>
+    <li><a href="#ref-for-fetch-the-manifest①">10.3.1. Manifest Fingerprinting</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="check-the-root-manifest">
@@ -4410,13 +4485,13 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
   <aside class="dfn-panel" data-for="pull-model">
    <b><a href="#pull-model">#pull-model</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-pull-model">9.3.3. Push Model</a>
+    <li><a href="#ref-for-pull-model">10.3.3. Push Model</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="push-model">
    <b><a href="#push-model">#push-model</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-push-model">9.3.3. Push Model</a> <a href="#ref-for-push-model①">(2)</a>
+    <li><a href="#ref-for-push-model">10.3.3. Push Model</a> <a href="#ref-for-push-model①">(2)</a>
    </ul>
   </aside>
 <script>/* script-dfn-panel */
