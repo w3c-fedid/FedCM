@@ -521,7 +521,7 @@ identity federation.
       |                               | "GET /config.json"        |
       |                               |-------------------------------->|
       |                               |<--------------------------------| "{"
-      |                               |                                 |   "id_token_endpoint: ...,"
+      |                               |                                 |   "assertion_endpoint: ...,"
       |                               |                                 |   "accounts_endpoint: ...,"
       |                               |                                 |   "client_metadata_endpoint: ...,"
       |                               |                                 |   "branding: ...,"
@@ -554,7 +554,7 @@ identity federation.
       |                               |                                 |
       |                               |                                 |
       |                               |                                 |
-      |                               | "POST token.php"                |
+      |                               | "POST assertion.php"            |
       |                               | "client_id, cookies, account"   |
       |                               |-------------------------------->|
       |                               |<--------------------------------| "{"
@@ -584,7 +584,7 @@ by exposing a series of HTTP endpoints:
 1. A [[#idp-api-manifest]] endpoint in an agreed upon location that points to
 1. An [[#idp-api-accounts-endpoint]] endpoint
 1. A [[#idp-api-client-id-metadata-endpoint]] endpoint
-1. An [[#idp-api-id-token-endpoint]] endpoint
+1. An [[#idp-api-assertion-endpoint]] endpoint
 
 <!-- ============================================================ -->
 ## Manifest ## {#idp-api-manifest}
@@ -621,8 +621,8 @@ The <dfn>Manifest</dfn> JSON object has the following properties:
     ::  A URL that points to an HTTP API that complies with the [[#idp-api-accounts-endpoint]] API.
     :   <dfn>client_metadata_endpoint</dfn> (required)
     ::  A URL that points to an HTTP API that complies with the [[#idp-api-client-id-metadata-endpoint]] API.
-    :   <dfn>id_token_endpoint</dfn> (required)
-    ::  A URL that points to an HTTP API that complies with the [[#idp-api-id-token-endpoint]] API.
+    :   <dfn>assertion_endpoint</dfn> (required)
+    ::  A URL that points to an HTTP API that complies with the [[#idp-api-assertion-endpoint]] API.
     :   <dfn>branding</dfn> (optional)
     ::  A set of [=Branding JSON=] options.
 </dl>
@@ -677,7 +677,7 @@ For example:
 {
   "accounts_endpoint": "/accounts.php",
   "client_metadata_endpoint": "/metadata.php",
-  "id_token_endpoint": "/idtokens.php",
+  "assertion_endpoint": "/assertion.php",
   "branding": {
     "background_color": "green",
     "color": "0xFFEEAA",
@@ -811,12 +811,13 @@ For example:
 </div>
 
 <!-- ============================================================ -->
-## ID Token ## {#idp-api-id-token-endpoint}
+## Assertions ## {#idp-api-assertion-endpoint}
 <!-- ============================================================ -->
 
-The ID Token endpoint is responsible for [=minting=] a new [=token=] for the user.
+The assertion endpoint is responsible for [=minting=] a new [=token=] that contains signed assertions about the user.
 
-The ID Token endpoint is fetched
+The assertion endpoint is fetched
+
 (a) as a **POST** request,
 (b) **with** [=IDP=] cookies,
 (c) **with** a [[RFC9110#header.referer|Referer]] header indicating the [=RP=]'s origin
@@ -827,7 +828,7 @@ The ID Token endpoint is fetched
 
 It will also contain the following parameters in the request body `application/x-www-form-urlencoded`:
 
-<dl dfn-type="argument" dfn-for="id_token_endpoint_request">
+<dl dfn-type="argument" dfn-for="assertion_endpoint_request">
     :   <dfn>client_id</dfn>
     ::  The [=RP=]'s [=client id=].
     :   <dfn>nonce</dfn>
@@ -845,7 +846,7 @@ For example:
 
 <div class=example>
 ```http
-POST /fedcm_token_endpoint HTTP/1.1
+POST /fedcm_assertion_endpoint HTTP/1.1
 Host: idp.example
 Referer: https://rp.example/
 Content-Type: application/x-www-form-urlencoded
@@ -857,7 +858,7 @@ account_id=123&client_id=client1234&nonce=Ct60bD&disclosure_text_shown=true
 
 The response is parsed as a JSON file expecting the following properties:
 
-<dl dfn-type="argument" dfn-for="id_token_endpoint_response">
+<dl dfn-type="argument" dfn-for="assertion_endpoint_response">
     :   <dfn>token</dfn>
     ::  The resulting [=token=].
 </dl>
@@ -1223,7 +1224,7 @@ To <dfn>create tokens</dfn> given an [=AccountState=] |accountState|, a {{USVStr
         1. Set |request|["client_id"] to |provider|'s {{IdentityProvider/clientId}}.
         1. Set |request|["nonce"] to |provider|'s {{IdentityProvider/nonce}}.
     1. Let |tokens| be the result of making a POST request described in
-        [[#idp-api-id-token-endpoint]].
+        [[#idp-api-assertion-endpoint]].
     1. Return |tokens|["token"].
 </div>
 
