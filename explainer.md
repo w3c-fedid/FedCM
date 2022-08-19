@@ -624,7 +624,7 @@ place in
 
 By descending order of proximity:
 
-* [Mozilla Personas](https://github.com/mozilla/persona)
+* [Mozilla Persona](https://github.com/mozilla/persona)
 * [Web Login](https://github.com/junosuarez/web-login)
 * [OpenYOLO](https://github.com/openid/OpenYOLO-Web)
 * [Basic Auth](https://developer.mozilla.org/en-US/docs/Web/HTTP/Authentication)
