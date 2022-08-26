@@ -1254,28 +1254,35 @@ it will not be used if the user agent does not find it in the manifest list. Thi
 to keep their actual manifest on an arbitary path while allowing the user agent to prevent manifest
 manipulation to fingerprint. See [[#manifest-fingerprinting]].
 
-The <dfn>check the root manifest</dfn> accepts an {{IdentityProvider}} |provider| and whether the manifest is included in the manifest list:
+<div algorithm>
+The <dfn>check the root manifest</dfn> accepts an {{IdentityProvider}} |provider| and returns
+whether the manifest is included in the manifest list:
     1. Let |url| be |provider|'s {{IdentityProvider/configURL}}.
     1. Let |rootUrl| be a new [=/URL=].
     1. Set |rootUrl|'s [=url/scheme=] to |url|'s [=url/scheme=].
     1. Set |rootUrl|'s [=url/host=] to |url|'s [=url/host=]'s [=host/registrable domain=].
-    1. Set |rootUrl|'s [=url/path=] to ".well-known/web-identity".
+    1. Set |rootUrl|'s [=url/path=] to the <a>list</a> «".well-known", "web-identity"».
     1. Let |request| be a new <a spec=fetch for=/>request</a> whose [=request/url=] is |rootUrl| and
         [=request/redirect mode=] set to "error". TODO: what other fields need to be set?
+    1. Let |check| be false.
     1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
         steps given a <a spec=fetch for=/>response</a> |response|:
         1. If |response| is a [=network error=] or its [=response/status=] is not an [=ok status=],
-            return false.
-        1. If |response|'s [=Content-Type Metadata=] is not a [=JSON MIME Type=], return false.
+            return.
+        1. Let |mimeType| be the result of <a>extracting a MIME TYPE</a> from |response|'s
+            <a for=response>header list</a>.
+        1. If |mimeType| is failure or is not a [=JSON MIME Type=], return.
         1. Let |json| be the result of [=parse JSON bytes to an Infra value=] passing |response|'s
             [=response/body=].
-        1. If |json| is a parsing exception, or if |json| is not an [=ordered map=], return false.
-        1. If |json|["provider_urls"] does not exist, or if it is not a [=list=], return false.
-        1. If the [=list/size=] of |json|["provider_urls"] is greater than 1, return false. TODO:
+        1. If |json| is a parsing exception, or if |json| is not an [=ordered map=], return.
+        1. If |json|["provider_urls"] does not exist, or if it is not a [=list=], return.
+        1. If the [=list/size=] of |json|["provider_urls"] is greater than 1, return. TODO:
             determine the right value, probably greater than 1.
-        1. If |json|["provider_urls"][0] is not a [=string=], return false.
-        1. Return true if |json|["provider_urls"][0] [=string/is=] equal to |provider|'s
-            {{IdentityProvider/configURL}}, otherwise return false.
+        1. If |json|["provider_urls"][0] is not a [=string=], return.
+        1. Set |check| to true if |json|["provider_urls"][0] [=string/is=] equal to |provider|'s
+            {{IdentityProvider/configURL}}.
+    1. Return |check|.
+</div>
 
 The <dfn>fetch the internal manifest</dfn> algorithm accepts an {{IdentityProvider}} |provider| and returns a [=Manifest=]:
     1. Run a [[!CSP]] check with a [[CSP#directive-connect-src|connect-src]]
