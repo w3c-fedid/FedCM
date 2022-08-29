@@ -6,7 +6,7 @@
   <link href="https://www.w3.org/StyleSheets/TR/2021/cg-draft" rel="stylesheet">
   <meta content="Bikeshed version 44af0bf3e, updated Fri Jul 29 17:05:16 2022 -0700" name="generator">
   <link href="https://fedidcg.github.io/FedCM/" rel="canonical">
-  <meta content="cdc7c5c9cd166cd88f590346153a5cb349ef5345" name="document-revision">
+  <meta content="ecc2d25ee66f84757baaf6eb76b97209dd151e71" name="document-revision">
 <style>
 dl.domintro dt {
     font-family: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
@@ -608,7 +608,7 @@ c-[il] { color: #000000 } /* Literal.Number.Integer.Long */
   <div class="head">
    <p data-fill-with="logo"><a class="logo" href="https://www.w3.org/"> <img alt="W3C" height="48" src="https://www.w3.org/StyleSheets/TR/2021/logos/W3C" width="72"> </a> </p>
    <h1 class="p-name no-ref" id="title">Federated Credential Management API</h1>
-   <p id="w3c-state"><a href="https://www.w3.org/standards/types#CG-DRAFT">Draft Community Group Report</a>, <time class="dt-updated" datetime="2022-08-26">26 August 2022</time></p>
+   <p id="w3c-state"><a href="https://www.w3.org/standards/types#CG-DRAFT">Draft Community Group Report</a>, <time class="dt-updated" datetime="2022-08-29">29 August 2022</time></p>
    <div data-fill-with="spec-metadata">
     <dl>
      <dt>This version:
@@ -1767,44 +1767,53 @@ manually selects from the accounts chooser, or null if no account is selected.</
 requiring a manifest list to be on the root of the <a data-link-type="dfn" href="#idp" id="ref-for-idp③⑦">IDP</a>. The manifest itself can be anywhere, but
 it will not be used if the user agent does not find it in the manifest list. This allows the <a data-link-type="dfn" href="#idp" id="ref-for-idp③⑧">IDP</a> to keep their actual manifest on an arbitary path while allowing the user agent to prevent manifest
 manipulation to fingerprint. See <a href="#manifest-fingerprinting">§ 10.3.1 Manifest Fingerprinting</a>.</p>
-   <p>The <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="check-the-root-manifest">check the root manifest</dfn> accepts an <code class="idl"><a data-link-type="idl" href="#dictdef-identityprovider" id="ref-for-dictdef-identityprovider①⓪">IdentityProvider</a></code> <var>provider</var> and whether the manifest is included in the manifest list:</p>
-   <ol>
-    <li data-md>
-     <p>Let <var>url</var> be <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityprovider-configurl" id="ref-for-dom-identityprovider-configurl④">configURL</a></code>.</p>
-    <li data-md>
-     <p>Let <var>rootUrl</var> be a new <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url" id="ref-for-concept-url">URL</a>.</p>
-    <li data-md>
-     <p>Set <var>rootUrl</var>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-scheme" id="ref-for-concept-url-scheme">scheme</a> to <var>url</var>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-scheme" id="ref-for-concept-url-scheme①">scheme</a>.</p>
-    <li data-md>
-     <p>Set <var>rootUrl</var>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-host" id="ref-for-concept-url-host">host</a> to <var>url</var>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-host" id="ref-for-concept-url-host①">host</a>'s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#host-registrable-domain" id="ref-for-host-registrable-domain①">registrable domain</a>.</p>
-    <li data-md>
-     <p>Set <var>rootUrl</var>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-path" id="ref-for-concept-url-path">path</a> to ".well-known/web-identity".</p>
-    <li data-md>
-     <p>Let <var>request</var> be a new <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-request" id="ref-for-concept-request">request</a> whose <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-request-url" id="ref-for-concept-request-url">url</a> is <var>rootUrl</var> and <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-request-redirect-mode" id="ref-for-concept-request-redirect-mode">redirect mode</a> set to "error". TODO: what other fields need to be set?</p>
-    <li data-md>
-     <p><a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-fetch" id="ref-for-concept-fetch①">Fetch</a> <var>request</var> with <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#process-response-end-of-body" id="ref-for-process-response-end-of-body">processResponseConsumeBody</a> set to the following
+   <div class="algorithm" data-algorithm="check the root manifest">
+     The <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="check-the-root-manifest">check the root manifest</dfn> accepts an <code class="idl"><a data-link-type="idl" href="#dictdef-identityprovider" id="ref-for-dictdef-identityprovider①⓪">IdentityProvider</a></code> <var>provider</var> and returns
+whether the manifest is included in the manifest list: 
+    <ol>
+     <li data-md>
+      <p>Let <var>url</var> be <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityprovider-configurl" id="ref-for-dom-identityprovider-configurl④">configURL</a></code>.</p>
+     <li data-md>
+      <p>Let <var>rootUrl</var> be a new <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url" id="ref-for-concept-url">URL</a>.</p>
+     <li data-md>
+      <p>Set <var>rootUrl</var>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-scheme" id="ref-for-concept-url-scheme">scheme</a> to <var>url</var>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-scheme" id="ref-for-concept-url-scheme①">scheme</a>.</p>
+     <li data-md>
+      <p>Set <var>rootUrl</var>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-host" id="ref-for-concept-url-host">host</a> to <var>url</var>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-host" id="ref-for-concept-url-host①">host</a>'s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#host-registrable-domain" id="ref-for-host-registrable-domain①">registrable domain</a>.</p>
+     <li data-md>
+      <p>Set <var>rootUrl</var>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-path" id="ref-for-concept-url-path">path</a> to the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list" id="ref-for-list">list</a> «".well-known", "web-identity"».</p>
+     <li data-md>
+      <p>Let <var>request</var> be a new <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-request" id="ref-for-concept-request">request</a> whose <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-request-url" id="ref-for-concept-request-url">url</a> is <var>rootUrl</var> and <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-request-redirect-mode" id="ref-for-concept-request-redirect-mode">redirect mode</a> set to "error". TODO: what other fields need to be set?</p>
+     <li data-md>
+      <p>Let <var>check</var> be false.</p>
+     <li data-md>
+      <p><a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-fetch" id="ref-for-concept-fetch①">Fetch</a> <var>request</var> with <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#process-response-end-of-body" id="ref-for-process-response-end-of-body">processResponseConsumeBody</a> set to the following
 steps given a <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-response" id="ref-for-concept-response">response</a> <var>response</var>:</p>
-     <ol>
-      <li data-md>
-       <p>If <var>response</var> is a <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-network-error" id="ref-for-concept-network-error">network error</a> or its <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-response-status" id="ref-for-concept-response-status">status</a> is not an <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#ok-status" id="ref-for-ok-status">ok status</a>,
-return false.</p>
-      <li data-md>
-       <p>If <var>response</var>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/urls-and-fetching.html#content-type" id="ref-for-content-type">Content-Type Metadata</a> is not a <a data-link-type="dfn" href="https://mimesniff.spec.whatwg.org/#json-mime-type" id="ref-for-json-mime-type">JSON MIME Type</a>, return false.</p>
-      <li data-md>
-       <p>Let <var>json</var> be the result of <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#parse-json-bytes-to-an-infra-value" id="ref-for-parse-json-bytes-to-an-infra-value">parse JSON bytes to an Infra value</a> passing <var>response</var>’s <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-response-body" id="ref-for-concept-response-body">body</a>.</p>
-      <li data-md>
-       <p>If <var>json</var> is a parsing exception, or if <var>json</var> is not an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map①">ordered map</a>, return false.</p>
-      <li data-md>
-       <p>If <var>json</var>["provider_urls"] does not exist, or if it is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list" id="ref-for-list">list</a>, return false.</p>
-      <li data-md>
-       <p>If the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size" id="ref-for-list-size②">size</a> of <var>json</var>["provider_urls"] is greater than 1, return false. TODO:
+      <ol>
+       <li data-md>
+        <p>If <var>response</var> is a <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-network-error" id="ref-for-concept-network-error">network error</a> or its <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-response-status" id="ref-for-concept-response-status">status</a> is not an <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#ok-status" id="ref-for-ok-status">ok status</a>,
+return.</p>
+       <li data-md>
+        <p>Let <var>mimeType</var> be the result of <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-header-extract-mime-type" id="ref-for-concept-header-extract-mime-type">extracting a MIME TYPE</a> from <var>response</var>’s <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-response-header-list" id="ref-for-concept-response-header-list">header list</a>.</p>
+       <li data-md>
+        <p>If <var>mimeType</var> is failure or is not a <a data-link-type="dfn" href="https://mimesniff.spec.whatwg.org/#json-mime-type" id="ref-for-json-mime-type">JSON MIME Type</a>, return.</p>
+       <li data-md>
+        <p>Let <var>json</var> be the result of <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#parse-json-bytes-to-an-infra-value" id="ref-for-parse-json-bytes-to-an-infra-value">parse JSON bytes to an Infra value</a> passing <var>response</var>’s <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-response-body" id="ref-for-concept-response-body">body</a>.</p>
+       <li data-md>
+        <p>If <var>json</var> is a parsing exception, or if <var>json</var> is not an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map①">ordered map</a>, return.</p>
+       <li data-md>
+        <p>If <var>json</var>["provider_urls"] does not exist, or if it is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list" id="ref-for-list①">list</a>, return.</p>
+       <li data-md>
+        <p>If the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size" id="ref-for-list-size②">size</a> of <var>json</var>["provider_urls"] is greater than 1, return. TODO:
 determine the right value, probably greater than 1.</p>
-      <li data-md>
-       <p>If <var>json</var>["provider_urls"][0] is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string">string</a>, return false.</p>
-      <li data-md>
-       <p>Return true if <var>json</var>["provider_urls"][0] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string-is" id="ref-for-string-is">is</a> equal to <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityprovider-configurl" id="ref-for-dom-identityprovider-configurl⑤">configURL</a></code>, otherwise return false.</p>
-     </ol>
-   </ol>
+       <li data-md>
+        <p>If <var>json</var>["provider_urls"][0] is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string">string</a>, return.</p>
+       <li data-md>
+        <p>Set <var>check</var> to true if <var>json</var>["provider_urls"][0] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string-is" id="ref-for-string-is">is</a> equal to <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityprovider-configurl" id="ref-for-dom-identityprovider-configurl⑤">configURL</a></code>.</p>
+      </ol>
+     <li data-md>
+      <p>Return <var>check</var>.</p>
+    </ol>
+   </div>
    <p>The <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="fetch-the-internal-manifest">fetch the internal manifest</dfn> algorithm accepts an <code class="idl"><a data-link-type="idl" href="#dictdef-identityprovider" id="ref-for-dictdef-identityprovider①①">IdentityProvider</a></code> <var>provider</var> and returns a <a data-link-type="dfn" href="#manifest" id="ref-for-manifest⑤">Manifest</a>:</p>
    <ol>
     <li data-md>
@@ -2048,7 +2057,7 @@ signed into.</p>
 };
 </pre>
    <div class="algorithm" data-algorithm="logoutRPs">
-     When the <code class="idl"><a data-link-type="idl" href="#dom-identitycredential-logoutrps" id="ref-for-dom-identitycredential-logoutrps③">logoutRPs()</a></code> method is invoked given a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list" id="ref-for-list①">list</a> of <code class="idl"><a data-link-type="idl" href="#dictdef-identitycredentiallogoutrpsrequest" id="ref-for-dictdef-identitycredentiallogoutrpsrequest①">IdentityCredentialLogoutRPsRequest</a></code>s <var>logoutRequests</var>, the user agent MUST execute the following
+     When the <code class="idl"><a data-link-type="idl" href="#dom-identitycredential-logoutrps" id="ref-for-dom-identitycredential-logoutrps③">logoutRPs()</a></code> method is invoked given a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list" id="ref-for-list②">list</a> of <code class="idl"><a data-link-type="idl" href="#dictdef-identitycredentiallogoutrpsrequest" id="ref-for-dictdef-identitycredentiallogoutrpsrequest①">IdentityCredentialLogoutRPsRequest</a></code>s <var>logoutRequests</var>, the user agent MUST execute the following
 steps: 
     <ol>
      <li data-md>
@@ -3426,6 +3435,12 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
     <li><a href="#ref-for-concept-response-body">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a>
    </ul>
   </aside>
+  <aside class="dfn-panel" data-for="term-for-concept-header-extract-mime-type">
+   <a href="https://fetch.spec.whatwg.org/#concept-header-extract-mime-type">https://fetch.spec.whatwg.org/#concept-header-extract-mime-type</a><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-concept-header-extract-mime-type">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a>
+   </ul>
+  </aside>
   <aside class="dfn-panel" data-for="term-for-concept-fetch">
    <a href="https://fetch.spec.whatwg.org/#concept-fetch">https://fetch.spec.whatwg.org/#concept-fetch</a><b>Referenced in:</b>
    <ul>
@@ -3437,6 +3452,12 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <ul>
     <li><a href="#ref-for-forbidden-header-name">5.5. Sec-FedCM-CSRF</a>
     <li><a href="#ref-for-forbidden-header-name①">9.2. Sec-FedCM-CSRF Header</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="term-for-concept-response-header-list">
+   <a href="https://fetch.spec.whatwg.org/#concept-response-header-list">https://fetch.spec.whatwg.org/#concept-response-header-list</a><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-concept-response-header-list">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-concept-network-error">
@@ -3491,12 +3512,6 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <a href="https://html.spec.whatwg.org/multipage/iframe-embed-object.html#allowed-to-use">https://html.spec.whatwg.org/multipage/iframe-embed-object.html#allowed-to-use</a><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-allowed-to-use">8. Permissions Policy Integration</a>
-   </ul>
-  </aside>
-  <aside class="dfn-panel" data-for="term-for-content-type">
-   <a href="https://html.spec.whatwg.org/multipage/urls-and-fetching.html#content-type">https://html.spec.whatwg.org/multipage/urls-and-fetching.html#content-type</a><b>Referenced in:</b>
-   <ul>
-    <li><a href="#ref-for-content-type">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-current-settings-object">
@@ -3578,8 +3593,8 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
   <aside class="dfn-panel" data-for="term-for-list">
    <a href="https://infra.spec.whatwg.org/#list">https://infra.spec.whatwg.org/#list</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-list">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a>
-    <li><a href="#ref-for-list①">7.4.1. IDP Sign-out</a>
+    <li><a href="#ref-for-list">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a> <a href="#ref-for-list①">(2)</a>
+    <li><a href="#ref-for-list②">7.4.1. IDP Sign-out</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-ordered-map">
@@ -3805,8 +3820,10 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
     <a data-link-type="biblio">[FETCH]</a> defines the following terms:
     <ul>
      <li><span class="dfn-paneled" id="term-for-concept-response-body">body</span>
+     <li><span class="dfn-paneled" id="term-for-concept-header-extract-mime-type">extracting a mime type</span>
      <li><span class="dfn-paneled" id="term-for-concept-fetch">fetch</span>
      <li><span class="dfn-paneled" id="term-for-forbidden-header-name">forbidden header name</span>
+     <li><span class="dfn-paneled" id="term-for-concept-response-header-list">header list</span>
      <li><span class="dfn-paneled" id="term-for-concept-network-error">network error</span>
      <li><span class="dfn-paneled" id="term-for-ok-status">ok status</span>
      <li><span class="dfn-paneled" id="term-for-process-response-end-of-body">processresponseconsumebody</span>
@@ -3820,7 +3837,6 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
     <a data-link-type="biblio">[HTML]</a> defines the following terms:
     <ul>
      <li><span class="dfn-paneled" id="term-for-allowed-to-use">allowed to use</span>
-     <li><span class="dfn-paneled" id="term-for-content-type">content-type metadata</span>
      <li><span class="dfn-paneled" id="term-for-current-settings-object">current settings object</span>
      <li><span class="dfn-paneled" id="term-for-environment-settings-object">environment settings object</span>
      <li><span class="dfn-paneled" id="term-for-in-parallel">in parallel</span>
