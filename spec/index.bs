@@ -1736,14 +1736,90 @@ While the [=push model=] seems like an improvement for privacy, the current API 
 #### The IdP Sign-in Status API #### {#the-idp-sign-in-status-api}
 <!-- ============================================================ -->
 
-A strict subset of the [=push model=] that seems promising is to narrow the pushing of exclusively
-the user's sign-in status in the IdP (as opposed to the entirety of the user's metadata,
+A strict subset of the [=push model=] that seems promising is to narrow the pushing to exclusively
+the user's sign-in status in the IdP (as opposed to the entirety of the user's account data,
 e.g. name, email).
 
 Since the sign-in status is specific to a browser instance/profile, this bit can reflect reality
-almost perfectly (with the exception to server-side invalidations, e.g. users changing passwords or
+almost perfectly (with the exception of server-side invalidations, e.g. users changing passwords or
 deleting accounts).
 
+In this variation, the [=user agent=] exposes an API that allows an [=IDP=] to record the user's
+sign-in status: whether the user is signed-in or not.
+
+This is a compelling variation because (a) it is comparably simpler to implement by [=IDPs=] and (b)
+if the [=user agent=] knew whether the user is signed-in or not to the [=IDP=], it can guarantee that
+a user prompt will always be displayed, which makes the timing attack impossible to be performed
+invisibly (i.e. without any explicit and observable indication to the user).
+
+The [=IDPs=] are provided with an API that allows them to set their [=Sign-in Status=].
+
+<div class="example">
+A possible JS API that allows IDPs to set their Sign-in Status.
+```js
+IdentityProvider.login();
+// ... later ...
+IdentityProvider.logout();
+```
+</div>
+
+<div class="example">
+A possible HTTP header API that allows IDPs to set their Sign-in Status.
+```http
+IdP-Sign-in-Status: action=login
+// ... later ...
+IdP-Sign-in-Status: action=logout
+```
+</div>
+
+IDPs are also offered an extension to the [=Manifest=] JSON object to include:
+
+<dl dfn-type="argument" dfn-for="Manifest">
+    :   <dfn>signin_url</dfn> (required)
+    ::  A URL that allows a user to sign-in to the [=IDP=].
+</dl>
+
+Internally, each [=user agent=] keeps track of a global <dfn>Sign-in Status</dfn> map per [=IDP=] that can be:
+
+<dl dfn-type="argument" dfn-for="Sign-in Status">
+    :   <dfn>unknown</dfn> (default)
+    ::  By default, the [=user agent=] assumes that the user's signed in status is undefined.
+    :   <dfn>signed-in</dfn>
+    ::  The user has explicitly signed-in to the IDP.
+    :   <dfn>signed-out</dfn>
+    ::  The user has explicitly signed-out to the IDP.
+</dl>
+
+We would then use the follow [=maybe fetch the accounts list=] (described below) in the [=potentially create IdentityCredential=] algorithm, as opposed to the [=fetch the accounts list=].
+
+<div algorithm>
+To <dfn>maybe fetch the accounts list</dfn> given a [=Manifest=] |manifest| and an {{IdentityProvider}}
+    |provider|:
+    1. Let |status| be the [=Sign-in Status=] of the |provider|.
+    1. If |status| is {{Sign-in Status/unknown}}
+        1. Let |accounts| be the result of the [=fetch the accounts list=] algorithm
+        1. Set the [=Sign-in Status=] of the |provider| to {{Sign-in Status/signed-in}} if |accounts|'s size > 0, {{Sign-in Status/signed-out}} otherwise
+
+        NOTE: This handles the case where the [=IDP=] hasn't had the chance to call the API before the accounts list is needed. This can incur into a [=timing attack=], but it is limited to 1 per [=IDP=] per [=user agent=], so not very practical.
+
+    1. If |status| is {{Sign-in Status/signed-out}}
+        1. Terminate the request
+	1. Return an empty list
+
+        NOTE: By terminating the request here before running [=fetch the accounts list=] algorithm we prevent the timing attack to be performed without any user prompt.
+
+    1. If |status| is {{Sign-in Status/signed-in}}
+        1. Let |accounts| be the result of the [=fetch the accounts list=] algorithm
+        1. if |accounts|'s size == 0
+            1. Set the [=Sign-in Status=] of the |provider| to {{Sign-in Status/signed-out}}
+            1. Prompt the user to confirm they want to sign-in to their [=IDP=].
+            1. Navigate the user to the [=IDP=]'s {{Manifest/signin_url}} to allow them to sign-in.
+            1. Set |accounts| to the result of the [=fetch the accounts list=] algorithm
+
+            NOTE: This happens when the user's local client credentials are invalidated on the server (e.g. changing passwords or deleting accounts on a different device).
+
+        1. Return |accounts|.
+</div>
 
 
 <!-- ============================================================ -->
