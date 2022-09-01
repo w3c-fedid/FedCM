@@ -592,6 +592,8 @@ by exposing a series of HTTP endpoints:
 1. A [[#idp-api-client-id-metadata-endpoint]] endpoint
 1. An [[#idp-api-id-token-endpoint]] endpoint
 
+Issue: The algorithms used for these endpoints need to [integrate](https://github.com/fedidcg/FedCM/issues/261) with [=fetch=].
+
 <!-- ============================================================ -->
 ## Manifest ## {#idp-api-manifest}
 <!-- ============================================================ -->
@@ -1188,8 +1190,6 @@ To <dfn>fetch the accounts list</dfn> given a [=Manifest=] |manifest| and an {{I
 
         Issue: The credentialed fetch in this algorithm can lead to a timing attack that leaks the user's identities before the user consents. This is an active area of investigation that is being explored [here](https://github.com/fedidcg/FedCM/issues/230#issuecomment-1089040953).
 
-        Issue: This algorithm needs to use [=fetch=] appropriately, that's been tracked [here](https://github.com/fedidcg/FedCM/issues/261).
-
     1. Return |accountsList|.
 
         Issue: We should validate the accounts list returned here for repeated ids, as described [here](https://github.com/fedidcg/FedCM/issues/336).
@@ -1300,13 +1300,14 @@ whether the manifest is included in the manifest list:
         1. If |json| is a parsing exception, or if |json| is not an [=ordered map=], return.
         1. If |json|["provider_urls"] does not exist, or if it is not a [=list=], return.
         1. If the [=list/size=] of |json|["provider_urls"] is greater than 1, return.
+
+            Issue: [relax](https://github.com/fedidcg/FedCM/issues/333) the size of the provider_urls array. 
+
         1. If |json|["provider_urls"][0] is not a [=string=], return.
         1. Set |check| to true if |json|["provider_urls"][0] [=string/is=] equal to |provider|'s
             {{IdentityProvider/configURL}}.
     1. Return |check|.
 </div>
-
-Issue: determine the size of the provider_urls array, probably [greater than 1](https://github.com/fedidcg/FedCM/issues/333). 
 
 The <dfn>fetch the internal manifest</dfn> algorithm accepts an {{IdentityProvider}} |provider| and returns a [=Manifest=]:
     1. Run a [[!CSP]] check with a [[CSP#directive-connect-src|connect-src]]
