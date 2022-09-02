@@ -1746,7 +1746,9 @@ Since the sign-in status is specific to a browser instance/profile, this bit can
 almost perfectly (with the exception of server-side invalidations, e.g. users changing password, and
 deleting accounts on other devices).
 
-In this variation, the [=user agent=] exposes an API that allows an [=IDP=] to signal to the [=user agent=]
+Importantly, sign-in status seems easier to degrade gracefully when the client-side state is inconsistent with the server-side state: re-authentication UX. The user's profile information, on the other hand, has a series of legal freshness requirements that are still not quite well understood.
+
+So, in this variation, the [=user agent=] exposes an API that allows an [=IDP=] to signal to the [=user agent=]
 the user's sign-in status: whether the user is signed-in or not.
 
 This is a compelling variation because (a) it is comparably simpler to implement by [=IDPs=] and (b)
@@ -1755,6 +1757,28 @@ a user prompt will always be displayed, which makes the timing attack much less 
 invisibly (i.e. without any explicit and observable indication to the user).
 
 The [=IDPs=] are provided with an API that allows them to set their [=Sign-in Status=].
+
+<xmp class=idl>
+[Exposed=Window, SecureContext]
+interface IdentityProvider {
+  static void login();
+  static void logout();
+};
+</xmp>
+
+<div algorithm=login>
+When the {{IdentityProvider/login()}} static method is invoked the user agent MUST execute the following
+steps:
+    1. Set the [=Sign-in Status=] to {{Sign-in Status/signed-in}}.
+</div>
+
+<div algorithm=logout>
+When the {{IdentityProvider/logout()}} static method is invoked the user agent MUST execute the following
+steps:
+    1. Set the [=Sign-in Status=] to {{Sign-in Status/signed-out}}.
+</div>
+
+For example:
 
 <div class="example">
 A possible JS API that allows IDPs to set their Sign-in Status.
@@ -1765,6 +1789,8 @@ IdentityProvider.logout();
 ```
 </div>
 
+For convenience and compatibility with existing deployed flows, the [=user agent=] also exposes the ability for [=IDPs=] to control their [=Sign-in Status=] via HTTP headers:
+
 <div class="example">
 A possible HTTP header API that allows IDPs to set their Sign-in Status.
 ```http
@@ -1774,14 +1800,14 @@ IdP-Sign-in-Status: action=logout
 ```
 </div>
 
+When site data (e.g. cookies) are cleared manually by the user, the [=user agent=] also sets the [=Sign-in Status=] to {{Sign-in Status/unknown}}.
+
 IDPs are also offered an extension to the [=Manifest=] JSON object to include:
 
 <dl dfn-type="argument" dfn-for="Manifest">
     :   <dfn>signin_url</dfn> (optional)
     ::  A URL that allows a user to sign-in to the [=IDP=].
 </dl>
-
-NOTE: when site data (e.g. cookies) are cleared manually by the user, we should also probably set the [=Sign-in Status=] to {{Sign-in Status/unknown}}.
 
 Internally, each [=user agent=] keeps track of a global <dfn>Sign-in Status</dfn> map per [=IDP=]. The [=map/keys=] in the [=Sign-in Status=] map is the [=origin=] of the [=IDP=]. The [=map/values=] in the [=Sign-in Status=] map are <dfn>status</dfn> objects which can be one of the following values:
 
