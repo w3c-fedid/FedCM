@@ -1746,12 +1746,12 @@ Since the sign-in status is specific to a browser instance/profile, this bit can
 almost perfectly (with the exception of server-side invalidations, e.g. users changing passwords or
 deleting accounts on other devices).
 
-In this variation, the [=user agent=] exposes an API that allows an [=IDP=] to record the user's
-sign-in status: whether the user is signed-in or not.
+In this variation, the [=user agent=] exposes an API that allows an [=IDP=] to signal to the [=user agent=]
+the user's sign-in status: whether the user is signed-in or not.
 
 This is a compelling variation because (a) it is comparably simpler to implement by [=IDPs=] and (b)
 if the [=user agent=] knew whether the user is signed-in or not to the [=IDP=], it can guarantee that
-a user prompt will always be displayed, which makes the timing attack impossible to be performed
+a user prompt will always be displayed, which makes the timing attack much less viable to be performed
 invisibly (i.e. without any explicit and observable indication to the user).
 
 The [=IDPs=] are provided with an API that allows them to set their [=Sign-in Status=].
@@ -1781,9 +1781,11 @@ IDPs are also offered an extension to the [=Manifest=] JSON object to include:
     ::  A URL that allows a user to sign-in to the [=IDP=].
 </dl>
 
-Internally, each [=user agent=] keeps track of a global <dfn>Sign-in Status</dfn> map per [=IDP=] that can be:
+NOTE: when site data (e.g. cookies) are cleared manually by the user, we should also probably set the [=Sign-in Status=] to {{Sign-in Status/unknown}}.
 
-<dl dfn-type="argument" dfn-for="Sign-in Status">
+Internally, each [=user agent=] keeps track of a global <dfn>Sign-in Status</dfn> map per [=IDP=]. The [=map/keys=] in the [=Sign-in Status=] map is the [=origin=] of the [=IDP=]. The [=map/values=] in the [=Sign-in Status=] map are <dfn>status</dfn> objects which can be one of the following values:
+
+<dl dfn-type="status" dfn-for="Sign-in Status">
     :   <dfn>unknown</dfn> (default)
     ::  By default, the [=user agent=] assumes that the user's signed in status is undefined.
     :   <dfn>signed-in</dfn>
@@ -1792,7 +1794,7 @@ Internally, each [=user agent=] keeps track of a global <dfn>Sign-in Status</dfn
     ::  The user has explicitly signed-out to the IDP.
 </dl>
 
-We would then use the following [=maybe fetch the accounts list=] in the [=potentially create IdentityCredential=] algorithm, as opposed to the [=fetch the accounts list=].
+The [=user agent=] uses the following [=maybe fetch the accounts list=] in the [=potentially create IdentityCredential=] algorithm, as opposed to the [=fetch the accounts list=] algorithm.
 
 <div algorithm>
 To <dfn>maybe fetch the accounts list</dfn> given a [=Manifest=] |manifest| and an {{IdentityProvider}}
@@ -1805,7 +1807,6 @@ To <dfn>maybe fetch the accounts list</dfn> given a [=Manifest=] |manifest| and 
         NOTE: This handles the case where the [=IDP=] hasn't had the chance to call the API before the accounts list is needed. This can incur into a [=timing attack=], but it is limited to 1 per [=IDP=] per [=user agent=], so not very practical.
 
     1. If |status| is {{Sign-in Status/signed-out}}
-        1. Terminate the request
         1. Return an empty list
 
         NOTE: By terminating the request here before running [=fetch the accounts list=] algorithm we prevent the timing attack to be performed without any user prompt.
@@ -1818,7 +1819,7 @@ To <dfn>maybe fetch the accounts list</dfn> given a [=Manifest=] |manifest| and 
             1. Navigate the user to the [=IDP=]'s {{Manifest/signin_url}} to allow them to sign-in.
             1. Set |accounts| to the result of the [=fetch the accounts list=] algorithm
 
-            NOTE: This happens when the user's local client credentials are invalidated on the server (e.g. changing passwords or deleting accounts on a different device).
+            NOTE: This can happen when the user's local client credentials are invalidated on the server (e.g. changing passwords or deleting accounts on a different device), or we get network errors (e.g. timeouts, failures, etc).
 
         1. Return |accounts|.
 </div>
