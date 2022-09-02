@@ -1815,15 +1815,30 @@ To <dfn>maybe fetch the accounts list</dfn> given a [=Manifest=] |manifest| and 
         1. Let |accounts| be the result of the [=fetch the accounts list=] algorithm
         1. If |accounts|'s size is 0:
             1. Set the [=Sign-in Status=] of the |provider| to {{Sign-in Status/signed-out}}
-            1. Prompt the user to confirm they want to sign-in to their [=IDP=].
-            1. Navigate the user to the [=IDP=]'s {{Manifest/signin_url}} to allow them to sign-in.
-            1. Set |accounts| to the result of the [=fetch the accounts list=] algorithm
+            1. Ask the user to confirm they want to sign-in to their [=IDP=]
+            1. If they decline, return null
+            1. Return the result of running the [=Sign-in to the IDP=] algorithm.
 
             NOTE: This can happen when the user's local client credentials are invalidated on the server (e.g. changing passwords or deleting accounts on a different device), or we get network errors (e.g. timeouts, failures, etc).
 
         1. Return |accounts|.
 </div>
 
+<div algorithm>
+To <dfn>Sign-in to the IDP</dfn> given a [=Manifest=] |manifest| and an {{IdentityProvider}}
+    |provider|:
+    1. Assert that the [=Sign-in Status=] of the |provider| is {{Sign-in Status/signed-out}}
+    1. Start a [=task=] to:
+        1. Wait until the [=Sign-in Status=] of the |provider| becomes {{Sign-in Status/signed-in}}
+        1.   Close the dialog
+        1.   Return the result of the [=fetch the accounts list=] algorithm
+    1. Start a [=task=] to:
+        1. Wait until the user explicitly cancels the dialog
+        1.   Close the dialog
+        1.   Return null
+    1. Open a dialog that directs the user user to the [=IDP=]'s {{Manifest/signin_url}}.
+    1. Wait for one of the tasks to finish.
+</div>
 
 <!-- ============================================================ -->
 ### IDP Intrusion ### {#idp-intrusion}
