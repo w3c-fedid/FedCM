@@ -1756,6 +1756,46 @@ if the [=user agent=] knew whether the user is signed-in or not to the [=IDP=], 
 a user prompt will always be displayed, which makes the timing attack much less viable to be performed
 invisibly (i.e. without any explicit and observable indication to the user).
 
+<script type="text/typogram">
+.---------------------------------.    .---------------------------------.    .---------------------------------.
+| .-----------------------------. |    | .-----------------------------. |    | .-----------------------------. |
+| | "https://idp.example"       | |    | | "https://idp.example"       | |    | | "https://idp.example"       | |
+| '-----------------------------' |    | '-----------------------------' |    | '-----------------------------' |
+| .-----------------------------. |    | .-----------------------------. |    | .-----------------------------. |
+| |                             | |    | |                     logout -+-+-+  | |                             | |
+| |   Sign-in                   | |    | |  Welcome, Sam!      ------  | | |  | |  Bye!                       | |
+| |                             | |    | |                             | | |  | |                             | |
+| |   username                  | |    | |                             | | |  | |                             | |
+| |  +-----------------------+  | |    | | "// calls"                  | | |  | | "// calls"                  | |
+| |  | you@email.com         |  | | +--+-+>"IdentityProvider.login();" | | +--+-+>"IdentityProvider.logout();"| |
+| |  +-----------------------+  | | |  | |                     :       | |    | |                     :       | |
+| |   password                  | | |  | |                     :       | |    | |                     :       | |
+| |  +-----------------------+  | | |  | |                     :       | |    | |                     :       | |
+| |  |"**********"           |  | | |  | |                     :       | |    | |                     :       | |
+| |  +-----------------------+  | | |  | |                     :       | |    | |                     :       | |
+| |                             | | |  | |                     :       | |    | |                     :       | |
+| |  +-----------------------+  | | |  | |                     :       | |    | |                     :       | |
+| |  |       Sign-in         +--+-+-+  | |                     :       | |    | |                     :       | |
+| |  +-----------------------+  | |    | |                     :       | |    | |                     :       | |
+| |                             | |    | |                     :       | |    | |                     :       | |
+| '-----------------------------' |    | '---------------------:-------' |    | '---------------------:-------' |
+'---------------------------------'    '-----------------------:---------'    '-----------------------:---------'
+                                                               :                                      :
+                                                               +~~~~+    +~~~~~~~~~~~~~~~~~~~~~~~~~~~~+
+                                                                    :    :
+                                                                    v    v
+                                       +-----------------------+-----------------+
+                                       |  Identity Provider    | Sign-in Status  |
+                                       +-----------------------+-----------------+
+                                       | "..."                 | "..."           |
+                                       +-----------------------+-----------------+
+                                       | "https://idp.example" | Signed-in       |
+                                       +-----------------------+-----------------+
+                                       | "..."                 | "..."           |
+                                       +-----------------------+-----------------+
+
+</script>
+
 The [=IDPs=] are provided with an API that allows them to set their [=Sign-in Status=].
 
 <xmp class=idl>
@@ -1809,9 +1849,9 @@ IDPs are also offered an extension to the [=Manifest=] JSON object to include:
     ::  A URL that allows a user to sign-in to the [=IDP=].
 </dl>
 
-Internally, each [=user agent=] keeps track of a global <dfn>Sign-in Status</dfn> map per [=IDP=]. The [=map/keys=] in the [=Sign-in Status=] map is the [=origin=] of the [=IDP=]. The [=map/values=] in the [=Sign-in Status=] map are <dfn>status</dfn> objects which can be one of the following values:
+Internally, each [=user agent=] keeps track of a global <dfn>Sign-in Status</dfn> map per [=IDP=], initially an empty [=map=]. The [=map/keys=] in the [=Sign-in Status=] map is the [=origin=] of the [=IDP=]. The [=map/values=] in the [=Sign-in Status=] map are <dfn>status</dfn> objects which can be one of the following values:
 
-<dl dfn-type="status" dfn-for="Sign-in Status">
+<dl dfn-type="argument" dfn-for="Sign-in Status">
     :   <dfn>unknown</dfn> (default)
     ::  By default, the [=user agent=] assumes that the user's signed in status is undefined.
     :   <dfn>signed-in</dfn>
@@ -1822,46 +1862,6 @@ Internally, each [=user agent=] keeps track of a global <dfn>Sign-in Status</dfn
 
 The [=user agent=] uses the following [=maybe fetch the accounts list=] in the [=potentially create IdentityCredential=] algorithm, as opposed to the [=fetch the accounts list=] algorithm. It would also return early on the [=potentially create IdentityCredential=] algorithm if the user was {{Sign-in Status/signed-out}}.
 
-<script type="text/typogram">
-.---------------------------------.    .---------------------------------.    .---------------------------------.
-| .-----------------------------. |    | .-----------------------------. |    | .-----------------------------. |
-| | "https://idp.example"       | |    | | "https://idp.example"       | |    | | "https://idp.example"       | |
-| '-----------------------------' |    | '-----------------------------' |    | '-----------------------------' |
-| .-----------------------------. |    | .-----------------------------. |    | .-----------------------------. |
-| |                             | |    | |                     logout -+-+-+  | |                             | |
-| |   Sign-in                   | |    | |  Welcome, Sam!      ------  | | |  | |  Bye!                       | |
-| |                             | |    | |                             | | |  | |                             | |
-| |   username                  | |    | |                             | | |  | |                             | |
-| |  +-----------------------+  | |    | | "// calls"                  | | |  | | "// calls"                  | |
-| |  | you@email.com         |  | | +--+-+>"IdentityProvider.login();" | | +--+-+>"IdentityProvider.logout();"| |
-| |  +-----------------------+  | | |  | |                     :       | |    | |                     :       | |
-| |   password                  | | |  | |                     :       | |    | |                     :       | |
-| |  +-----------------------+  | | |  | |                     :       | |    | |                     :       | |
-| |  |"**********"           |  | | |  | |                     :       | |    | |                     :       | |
-| |  +-----------------------+  | | |  | |                     :       | |    | |                     :       | |
-| |                             | | |  | |                     :       | |    | |                     :       | |
-| |  +-----------------------+  | | |  | |                     :       | |    | |                     :       | |
-| |  |       Sign-in         +--+-+-+  | |                     :       | |    | |                     :       | |
-| |  +-----------------------+  | |    | |                     :       | |    | |                     :       | |
-| |                             | |    | |                     :       | |    | |                     :       | |
-| '-----------------------------' |    | '---------------------:-------' |    | '---------------------:-------' |
-'---------------------------------'    '-----------------------:---------'    '-----------------------:---------'
-                                                               :                                      :
-                                                               +~~~~+    +~~~~~~~~~~~~~~~~~~~~~~~~~~~~+
-                                                                    :    :
-                                                                    v    v
-                                       +-----------------------+-----------------+
-                                       |  Identity Provider    | Sign-in Status  |
-                                       +-----------------------+-----------------+
-                                       | "..."                 | "..."           |
-                                       +-----------------------+-----------------+
-                                       | "https://idp.example" | Signed-in       |
-                                       +-----------------------+-----------------+
-                                       | "..."                 | "..."           |
-                                       +-----------------------+-----------------+
-
-</script>
-
 <div algorithm>
 To <dfn>maybe fetch the accounts list</dfn> given a [=Manifest=] |manifest| and an {{IdentityProviderConfig}}
     |provider|:
@@ -1870,7 +1870,7 @@ To <dfn>maybe fetch the accounts list</dfn> given a [=Manifest=] |manifest| and 
         1. Let |accounts| be the result of the [=fetch the accounts list=] algorithm
         1. Set the [=Sign-in Status=] of the |provider| to {{Sign-in Status/signed-in}} if |accounts|'s size > 0, {{Sign-in Status/signed-out}} otherwise
 
-        NOTE: This handles the case where the [=IDP=] hasn't had the chance to call the API before the accounts list is needed. This can incur into a [=timing attack=], but it is limited to 1 per [=IDP=] per [=user agent=], so not very practical. 
+        NOTE: This handles the case where the [=IDP=] hasn't had the chance to call the API before the accounts list is needed. This can incur into a timing attack, but it is limited to 1 per [=IDP=] per [=user agent=], so not very practical. Albeit small, removing this attack surface is an active area of investigation.
 
     1. If |status| is {{Sign-in Status/signed-out}}
         1. Return an empty list
@@ -1894,8 +1894,8 @@ To <dfn>maybe fetch the accounts list</dfn> given a [=Manifest=] |manifest| and 
 To <dfn>Sign-in to the IDP</dfn> given a [=Manifest=] |manifest| and an {{IdentityProviderConfig}}
     |provider|:
     1. Assert that the [=Sign-in Status=] of the |provider| is {{Sign-in Status/signed-out}}
-    1. In parallel, wait for one these tasks to return:
-        1. Open a dialog that directs the user user to the [=IDP=]'s {{Manifest/signin_url}}.
+    1. In parallel, wait until one of the following tasks returns to continue:
+        1. Open a dialog that directs the user to the [=IDP=]'s {{Manifest/signin_url}}.
         1. Wait until the [=Sign-in Status=] of the |provider| becomes {{Sign-in Status/signed-in}}
             1. Close the dialog
             1. Return the result of the [=fetch the accounts list=] algorithm
