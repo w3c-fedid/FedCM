@@ -1032,20 +1032,20 @@ This specification starts by introducing an extension to the
 </pre>
 
 The {{IdentityCredentialRequestOptions}} contains a list of
-{{IdentityProvider}}s that the [=Relying Party=] supports and has
+{{IdentityProviderConfig}}s that the [=Relying Party=] supports and has
 pre-registered with (i.e. it has a `clientId`).
 
 <xmp class=idl>
 dictionary IdentityCredentialRequestOptions {
-  sequence<IdentityProvider> providers;
+  sequence<IdentityProviderConfig> providers;
 };
 </xmp>
 
-Each {{IdentityProvider}} represents an [=Identity Provider=] that
+Each {{IdentityProviderConfig}} represents an [=Identity Provider=] that
 the [=Relying Party=] supports (e.g. that it has a pre-registration agreement with).
 
 <xmp class=idl>
-dictionary IdentityProvider {
+dictionary IdentityProviderConfig {
   required USVString configURL;
   required USVString clientId;
   USVString nonce;
@@ -1053,11 +1053,11 @@ dictionary IdentityProvider {
 </xmp>
 
 <dl>
-    :   <b>{{IdentityProvider/configURL}}</b>
+    :   <b>{{IdentityProviderConfig/configURL}}</b>
     ::  The URL of the configuration file for the identity provider.
-    :   <b>{{IdentityProvider/clientId}}</b>
+    :   <b>{{IdentityProviderConfig/clientId}}</b>
     ::  The [=client id=] provided to the [=RP=] out of band by the [=IDP=]
-    :   <b>{{IdentityProvider/nonce}}</b>
+    :   <b>{{IdentityProviderConfig/nonce}}</b>
     ::  A random number of the choice of the [=RP=]. It is generally used to associate a client
         session with a [=token=] and to mitigate replay attacks. Therefore, this value should have
         sufficient entropy such that it would be hard to guess.
@@ -1124,7 +1124,7 @@ requests.
 </div>
 
 <div algorithm>
-To <dfn>potentially create IdentityCredential</dfn>, given an {{IdentityProvider}} |provider|:
+To <dfn>potentially create IdentityCredential</dfn>, given an {{IdentityProviderConfig}} |provider|:
     1. Let |manifest| be the result of running the [=fetch the manifest=]
         algorithm with |provider|.
     1. If |manifest| is null, return null.
@@ -1159,9 +1159,9 @@ To <dfn>potentially create IdentityCredential</dfn>, given an {{IdentityProvider
 </div>
 
 <div algorithm>
-To <dfn>compute account state</dfn> given an {{IdentityProvider}} |provider| and an
+To <dfn>compute account state</dfn> given an {{IdentityProviderConfig}} |provider| and an
     [=Account JSON=] |account|, run the following steps:
-    1. Let |idpURL| be |provider|'s {{IdentityProvider/configURL}}.
+    1. Let |idpURL| be |provider|'s {{IdentityProviderConfig/configURL}}.
     1. Let |idpOrigin| be the [=origin=] corresponding to |idpURL|.
     1. Let |rpOrigin| be [=this=]'s [=Document/origin=].
     1. Let |accountId| be |account|'s {{account_json/id}}.
@@ -1173,10 +1173,10 @@ To <dfn>compute account state</dfn> given an {{IdentityProvider}} |provider| and
 </div>
 
 <div algorithm>
-To <dfn>fetch the accounts list</dfn> given a [=Manifest=] |manifest| and an {{IdentityProvider}}
+To <dfn>fetch the accounts list</dfn> given a [=Manifest=] |manifest| and an {{IdentityProviderConfig}}
     |provider|:
     1. Let the |accountsEndpoint| url be the relative url
-        |manifest|["{{Manifest/accounts_endpoint}}"] of |provider|'s {{IdentityProvider/configURL}}.
+        |manifest|["{{Manifest/accounts_endpoint}}"] of |provider|'s {{IdentityProviderConfig/configURL}}.
     1. Let |accountsList| be the result of fetching the |accountsEndpoint| with the
         [=Identity Provider=]'s cookies.  This request MUST NOT follow
         [[RFC9110#header.location|HTTP redirects]] and instead return null if there is any error.
@@ -1188,17 +1188,17 @@ Issue: the [=fetch the accounts list=] algorithm needs to use [=fetch=] appropri
 
 <div algorithm>
 To <dfn>request consent to sign-up</dfn> the user with a given [=Account JSON=] |account|, an
-    [=AccountState=] |accountState|, a [=Manifest=] |manifest|, and an {{IdentityProvider}}
+    [=AccountState=] |accountState|, a [=Manifest=] |manifest|, and an {{IdentityProviderConfig}}
     |provider|:
     1. Let |metadata| be the result of running the [=fetch the client metadata=]
         algorithm with |manifest| and |provider|.
     1. If |metadata| is not null,
         |metadata|["{{client_metadata/privacy_policy_url}}"] is defined, and the |provider|'s
-        {{IdentityProvider/clientId}} is not in the list of
+        {{IdentityProviderConfig/clientId}} is not in the list of
         |account|["{{account_json/approved_clients}}"], then display the
         |metadata|["{{client_metadata/privacy_policy_url}}"] link.
     1. If |metadata| is not null, |metadata|["{{client_metadata/terms_of_service_url}}"] is defined,
-        and the |provider|'s {{IdentityProvider/clientId}} is not in the list of
+        and the |provider|'s {{IdentityProviderConfig/clientId}} is not in the list of
         |account|["{{account_json/approved_clients}}"], then display the
         |metadata|["{{client_metadata/terms_of_service_url}}"] link.
     1. Prompt the user to gather explicit intent to create an account. The user agent MAY use the
@@ -1211,10 +1211,10 @@ To <dfn>request consent to sign-up</dfn> the user with a given [=Account JSON=] 
 
 <div algorithm>
 To <dfn noexport>fetch the client metadata</dfn> given a [=Manifest=] |manifest| and an
-    {{IdentityProvider}} |provider|, run the following steps:
+    {{IdentityProviderConfig}} |provider|, run the following steps:
     1. Let the |clientMetadataEndpoint| url be the relative url
         |manifest|["{{Manifest/client_metadata_endpoint}}"] of |provider|'s
-        {{IdentityProvider/configURL}}.
+        {{IdentityProviderConfig/configURL}}.
     1. Let the |clientMetadata| be the result of fetching the |clientMetadataEndpoint| with the
         [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]] header but without the [=Identity Provider=]'s cookies.  This request MUST NOT follow [[RFC9110#header.location|HTTP redirects]] and instead return
         null if there is any error. See also [[#idp-api-client-id-metadata-endpoint]].
@@ -1238,20 +1238,20 @@ To <dfn>sign-in</dfn> the user with a given an [=AccountState=] |accountState|:
 
 <div algorithm>
 To <dfn>create tokens</dfn> given an [=AccountState=] |accountState|, a {{USVString}} |accountId|,
-    and an {{IdentityProvider}} |provider|:
+    and an {{IdentityProviderConfig}} |provider|:
     1. Assert |accountState|'s {{AccountState/registration state}} is [=registered=].
     1. Assert |accountState|'s {{AccountState/allows logout}} is true.
     1. Let |request| be a new object.
         1. Set |request|["account_id"] to |accountId|.
-        1. Set |request|["client_id"] to |provider|'s {{IdentityProvider/clientId}}.
-        1. Set |request|["nonce"] to |provider|'s {{IdentityProvider/nonce}}.
+        1. Set |request|["client_id"] to |provider|'s {{IdentityProviderConfig/clientId}}.
+        1. Set |request|["nonce"] to |provider|'s {{IdentityProviderConfig/nonce}}.
     1. Let |tokens| be the result of making a POST request described in
         [[#idp-api-id-token-endpoint]].
     1. Return |tokens|["token"].
 </div>
 
 <div algorithm>
-The <dfn>fetch the manifest</dfn> algorithm accepts an {{IdentityProvider}} |provider| and returns a [=Manifest=] object:
+The <dfn>fetch the manifest</dfn> algorithm accepts an {{IdentityProviderConfig}} |provider| and returns a [=Manifest=] object:
     1. In parallel, perform the following two steps:
         1. Let |manifestInSet| be the result of running [=check the root manifest=], passing
             |provider|.
@@ -1268,9 +1268,9 @@ to keep their actual manifest on an arbitary path while allowing the user agent 
 manipulation to fingerprint. See [[#manifest-fingerprinting]].
 
 <div algorithm>
-The <dfn>check the root manifest</dfn> accepts an {{IdentityProvider}} |provider| and returns
+The <dfn>check the root manifest</dfn> accepts an {{IdentityProviderConfig}} |provider| and returns
 whether the manifest is included in the manifest list:
-    1. Let |url| be |provider|'s {{IdentityProvider/configURL}}.
+    1. Let |url| be |provider|'s {{IdentityProviderConfig/configURL}}.
     1. Let |rootUrl| be a new [=/URL=].
     1. Set |rootUrl|'s [=url/scheme=] to |url|'s [=url/scheme=].
     1. Set |rootUrl|'s [=url/host=] to |url|'s [=url/host=]'s [=host/registrable domain=].
@@ -1293,15 +1293,15 @@ whether the manifest is included in the manifest list:
             determine the right value, probably greater than 1.
         1. If |json|["provider_urls"][0] is not a [=string=], return.
         1. Set |check| to true if |json|["provider_urls"][0] [=string/is=] equal to |provider|'s
-            {{IdentityProvider/configURL}}.
+            {{IdentityProviderConfig/configURL}}.
     1. Return |check|.
 </div>
 
-The <dfn>fetch the internal manifest</dfn> algorithm accepts an {{IdentityProvider}} |provider| and returns a [=Manifest=]:
+The <dfn>fetch the internal manifest</dfn> algorithm accepts an {{IdentityProviderConfig}} |provider| and returns a [=Manifest=]:
     1. Run a [[!CSP]] check with a [[CSP#directive-connect-src|connect-src]]
-        directive on the URL passed as |provider|'s {{IdentityProvider/configURL}}
+        directive on the URL passed as |provider|'s {{IdentityProviderConfig/configURL}}
         and return if the check fails.
-    1. Return the result of fetching the |provider|'s {{IdentityProvider/configURL}}
+    1. Return the result of fetching the |provider|'s {{IdentityProviderConfig/configURL}}
         and parsing it into a [=Manifest=]. TODO: specify how the fetching and the parsing works.
         The fetch MUST be done with the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]] header but without the
         [=Identity Provider=]'s cookies. This request MUST NOT follow
@@ -1863,7 +1863,7 @@ The [=user agent=] uses the following [=maybe fetch the accounts list=] in the [
 </script>
 
 <div algorithm>
-To <dfn>maybe fetch the accounts list</dfn> given a [=Manifest=] |manifest| and an {{IdentityProvider}}
+To <dfn>maybe fetch the accounts list</dfn> given a [=Manifest=] |manifest| and an {{IdentityProviderConfig}}
     |provider|:
     1. Let |status| be the [=Sign-in Status=] of the |provider|.
     1. If |status| is {{Sign-in Status/unknown}}
@@ -1891,7 +1891,7 @@ To <dfn>maybe fetch the accounts list</dfn> given a [=Manifest=] |manifest| and 
 </div>
 
 <div algorithm>
-To <dfn>Sign-in to the IDP</dfn> given a [=Manifest=] |manifest| and an {{IdentityProvider}}
+To <dfn>Sign-in to the IDP</dfn> given a [=Manifest=] |manifest| and an {{IdentityProviderConfig}}
     |provider|:
     1. Assert that the [=Sign-in Status=] of the |provider| is {{Sign-in Status/signed-out}}
     1. In parallel, wait for one these tasks to return:
