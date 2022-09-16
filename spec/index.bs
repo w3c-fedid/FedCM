@@ -592,6 +592,8 @@ by exposing a series of HTTP endpoints:
 1. A [[#idp-api-client-id-metadata-endpoint]] endpoint
 1. An [[#idp-api-id-token-endpoint]] endpoint
 
+Issue: The algorithms used for these endpoints need to [integrate](https://github.com/fedidcg/FedCM/issues/261) with [=fetch=].
+
 <!-- ============================================================ -->
 ## Manifest ## {#idp-api-manifest}
 <!-- ============================================================ -->
@@ -629,6 +631,9 @@ The <dfn>Manifest</dfn> JSON object has the following properties:
     ::  A URL that points to an HTTP API that complies with the [[#idp-api-client-id-metadata-endpoint]] API.
     :   <dfn>id_token_endpoint</dfn> (required)
     ::  A URL that points to an HTTP API that complies with the [[#idp-api-id-token-endpoint]] API.
+
+    Issue: the id_token_endpoint may be confused with OIDC's endpoint, so we are looking for alternatives [here](https://github.com/fedidcg/FedCM/issues/254).
+
     :   <dfn>branding</dfn> (optional)
     ::  A set of [=Branding JSON=] options.
 </dl>
@@ -767,6 +772,8 @@ For example:
 }
 ```
 </div>
+
+Issue: [Clarify](https://github.com/fedidcg/FedCM/issues/218) the IDP API response when the user is not signed in.
 
 <!-- ============================================================ -->
 ## Client Metadata ## {#idp-api-client-id-metadata-endpoint}
@@ -1108,8 +1115,7 @@ requests.
       1.  Assert: |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"] [=map/exists=].
       1.  Assert: |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"] [=list/size=] is 1.
 
-           Note: At some point we would like to support choosing accounts from
-           multiple [=Identity Provider=]s.
+           Issue: Support choosing accounts from multiple [=Identity Provider=]s, as described [here](https://github.com/fedidcg/FedCM/issues/319).
       1. Run {{setTimeout}} passing a [=task=] which throws a {{NetworkError}}, after a timeout of
           120 seconds.
 
@@ -1181,10 +1187,14 @@ To <dfn>fetch the accounts list</dfn> given a [=Manifest=] |manifest| and an {{I
         [=Identity Provider=]'s cookies.  This request MUST NOT follow
         [[RFC9110#header.location|HTTP redirects]] and instead return null if there is any error.
         See also [[#idp-api-accounts-endpoint]].
-    1. Return |accountsList|.
-</div>
 
-Issue: the [=fetch the accounts list=] algorithm needs to use [=fetch=] appropriately.
+        Issue: The credentialed fetch in this algorithm can lead to a timing attack that leaks the user's identities before the user consents. This is an active area of investigation that is being explored [here](https://github.com/fedidcg/FedCM/issues/230#issuecomment-1089040953).
+
+    1. Return |accountsList|.
+
+        Issue: We should validate the accounts list returned here for repeated ids, as described [here](https://github.com/fedidcg/FedCM/issues/336).
+
+</div>
 
 <div algorithm>
 To <dfn>request consent to sign-up</dfn> the user with a given [=Account JSON=] |account|, an
@@ -1289,8 +1299,10 @@ whether the manifest is included in the manifest list:
             [=response/body=].
         1. If |json| is a parsing exception, or if |json| is not an [=ordered map=], return.
         1. If |json|["provider_urls"] does not exist, or if it is not a [=list=], return.
-        1. If the [=list/size=] of |json|["provider_urls"] is greater than 1, return. TODO:
-            determine the right value, probably greater than 1.
+        1. If the [=list/size=] of |json|["provider_urls"] is greater than 1, return.
+
+            Issue: [relax](https://github.com/fedidcg/FedCM/issues/333) the size of the provider_urls array. 
+
         1. If |json|["provider_urls"][0] is not a [=string=], return.
         1. Set |check| to true if |json|["provider_urls"][0] [=string/is=] equal to |provider|'s
             {{IdentityProvider/configURL}}.
@@ -1307,6 +1319,8 @@ The <dfn>fetch the internal manifest</dfn> algorithm accepts an {{IdentityProvid
         [=Identity Provider=]'s cookies. This request MUST NOT follow
         [[RFC9110#header.location|HTTP redirects]] and instead throw an
         error if there are any.
+
+        Issue: it is unclear if the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]] header is [needed](https://github.com/fedidcg/FedCM/issues/267) on the manifest fetch.
 
 <!-- ============================================================ -->
 ### IDP Sign-out ### {#browser-api-idp-sign-out}
@@ -1449,6 +1463,8 @@ to run an XSS attack. An [=IDP=] must to check for this header in the credential
 receives, which ensures that the request was initiated by the user agent, based on the FedCM API. A
 malicious actor cannot spam FedCM API calls, so this is sufficient protection for the new [=IDP=]
 endpoints.
+
+Issue: There is an ongoing investigation on whether we should use this header or CORS [here](https://github.com/fedidcg/FedCM/issues/320).
 
 <!-- ============================================================ -->
 ## Browser Surface Impersonation ## {#browser-surface-impersonation}
