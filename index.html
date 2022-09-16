@@ -6,7 +6,7 @@
   <link href="https://www.w3.org/StyleSheets/TR/2021/cg-draft" rel="stylesheet">
   <meta content="Bikeshed version 44af0bf3e, updated Fri Jul 29 17:05:16 2022 -0700" name="generator">
   <link href="https://fedidcg.github.io/FedCM/" rel="canonical">
-  <meta content="44d9e7b429c9151238b16ab79801f6d615e26b0f" name="document-revision">
+  <meta content="e86bdc6830d4a999aa051ed6ffed1465e22d23f0" name="document-revision">
 <style>
 dl.domintro dt {
     font-family: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
@@ -785,28 +785,28 @@ it depends on third-party cookies, from sign-in to sign-out and revocation.</p>
 third-party cookies the API places the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent">user agent</a> as a mediator between <a data-link-type="dfn" href="#rp" id="ref-for-rp">RPs</a> and <a data-link-type="dfn" href="#idp" id="ref-for-idp">IDPs</a>. This mediation requires user consent before permitting
 the <a data-link-type="dfn" href="#rp" id="ref-for-rp①">RPs</a> and <a data-link-type="dfn" href="#idp" id="ref-for-idp①">IDPs</a> to know about their connection to the user.</p>
 <script type="text/typogram">
-┌─────────────────────────────────┐       ┌─────────────────────────────────┐
-| ┌─────────────────────────────┐ |       | ┌─────────────────────────────┐ |
+.---------------------------------.       .---------------------------------.
+| .-----------------------------. |       | .-----------------------------. |
 | | "https://rp.example"        | |       | | "https://rp.example"        | |
-| └─────────────────────────────┘ |       | └─────────────────────────────┘ |
-| ┌─────────────────────────────┐ |       | ┌─────────────────────────────┐ |
+| '-----------------------------' |       | '-----------------------------' |
+| .-----------------------------. |       | .-----------------------------. |
 | |                             | |       | |                             | |
 | |   Welcome to my website!    | |       | |  Welcome to my website!     | |
 | |                             | |       | |                             | |
 | |                             | |       | |                             | |
-| +─────────────────────────────+ |       | +─────────────────────────────+ |
+| +-----------------------------+ |       | +-----------------------------+ |
 | |       Choose an account     | |       | |    Sign-in to rp.example    | |
 | |   to sign-in to rp.example  | |       | |      with idp.example?      | |
 | |                             | |       | |                             | |
-| | ┌────┐                      | |       | | ┌────┐                      | |
-| | | :) |  John Doe            | |  ──►  | | | :) |  John Doe            | |
-| | └────┘  john@email.com      | |       | | └────┘  john@email.com      | |
-| | ┌────┐                      | |       | |                             | |
-| | | :] |  John Doe            | |       | | ┌─────────────────────────┐ | |
-| | └────┘  john.doe@work.com   | |       | | |    Continue as John     | | |
-| |                             | |       | | └─────────────────────────┘ | |
-| └─────────────────────────────┘ |       | └─────────────────────────────┘ |
-└─────────────────────────────────┘       └─────────────────────────────────┘
+| | .----.                      | |       | | .----.                      | |
+| | | :) |  John Doe            | |  -->  | | | :) |  John Doe            | |
+| | '----'  john@email.com      | |       | | '----'  john@email.com      | |
+| | .----.                      | |       | |                             | |
+| | | :] |  John Doe            | |       | | +-------------------------+ | |
+| | '----'  john.doe@work.com   | |       | | |    Continue as John     | | |
+| |                             | |       | | +-------------------------+ | |
+| '-----------------------------' |       | '-----------------------------' |
+'---------------------------------'       '---------------------------------'
 </script>
    <p>The specification leans heavily on changes in the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent①">user agent</a> and <a data-link-type="dfn" href="#idp" id="ref-for-idp②">IDP</a> and minimally on the <a data-link-type="dfn" href="#rp" id="ref-for-rp②">RP</a>. The FedCM API provides a way to authenticate,
 fetch tokens, revoke the provided tokens, and allow for front-channel logout.</p>
@@ -1058,34 +1058,34 @@ the <a data-link-type="dfn" href="#rp" id="ref-for-rp①④">RP</a> using the ac
 intermediation of cooperating <a data-link-type="dfn" href="#idp" id="ref-for-idp①⓪">IDP</a>s and <a data-link-type="dfn" href="#rp" id="ref-for-rp①⑤">RP</a>s.</p>
    <p>The <a href="#idp-api">§ 5 The Identity Provider API</a> and the <a href="#rp-api">§ 6 The Relying Party API</a> defines a set of HTTP APIs that cooperating <a data-link-type="dfn" href="#idp" id="ref-for-idp①①">IDP</a>s and <a data-link-type="dfn" href="#idp" id="ref-for-idp①②">IDP</a>s exposes as well as the entry points in the <a href="#browser-api">§ 7 The Browser API</a> that they can use.</p>
 <script type="text/typogram">
-┌───────────┐                  ┌───────────┐                      ┌───────────┐
-│           │                  │           │                      │           │
-│  Relying  │                  │   User    │                      │  Identity │
-│   Party   │                  │   Agent   │                      │  Provider │
-│           │                  │           │                      │           │
-│           │                  │           │                      │           │
-│           │   ┌──────────► *-+ Credential│     ┌────────────► *-+ manifest  │
-│           │   │              │ Manager   │     │                │           │
-│           │   ├              │ API       │     ├────────────► *-+ accounts  │
-│           │   │              │           │     │                │           │
-│           │   │              │           │     ├────────────► *-+ client    │
-│           │   │              │           │     │                │ metadata  │
-│           │   │              │           │     │                │           │
-│           │   │              │           │     ├────────────► *-+ token     │
-│           │   │              │           │     │                │           │
-│           │   │              │           │     │                │           │
-│           │   │              │           │     │                │           │
-│           │   │              │           │     │                │           │
-│ ┌───────┐ │   │              │ ┌───────┐ │     │                │ ┌───────┐ │
-│ │ JS    ├─┼───┘     ┌────────┼─┤ HTTP  ├─┼─────┘       ┌────────┼─┤ JS    │ │
-│ └───────┘ │         │        │ └───────┘ │             │        │ └───────┘ │
-│           │         │        │           │             │        │           │
-│           │         │        │           │             │        │           │
-│           │         │        │           │             │        │           │
-│    logout +-*  ◄────┘        │ logoutRPs +-*  ◄────────┘        │           │
-│           │                  │           │                      │           │
-│           │                  │           │                      │           │
-└───────────┘                  └───────────┘                      └───────────┘
++-----------+                  +-----------+                      +-----------+
+|           |                  |           |                      |           |
+|  Relying  |                  |   User    |                      | Identity  |
+|   Party   |                  |   Agent   |                      | Provider  |
+|           |                  |           |                      |           |
+|           |                  |           |                      |           |
+|           |   +----------->*-+ Credential|     +------------->*-+ manifest  |
+|           |   |              | Management|     |                |           |
+|           |   |              |    API    |     +------------->*-+ accounts  |
+|           |   |              |           |     |                |           |
+|           |   |              |           |     +------------->*-+ client    |
+|           |   |              |           |     |                | metadata  |
+|           |   |              |           |     |                |           |
+|           |   |              |           |     +------------->*-+ token     |
+|           |   |              |           |     |                |           |
+|           |   |              |           |     |                |           |
+|           |   |              |           |     |                |           |
+|           |   |              |           |     |                |           |
+| +-------+ |   |              | +-------+ |     |                | +-------+ |
+| | JS    +-+---+     +--------+-+ HTTP  +-+-----+       +------+-+-+   JS  | |
+| +-------+ |         |        | +-------+ |             |        | +-------+ |
+|           |         |        |           |             |        |           |
+|           |         |        |           |             |        |           |
+|           |         |        |           |             |        |           |
+|    logout +-*<------+        | logoutRPs +-*<----------+        |           |
+|           |                  |           |                      |           |
+|           |                  |           |                      |           |
++-----------+                  +-----------+                      +-----------+
 </script>
    <p>The user agent intermediates in such a matter that makes it impractical for the
 API to be used for tracking purposes, while preserving the functionality of
@@ -1104,7 +1104,7 @@ identity federation.</p>
       |                               |                                 |   "provider_urls: [ ... ]"
       |                               |                                 | "}"
       |                               |                                 |
-      |                               | "GET /config.json"        |
+      |                               | "GET /config.json"              |
       |                               |-------------------------------->|
       |                               |<--------------------------------| "{"
       |                               |                                 |   "id_token_endpoint: ...,"
