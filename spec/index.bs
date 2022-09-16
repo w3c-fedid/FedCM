@@ -1298,11 +1298,39 @@ Each [=Relying Party=] endpoint is responsible for clearing its local state
 After the completion of this API, the user's session is cleared and will go
 through an [[#use-cases-explicit-sign-in]] upon return.
 
-<div class='image'>
-<pre class=include-raw>
-path: img/mock31.svg
-</pre>
-</div>
+<script type="text/typogram">
+.---------------------------------.       .---------------------------------.
+| .-----------------------------. |       | .-----------------------------. |
+| | "https://rp.example"        | |       | | "https://idp.example"       | |
+| '-----------------------------' |       | '-----------------------------' |
+| .-----------------------------. |       | .-----------------------------. |
+| |                             | |       | |                             | |
+| |   Welcome to my website!    | |       | |  John, we are logging out.  | |
+| |                             | |       | |                             | |
+| |                             | |       | |                             | |
+| +-----------------------------+ |       | |  +~~~~~~~~~~~~~~~~~~~~~~~+  | |
+| |   Sign-in to rp.example     | |       | |  :"<script>"             :  | |
+| |     with idp.example?       | |       | |  :" IdentityCredential. ":  | |
+| |                             | |       | |  :"    logoutRPs([{     ":  | |
+| | .----.                      | |       | |  :"       url: ...      ":  | |
+| | | :) |  John Doe            | |  -->  | |  :"       accountId: ...":  | |
+| | '----'  john@email.com      | |       | |  :"    }, {             ":  | |
+| |                             | |       | |  :"       ...           ":  | |
+| | +-------------------------+ | |       | |  :"    }]);             ":  | |
+| | |     Continue as John    | | |       | |  :"<\/script>"           :  | |
+| | +------------+------------+ | |       | |  +~~~~~~~~~~~+~~~~~~~~~~~+  | |
+| '--------------|--------------' |       | '--------------|--------------' |
+'----------------|----------------'       '----------------|----------------'
+                 |                                         |
+                 |                                         |
+                 |        +------------------------+       |        +-------+
+                 |        |                        |       |        |       |
+                 +------->|     Registered RPs     |-------+------->| Queue |
+                          |                        |                |       |
+                          +------------------------+                +-------+
+			  
+
+</script>
 
 <div class=example>
 ```js
