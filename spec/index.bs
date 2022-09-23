@@ -1077,7 +1077,7 @@ NOTE: The {{CredentialRequestOptions/mediation}} flag is currently not used.
 The {{CredentialRequestOptions/signal}} is used as an abort signal for the
 requests.
 
-<div algorithm>
+<div algorithm="DiscoverFromExternalSource">
     When the {{IdentityCredential}}'s
     <dfn for="IdentityCredential" method>\[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</dfn>\
     algorithm is invoked, the user agent MUST execute the following steps:
@@ -1092,11 +1092,51 @@ requests.
           Note: the purpose of having a timer here is to avoid leaking the reason causing this
           method to return null. If there was no such timer, the developer could easily infer
           whether the user has an account with the [=IDP=] or not, or whether the user closed the UI without granting permission to share the [=IDP=] account information with the [=RP=].
+      1. Let |all_options| be a list of pairs of {{CredentialRequestOptions}}
+          and {{Promise}} objects.
+          This list is reused for all {{Credential/[[DiscoverFromExternalSource]]}}
+          calls within the same global object.
+      1. Create a new promise and append (|options|, new promise) to |all_options|.
+      1. If a load event listener (next step) has already been registered or
+        a task has already been posted (step after next), return the promise.
+      1. If the document is not <a spec=HTML>completely loaded</a>, register
+          an [=event handler=] on the {{Window}} object for the
+          {{Window/load}} event. When the listener is called, proceed to the
+          next step.
+
+          Note: Typically, RPs interact with IDPs using an SDK provided by the
+          IDP. It is desirable to be able to show multiple IDPs together in the
+          account chooser even with IDP SDKs that do not cooperate with each
+          other. This and the next step make this possible.
+      1. [=Queue a global task=] where the global object is the current window
+          and the task source is the <dfn export>federated credential management
+          task source</dfn> and steps is "go to the next step".
+      1. Let |options| be the result of running the [=combine CredentialRequestOptions=]
+          algorithm with |all_options|.
       1. Let |provider| be |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"][0].
       1. Let |credential| be the result of running the [=potentially create IdentityCredential=]
           algorithm with |provider|.
-      1. If |credential| is null, wait for the task that throws a {{NetworkError}}, otherwise return
-          |credential|.
+      1. If |credential| is null, wait for the task that throws a {{NetworkError}}, otherwise
+          find the pair in |all_options| where the {{IdentityProviderConfig/configURL}}
+          matches the selected |credential|. Resolve the promise in that pair with
+          this |credential| and reject all other promises in the list with
+          {{NetworkError}}.
+      1. If, at any time, any of the |options|.{{CredentialRequestOptions/signal}}s
+          in |all_options| is aborted, abort further processing, close any UI
+          that may have been shown as part of the request, and reject all
+          promises with an {{AbortError}}.
+      1. Clear |all_options|.
+</div>
+
+<div algorithm>
+To <dfn>combine CredentialRequestOptions</dfn>:
+    1. Let |all_options| be the input options
+    1. Let |options| be a new {{CredentialRequestOptions}} object
+    1. The {{CredentialRequestOptions}}.{{CredentialRequestOptions/identity}}.
+        {{IdentityCredentialRequestOptions/providers}} arrays of all objects
+        in the list are concatenated and set as |options|`.identity.providers`.
+    1. If there is a duplicate provider configURL in the array, all
+        promises are rejected.
 </div>
 
 <div algorithm>
