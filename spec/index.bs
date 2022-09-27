@@ -1098,7 +1098,8 @@ This [=internal method=] accepts three arguments:
 
         Note: Invocation of this [=internal method=] indicates that it was allowed by
         [=permissions policy=], which is evaluated at the [[!CREDENTIAL-MANAGEMENT-1]] level.
-        See [[#permissions-policy-integration]]. As such, |sameOriginWithAncestors| is unused.
+        See [[#permissions-policy-integration]]. As such,
+            <var ignore=''>sameOriginWithAncestors</var> is unused.
 
 </dl>
 
@@ -1158,7 +1159,7 @@ To <dfn>potentially create IdentityCredential</dfn>, given an {{IdentityProvider
         1. Otherwise, run the [=sign-in=] algorithm with |accountState|.
     1. If |accountState|'s {{AccountState/registration state}} is [=unregistered=] then return null.
     1. Let |token| be the result of running the [=create tokens=] algorithm with |accountState|,
-        |account|'s {{account_json/id}}, and |provider|.
+        |account|'s {{account_json/id}}, |provider|, and |manifest|.
     1. Let |credential| be a new {{IdentityCredential}}.
     1. Set |credential|'s {{IdentityCredential/token}} to |token|.
     1. Return |credential|.
@@ -1181,19 +1182,47 @@ To <dfn>compute account state</dfn> given an {{IdentityProvider}} |provider| and
 <div algorithm>
 To <dfn>fetch the accounts list</dfn> given a [=Manifest=] |manifest| and an {{IdentityProvider}}
     |provider|:
-    1. Let the |accountsEndpoint| url be the relative url
-        |manifest|["{{Manifest/accounts_endpoint}}"] of |provider|'s {{IdentityProvider/configURL}}.
-    1. Let |accountsList| be the result of fetching the |accountsEndpoint| with the
-        [=Identity Provider=]'s cookies.  This request MUST NOT follow
-        [[RFC9110#header.location|HTTP redirects]] and instead return null if there is any error.
-        See also [[#idp-api-accounts-endpoint]].
+    1. Let |accountsUrl| be the result of running [=url parser=] given
+        |manifest|[{{Manifest/accounts_endpoint}}] (the relative URL) and |provider|'s
+        {{IdentityProvider/configURL}} (the base URL).
+    1. If |accountsUrl| is failure, return an empty list.
+    1. Let |request| be a new <a spec=fetch for=/>request</a> whose [=request/url=] is
+        |accountsUrl| and [=request/redirect mode=] set to "error".
+    1. TODO: set other fields of the request, including the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]]
+        header or equivalent, as well as using [=Identity Provider=]'s cookies.
 
         Issue: The credentialed fetch in this algorithm can lead to a timing attack that leaks the user's identities before the user consents. This is an active area of investigation that is being explored [here](https://github.com/fedidcg/FedCM/issues/230#issuecomment-1089040953).
-
+    1. Let |accountsList| be an empty list.
+    1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
+        steps given a <a spec=fetch for=/>response</a> |response|:
+        1. If |response| is a [=network error=] or its [=response/status=] is not an [=ok status=],
+            return.
+        1. Let |mimeType| be the result of <a>extracting a MIME TYPE</a> from |response|'s
+            <a for=response>header list</a>.
+        1. If |mimeType| is failure or is not a [=JSON MIME Type=], return.
+        1. Let |json| be the result of [=parse JSON bytes to an Infra value=] passing |response|'s
+            [=response/body=].
+        1. If |json| is a parsing exception, or if |json| is not an [=ordered map=], return.
+        1. If |json|["accounts"] does not exist, or if it is not a [=list=], return.
+        1. Let |potentialAccountsList| be an empty list.
+        1. For each |account| in |json|["accounts"]:
+            1. If |account| is not an [=ordered map=], return.
+            1. If |account|["id"] does not exist or is not a [=string=], return.
+            1. If |account|["name"] does not exist or is not a [=string=], return.
+            1. If |account|["email"] does not exist or is not a [=string=], return.
+            1. Let |acc| be a new [=Account JSON=] with {{account_json/id}} set to |account|["id"],
+                {{account_json/name}} set to |account|["name"], and {{account_json/email}} set to
+                |account|["email"].
+            1. If |account|["given_name"] exists and is a [=string=], set |acc|'s
+                {{account_json/given_name}} to |account|["given_name"].
+            1. If |account|["approved_clients"] exists and is a list where each item is a
+                [=string=], set |acc|'s {{account_json/approved_clients}} to
+                |account|["approved_clients"].
+            1. [=list/Append=] |acc| to |potentialAccountsList|.
+        1. Set |accountsList| to |potentialAccountsList|.
     1. Return |accountsList|.
 
         Issue: We should validate the accounts list returned here for repeated ids, as described [here](https://github.com/fedidcg/FedCM/issues/336).
-
 </div>
 
 <div algorithm>
@@ -1222,13 +1251,30 @@ To <dfn>request consent to sign-up</dfn> the user with a given [=Account JSON=] 
 <div algorithm>
 To <dfn noexport>fetch the client metadata</dfn> given a [=Manifest=] |manifest| and an
     {{IdentityProvider}} |provider|, run the following steps:
-    1. Let the |clientMetadataEndpoint| url be the relative url
-        |manifest|["{{Manifest/client_metadata_endpoint}}"] of |provider|'s
-        {{IdentityProvider/configURL}}.
-    1. Let the |clientMetadata| be the result of fetching the |clientMetadataEndpoint| with the
-        [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]] header but without the [=Identity Provider=]'s cookies.  This request MUST NOT follow [[RFC9110#header.location|HTTP redirects]] and instead return
-        null if there is any error. See also [[#idp-api-client-id-metadata-endpoint]].
-    1. Return |clientMetadata|.
+    1. Let |clientMetadataUrl| be the result of running [=url parser=] given
+        |manifest|["{{Manifest/client_metadata_endpoint}}"] (the relative URL) and |provider|'s
+        {{IdentityProvider/configURL}} (the base URL).
+    1. If |clientMetadataUrl| is failure, return null.
+    1. Let |request| be a new <a spec=fetch for=/>request</a> whose [=request/url=] is
+        |clientMetadataUrl| and [=request/redirect mode=] set to "error".
+    1. TODO: set other fields of the request, including the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]]
+        header or equivalent.
+    1. Let |clientMetadata| be a new [=ordered map=].
+    1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
+        steps given a <a spec=fetch for=/>response</a> |response|:
+        1. If |response| is a [=network error=] or its [=response/status=] is not an [=ok status=],
+            return.
+        1. Let |mimeType| be the result of <a>extracting a MIME TYPE</a> from |response|'s
+            <a for=response>header list</a>.
+        1. If |mimeType| is failure or is not a [=JSON MIME Type=], return.
+        1. Let |json| be the result of [=parse JSON bytes to an Infra value=] passing |response|'s
+            [=response/body=].
+        1. If |json| is a parsing exception, or if |json| is not an [=ordered map=], return.
+        1. If |json|["privacy_policy_url"] exists and is a [=string=], set
+            |clientMetadata|["privacy_policy_url"] to |json|["privacy_policy_url"].
+        1. If |json|["terms_of_service_url"] exists and is a [=string=], set
+            |clientMetadata|["terms_of_service_url"] to |json|["terms_of_service_url"].
+    1. Return |clientMetadata|.    
 </div>
 
 <div algorithm>
@@ -1248,16 +1294,36 @@ To <dfn>sign-in</dfn> the user with a given an [=AccountState=] |accountState|:
 
 <div algorithm>
 To <dfn>create tokens</dfn> given an [=AccountState=] |accountState|, a {{USVString}} |accountId|,
-    and an {{IdentityProvider}} |provider|:
+    an {{IdentityProvider}} |provider|, and a [=Manifest=] |manifest|:
     1. Assert |accountState|'s {{AccountState/registration state}} is [=registered=].
     1. Assert |accountState|'s {{AccountState/allows logout}} is true.
-    1. Let |request| be a new object.
-        1. Set |request|["account_id"] to |accountId|.
-        1. Set |request|["client_id"] to |provider|'s {{IdentityProvider/clientId}}.
-        1. Set |request|["nonce"] to |provider|'s {{IdentityProvider/nonce}}.
-    1. Let |tokens| be the result of making a POST request described in
-        [[#idp-api-id-token-endpoint]].
-    1. Return |tokens|["token"].
+    1. Let |tokenUrl| be the result of running [=url parser=] given
+        |manifest|[{{Manifest/id_token_endpoint}}] (the relative URL) and |provider|'s
+        {{IdentityProvider/configURL}} (the base URL).
+    1. If |tokenUrl| is failure, return an empty list.
+    1. Let |requestBody| be a new object constructed as follows (TODO: what is the correct type):
+        1. Set |requestBody|["account_id"] to |accountId|.
+        1. Set |requestBody|["client_id"] to |provider|'s {{IdentityProvider/clientId}}.
+        1. Set |requestBody|["nonce"] to |provider|'s {{IdentityProvider/nonce}}.
+    1. Let |request| be a new <a spec=fetch for=/>request</a> whose [=request/url=] is
+        |tokenUrl|, [=request/redirect mode=] set to "error", [=request/mode=] set to `POST`, and
+        [=request/body=] set to |requestBody|.
+    1. TODO: set other fields of the request, including the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]]
+        header or equivalent, as well as using [=Identity Provider=]'s cookies.
+    1. Let |token| be null.
+    1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
+        steps given a <a spec=fetch for=/>response</a> |response|:
+        1. If |response| is a [=network error=] or its [=response/status=] is not an [=ok status=],
+            return.
+        1. Let |mimeType| be the result of <a>extracting a MIME TYPE</a> from |response|'s
+            <a for=response>header list</a>.
+        1. If |mimeType| is failure or is not a [=JSON MIME Type=], return.
+        1. Let |json| be the result of [=parse JSON bytes to an Infra value=] passing |response|'s
+            [=response/body=].
+        1. If |json| is a parsing exception, or if |json| is not an [=ordered map=], return.
+        1. If |json|["token"] does not exist, or if it is not a [=string=], return.
+        1. Set |token| to |json|["token"].
+    1. Return |token|.
 </div>
 
 <div algorithm>
@@ -1280,10 +1346,10 @@ manipulation to fingerprint. See [[#manifest-fingerprinting]].
 <div algorithm>
 The <dfn>check the root manifest</dfn> accepts an {{IdentityProvider}} |provider| and returns
 whether the manifest is included in the manifest list:
-    1. Let |url| be |provider|'s {{IdentityProvider/configURL}}.
+    1. Let |configUrl| be |provider|'s {{IdentityProvider/configURL}}.
     1. Let |rootUrl| be a new [=/URL=].
-    1. Set |rootUrl|'s [=url/scheme=] to |url|'s [=url/scheme=].
-    1. Set |rootUrl|'s [=url/host=] to |url|'s [=url/host=]'s [=host/registrable domain=].
+    1. Set |rootUrl|'s [=url/scheme=] to |configUrl|'s [=url/scheme=].
+    1. Set |rootUrl|'s [=url/host=] to |configUrl|'s [=url/host=]'s [=host/registrable domain=].
     1. Set |rootUrl|'s [=url/path=] to the <a>list</a> «".well-known", "web-identity"».
     1. Let |request| be a new <a spec=fetch for=/>request</a> whose [=request/url=] is |rootUrl| and
         [=request/redirect mode=] set to "error". TODO: what other fields need to be set?
@@ -1309,18 +1375,39 @@ whether the manifest is included in the manifest list:
     1. Return |check|.
 </div>
 
-The <dfn>fetch the internal manifest</dfn> algorithm accepts an {{IdentityProvider}} |provider| and returns a [=Manifest=]:
+<div algorithm>
+The <dfn>fetch the internal manifest</dfn> algorithm accepts an {{IdentityProvider}} |provider| and returns a [=Manifest=] or null if there is some failure fetching or parsing the manifest:
     1. Run a [[!CSP]] check with a [[CSP#directive-connect-src|connect-src]]
         directive on the URL passed as |provider|'s {{IdentityProvider/configURL}}
-        and return if the check fails.
-    1. Return the result of fetching the |provider|'s {{IdentityProvider/configURL}}
-        and parsing it into a [=Manifest=]. TODO: specify how the fetching and the parsing works.
-        The fetch MUST be done with the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]] header but without the
-        [=Identity Provider=]'s cookies. This request MUST NOT follow
-        [[RFC9110#header.location|HTTP redirects]] and instead throw an
-        error if there are any.
+        and return if the check fails. TODO: Add parameters to integrate this check into fetch.
+    1. Let |url| be |provider|'s {{IdentityProvider/configURL}}.
+    1. Let |request| be a new <a spec=fetch for=/>request</a> whose [=request/url=] is |url| and
+        [=request/redirect mode=] set to "error".
+    1. TODO: set other fields of the request, including the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]]
+        header or equivalent.
 
         Issue: it is unclear if the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]] header is [needed](https://github.com/fedidcg/FedCM/issues/267) on the manifest fetch.
+    1. Let |manifest| be null.
+    1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
+        steps given a <a spec=fetch for=/>response</a> |response|:
+        1. If |response| is a [=network error=] or its [=response/status=] is not an [=ok status=],
+            return.
+        1. Let |mimeType| be the result of <a>extracting a MIME TYPE</a> from |response|'s
+            <a for=response>header list</a>.
+        1. If |mimeType| is failure or is not a [=JSON MIME Type=], return.
+        1. Let |json| be the result of [=parse JSON bytes to an Infra value=] passing |response|'s
+            [=response/body=].
+        1. If |json| is a parsing exception, or if |json| is not an [=ordered map=], return.
+        1. If |json|["accounts_endpoint"] does not exist, or if it is not a [=string=], return.
+        1. If |json|["client_metadata_endpoint"] does not exist, or if it is not a [=string=],
+            return.
+        1. If |json|["id_token_endpoint"] does not exist, or if it is not a [=string=], return.
+        1. Set |manifest| to a new [=Manifest=] with {{Manifest/accounts_endpoint}} set to
+            |json|["accounts_endpoint"], {{Manifest/client_metadata_endpoint}} set to
+            |json|["client_metadata_endpoint"], and {{Manifest/id_token_endpoint}} set to
+            |json|["id_token_endpoint"].
+    1. Return |manifest|.
+</div>
 
 <!-- ============================================================ -->
 ### IDP Sign-out ### {#browser-api-idp-sign-out}
@@ -2007,10 +2094,6 @@ Note: write down the Acknowledgements section.
   "SAML-Glossary": {
     "href": "https://docs.oasis-open.org/security/saml/v2.0/saml-glossary-2.0-os.pdf",
     "title": "SAML glossary"
-  },
-  "Security-Origin-Confusion": {
-    "href": "https://w3c.github.io/webappsec-credential-management/#security-origin-confusion",
-    "title": "Security Origin Confusion"
   }
 }
 </pre>
