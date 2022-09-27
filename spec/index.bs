@@ -1784,7 +1784,7 @@ While the [=push model=] seems like an improvement for privacy, the current API 
     that all users pay the cost, and only some get the reward.
 
 <!-- ============================================================ -->
-#### The IdP Sign-in Status API #### {#the-idp-sign-in-status-api}
+##### The IdP Sign-in Status API ##### {#the-idp-sign-in-status-api}
 <!-- ============================================================ -->
 
 Issue: this is a more formal description of what is proposed [here](https://github.com/fedidcg/FedCM/issues/230#issuecomment-1233290946).
@@ -1799,8 +1799,7 @@ deleting accounts on other devices).
 
 Importantly, sign-in status seems easier to degrade gracefully when the client-side state is inconsistent with the server-side state: re-authentication UX. The user's profile information, on the other hand, has a series of legal freshness requirements that are still not quite well understood.
 
-So, in this variation, the [=user agent=] exposes an API that allows an [=IDP=] to signal to the [=user agent=]
-the user's sign-in status: whether the user is signed-in or not.
+So, in this variation, the [=user agent=] does two things: (a) it stores the user's login status at each [=IDP=] and (b) exposes APIs that allows [=IDP=]s to change them.
 
 This is a compelling variation because (a) it is comparably simpler to implement by [=IDPs=] and (b)
 if the [=user agent=] knew whether the user is signed-in or not to the [=IDP=], it can guarantee that
@@ -1846,6 +1845,17 @@ invisibly (i.e. without any explicit and observable indication to the user).
                                        +-----------------------+-----------------+
 
 </script>
+
+Internally, each [=user agent=] keeps track of a global <dfn>Sign-in Status</dfn> map per [=IDP=], initially an empty [=map=]. The [=map/keys=] in the [=Sign-in Status=] map is the [=origin=] of the [=IDP=]. The [=map/values=] in the [=Sign-in Status=] map are <dfn>status</dfn> objects which can be one of the following values:
+
+<dl dfn-type="argument" dfn-for="Sign-in Status">
+    :   <dfn>unknown</dfn> (default)
+    ::  By default, the [=user agent=] assumes that the user's signed in status is undefined.
+    :   <dfn>signed-in</dfn>
+    ::  The user has explicitly signed-in to the IDP.
+    :   <dfn>signed-out</dfn>
+    ::  The user has explicitly signed-out to the IDP.
+</dl>
 
 The [=IDPs=] are provided with an API that allows them to set their [=Sign-in Status=].
 
@@ -1900,17 +1910,6 @@ IDPs are also offered an extension to the [=Manifest=] JSON object to include:
 <dl dfn-type="argument" dfn-for="Manifest">
     :   <dfn>signin_url</dfn> (optional)
     ::  A URL that allows a user to sign-in to the [=IDP=].
-</dl>
-
-Internally, each [=user agent=] keeps track of a global <dfn>Sign-in Status</dfn> map per [=IDP=], initially an empty [=map=]. The [=map/keys=] in the [=Sign-in Status=] map is the [=origin=] of the [=IDP=]. The [=map/values=] in the [=Sign-in Status=] map are <dfn>status</dfn> objects which can be one of the following values:
-
-<dl dfn-type="argument" dfn-for="Sign-in Status">
-    :   <dfn>unknown</dfn> (default)
-    ::  By default, the [=user agent=] assumes that the user's signed in status is undefined.
-    :   <dfn>signed-in</dfn>
-    ::  The user has explicitly signed-in to the IDP.
-    :   <dfn>signed-out</dfn>
-    ::  The user has explicitly signed-out to the IDP.
 </dl>
 
 The [=user agent=] uses the following [=maybe fetch the accounts list=] in the [=potentially create IdentityCredential=] algorithm, as opposed to the [=fetch the accounts list=] algorithm. It would also return early on the [=potentially create IdentityCredential=] algorithm if the user was {{Sign-in Status/signed-out}}.
