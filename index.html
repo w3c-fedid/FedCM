@@ -6,7 +6,7 @@
   <link href="https://www.w3.org/StyleSheets/TR/2021/cg-draft" rel="stylesheet">
   <meta content="Bikeshed version 44af0bf3e, updated Fri Jul 29 17:05:16 2022 -0700" name="generator">
   <link href="https://fedidcg.github.io/FedCM/" rel="canonical">
-  <meta content="47d453012291c24fb192e084149f08a96cf6cb96" name="document-revision">
+  <meta content="1572b7a2141ea80687126d6d0cf29c67895e7c0d" name="document-revision">
 <style>
 dl.domintro dt {
     font-family: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
@@ -608,7 +608,7 @@ c-[il] { color: #000000 } /* Literal.Number.Integer.Long */
   <div class="head">
    <p data-fill-with="logo"><a class="logo" href="https://www.w3.org/"> <img alt="W3C" height="48" src="https://www.w3.org/StyleSheets/TR/2021/logos/W3C" width="72"> </a> </p>
    <h1 class="p-name no-ref" id="title">Federated Credential Management API</h1>
-   <p id="w3c-state"><a href="https://www.w3.org/standards/types#CG-DRAFT">Draft Community Group Report</a>, <time class="dt-updated" datetime="2022-09-26">26 September 2022</time></p>
+   <p id="w3c-state"><a href="https://www.w3.org/standards/types#CG-DRAFT">Draft Community Group Report</a>, <time class="dt-updated" datetime="2022-09-27">27 September 2022</time></p>
    <div data-fill-with="spec-metadata">
     <dl>
      <dt>This version:
@@ -725,7 +725,11 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
          <a href="#timing-attacks"><span class="secno">10.3.2</span> <span class="content">Timing Attacks</span></a>
          <ol class="toc">
           <li><a href="#timing-attack-heuristics"><span class="secno">10.3.2.1</span> <span class="content">Heuristics</span></a>
-          <li><a href="#push-model-mitigation"><span class="secno">10.3.2.2</span> <span class="content">Push Model</span></a>
+          <li>
+           <a href="#push-model-mitigation"><span class="secno">10.3.2.2</span> <span class="content">Push Model</span></a>
+           <ol class="toc">
+            <li><a href="#the-idp-sign-in-status-api"><span class="secno">10.3.2.2.1</span> <span class="content">The IdP Sign-in Status API</span></a>
+           </ol>
          </ol>
         <li><a href="#idp-intrusion"><span class="secno">10.3.3</span> <span class="content">IDP Intrusion</span></a>
        </ol>
@@ -1516,28 +1520,28 @@ by the <a data-link-type="biblio" href="https://w3c.github.io/webappsec-credenti
   <a data-link-type="idl-name" href="#dictdef-identitycredentialrequestoptions" id="ref-for-dictdef-identitycredentialrequestoptions"><c- n>IdentityCredentialRequestOptions</c-></a> <dfn class="dfn-paneled idl-code" data-dfn-for="CredentialRequestOptions" data-dfn-type="dict-member" data-export data-type="IdentityCredentialRequestOptions " id="dom-credentialrequestoptions-identity"><code><c- g>identity</c-></code></dfn>;
 };
 </pre>
-   <p>The <code class="idl"><a data-link-type="idl" href="#dictdef-identitycredentialrequestoptions" id="ref-for-dictdef-identitycredentialrequestoptions①">IdentityCredentialRequestOptions</a></code> contains a list of <code class="idl"><a data-link-type="idl" href="#dictdef-identityprovider" id="ref-for-dictdef-identityprovider">IdentityProvider</a></code>s that the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④①">Relying Party</a> supports and has
+   <p>The <code class="idl"><a data-link-type="idl" href="#dictdef-identitycredentialrequestoptions" id="ref-for-dictdef-identitycredentialrequestoptions①">IdentityCredentialRequestOptions</a></code> contains a list of <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderconfig" id="ref-for-dictdef-identityproviderconfig">IdentityProviderConfig</a></code>s that the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④①">Relying Party</a> supports and has
 pre-registered with (i.e. it has a <code>clientId</code>).</p>
 <pre class="idl highlight def"><c- b>dictionary</c-> <dfn class="dfn-paneled idl-code" data-dfn-type="dictionary" data-export id="dictdef-identitycredentialrequestoptions"><code><c- g>IdentityCredentialRequestOptions</c-></code></dfn> {
-  <a data-link-type="dfn" href="https://webidl.spec.whatwg.org/#idl-sequence" id="ref-for-idl-sequence"><c- b>sequence</c-></a>&lt;<a data-link-type="idl-name" href="#dictdef-identityprovider" id="ref-for-dictdef-identityprovider①"><c- n>IdentityProvider</c-></a>> <dfn class="dfn-paneled idl-code" data-dfn-for="IdentityCredentialRequestOptions" data-dfn-type="dict-member" data-export data-type="sequence<IdentityProvider> " id="dom-identitycredentialrequestoptions-providers"><code><c- g>providers</c-></code></dfn>;
+  <a data-link-type="dfn" href="https://webidl.spec.whatwg.org/#idl-sequence" id="ref-for-idl-sequence"><c- b>sequence</c-></a>&lt;<a data-link-type="idl-name" href="#dictdef-identityproviderconfig" id="ref-for-dictdef-identityproviderconfig①"><c- n>IdentityProviderConfig</c-></a>> <dfn class="dfn-paneled idl-code" data-dfn-for="IdentityCredentialRequestOptions" data-dfn-type="dict-member" data-export data-type="sequence<IdentityProviderConfig> " id="dom-identitycredentialrequestoptions-providers"><code><c- g>providers</c-></code></dfn>;
 };
 </pre>
-   <p>Each <code class="idl"><a data-link-type="idl" href="#dictdef-identityprovider" id="ref-for-dictdef-identityprovider②">IdentityProvider</a></code> represents an <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②⑥">Identity Provider</a> that
+   <p>Each <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderconfig" id="ref-for-dictdef-identityproviderconfig②">IdentityProviderConfig</a></code> represents an <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②⑥">Identity Provider</a> that
 the <a data-link-type="dfn" href="#relying-party" id="ref-for-relying-party④②">Relying Party</a> supports (e.g. that it has a pre-registration agreement with).</p>
-<pre class="idl highlight def"><c- b>dictionary</c-> <dfn class="dfn-paneled idl-code" data-dfn-type="dictionary" data-export id="dictdef-identityprovider"><code><c- g>IdentityProvider</c-></code></dfn> {
-  <c- b>required</c-> <a class="idl-code" data-link-type="interface" href="https://webidl.spec.whatwg.org/#idl-USVString" id="ref-for-idl-USVString①"><c- b>USVString</c-></a> <dfn class="dfn-paneled idl-code" data-dfn-for="IdentityProvider" data-dfn-type="dict-member" data-export data-type="USVString " id="dom-identityprovider-configurl"><code><c- g>configURL</c-></code></dfn>;
-  <c- b>required</c-> <a class="idl-code" data-link-type="interface" href="https://webidl.spec.whatwg.org/#idl-USVString" id="ref-for-idl-USVString②"><c- b>USVString</c-></a> <dfn class="dfn-paneled idl-code" data-dfn-for="IdentityProvider" data-dfn-type="dict-member" data-export data-type="USVString " id="dom-identityprovider-clientid"><code><c- g>clientId</c-></code></dfn>;
-  <a class="idl-code" data-link-type="interface" href="https://webidl.spec.whatwg.org/#idl-USVString" id="ref-for-idl-USVString③"><c- b>USVString</c-></a> <dfn class="dfn-paneled idl-code" data-dfn-for="IdentityProvider" data-dfn-type="dict-member" data-export data-type="USVString " id="dom-identityprovider-nonce"><code><c- g>nonce</c-></code></dfn>;
+<pre class="idl highlight def"><c- b>dictionary</c-> <dfn class="dfn-paneled idl-code" data-dfn-type="dictionary" data-export id="dictdef-identityproviderconfig"><code><c- g>IdentityProviderConfig</c-></code></dfn> {
+  <c- b>required</c-> <a class="idl-code" data-link-type="interface" href="https://webidl.spec.whatwg.org/#idl-USVString" id="ref-for-idl-USVString①"><c- b>USVString</c-></a> <dfn class="dfn-paneled idl-code" data-dfn-for="IdentityProviderConfig" data-dfn-type="dict-member" data-export data-type="USVString " id="dom-identityproviderconfig-configurl"><code><c- g>configURL</c-></code></dfn>;
+  <c- b>required</c-> <a class="idl-code" data-link-type="interface" href="https://webidl.spec.whatwg.org/#idl-USVString" id="ref-for-idl-USVString②"><c- b>USVString</c-></a> <dfn class="dfn-paneled idl-code" data-dfn-for="IdentityProviderConfig" data-dfn-type="dict-member" data-export data-type="USVString " id="dom-identityproviderconfig-clientid"><code><c- g>clientId</c-></code></dfn>;
+  <a class="idl-code" data-link-type="interface" href="https://webidl.spec.whatwg.org/#idl-USVString" id="ref-for-idl-USVString③"><c- b>USVString</c-></a> <dfn class="dfn-paneled idl-code" data-dfn-for="IdentityProviderConfig" data-dfn-type="dict-member" data-export data-type="USVString " id="dom-identityproviderconfig-nonce"><code><c- g>nonce</c-></code></dfn>;
 };
 </pre>
    <dl>
-    <dt data-md><b><code class="idl"><a data-link-type="idl" href="#dom-identityprovider-configurl" id="ref-for-dom-identityprovider-configurl">configURL</a></code></b>
+    <dt data-md><b><code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-configurl" id="ref-for-dom-identityproviderconfig-configurl">configURL</a></code></b>
     <dd data-md>
      <p>The URL of the configuration file for the identity provider.</p>
-    <dt data-md><b><code class="idl"><a data-link-type="idl" href="#dom-identityprovider-clientid" id="ref-for-dom-identityprovider-clientid">clientId</a></code></b>
+    <dt data-md><b><code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-clientid" id="ref-for-dom-identityproviderconfig-clientid">clientId</a></code></b>
     <dd data-md>
      <p>The <a data-link-type="dfn" href="#client-id" id="ref-for-client-id⑦">client id</a> provided to the <a data-link-type="dfn" href="#rp" id="ref-for-rp③⑤">RP</a> out of band by the <a data-link-type="dfn" href="#idp" id="ref-for-idp③③">IDP</a></p>
-    <dt data-md><b><code class="idl"><a data-link-type="idl" href="#dom-identityprovider-nonce" id="ref-for-dom-identityprovider-nonce">nonce</a></code></b>
+    <dt data-md><b><code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-nonce" id="ref-for-dom-identityproviderconfig-nonce">nonce</a></code></b>
     <dd data-md>
      <p>A random number of the choice of the <a data-link-type="dfn" href="#rp" id="ref-for-rp③⑥">RP</a>. It is generally used to associate a client
 session with a <a data-link-type="dfn" href="#token" id="ref-for-token⑦">token</a> and to mitigate replay attacks. Therefore, this value should have
@@ -1589,7 +1593,7 @@ requests.</p>
     </ol>
    </div>
    <div class="algorithm" data-algorithm="potentially create IdentityCredential">
-     To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="potentially-create-identitycredential">potentially create IdentityCredential</dfn>, given an <code class="idl"><a data-link-type="idl" href="#dictdef-identityprovider" id="ref-for-dictdef-identityprovider③">IdentityProvider</a></code> <var>provider</var>: 
+     To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="potentially-create-identitycredential">potentially create IdentityCredential</dfn>, given an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderconfig" id="ref-for-dictdef-identityproviderconfig③">IdentityProviderConfig</a></code> <var>provider</var>: 
     <ol>
      <li data-md>
       <p>Let <var>manifest</var> be the result of running the <a data-link-type="dfn" href="#fetch-the-manifest" id="ref-for-fetch-the-manifest">fetch the manifest</a> algorithm with <var>provider</var>.</p>
@@ -1642,10 +1646,10 @@ given <var>provider</var> and <var>account</var>.</p>
     </ol>
    </div>
    <div class="algorithm" data-algorithm="compute account state">
-     To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="compute-account-state">compute account state</dfn> given an <code class="idl"><a data-link-type="idl" href="#dictdef-identityprovider" id="ref-for-dictdef-identityprovider④">IdentityProvider</a></code> <var>provider</var> and an <a data-link-type="dfn" href="#account-json" id="ref-for-account-json①">Account JSON</a> <var>account</var>, run the following steps: 
+     To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="compute-account-state">compute account state</dfn> given an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderconfig" id="ref-for-dictdef-identityproviderconfig④">IdentityProviderConfig</a></code> <var>provider</var> and an <a data-link-type="dfn" href="#account-json" id="ref-for-account-json①">Account JSON</a> <var>account</var>, run the following steps: 
     <ol>
      <li data-md>
-      <p>Let <var>idpURL</var> be <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityprovider-configurl" id="ref-for-dom-identityprovider-configurl①">configURL</a></code>.</p>
+      <p>Let <var>idpURL</var> be <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-configurl" id="ref-for-dom-identityproviderconfig-configurl①">configURL</a></code>.</p>
      <li data-md>
       <p>Let <var>idpOrigin</var> be the <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#concept-origin" id="ref-for-concept-origin④">origin</a> corresponding to <var>idpURL</var>.</p>
      <li data-md>
@@ -1664,10 +1668,10 @@ new <a data-link-type="dfn" href="#accountstate" id="ref-for-accountstate">Accou
     </ol>
    </div>
    <div class="algorithm" data-algorithm="fetch the accounts list">
-     To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="fetch-the-accounts-list">fetch the accounts list</dfn> given a <a data-link-type="dfn" href="#manifest" id="ref-for-manifest①">Manifest</a> <var>manifest</var> and an <code class="idl"><a data-link-type="idl" href="#dictdef-identityprovider" id="ref-for-dictdef-identityprovider⑤">IdentityProvider</a></code> <var>provider</var>: 
+     To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="fetch-the-accounts-list">fetch the accounts list</dfn> given a <a data-link-type="dfn" href="#manifest" id="ref-for-manifest①">Manifest</a> <var>manifest</var> and an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderconfig" id="ref-for-dictdef-identityproviderconfig⑤">IdentityProviderConfig</a></code> <var>provider</var>: 
     <ol>
      <li data-md>
-      <p>Let the <var>accountsEndpoint</var> url be the relative url <var>manifest</var>["<code class="idl"><a data-link-type="idl" href="#dom-manifest-accounts_endpoint" id="ref-for-dom-manifest-accounts_endpoint">accounts_endpoint</a></code>"] of <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityprovider-configurl" id="ref-for-dom-identityprovider-configurl②">configURL</a></code>.</p>
+      <p>Let the <var>accountsEndpoint</var> url be the relative url <var>manifest</var>["<code class="idl"><a data-link-type="idl" href="#dom-manifest-accounts_endpoint" id="ref-for-dom-manifest-accounts_endpoint">accounts_endpoint</a></code>"] of <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-configurl" id="ref-for-dom-identityproviderconfig-configurl②">configURL</a></code>.</p>
      <li data-md>
       <p>Let <var>accountsList</var> be the result of fetching the <var>accountsEndpoint</var> with the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider②⑨">Identity Provider</a>'s cookies.  This request MUST NOT follow <a href="https://www.rfc-editor.org/rfc/rfc9110#header.location">HTTP redirects</a> and instead return null if there is any error.
 See also <a href="#idp-api-accounts-endpoint">§ 5.2 Accounts List</a>.</p>
@@ -1678,15 +1682,15 @@ See also <a href="#idp-api-accounts-endpoint">§ 5.2 Accounts List</a>.</p>
     </ol>
    </div>
    <div class="algorithm" data-algorithm="request consent to sign-up">
-     To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="request-consent-to-sign-up">request consent to sign-up</dfn> the user with a given <a data-link-type="dfn" href="#account-json" id="ref-for-account-json②">Account JSON</a> <var>account</var>, an <a data-link-type="dfn" href="#accountstate" id="ref-for-accountstate①">AccountState</a> <var>accountState</var>, a <a data-link-type="dfn" href="#manifest" id="ref-for-manifest②">Manifest</a> <var>manifest</var>, and an <code class="idl"><a data-link-type="idl" href="#dictdef-identityprovider" id="ref-for-dictdef-identityprovider⑥">IdentityProvider</a></code> <var>provider</var>: 
+     To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="request-consent-to-sign-up">request consent to sign-up</dfn> the user with a given <a data-link-type="dfn" href="#account-json" id="ref-for-account-json②">Account JSON</a> <var>account</var>, an <a data-link-type="dfn" href="#accountstate" id="ref-for-accountstate①">AccountState</a> <var>accountState</var>, a <a data-link-type="dfn" href="#manifest" id="ref-for-manifest②">Manifest</a> <var>manifest</var>, and an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderconfig" id="ref-for-dictdef-identityproviderconfig⑥">IdentityProviderConfig</a></code> <var>provider</var>: 
     <ol>
      <li data-md>
       <p>Let <var>metadata</var> be the result of running the <a data-link-type="dfn" href="#fetch-the-client-metadata" id="ref-for-fetch-the-client-metadata">fetch the client metadata</a> algorithm with <var>manifest</var> and <var>provider</var>.</p>
      <li data-md>
-      <p>If <var>metadata</var> is not null, <var>metadata</var>["<code class="idl"><a data-link-type="idl" href="#dom-client_metadata-privacy_policy_url" id="ref-for-dom-client_metadata-privacy_policy_url①">privacy_policy_url</a></code>"] is defined, and the <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityprovider-clientid" id="ref-for-dom-identityprovider-clientid①">clientId</a></code> is not in the list of <var>account</var>["<code class="idl"><a data-link-type="idl" href="#dom-account_json-approved_clients" id="ref-for-dom-account_json-approved_clients">approved_clients</a></code>"], then display the <var>metadata</var>["<code class="idl"><a data-link-type="idl" href="#dom-client_metadata-privacy_policy_url" id="ref-for-dom-client_metadata-privacy_policy_url②">privacy_policy_url</a></code>"] link.</p>
+      <p>If <var>metadata</var> is not null, <var>metadata</var>["<code class="idl"><a data-link-type="idl" href="#dom-client_metadata-privacy_policy_url" id="ref-for-dom-client_metadata-privacy_policy_url①">privacy_policy_url</a></code>"] is defined, and the <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-clientid" id="ref-for-dom-identityproviderconfig-clientid①">clientId</a></code> is not in the list of <var>account</var>["<code class="idl"><a data-link-type="idl" href="#dom-account_json-approved_clients" id="ref-for-dom-account_json-approved_clients">approved_clients</a></code>"], then display the <var>metadata</var>["<code class="idl"><a data-link-type="idl" href="#dom-client_metadata-privacy_policy_url" id="ref-for-dom-client_metadata-privacy_policy_url②">privacy_policy_url</a></code>"] link.</p>
      <li data-md>
       <p>If <var>metadata</var> is not null, <var>metadata</var>["<code class="idl"><a data-link-type="idl" href="#dom-client_metadata-terms_of_service_url" id="ref-for-dom-client_metadata-terms_of_service_url①">terms_of_service_url</a></code>"] is defined,
-and the <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityprovider-clientid" id="ref-for-dom-identityprovider-clientid②">clientId</a></code> is not in the list of <var>account</var>["<code class="idl"><a data-link-type="idl" href="#dom-account_json-approved_clients" id="ref-for-dom-account_json-approved_clients①">approved_clients</a></code>"], then display the <var>metadata</var>["<code class="idl"><a data-link-type="idl" href="#dom-client_metadata-terms_of_service_url" id="ref-for-dom-client_metadata-terms_of_service_url②">terms_of_service_url</a></code>"] link.</p>
+and the <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-clientid" id="ref-for-dom-identityproviderconfig-clientid②">clientId</a></code> is not in the list of <var>account</var>["<code class="idl"><a data-link-type="idl" href="#dom-account_json-approved_clients" id="ref-for-dom-account_json-approved_clients①">approved_clients</a></code>"], then display the <var>metadata</var>["<code class="idl"><a data-link-type="idl" href="#dom-client_metadata-terms_of_service_url" id="ref-for-dom-client_metadata-terms_of_service_url②">terms_of_service_url</a></code>"] link.</p>
      <li data-md>
       <p>Prompt the user to gather explicit intent to create an account. The user agent MAY use the <a data-link-type="dfn" href="#branding-json" id="ref-for-branding-json①">Branding JSON</a> to inform the style choices of its UI.</p>
      <li data-md>
@@ -1698,10 +1702,10 @@ and the <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="
     </ol>
    </div>
    <div class="algorithm" data-algorithm="fetch the client metadata">
-     To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="fetch-the-client-metadata">fetch the client metadata</dfn> given a <a data-link-type="dfn" href="#manifest" id="ref-for-manifest③">Manifest</a> <var>manifest</var> and an <code class="idl"><a data-link-type="idl" href="#dictdef-identityprovider" id="ref-for-dictdef-identityprovider⑦">IdentityProvider</a></code> <var>provider</var>, run the following steps: 
+     To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="fetch-the-client-metadata">fetch the client metadata</dfn> given a <a data-link-type="dfn" href="#manifest" id="ref-for-manifest③">Manifest</a> <var>manifest</var> and an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderconfig" id="ref-for-dictdef-identityproviderconfig⑦">IdentityProviderConfig</a></code> <var>provider</var>, run the following steps: 
     <ol>
      <li data-md>
-      <p>Let the <var>clientMetadataEndpoint</var> url be the relative url <var>manifest</var>["<code class="idl"><a data-link-type="idl" href="#dom-manifest-client_metadata_endpoint" id="ref-for-dom-manifest-client_metadata_endpoint">client_metadata_endpoint</a></code>"] of <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityprovider-configurl" id="ref-for-dom-identityprovider-configurl③">configURL</a></code>.</p>
+      <p>Let the <var>clientMetadataEndpoint</var> url be the relative url <var>manifest</var>["<code class="idl"><a data-link-type="idl" href="#dom-manifest-client_metadata_endpoint" id="ref-for-dom-manifest-client_metadata_endpoint">client_metadata_endpoint</a></code>"] of <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-configurl" id="ref-for-dom-identityproviderconfig-configurl③">configURL</a></code>.</p>
      <li data-md>
       <p>Let the <var>clientMetadata</var> be the result of fetching the <var>clientMetadataEndpoint</var> with the <a href="#Sec-FedCM-CSRF">Sec-FedCM-CSRF</a> header but without the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider③⓪">Identity Provider</a>'s cookies.  This request MUST NOT follow <a href="https://www.rfc-editor.org/rfc/rfc9110#header.location">HTTP redirects</a> and instead return
 null if there is any error. See also <a href="#idp-api-client-id-metadata-endpoint">§ 5.3 Client Metadata</a>.</p>
@@ -1734,7 +1738,7 @@ manually selects from the accounts chooser, or null if no account is selected.</
    </div>
    <div class="algorithm" data-algorithm="create tokens">
      To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="create-tokens">create tokens</dfn> given an <a data-link-type="dfn" href="#accountstate" id="ref-for-accountstate③">AccountState</a> <var>accountState</var>, a <code class="idl"><a data-link-type="idl" href="https://webidl.spec.whatwg.org/#idl-USVString" id="ref-for-idl-USVString④">USVString</a></code> <var>accountId</var>,
-    and an <code class="idl"><a data-link-type="idl" href="#dictdef-identityprovider" id="ref-for-dictdef-identityprovider⑧">IdentityProvider</a></code> <var>provider</var>: 
+    and an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderconfig" id="ref-for-dictdef-identityproviderconfig⑧">IdentityProviderConfig</a></code> <var>provider</var>: 
     <ol>
      <li data-md>
       <p>Assert <var>accountState</var>’s <code class="idl"><a data-link-type="idl" href="#dom-accountstate-registration-state" id="ref-for-dom-accountstate-registration-state⑤">registration state</a></code> is <a data-link-type="dfn" href="#registered" id="ref-for-registered③">registered</a>.</p>
@@ -1746,9 +1750,9 @@ manually selects from the accounts chooser, or null if no account is selected.</
        <li data-md>
         <p>Set <var>request</var>["account_id"] to <var>accountId</var>.</p>
        <li data-md>
-        <p>Set <var>request</var>["client_id"] to <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityprovider-clientid" id="ref-for-dom-identityprovider-clientid③">clientId</a></code>.</p>
+        <p>Set <var>request</var>["client_id"] to <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-clientid" id="ref-for-dom-identityproviderconfig-clientid③">clientId</a></code>.</p>
        <li data-md>
-        <p>Set <var>request</var>["nonce"] to <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityprovider-nonce" id="ref-for-dom-identityprovider-nonce①">nonce</a></code>.</p>
+        <p>Set <var>request</var>["nonce"] to <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-nonce" id="ref-for-dom-identityproviderconfig-nonce①">nonce</a></code>.</p>
       </ol>
      <li data-md>
       <p>Let <var>tokens</var> be the result of making a POST request described in <a href="#idp-api-id-token-endpoint">§ 5.4 ID Token</a>.</p>
@@ -1757,7 +1761,7 @@ manually selects from the accounts chooser, or null if no account is selected.</
     </ol>
    </div>
    <div class="algorithm" data-algorithm="fetch the manifest">
-     The <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="fetch-the-manifest">fetch the manifest</dfn> algorithm accepts an <code class="idl"><a data-link-type="idl" href="#dictdef-identityprovider" id="ref-for-dictdef-identityprovider⑨">IdentityProvider</a></code> <var>provider</var> and returns a <a data-link-type="dfn" href="#manifest" id="ref-for-manifest④">Manifest</a> object: 
+     The <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="fetch-the-manifest">fetch the manifest</dfn> algorithm accepts an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderconfig" id="ref-for-dictdef-identityproviderconfig⑨">IdentityProviderConfig</a></code> <var>provider</var> and returns a <a data-link-type="dfn" href="#manifest" id="ref-for-manifest④">Manifest</a> object: 
     <ol>
      <li data-md>
       <p>In parallel, perform the following two steps:</p>
@@ -1776,11 +1780,11 @@ requiring a manifest list to be on the root of the <a data-link-type="dfn" href=
 it will not be used if the user agent does not find it in the manifest list. This allows the <a data-link-type="dfn" href="#idp" id="ref-for-idp③⑧">IDP</a> to keep their actual manifest on an arbitary path while allowing the user agent to prevent manifest
 manipulation to fingerprint. See <a href="#manifest-fingerprinting">§ 10.3.1 Manifest Fingerprinting</a>.</p>
    <div class="algorithm" data-algorithm="check the root manifest">
-     The <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="check-the-root-manifest">check the root manifest</dfn> accepts an <code class="idl"><a data-link-type="idl" href="#dictdef-identityprovider" id="ref-for-dictdef-identityprovider①⓪">IdentityProvider</a></code> <var>provider</var> and returns
+     The <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="check-the-root-manifest">check the root manifest</dfn> accepts an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderconfig" id="ref-for-dictdef-identityproviderconfig①⓪">IdentityProviderConfig</a></code> <var>provider</var> and returns
 whether the manifest is included in the manifest list: 
     <ol>
      <li data-md>
-      <p>Let <var>url</var> be <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityprovider-configurl" id="ref-for-dom-identityprovider-configurl④">configURL</a></code>.</p>
+      <p>Let <var>url</var> be <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-configurl" id="ref-for-dom-identityproviderconfig-configurl④">configURL</a></code>.</p>
      <li data-md>
       <p>Let <var>rootUrl</var> be a new <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url" id="ref-for-concept-url">URL</a>.</p>
      <li data-md>
@@ -1816,18 +1820,18 @@ return.</p>
        <li data-md>
         <p>If <var>json</var>["provider_urls"][0] is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string">string</a>, return.</p>
        <li data-md>
-        <p>Set <var>check</var> to true if <var>json</var>["provider_urls"][0] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string-is" id="ref-for-string-is">is</a> equal to <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityprovider-configurl" id="ref-for-dom-identityprovider-configurl⑤">configURL</a></code>.</p>
+        <p>Set <var>check</var> to true if <var>json</var>["provider_urls"][0] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string-is" id="ref-for-string-is">is</a> equal to <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-configurl" id="ref-for-dom-identityproviderconfig-configurl⑤">configURL</a></code>.</p>
       </ol>
      <li data-md>
       <p>Return <var>check</var>.</p>
     </ol>
    </div>
-   <p>The <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="fetch-the-internal-manifest">fetch the internal manifest</dfn> algorithm accepts an <code class="idl"><a data-link-type="idl" href="#dictdef-identityprovider" id="ref-for-dictdef-identityprovider①①">IdentityProvider</a></code> <var>provider</var> and returns a <a data-link-type="dfn" href="#manifest" id="ref-for-manifest⑤">Manifest</a>:</p>
+   <p>The <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="fetch-the-internal-manifest">fetch the internal manifest</dfn> algorithm accepts an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderconfig" id="ref-for-dictdef-identityproviderconfig①①">IdentityProviderConfig</a></code> <var>provider</var> and returns a <a data-link-type="dfn" href="#manifest" id="ref-for-manifest⑤">Manifest</a>:</p>
    <ol>
     <li data-md>
-     <p>Run a <a data-link-type="biblio" href="https://w3c.github.io/webappsec-csp/"><cite>Content Security Policy Level 3</cite></a> check with a <a href="https://w3c.github.io/webappsec-csp/#directive-connect-src">connect-src</a> directive on the URL passed as <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityprovider-configurl" id="ref-for-dom-identityprovider-configurl⑥">configURL</a></code> and return if the check fails.</p>
+     <p>Run a <a data-link-type="biblio" href="https://w3c.github.io/webappsec-csp/"><cite>Content Security Policy Level 3</cite></a> check with a <a href="https://w3c.github.io/webappsec-csp/#directive-connect-src">connect-src</a> directive on the URL passed as <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-configurl" id="ref-for-dom-identityproviderconfig-configurl⑥">configURL</a></code> and return if the check fails.</p>
     <li data-md>
-     <p>Return the result of fetching the <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityprovider-configurl" id="ref-for-dom-identityprovider-configurl⑦">configURL</a></code> and parsing it into a <a data-link-type="dfn" href="#manifest" id="ref-for-manifest⑥">Manifest</a>. TODO: specify how the fetching and the parsing works.
+     <p>Return the result of fetching the <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-configurl" id="ref-for-dom-identityproviderconfig-configurl⑦">configURL</a></code> and parsing it into a <a data-link-type="dfn" href="#manifest" id="ref-for-manifest⑥">Manifest</a>. TODO: specify how the fetching and the parsing works.
 The fetch MUST be done with the <a href="#Sec-FedCM-CSRF">Sec-FedCM-CSRF</a> header but without the <a data-link-type="dfn" href="#identity-provider" id="ref-for-identity-provider③①">Identity Provider</a>'s cookies. This request MUST NOT follow <a href="https://www.rfc-editor.org/rfc/rfc9110#header.location">HTTP redirects</a> and instead throw an
 error if there are any.</p>
      <p class="issue" id="issue-e5d78f22"><a class="self-link" href="#issue-e5d78f22"></a> it is unclear if the <a href="#Sec-FedCM-CSRF">Sec-FedCM-CSRF</a> header is <a href="https://github.com/fedidcg/FedCM/issues/267">needed</a> on the manifest fetch.</p>
@@ -2220,6 +2224,203 @@ accounts. The push model requires storing all of the user accounts from all of t
 a user is logged into, regardless of whether the user ever uses the FedCM API or not. This means
 that all users pay the cost, and only some get the reward.</p>
    </ul>
+   <h6 class="heading settled" data-level="10.3.2.2.1" id="the-idp-sign-in-status-api"><span class="secno">10.3.2.2.1. </span><span class="content">The IdP Sign-in Status API</span><a class="self-link" href="#the-idp-sign-in-status-api"></a></h6>
+   <p class="issue" id="issue-71e44d70"><a class="self-link" href="#issue-71e44d70"></a> this is a more formal description of what is proposed <a href="https://github.com/fedidcg/FedCM/issues/230#issuecomment-1233290946">here</a>.</p>
+   <p>A strict subset of the <a data-link-type="dfn" href="#push-model" id="ref-for-push-model②">push model</a> that seems promising is to only push
+the user’s sign-in status in the IdP (as opposed to the entirety of the user’s account data,
+e.g. name, email).</p>
+   <p>Since the sign-in status is specific to a browser instance/profile, this bit can reflect reality
+almost perfectly (with the exception of server-side invalidations, e.g. users changing password, and
+deleting accounts on other devices).</p>
+   <p>Importantly, sign-in status seems easier to degrade gracefully when the client-side state is inconsistent with the server-side state: re-authentication UX. The user’s profile information, on the other hand, has a series of legal freshness requirements that are still not quite well understood.</p>
+   <p>So, in this variation, the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent②⑤">user agent</a> does two things: (a) it stores the user’s login status at each <a data-link-type="dfn" href="#idp" id="ref-for-idp①⓪①">IDP</a> and (b) exposes APIs that allows <a data-link-type="dfn" href="#idp" id="ref-for-idp①⓪②">IDP</a>s to change them.</p>
+   <p>This is a compelling variation because (a) it is comparably simpler to implement by <a data-link-type="dfn" href="#idp" id="ref-for-idp①⓪③">IDPs</a> and (b)
+if the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent②⑥">user agent</a> knew whether the user is signed-in or not to the <a data-link-type="dfn" href="#idp" id="ref-for-idp①⓪④">IDP</a>, it can guarantee that
+a user prompt will always be displayed, which makes the timing attack much less viable to be performed
+invisibly (i.e. without any explicit and observable indication to the user).</p>
+<script type="text/typogram">
+.---------------------------------.    .---------------------------------.    .---------------------------------.
+| .-----------------------------. |    | .-----------------------------. |    | .-----------------------------. |
+| | "https://idp.example"       | |    | | "https://idp.example"       | |    | | "https://idp.example"       | |
+| '-----------------------------' |    | '-----------------------------' |    | '-----------------------------' |
+| .-----------------------------. |    | .-----------------------------. |    | .-----------------------------. |
+| |                             | |    | |                     logout -+-+-+  | |                             | |
+| |   Sign-in                   | |    | |  Welcome, Sam!      ------  | | |  | |  Bye!                       | |
+| |                             | |    | |                             | | |  | |                             | |
+| |   username                  | |    | |                             | | |  | |                             | |
+| |  +-----------------------+  | |    | | "// calls"                  | | |  | | "// calls"                  | |
+| |  | you@email.com         |  | | +--+-+>"IdentityProvider.login();" | | +--+-+>"IdentityProvider.logout();"| |
+| |  +-----------------------+  | | |  | |                     :       | |    | |                     :       | |
+| |   password                  | | |  | |                     :       | |    | |                     :       | |
+| |  +-----------------------+  | | |  | |                     :       | |    | |                     :       | |
+| |  |"**********"           |  | | |  | |                     :       | |    | |                     :       | |
+| |  +-----------------------+  | | |  | |                     :       | |    | |                     :       | |
+| |                             | | |  | |                     :       | |    | |                     :       | |
+| |  +-----------------------+  | | |  | |                     :       | |    | |                     :       | |
+| |  |       Sign-in         +--+-+-+  | |                     :       | |    | |                     :       | |
+| |  +-----------------------+  | |    | |                     :       | |    | |                     :       | |
+| |                             | |    | |                     :       | |    | |                     :       | |
+| '-----------------------------' |    | '---------------------:-------' |    | '---------------------:-------' |
+'---------------------------------'    '-----------------------:---------'    '-----------------------:---------'
+                                                               :                                      :
+                                                               +~~~~+    +~~~~~~~~~~~~~~~~~~~~~~~~~~~~+
+                                                                    :    :
+                                                                    v    v
+                                       +-----------------------+-----------------+
+                                       |  Identity Provider    | Sign-in Status  |
+                                       +-----------------------+-----------------+
+                                       | "..."                 | "..."           |
+                                       +-----------------------+-----------------+
+                                       | "https://idp.example" | Signed-in       |
+                                       +-----------------------+-----------------+
+                                       | "..."                 | "..."           |
+                                       +-----------------------+-----------------+
+
+</script>
+   <p>Internally, each <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent②⑦">user agent</a> keeps track of a global <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="sign-in-status">Sign-in Status</dfn> map per <a data-link-type="dfn" href="#idp" id="ref-for-idp①⓪⑤">IDP</a>, initially an empty <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map②">map</a>. The <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-getting-the-keys" id="ref-for-map-getting-the-keys①">keys</a> in the <a data-link-type="dfn" href="#sign-in-status" id="ref-for-sign-in-status">Sign-in Status</a> map is the <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#concept-origin" id="ref-for-concept-origin⑥">origin</a> of the <a data-link-type="dfn" href="#idp" id="ref-for-idp①⓪⑥">IDP</a>. The <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-getting-the-values" id="ref-for-map-getting-the-values①">values</a> in the <a data-link-type="dfn" href="#sign-in-status" id="ref-for-sign-in-status①">Sign-in Status</a> map are <dfn data-dfn-type="dfn" data-noexport id="status①">status<a class="self-link" href="#status①"></a></dfn> objects which can be one of the following values:</p>
+   <dl>
+    <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="Sign-in Status" data-dfn-type="argument" data-export id="dom-sign-in-status-unknown"><code>unknown</code></dfn> (default)
+    <dd data-md>
+     <p>By default, the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent②⑧">user agent</a> assumes that the user’s signed in status is undefined.</p>
+    <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="Sign-in Status" data-dfn-type="argument" data-export id="dom-sign-in-status-signed-in"><code>signed-in</code></dfn>
+    <dd data-md>
+     <p>The user has explicitly signed-in to the IDP.</p>
+    <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="Sign-in Status" data-dfn-type="argument" data-export id="dom-sign-in-status-signed-out"><code>signed-out</code></dfn>
+    <dd data-md>
+     <p>The user has explicitly signed-out to the IDP.</p>
+   </dl>
+   <p>The <a data-link-type="dfn" href="#idp" id="ref-for-idp①⓪⑦">IDPs</a> are provided with an API that allows them to set their <a data-link-type="dfn" href="#sign-in-status" id="ref-for-sign-in-status②">Sign-in Status</a>.</p>
+<pre class="idl highlight def">[<a class="idl-code" data-link-type="extended-attribute" href="https://webidl.spec.whatwg.org/#Exposed" id="ref-for-Exposed②"><c- g>Exposed</c-></a>=<c- n>Window</c->, <a class="idl-code" data-link-type="extended-attribute" href="https://webidl.spec.whatwg.org/#SecureContext" id="ref-for-SecureContext②"><c- g>SecureContext</c-></a>]
+<c- b>interface</c-> <dfn class="idl-code" data-dfn-type="interface" data-export id="identityprovider"><code><c- g>IdentityProvider</c-></code><a class="self-link" href="#identityprovider"></a></dfn> {
+  <c- b>static</c-> <a class="idl-code" data-link-type="interface" href="https://webidl.spec.whatwg.org/#idl-undefined" id="ref-for-idl-undefined①"><c- b>undefined</c-></a> <dfn class="dfn-paneled idl-code" data-dfn-for="IdentityProvider" data-dfn-type="method" data-export data-lt="login()" id="dom-identityprovider-login"><code><c- g>login</c-></code></dfn>();
+  <c- b>static</c-> <a class="idl-code" data-link-type="interface" href="https://webidl.spec.whatwg.org/#idl-undefined" id="ref-for-idl-undefined②"><c- b>undefined</c-></a> <dfn class="dfn-paneled idl-code" data-dfn-for="IdentityProvider" data-dfn-type="method" data-export data-lt="logout()" id="dom-identityprovider-logout"><code><c- g>logout</c-></code></dfn>();
+};
+</pre>
+   <div class="algorithm" data-algorithm="login">
+     When the <code class="idl"><a data-link-type="idl" href="#dom-identityprovider-login" id="ref-for-dom-identityprovider-login">login()</a></code> static method is invoked the user agent MUST execute the following
+steps: 
+    <ol>
+     <li data-md>
+      <p>Let <var>origin</var> be the <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/webappapis.html#current-settings-object" id="ref-for-current-settings-object①">current settings object</a>'s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/webappapis.html#concept-settings-object-origin" id="ref-for-concept-settings-object-origin①">origin</a>.</p>
+     <li data-md>
+      <p>Set the <a data-link-type="dfn" href="#sign-in-status" id="ref-for-sign-in-status③">Sign-in Status</a> of the <var>origin</var> to <code class="idl"><a data-link-type="idl" href="#dom-sign-in-status-signed-in" id="ref-for-dom-sign-in-status-signed-in">signed-in</a></code>.</p>
+    </ol>
+   </div>
+   <div class="algorithm" data-algorithm="logout">
+     When the <code class="idl"><a data-link-type="idl" href="#dom-identityprovider-logout" id="ref-for-dom-identityprovider-logout">logout()</a></code> static method is invoked the user agent MUST execute the following
+steps: 
+    <ol>
+     <li data-md>
+      <p>Let <var>origin</var> be the <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/webappapis.html#current-settings-object" id="ref-for-current-settings-object②">current settings object</a>'s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/webappapis.html#concept-settings-object-origin" id="ref-for-concept-settings-object-origin②">origin</a>.</p>
+     <li data-md>
+      <p>Set the <a data-link-type="dfn" href="#sign-in-status" id="ref-for-sign-in-status④">Sign-in Status</a> of the <var>origin</var> to <code class="idl"><a data-link-type="idl" href="#dom-sign-in-status-signed-out" id="ref-for-dom-sign-in-status-signed-out">signed-out</a></code>.</p>
+    </ol>
+   </div>
+   <p>For example:</p>
+   <div class="example" id="example-1d2e6860">
+    <a class="self-link" href="#example-1d2e6860"></a> A possible JS API that allows IDPs to set their Sign-in Status. 
+<pre class="language-js highlight">IdentityProvider<c- p>.</c->login<c- p>();</c->
+<c- c1>// ... later ...</c->
+IdentityProvider<c- p>.</c->logout<c- p>();</c->
+</pre>
+   </div>
+   <p>For convenience and compatibility with existing deployed flows, the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent②⑨">user agent</a> also exposes the ability for <a data-link-type="dfn" href="#idp" id="ref-for-idp①⓪⑧">IDPs</a> to control their <a data-link-type="dfn" href="#sign-in-status" id="ref-for-sign-in-status⑤">Sign-in Status</a> via HTTP headers:</p>
+   <div class="example" id="example-37a87327">
+    <a class="self-link" href="#example-37a87327"></a> A possible HTTP header API that allows IDPs to set their Sign-in Status. 
+<pre class="language-http highlight">IdP-Sign-in-Status: action=login
+// ... later ...
+IdP-Sign-in-Status: action=logout
+</pre>
+   </div>
+   <p>When site data (e.g. cookies) are cleared manually by the user, the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent③⓪">user agent</a> also sets the <a data-link-type="dfn" href="#sign-in-status" id="ref-for-sign-in-status⑥">Sign-in Status</a> to <code class="idl"><a data-link-type="idl" href="#dom-sign-in-status-unknown" id="ref-for-dom-sign-in-status-unknown">unknown</a></code>.</p>
+   <p>IDPs are also offered an extension to the <a data-link-type="dfn" href="#manifest" id="ref-for-manifest⑦">Manifest</a> JSON object to include:</p>
+   <dl>
+    <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="Manifest" data-dfn-type="argument" data-export id="dom-manifest-signin_url"><code>signin_url</code></dfn> (optional)
+    <dd data-md>
+     <p>A URL that allows a user to sign-in to the <a data-link-type="dfn" href="#idp" id="ref-for-idp①⓪⑨">IDP</a>.</p>
+   </dl>
+   <p>The <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent③①">user agent</a> uses the following <a data-link-type="dfn" href="#maybe-fetch-the-accounts-list" id="ref-for-maybe-fetch-the-accounts-list">maybe fetch the accounts list</a> in the <a data-link-type="dfn" href="#potentially-create-identitycredential" id="ref-for-potentially-create-identitycredential①">potentially create IdentityCredential</a> algorithm, as opposed to the <a data-link-type="dfn" href="#fetch-the-accounts-list" id="ref-for-fetch-the-accounts-list①">fetch the accounts list</a> algorithm. It would also return early on the <a data-link-type="dfn" href="#potentially-create-identitycredential" id="ref-for-potentially-create-identitycredential②">potentially create IdentityCredential</a> algorithm if the user was <code class="idl"><a data-link-type="idl" href="#dom-sign-in-status-signed-out" id="ref-for-dom-sign-in-status-signed-out①">signed-out</a></code>.</p>
+   <div class="algorithm" data-algorithm="maybe fetch the accounts list">
+     To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="maybe-fetch-the-accounts-list">maybe fetch the accounts list</dfn> given a <a data-link-type="dfn" href="#manifest" id="ref-for-manifest⑧">Manifest</a> <var>manifest</var> and an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderconfig" id="ref-for-dictdef-identityproviderconfig①②">IdentityProviderConfig</a></code> <var>provider</var>: 
+    <ol>
+     <li data-md>
+      <p>Let <var>idpURL</var> be <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-configurl" id="ref-for-dom-identityproviderconfig-configurl⑧">configURL</a></code>.</p>
+     <li data-md>
+      <p>Let <var>idpOrigin</var> be the origin corresponding to <var>idpURL</var>.</p>
+     <li data-md>
+      <p>Let <var>status</var> be the <a data-link-type="dfn" href="#sign-in-status" id="ref-for-sign-in-status⑦">Sign-in Status</a> of the <var>idpOrigin</var>.</p>
+     <li data-md>
+      <p>If <var>status</var> is <code class="idl"><a data-link-type="idl" href="#dom-sign-in-status-unknown" id="ref-for-dom-sign-in-status-unknown①">unknown</a></code></p>
+      <ol>
+       <li data-md>
+        <p>Let <var>accounts</var> be the result of the <a data-link-type="dfn" href="#fetch-the-accounts-list" id="ref-for-fetch-the-accounts-list②">fetch the accounts list</a> algorithm</p>
+       <li data-md>
+        <p>Set the <a data-link-type="dfn" href="#sign-in-status" id="ref-for-sign-in-status⑧">Sign-in Status</a> of the <var>idpOrigin</var> to <code class="idl"><a data-link-type="idl" href="#dom-sign-in-status-signed-in" id="ref-for-dom-sign-in-status-signed-in①">signed-in</a></code> if <var>accounts</var> is non-empty, <code class="idl"><a data-link-type="idl" href="#dom-sign-in-status-signed-out" id="ref-for-dom-sign-in-status-signed-out②">signed-out</a></code> otherwise</p>
+      </ol>
+      <p class="note" role="note"><span>NOTE:</span> This handles the case where the <a data-link-type="dfn" href="#idp" id="ref-for-idp①①⓪">IDP</a> hasn’t had the chance to call the API before the accounts list is needed. This can incur into a timing attack, but it is limited to 1 per <a data-link-type="dfn" href="#idp" id="ref-for-idp①①①">IDP</a> per <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent③②">user agent</a>, so not very practical. Albeit small, removing this attack surface is an active area of investigation.</p>
+     <li data-md>
+      <p>If <var>status</var> is <code class="idl"><a data-link-type="idl" href="#dom-sign-in-status-signed-out" id="ref-for-dom-sign-in-status-signed-out③">signed-out</a></code></p>
+      <ol>
+       <li data-md>
+        <p>Return an empty list</p>
+      </ol>
+      <p class="note" role="note"><span>NOTE:</span> By terminating the request here before running <a data-link-type="dfn" href="#fetch-the-accounts-list" id="ref-for-fetch-the-accounts-list③">fetch the accounts list</a> algorithm we prevent the timing attack to be performed without any user prompt.</p>
+     <li data-md>
+      <p>If <var>status</var> is <code class="idl"><a data-link-type="idl" href="#dom-sign-in-status-signed-in" id="ref-for-dom-sign-in-status-signed-in②">signed-in</a></code></p>
+      <ol>
+       <li data-md>
+        <p>Let <var>accounts</var> be the result of the <a data-link-type="dfn" href="#fetch-the-accounts-list" id="ref-for-fetch-the-accounts-list④">fetch the accounts list</a> algorithm</p>
+       <li data-md>
+        <p>If <var>accounts</var>’s size is 0:</p>
+        <ol>
+         <li data-md>
+          <p>Set the <a data-link-type="dfn" href="#sign-in-status" id="ref-for-sign-in-status⑨">Sign-in Status</a> of the <var>idpOrigin</var> to <code class="idl"><a data-link-type="idl" href="#dom-sign-in-status-signed-out" id="ref-for-dom-sign-in-status-signed-out④">signed-out</a></code></p>
+         <li data-md>
+          <p>Ask the user to confirm they want to sign-in to their <a data-link-type="dfn" href="#idp" id="ref-for-idp①①②">IDP</a></p>
+         <li data-md>
+          <p>If they decline, return an empty list</p>
+         <li data-md>
+          <p>Return the result of running the <a data-link-type="dfn" href="#sign-in-to-the-idp" id="ref-for-sign-in-to-the-idp">Sign-in to the IDP</a> algorithm.</p>
+        </ol>
+        <p class="note" role="note"><span>NOTE:</span> This can happen when the user’s local client credentials are invalidated on the server (e.g. changing passwords or deleting accounts on a different device), or we get network errors (e.g. timeouts, failures, etc).</p>
+       <li data-md>
+        <p>Return <var>accounts</var>.</p>
+      </ol>
+    </ol>
+   </div>
+   <div class="algorithm" data-algorithm="Sign-in to the IDP">
+     To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="sign-in-to-the-idp">Sign-in to the IDP</dfn> given a <a data-link-type="dfn" href="#manifest" id="ref-for-manifest⑨">Manifest</a> <var>manifest</var> and an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderconfig" id="ref-for-dictdef-identityproviderconfig①③">IdentityProviderConfig</a></code> <var>provider</var>: 
+    <ol>
+     <li data-md>
+      <p>Let <var>idpURL</var> be <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-configurl" id="ref-for-dom-identityproviderconfig-configurl⑨">configURL</a></code>.</p>
+     <li data-md>
+      <p>Let <var>idpOrigin</var> be the origin corresponding to <var>idpURL</var>.</p>
+     <li data-md>
+      <p>Assert that the <a data-link-type="dfn" href="#sign-in-status" id="ref-for-sign-in-status①⓪">Sign-in Status</a> of the <var>idpOrigin</var> is <code class="idl"><a data-link-type="idl" href="#dom-sign-in-status-signed-out" id="ref-for-dom-sign-in-status-signed-out⑤">signed-out</a></code></p>
+     <li data-md>
+      <p>In parallel, wait until one of the following tasks returns to continue:</p>
+      <ol>
+       <li data-md>
+        <p>Open a dialog that directs the user to the <a data-link-type="dfn" href="#idp" id="ref-for-idp①①③">IDP</a>'s <code class="idl"><a data-link-type="idl" href="#dom-manifest-signin_url" id="ref-for-dom-manifest-signin_url">signin_url</a></code>.</p>
+       <li data-md>
+        <p>Wait until the <a data-link-type="dfn" href="#sign-in-status" id="ref-for-sign-in-status①①">Sign-in Status</a> of the <var>idpOrigin</var> becomes <code class="idl"><a data-link-type="idl" href="#dom-sign-in-status-signed-in" id="ref-for-dom-sign-in-status-signed-in③">signed-in</a></code></p>
+        <ol>
+         <li data-md>
+          <p>Close the dialog</p>
+         <li data-md>
+          <p>Return the result of the <a data-link-type="dfn" href="#fetch-the-accounts-list" id="ref-for-fetch-the-accounts-list⑤">fetch the accounts list</a> algorithm</p>
+        </ol>
+       <li data-md>
+        <p>Wait until the user explicitly cancels the dialog</p>
+        <ol>
+         <li data-md>
+          <p>Close the dialog</p>
+         <li data-md>
+          <p>Return empty list</p>
+        </ol>
+      </ol>
+    </ol>
+   </div>
    <h4 class="heading settled" data-level="10.3.3" id="idp-intrusion"><span class="secno">10.3.3. </span><span class="content">IDP Intrusion</span><a class="self-link" href="#idp-intrusion"></a></h4>
    <blockquote>
     <p>From <a href="https://w3cping.github.io/privacy-threat-model/#hl-intrusion">Target Privacy Threat Model § hl-intrusion</a></p>
@@ -2231,14 +2432,14 @@ that all users pay the cost, and only some get the reward.</p>
 Intrusion can thwart individuals' desires to be left alone, sap their time or attention, or
 interrupt their activities.</p>
    </blockquote>
-   <p>In the context of federation, intrusion happens when an <a data-link-type="dfn" href="#rp" id="ref-for-rp⑦⑨">RP</a> and an <a data-link-type="dfn" href="#idp" id="ref-for-idp①⓪①">IDP</a> are colluding to
+   <p>In the context of federation, intrusion happens when an <a data-link-type="dfn" href="#rp" id="ref-for-rp⑦⑨">RP</a> and an <a data-link-type="dfn" href="#idp" id="ref-for-idp①①④">IDP</a> are colluding to
 invasively and aggressively recommend the user to login disproportionally to the their intent. Much
-like unsolicited notifications, an <a data-link-type="dfn" href="#rp" id="ref-for-rp⑧⓪">RP</a> can collude with an <a data-link-type="dfn" href="#idp" id="ref-for-idp①⓪②">IDP</a> to aggressively log users in.</p>
-   <p>The <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent②⑤">user agent</a> can mitigate this by mediating the user controls and offering them proportionally
-to the intent of the user or the privacy risks involved. For example, a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent②⑥">user agent</a> can choose to
+like unsolicited notifications, an <a data-link-type="dfn" href="#rp" id="ref-for-rp⑧⓪">RP</a> can collude with an <a data-link-type="dfn" href="#idp" id="ref-for-idp①①⑤">IDP</a> to aggressively log users in.</p>
+   <p>The <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent③③">user agent</a> can mitigate this by mediating the user controls and offering them proportionally
+to the intent of the user or the privacy risks involved. For example, a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent③④">user agent</a> can choose to
 show a loud / disruptive modal mediated dialog when it has enough confidence of the user’s intent or
 show a quiet / conservative UI hint when it doesn’t.</p>
-   <p>A <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent②⑦">user agent</a> could also choose to control disruption of the user’s experience based on the risks
+   <p>A <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent③⑤">user agent</a> could also choose to control disruption of the user’s experience based on the risks
 involved. For example, when a <a data-link-type="dfn" href="#directed-identifier" id="ref-for-directed-identifier①">directed identifier</a> is being exchanged it can be more confident of
 the unintended consequeces and offer a more aggressive user experience, whereas when global
 identifiers are exchanged a more conservative user experience.</p>
@@ -2369,7 +2570,7 @@ identifiers are exchanged a more conservative user experience.</p>
    <h3 class="heading settled" data-level="10.4" id="other-attack-scenarios"><span class="secno">10.4. </span><span class="content">Other Attack Scenarios</span><a class="self-link" href="#other-attack-scenarios"></a></h3>
    <p>The following are other attack scenarios considered but for which we do not <strong>currently</strong> have specific
 mitigations in this API, but would ideally like to see addressed in future revisions of this API. This is usually because the attacks rely on the user already providing user
-consent. Usually stopping such attacks would be very hard since the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑧①">RP</a> and <a data-link-type="dfn" href="#idp" id="ref-for-idp①⓪③">IDP</a> communication
+consent. Usually stopping such attacks would be very hard since the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑧①">RP</a> and <a data-link-type="dfn" href="#idp" id="ref-for-idp①①⑥">IDP</a> communication
 has been established. In addition, such attacks would still be possible when using regular login
 mechanisms. Still, they are worth mentioning as they showcase some risks users take when signing
 into <a data-link-type="dfn" href="#rp" id="ref-for-rp⑧②">RP</a>s. In some cases, future mitigations are discussed.</p>
@@ -2378,8 +2579,8 @@ into <a data-link-type="dfn" href="#rp" id="ref-for-rp⑧②">RP</a>s. In some c
 build a richer profile. When a user willingly provides their full name, email address, phone number,
 etc, to multiple relying parties, those relying parties can collaborate to build a profile of that
 user and their activity across collaborating sites. Sometimes this is referred to as <a data-link-type="dfn" href="#joining" id="ref-for-joining">joining</a> since it amounts to a join of user records between the account databases of multiple RPs. This
-correlation and profile-building is outside the user’s control and entirely out of the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent②⑧">user
-agent</a>’s or <a data-link-type="dfn" href="#idp" id="ref-for-idp①⓪④">IDP</a>’s view.</p>
+correlation and profile-building is outside the user’s control and entirely out of the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent③⑥">user
+agent</a>’s or <a data-link-type="dfn" href="#idp" id="ref-for-idp①①⑦">IDP</a>’s view.</p>
    <div class="image">
     <svg height="100%" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:10;" version="1.1" viewBox="0 0 6000 4500" width="100%" xmlnsU0003Aserif="http://www.serif.com/" xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" space="preserve">
      <g transform="matrix(8.33333,0,0,8.33333,0,0)">
@@ -2535,9 +2736,9 @@ advertise and filters their housing inventory.</p>
    </div>
    <p>The problem of <a data-link-type="dfn" href="#rp" id="ref-for-rp⑧④">RP</a>s <a data-link-type="dfn" href="#joining" id="ref-for-joining①">joining</a> user data via back-channels is inherent to the proliferation of
 identifying user data. This can be solved by issuing <a data-link-type="dfn" href="#directed-identifier" id="ref-for-directed-identifier②">directed identifiers</a> that provide an
-effective handle to a user’s identity with a given <a data-link-type="dfn" href="#idp" id="ref-for-idp①⓪⑤">IDP</a> that is unique and therefore cannot be
+effective handle to a user’s identity with a given <a data-link-type="dfn" href="#idp" id="ref-for-idp①①⑧">IDP</a> that is unique and therefore cannot be
 correlated with other <a data-link-type="dfn" href="#rp" id="ref-for-rp⑧⑤">RP</a>s. In the past, there have been schemes to accomplish this using one-way
-hashes of, for example, the user’s name, the <a data-link-type="dfn" href="#idp" id="ref-for-idp①⓪⑥">IDP</a>, and the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑧⑥">RP</a>. These identifiers would be
+hashes of, for example, the user’s name, the <a data-link-type="dfn" href="#idp" id="ref-for-idp①①⑨">IDP</a>, and the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑧⑥">RP</a>. These identifiers would be
 unique, and hence it would not be possible to correlate these with other <a data-link-type="dfn" href="#rp" id="ref-for-rp⑧⑦">RP</a>s.</p>
    <div class="image">
     <svg height="100%" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:10;" version="1.1" viewBox="0 0 10667 8000" width="100%" xmlnsU0003Aserif="http://www.serif.com/" xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" space="preserve">
@@ -2749,8 +2950,8 @@ unique, and hence it would not be possible to correlate these with other <a data
     </svg>
    </div>
    <h4 class="heading settled" data-level="10.4.2" id="unauthorized-data-usage"><span class="secno">10.4.2. </span><span class="content">Unauthorized Data Usage</span><a class="self-link" href="#unauthorized-data-usage"></a></h4>
-   <p>Another attack is when the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑧⑧">RP</a> or <a data-link-type="dfn" href="#idp" id="ref-for-idp①⓪⑦">IDP</a> uses user information for purposes not authorized by
-the user. When the user agrees to allow the <a data-link-type="dfn" href="#idp" id="ref-for-idp①⓪⑧">IDP</a> to provide information to the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑧⑨">RP</a>, the
+   <p>Another attack is when the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑧⑧">RP</a> or <a data-link-type="dfn" href="#idp" id="ref-for-idp①②⓪">IDP</a> uses user information for purposes not authorized by
+the user. When the user agrees to allow the <a data-link-type="dfn" href="#idp" id="ref-for-idp①②①">IDP</a> to provide information to the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑧⑨">RP</a>, the
 consent is specific to certain purposes, such as sign-in and personalization. For instance, the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑨⓪">RP</a> might use that data for other purposes that the user would not expect and did not authorize,
 such as selling email addresses to a spam list. Spamming risk can exist even when using <a data-link-type="dfn" href="#directed-identifier" id="ref-for-directed-identifier③">directed identifiers</a>.</p>
    <h4 class="heading settled" data-level="10.4.3" id="rp-fingerprinting"><span class="secno">10.4.3. </span><span class="content">RP Fingerprinting</span><a class="self-link" href="#rp-fingerprinting"></a></h4>
@@ -2810,14 +3011,14 @@ able to rescind the access to that identification, for instance by logging out. 
    <h4 class="heading settled" data-level="10.4.4" id="secondary-use"><span class="secno">10.4.4. </span><span class="content">Secondary Use</span><a class="self-link" href="#secondary-use"></a></h4>
    <p>Secondary use is the use of collected information about an individual without the individual’s
 consent for a purpose different from that for which the information was collected. This attack
-happens when <a data-link-type="dfn" href="#idp" id="ref-for-idp①⓪⑨">IDP</a>s misuse the the information collected to enable sign-in for other
+happens when <a data-link-type="dfn" href="#idp" id="ref-for-idp①②②">IDP</a>s misuse the the information collected to enable sign-in for other
 purposes.</p>
-   <p>Existing federation protocols require that the <a data-link-type="dfn" href="#idp" id="ref-for-idp①①⓪">IDP</a> know which service is requesting a <a data-link-type="dfn" href="#token" id="ref-for-token⑨">token</a> in order to allow identity federation. Identity providers can use this fact to build profiles of
+   <p>Existing federation protocols require that the <a data-link-type="dfn" href="#idp" id="ref-for-idp①②③">IDP</a> know which service is requesting a <a data-link-type="dfn" href="#token" id="ref-for-token⑨">token</a> in order to allow identity federation. Identity providers can use this fact to build profiles of
 users across sites where the user has decided to use federation with the same account. This profile
 could be used, for example, to serve targeted advertisements to those users browsing on sites that
 the IDP controls.</p>
-   <p>This risk can exist even in the case where the <a data-link-type="dfn" href="#idp" id="ref-for-idp①①①">IDP</a> does not having pre-existing user account
-information (for instance, if it is not a _bona fide_ IDP), because FedCM requests sent to the <a data-link-type="dfn" href="#idp" id="ref-for-idp①①②">IDP</a> are credentialed. This is more likely to occur if the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑨④">RP</a> is colluding with the <a data-link-type="dfn" href="#idp" id="ref-for-idp①①③">IDP</a> to enable tracking via <a href="#timing-attacks">§ 10.3.2 Timing Attacks</a>.</p>
+   <p>This risk can exist even in the case where the <a data-link-type="dfn" href="#idp" id="ref-for-idp①②④">IDP</a> does not having pre-existing user account
+information (for instance, if it is not a _bona fide_ IDP), because FedCM requests sent to the <a data-link-type="dfn" href="#idp" id="ref-for-idp①②⑤">IDP</a> are credentialed. This is more likely to occur if the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑨④">RP</a> is colluding with the <a data-link-type="dfn" href="#idp" id="ref-for-idp①②⑥">IDP</a> to enable tracking via <a href="#timing-attacks">§ 10.3.2 Timing Attacks</a>.</p>
    <div class="image">
     <svg height="100%" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:10;" version="1.1" viewBox="0 0 10667 8000" width="100%" xmlnsU0003Aserif="http://www.serif.com/" xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" space="preserve">
      <g transform="matrix(8.33333,0,0,8.33333,0,0)">
@@ -2930,21 +3131,21 @@ information (for instance, if it is not a _bona fide_ IDP), because FedCM reques
     <a class="self-link" href="#example-ee3423e4"></a> 
     <ol>
      <li data-md>
-      <p>User signs into RP1 (which sells jewelry) with an <a data-link-type="dfn" href="#idp" id="ref-for-idp①①④">IDP</a>.</p>
+      <p>User signs into RP1 (which sells jewelry) with an <a data-link-type="dfn" href="#idp" id="ref-for-idp①②⑦">IDP</a>.</p>
      <li data-md>
-      <p>User signs into RP2 (which sells houses) with the same <a data-link-type="dfn" href="#idp" id="ref-for-idp①①⑤">IDP</a>.</p>
+      <p>User signs into RP2 (which sells houses) with the same <a data-link-type="dfn" href="#idp" id="ref-for-idp①②⑧">IDP</a>.</p>
      <li data-md>
-      <p>User navigates to the <a data-link-type="dfn" href="#idp" id="ref-for-idp①①⑥">IDP</a>.</p>
+      <p>User navigates to the <a data-link-type="dfn" href="#idp" id="ref-for-idp①②⑨">IDP</a>.</p>
      <li data-md>
-      <p>Because the <a data-link-type="dfn" href="#idp" id="ref-for-idp①①⑦">IDP</a> knows that the user has an account with RP1 and RP2, the <a data-link-type="dfn" href="#idp" id="ref-for-idp①①⑧">IDP</a> can show ads about vacations for honeymoons.</p>
+      <p>Because the <a data-link-type="dfn" href="#idp" id="ref-for-idp①③⓪">IDP</a> knows that the user has an account with RP1 and RP2, the <a data-link-type="dfn" href="#idp" id="ref-for-idp①③①">IDP</a> can show ads about vacations for honeymoons.</p>
      <li data-md>
-      <p>The user is surprised that their <a data-link-type="dfn" href="#idp" id="ref-for-idp①①⑨">IDP</a> is aware of their plans to get
+      <p>The user is surprised that their <a data-link-type="dfn" href="#idp" id="ref-for-idp①③②">IDP</a> is aware of their plans to get
 married.</p>
     </ol>
    </div>
-   <p>Preventing tracking of users by the <a data-link-type="dfn" href="#idp" id="ref-for-idp①②⓪">IDP</a> is difficult: the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑨⑤">RP</a> has to be coded into the
+   <p>Preventing tracking of users by the <a data-link-type="dfn" href="#idp" id="ref-for-idp①③③">IDP</a> is difficult: the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑨⑤">RP</a> has to be coded into the
 identity token for security reasons, such as token reuse and fraud and abuse prevention. That said,
-there have been cryptographic schemes developed to blind the <a data-link-type="dfn" href="#idp" id="ref-for-idp①②①">IDP</a> to the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑨⑥">RP</a> while still
+there have been cryptographic schemes developed to blind the <a data-link-type="dfn" href="#idp" id="ref-for-idp①③④">IDP</a> to the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑨⑥">RP</a> while still
 preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identity/Persona_AAR">personas</a>).</p>
    <div class="image">
     <svg height="100%" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:10;" version="1.1" viewBox="0 0 7112 5334" width="100%" xmlnsU0003Aserif="http://www.serif.com/" xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" space="preserve">
@@ -3105,10 +3306,10 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <li><a href="#branding-json">Branding JSON</a><span>, in § 5.1</span>
    <li><a href="#check-the-root-manifest">check the root manifest</a><span>, in § 7.4</span>
    <li><a href="#client-id">client id</a><span>, in § 3</span>
-   <li><a href="#dom-identityprovider-clientid">clientId</a><span>, in § 7.3</span>
+   <li><a href="#dom-identityproviderconfig-clientid">clientId</a><span>, in § 7.3</span>
    <li><a href="#color">color</a><span>, in § 5.1</span>
    <li><a href="#compute-account-state">compute account state</a><span>, in § 7.4</span>
-   <li><a href="#dom-identityprovider-configurl">configURL</a><span>, in § 7.3</span>
+   <li><a href="#dom-identityproviderconfig-configurl">configURL</a><span>, in § 7.3</span>
    <li><a href="#create-tokens">create tokens</a><span>, in § 7.4</span>
    <li><a href="#directed-identifier">directed identifier</a><span>, in § 3</span>
    <li><a href="#dom-identitycredential-discoverfromexternalsource-slot">[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</a><span>, in § 7.4</span>
@@ -3126,14 +3327,18 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <li><a href="#dictdef-identitycredentialrequestoptions">IdentityCredentialRequestOptions</a><span>, in § 7.3</span>
    <li><a href="#identity-credentials-get">identity-credentials-get</a><span>, in § 8</span>
    <li><a href="#identity-provider">Identity Provider</a><span>, in § 3</span>
-   <li><a href="#dictdef-identityprovider">IdentityProvider</a><span>, in § 7.3</span>
+   <li><a href="#identityprovider">IdentityProvider</a><span>, in § 10.3.2.2.1</span>
+   <li><a href="#dictdef-identityproviderconfig">IdentityProviderConfig</a><span>, in § 7.3</span>
    <li><a href="#idp">IDP</a><span>, in § 3</span>
    <li><a href="#joining">joining</a><span>, in § 3</span>
+   <li><a href="#dom-identityprovider-login">login()</a><span>, in § 10.3.2.2.1</span>
+   <li><a href="#dom-identityprovider-logout">logout()</a><span>, in § 10.3.2.2.1</span>
    <li><a href="#dom-identitycredential-logoutrps">logoutRPs(logoutRequests)</a><span>, in § 7.4.1</span>
    <li><a href="#low-level-api">low-level API</a><span>, in § 3</span>
    <li><a href="#manifest">Manifest</a><span>, in § 5.1</span>
+   <li><a href="#maybe-fetch-the-accounts-list">maybe fetch the accounts list</a><span>, in § 10.3.2.2.1</span>
    <li><a href="#minting">minting</a><span>, in § 3</span>
-   <li><a href="#dom-identityprovider-nonce">nonce</a><span>, in § 7.3</span>
+   <li><a href="#dom-identityproviderconfig-nonce">nonce</a><span>, in § 7.3</span>
    <li><a href="#out-of-band">out-of-band</a><span>, in § 3</span>
    <li><a href="#potentially-create-identitycredential">potentially create IdentityCredential</a><span>, in § 7.4</span>
    <li><a href="#privacy-policy">Privacy Policy</a><span>, in § 3</span>
@@ -3148,8 +3353,11 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <li><a href="#select-an-account">select an account</a><span>, in § 7.4</span>
    <li><a href="#session">session</a><span>, in § 3</span>
    <li><a href="#sign-in">sign-in</a><span>, in § 7.4</span>
+   <li><a href="#sign-in-status">Sign-in Status</a><span>, in § 10.3.2.2.1</span>
+   <li><a href="#sign-in-to-the-idp">Sign-in to the IDP</a><span>, in § 10.3.2.2.1</span>
    <li><a href="#site">site</a><span>, in § 3</span>
    <li><a href="#state-machine-map">state machine map</a><span>, in § 7.1</span>
+   <li><a href="#status①">status</a><span>, in § 10.3.2.2.1</span>
    <li><a href="#terms-of-service">Terms of Service</a><span>, in § 3</span>
    <li>
     token
@@ -3365,6 +3573,7 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <a href="https://html.spec.whatwg.org/multipage/webappapis.html#current-settings-object">https://html.spec.whatwg.org/multipage/webappapis.html#current-settings-object</a><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-current-settings-object">8. Permissions Policy Integration</a>
+    <li><a href="#ref-for-current-settings-object①">10.3.2.2.1. The IdP Sign-in Status API</a> <a href="#ref-for-current-settings-object②">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-environment-settings-object">
@@ -3386,6 +3595,7 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
     <li><a href="#ref-for-concept-origin②">7.1. The State Machine</a> <a href="#ref-for-concept-origin③">(2)</a>
     <li><a href="#ref-for-concept-origin④">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a>
     <li><a href="#ref-for-concept-origin⑤">7.4.1. IDP Sign-out</a>
+    <li><a href="#ref-for-concept-origin⑥">10.3.2.2.1. The IdP Sign-in Status API</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-concept-document-permissions-policy">
@@ -3435,6 +3645,7 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <a href="https://infra.spec.whatwg.org/#map-getting-the-keys">https://infra.spec.whatwg.org/#map-getting-the-keys</a><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-map-getting-the-keys">7.1. The State Machine</a>
+    <li><a href="#ref-for-map-getting-the-keys①">10.3.2.2.1. The IdP Sign-in Status API</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-list">
@@ -3449,6 +3660,7 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <ul>
     <li><a href="#ref-for-ordered-map">7.1. The State Machine</a>
     <li><a href="#ref-for-ordered-map①">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a>
+    <li><a href="#ref-for-ordered-map②">10.3.2.2.1. The IdP Sign-in Status API</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-ordered-map">
@@ -3456,6 +3668,7 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <ul>
     <li><a href="#ref-for-ordered-map">7.1. The State Machine</a>
     <li><a href="#ref-for-ordered-map①">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a>
+    <li><a href="#ref-for-ordered-map②">10.3.2.2.1. The IdP Sign-in Status API</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-parse-json-bytes-to-an-infra-value">
@@ -3487,14 +3700,16 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
     <li><a href="#ref-for-user-agent①④">10.3.2. Timing Attacks</a> <a href="#ref-for-user-agent①⑤">(2)</a> <a href="#ref-for-user-agent①⑥">(3)</a> <a href="#ref-for-user-agent①⑦">(4)</a>
     <li><a href="#ref-for-user-agent①⑧">10.3.2.1. Heuristics</a> <a href="#ref-for-user-agent①⑨">(2)</a> <a href="#ref-for-user-agent②⓪">(3)</a> <a href="#ref-for-user-agent②①">(4)</a>
     <li><a href="#ref-for-user-agent②②">10.3.2.2. Push Model</a> <a href="#ref-for-user-agent②③">(2)</a> <a href="#ref-for-user-agent②④">(3)</a>
-    <li><a href="#ref-for-user-agent②⑤">10.3.3. IDP Intrusion</a> <a href="#ref-for-user-agent②⑥">(2)</a> <a href="#ref-for-user-agent②⑦">(3)</a>
-    <li><a href="#ref-for-user-agent②⑧">10.4.1. Cross-Site Correlation</a>
+    <li><a href="#ref-for-user-agent②⑤">10.3.2.2.1. The IdP Sign-in Status API</a> <a href="#ref-for-user-agent②⑥">(2)</a> <a href="#ref-for-user-agent②⑦">(3)</a> <a href="#ref-for-user-agent②⑧">(4)</a> <a href="#ref-for-user-agent②⑨">(5)</a> <a href="#ref-for-user-agent③⓪">(6)</a> <a href="#ref-for-user-agent③①">(7)</a> <a href="#ref-for-user-agent③②">(8)</a>
+    <li><a href="#ref-for-user-agent③③">10.3.3. IDP Intrusion</a> <a href="#ref-for-user-agent③④">(2)</a> <a href="#ref-for-user-agent③⑤">(3)</a>
+    <li><a href="#ref-for-user-agent③⑥">10.4.1. Cross-Site Correlation</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-map-getting-the-values">
    <a href="https://infra.spec.whatwg.org/#map-getting-the-values">https://infra.spec.whatwg.org/#map-getting-the-values</a><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-map-getting-the-values">7.1. The State Machine</a>
+    <li><a href="#ref-for-map-getting-the-values①">10.3.2.2.1. The IdP Sign-in Status API</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-json-mime-type">
@@ -3557,6 +3772,7 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <ul>
     <li><a href="#ref-for-Exposed">7.2. The IdentityCredential Interface</a>
     <li><a href="#ref-for-Exposed①">7.4.1. IDP Sign-out</a>
+    <li><a href="#ref-for-Exposed②">10.3.2.2.1. The IdP Sign-in Status API</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-networkerror">
@@ -3582,6 +3798,7 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <ul>
     <li><a href="#ref-for-SecureContext">7.2. The IdentityCredential Interface</a>
     <li><a href="#ref-for-SecureContext①">7.4.1. IDP Sign-out</a>
+    <li><a href="#ref-for-SecureContext②">10.3.2.2.1. The IdP Sign-in Status API</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-idl-USVString">
@@ -3623,6 +3840,7 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <a href="https://webidl.spec.whatwg.org/#idl-undefined">https://webidl.spec.whatwg.org/#idl-undefined</a><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-idl-undefined">7.4.1. IDP Sign-out</a>
+    <li><a href="#ref-for-idl-undefined①">10.3.2.2.1. The IdP Sign-in Status API</a> <a href="#ref-for-idl-undefined②">(2)</a>
    </ul>
   </aside>
   <h3 class="no-num no-ref heading settled" id="index-defined-elsewhere"><span class="content">Terms defined by reference</span><a class="self-link" href="#index-defined-elsewhere"></a></h3>
@@ -3821,13 +4039,13 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
 };
 
 <c- b>dictionary</c-> <a href="#dictdef-identitycredentialrequestoptions"><code><c- g>IdentityCredentialRequestOptions</c-></code></a> {
-  <a data-link-type="dfn" href="https://webidl.spec.whatwg.org/#idl-sequence"><c- b>sequence</c-></a>&lt;<a data-link-type="idl-name" href="#dictdef-identityprovider"><c- n>IdentityProvider</c-></a>> <a data-type="sequence<IdentityProvider> " href="#dom-identitycredentialrequestoptions-providers"><code><c- g>providers</c-></code></a>;
+  <a data-link-type="dfn" href="https://webidl.spec.whatwg.org/#idl-sequence"><c- b>sequence</c-></a>&lt;<a data-link-type="idl-name" href="#dictdef-identityproviderconfig"><c- n>IdentityProviderConfig</c-></a>> <a data-type="sequence<IdentityProviderConfig> " href="#dom-identitycredentialrequestoptions-providers"><code><c- g>providers</c-></code></a>;
 };
 
-<c- b>dictionary</c-> <a href="#dictdef-identityprovider"><code><c- g>IdentityProvider</c-></code></a> {
-  <c- b>required</c-> <a class="idl-code" data-link-type="interface" href="https://webidl.spec.whatwg.org/#idl-USVString"><c- b>USVString</c-></a> <a data-type="USVString " href="#dom-identityprovider-configurl"><code><c- g>configURL</c-></code></a>;
-  <c- b>required</c-> <a class="idl-code" data-link-type="interface" href="https://webidl.spec.whatwg.org/#idl-USVString"><c- b>USVString</c-></a> <a data-type="USVString " href="#dom-identityprovider-clientid"><code><c- g>clientId</c-></code></a>;
-  <a class="idl-code" data-link-type="interface" href="https://webidl.spec.whatwg.org/#idl-USVString"><c- b>USVString</c-></a> <a data-type="USVString " href="#dom-identityprovider-nonce"><code><c- g>nonce</c-></code></a>;
+<c- b>dictionary</c-> <a href="#dictdef-identityproviderconfig"><code><c- g>IdentityProviderConfig</c-></code></a> {
+  <c- b>required</c-> <a class="idl-code" data-link-type="interface" href="https://webidl.spec.whatwg.org/#idl-USVString"><c- b>USVString</c-></a> <a data-type="USVString " href="#dom-identityproviderconfig-configurl"><code><c- g>configURL</c-></code></a>;
+  <c- b>required</c-> <a class="idl-code" data-link-type="interface" href="https://webidl.spec.whatwg.org/#idl-USVString"><c- b>USVString</c-></a> <a data-type="USVString " href="#dom-identityproviderconfig-clientid"><code><c- g>clientId</c-></code></a>;
+  <a class="idl-code" data-link-type="interface" href="https://webidl.spec.whatwg.org/#idl-USVString"><c- b>USVString</c-></a> <a data-type="USVString " href="#dom-identityproviderconfig-nonce"><code><c- g>nonce</c-></code></a>;
 };
 
 <c- b>dictionary</c-> <a href="#dictdef-identitycredentiallogoutrpsrequest"><code><c- g>IdentityCredentialLogoutRPsRequest</c-></code></a> {
@@ -3838,6 +4056,12 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
 [<a class="idl-code" data-link-type="extended-attribute" href="https://webidl.spec.whatwg.org/#Exposed"><c- g>Exposed</c-></a>=<c- n>Window</c->, <a class="idl-code" data-link-type="extended-attribute" href="https://webidl.spec.whatwg.org/#SecureContext"><c- g>SecureContext</c-></a>]
 <c- b>partial</c-> <c- b>interface</c-> <a class="idl-code" data-link-type="interface" href="#identitycredential"><c- g>IdentityCredential</c-></a> {
   <c- b>static</c-> <a class="idl-code" data-link-type="interface" href="https://webidl.spec.whatwg.org/#idl-promise"><c- b>Promise</c-></a>&lt;<a class="idl-code" data-link-type="interface" href="https://webidl.spec.whatwg.org/#idl-undefined"><c- b>undefined</c-></a>> <a href="#dom-identitycredential-logoutrps"><code><c- g>logoutRPs</c-></code></a>(<a data-link-type="dfn" href="https://webidl.spec.whatwg.org/#idl-sequence"><c- b>sequence</c-></a>&lt;<a data-link-type="idl-name" href="#dictdef-identitycredentiallogoutrpsrequest"><c- n>IdentityCredentialLogoutRPsRequest</c-></a>> <a href="#dom-identitycredential-logoutrps-logoutrequests-logoutrequests"><code><c- g>logoutRequests</c-></code></a>);
+};
+
+[<a class="idl-code" data-link-type="extended-attribute" href="https://webidl.spec.whatwg.org/#Exposed"><c- g>Exposed</c-></a>=<c- n>Window</c->, <a class="idl-code" data-link-type="extended-attribute" href="https://webidl.spec.whatwg.org/#SecureContext"><c- g>SecureContext</c-></a>]
+<c- b>interface</c-> <a href="#identityprovider"><code><c- g>IdentityProvider</c-></code></a> {
+  <c- b>static</c-> <a class="idl-code" data-link-type="interface" href="https://webidl.spec.whatwg.org/#idl-undefined"><c- b>undefined</c-></a> <a href="#dom-identityprovider-login"><code><c- g>login</c-></code></a>();
+  <c- b>static</c-> <a class="idl-code" data-link-type="interface" href="https://webidl.spec.whatwg.org/#idl-undefined"><c- b>undefined</c-></a> <a href="#dom-identityprovider-logout"><code><c- g>logout</c-></code></a>();
 };
 
 </pre>
@@ -3852,6 +4076,7 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <div class="issue"> <a href="https://github.com/fedidcg/FedCM/issues/333">relax</a> the size of the provider_urls array. <a class="issue-return" href="#issue-80d5b61c" title="Jump to section">↵</a></div>
    <div class="issue"> it is unclear if the <a href="#Sec-FedCM-CSRF">Sec-FedCM-CSRF</a> header is <a href="https://github.com/fedidcg/FedCM/issues/267">needed</a> on the manifest fetch. <a class="issue-return" href="#issue-e5d78f22" title="Jump to section">↵</a></div>
    <div class="issue"> There is an ongoing investigation on whether we should use this header or CORS <a href="https://github.com/fedidcg/FedCM/issues/320">here</a>. <a class="issue-return" href="#issue-558918b0" title="Jump to section">↵</a></div>
+   <div class="issue"> this is a more formal description of what is proposed <a href="https://github.com/fedidcg/FedCM/issues/230#issuecomment-1233290946">here</a>. <a class="issue-return" href="#issue-71e44d70" title="Jump to section">↵</a></div>
   </div>
   <aside class="dfn-panel" data-for="account">
    <b><a href="#account">#account</a></b><b>Referenced in:</b>
@@ -3959,11 +4184,12 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
     <li><a href="#ref-for-idp⑧③">10.3.2. Timing Attacks</a> <a href="#ref-for-idp⑧④">(2)</a> <a href="#ref-for-idp⑧⑤">(3)</a> <a href="#ref-for-idp⑧⑥">(4)</a> <a href="#ref-for-idp⑧⑦">(5)</a> <a href="#ref-for-idp⑧⑧">(6)</a> <a href="#ref-for-idp⑧⑨">(7)</a> <a href="#ref-for-idp⑨⓪">(8)</a>
     <li><a href="#ref-for-idp⑨①">10.3.2.1. Heuristics</a> <a href="#ref-for-idp⑨②">(2)</a> <a href="#ref-for-idp⑨③">(3)</a>
     <li><a href="#ref-for-idp⑨④">10.3.2.2. Push Model</a> <a href="#ref-for-idp⑨⑤">(2)</a> <a href="#ref-for-idp⑨⑥">(3)</a> <a href="#ref-for-idp⑨⑦">(4)</a> <a href="#ref-for-idp⑨⑧">(5)</a> <a href="#ref-for-idp⑨⑨">(6)</a> <a href="#ref-for-idp①⓪⓪">(7)</a>
-    <li><a href="#ref-for-idp①⓪①">10.3.3. IDP Intrusion</a> <a href="#ref-for-idp①⓪②">(2)</a>
-    <li><a href="#ref-for-idp①⓪③">10.4. Other Attack Scenarios</a>
-    <li><a href="#ref-for-idp①⓪④">10.4.1. Cross-Site Correlation</a> <a href="#ref-for-idp①⓪⑤">(2)</a> <a href="#ref-for-idp①⓪⑥">(3)</a>
-    <li><a href="#ref-for-idp①⓪⑦">10.4.2. Unauthorized Data Usage</a> <a href="#ref-for-idp①⓪⑧">(2)</a>
-    <li><a href="#ref-for-idp①⓪⑨">10.4.4. Secondary Use</a> <a href="#ref-for-idp①①⓪">(2)</a> <a href="#ref-for-idp①①①">(3)</a> <a href="#ref-for-idp①①②">(4)</a> <a href="#ref-for-idp①①③">(5)</a> <a href="#ref-for-idp①①④">(6)</a> <a href="#ref-for-idp①①⑤">(7)</a> <a href="#ref-for-idp①①⑥">(8)</a> <a href="#ref-for-idp①①⑦">(9)</a> <a href="#ref-for-idp①①⑧">(10)</a> <a href="#ref-for-idp①①⑨">(11)</a> <a href="#ref-for-idp①②⓪">(12)</a> <a href="#ref-for-idp①②①">(13)</a>
+    <li><a href="#ref-for-idp①⓪①">10.3.2.2.1. The IdP Sign-in Status API</a> <a href="#ref-for-idp①⓪②">(2)</a> <a href="#ref-for-idp①⓪③">(3)</a> <a href="#ref-for-idp①⓪④">(4)</a> <a href="#ref-for-idp①⓪⑤">(5)</a> <a href="#ref-for-idp①⓪⑥">(6)</a> <a href="#ref-for-idp①⓪⑦">(7)</a> <a href="#ref-for-idp①⓪⑧">(8)</a> <a href="#ref-for-idp①⓪⑨">(9)</a> <a href="#ref-for-idp①①⓪">(10)</a> <a href="#ref-for-idp①①①">(11)</a> <a href="#ref-for-idp①①②">(12)</a> <a href="#ref-for-idp①①③">(13)</a>
+    <li><a href="#ref-for-idp①①④">10.3.3. IDP Intrusion</a> <a href="#ref-for-idp①①⑤">(2)</a>
+    <li><a href="#ref-for-idp①①⑥">10.4. Other Attack Scenarios</a>
+    <li><a href="#ref-for-idp①①⑦">10.4.1. Cross-Site Correlation</a> <a href="#ref-for-idp①①⑧">(2)</a> <a href="#ref-for-idp①①⑨">(3)</a>
+    <li><a href="#ref-for-idp①②⓪">10.4.2. Unauthorized Data Usage</a> <a href="#ref-for-idp①②①">(2)</a>
+    <li><a href="#ref-for-idp①②②">10.4.4. Secondary Use</a> <a href="#ref-for-idp①②③">(2)</a> <a href="#ref-for-idp①②④">(3)</a> <a href="#ref-for-idp①②⑤">(4)</a> <a href="#ref-for-idp①②⑥">(5)</a> <a href="#ref-for-idp①②⑦">(6)</a> <a href="#ref-for-idp①②⑧">(7)</a> <a href="#ref-for-idp①②⑨">(8)</a> <a href="#ref-for-idp①③⓪">(9)</a> <a href="#ref-for-idp①③①">(10)</a> <a href="#ref-for-idp①③②">(11)</a> <a href="#ref-for-idp①③③">(12)</a> <a href="#ref-for-idp①③④">(13)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="tracker">
@@ -4122,6 +4348,7 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <ul>
     <li><a href="#ref-for-manifest">5.1. Manifest</a>
     <li><a href="#ref-for-manifest①">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a> <a href="#ref-for-manifest②">(2)</a> <a href="#ref-for-manifest③">(3)</a> <a href="#ref-for-manifest④">(4)</a> <a href="#ref-for-manifest⑤">(5)</a> <a href="#ref-for-manifest⑥">(6)</a>
+    <li><a href="#ref-for-manifest⑦">10.3.2.2.1. The IdP Sign-in Status API</a> <a href="#ref-for-manifest⑧">(2)</a> <a href="#ref-for-manifest⑨">(3)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="dom-manifest-accounts_endpoint">
@@ -4253,38 +4480,41 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
     <li><a href="#ref-for-dom-identitycredentialrequestoptions-providers">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a> <a href="#ref-for-dom-identitycredentialrequestoptions-providers①">(2)</a> <a href="#ref-for-dom-identitycredentialrequestoptions-providers②">(3)</a>
    </ul>
   </aside>
-  <aside class="dfn-panel" data-for="dictdef-identityprovider">
-   <b><a href="#dictdef-identityprovider">#dictdef-identityprovider</a></b><b>Referenced in:</b>
+  <aside class="dfn-panel" data-for="dictdef-identityproviderconfig">
+   <b><a href="#dictdef-identityproviderconfig">#dictdef-identityproviderconfig</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dictdef-identityprovider">7.3. The CredentialRequestOptions</a> <a href="#ref-for-dictdef-identityprovider①">(2)</a> <a href="#ref-for-dictdef-identityprovider②">(3)</a>
-    <li><a href="#ref-for-dictdef-identityprovider③">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a> <a href="#ref-for-dictdef-identityprovider④">(2)</a> <a href="#ref-for-dictdef-identityprovider⑤">(3)</a> <a href="#ref-for-dictdef-identityprovider⑥">(4)</a> <a href="#ref-for-dictdef-identityprovider⑦">(5)</a> <a href="#ref-for-dictdef-identityprovider⑧">(6)</a> <a href="#ref-for-dictdef-identityprovider⑨">(7)</a> <a href="#ref-for-dictdef-identityprovider①⓪">(8)</a> <a href="#ref-for-dictdef-identityprovider①①">(9)</a>
+    <li><a href="#ref-for-dictdef-identityproviderconfig">7.3. The CredentialRequestOptions</a> <a href="#ref-for-dictdef-identityproviderconfig①">(2)</a> <a href="#ref-for-dictdef-identityproviderconfig②">(3)</a>
+    <li><a href="#ref-for-dictdef-identityproviderconfig③">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a> <a href="#ref-for-dictdef-identityproviderconfig④">(2)</a> <a href="#ref-for-dictdef-identityproviderconfig⑤">(3)</a> <a href="#ref-for-dictdef-identityproviderconfig⑥">(4)</a> <a href="#ref-for-dictdef-identityproviderconfig⑦">(5)</a> <a href="#ref-for-dictdef-identityproviderconfig⑧">(6)</a> <a href="#ref-for-dictdef-identityproviderconfig⑨">(7)</a> <a href="#ref-for-dictdef-identityproviderconfig①⓪">(8)</a> <a href="#ref-for-dictdef-identityproviderconfig①①">(9)</a>
+    <li><a href="#ref-for-dictdef-identityproviderconfig①②">10.3.2.2.1. The IdP Sign-in Status API</a> <a href="#ref-for-dictdef-identityproviderconfig①③">(2)</a>
    </ul>
   </aside>
-  <aside class="dfn-panel" data-for="dom-identityprovider-configurl">
-   <b><a href="#dom-identityprovider-configurl">#dom-identityprovider-configurl</a></b><b>Referenced in:</b>
+  <aside class="dfn-panel" data-for="dom-identityproviderconfig-configurl">
+   <b><a href="#dom-identityproviderconfig-configurl">#dom-identityproviderconfig-configurl</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dom-identityprovider-configurl">7.3. The CredentialRequestOptions</a>
-    <li><a href="#ref-for-dom-identityprovider-configurl①">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a> <a href="#ref-for-dom-identityprovider-configurl②">(2)</a> <a href="#ref-for-dom-identityprovider-configurl③">(3)</a> <a href="#ref-for-dom-identityprovider-configurl④">(4)</a> <a href="#ref-for-dom-identityprovider-configurl⑤">(5)</a> <a href="#ref-for-dom-identityprovider-configurl⑥">(6)</a> <a href="#ref-for-dom-identityprovider-configurl⑦">(7)</a>
+    <li><a href="#ref-for-dom-identityproviderconfig-configurl">7.3. The CredentialRequestOptions</a>
+    <li><a href="#ref-for-dom-identityproviderconfig-configurl①">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a> <a href="#ref-for-dom-identityproviderconfig-configurl②">(2)</a> <a href="#ref-for-dom-identityproviderconfig-configurl③">(3)</a> <a href="#ref-for-dom-identityproviderconfig-configurl④">(4)</a> <a href="#ref-for-dom-identityproviderconfig-configurl⑤">(5)</a> <a href="#ref-for-dom-identityproviderconfig-configurl⑥">(6)</a> <a href="#ref-for-dom-identityproviderconfig-configurl⑦">(7)</a>
+    <li><a href="#ref-for-dom-identityproviderconfig-configurl⑧">10.3.2.2.1. The IdP Sign-in Status API</a> <a href="#ref-for-dom-identityproviderconfig-configurl⑨">(2)</a>
    </ul>
   </aside>
-  <aside class="dfn-panel" data-for="dom-identityprovider-clientid">
-   <b><a href="#dom-identityprovider-clientid">#dom-identityprovider-clientid</a></b><b>Referenced in:</b>
+  <aside class="dfn-panel" data-for="dom-identityproviderconfig-clientid">
+   <b><a href="#dom-identityproviderconfig-clientid">#dom-identityproviderconfig-clientid</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dom-identityprovider-clientid">7.3. The CredentialRequestOptions</a>
-    <li><a href="#ref-for-dom-identityprovider-clientid①">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a> <a href="#ref-for-dom-identityprovider-clientid②">(2)</a> <a href="#ref-for-dom-identityprovider-clientid③">(3)</a>
+    <li><a href="#ref-for-dom-identityproviderconfig-clientid">7.3. The CredentialRequestOptions</a>
+    <li><a href="#ref-for-dom-identityproviderconfig-clientid①">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a> <a href="#ref-for-dom-identityproviderconfig-clientid②">(2)</a> <a href="#ref-for-dom-identityproviderconfig-clientid③">(3)</a>
    </ul>
   </aside>
-  <aside class="dfn-panel" data-for="dom-identityprovider-nonce">
-   <b><a href="#dom-identityprovider-nonce">#dom-identityprovider-nonce</a></b><b>Referenced in:</b>
+  <aside class="dfn-panel" data-for="dom-identityproviderconfig-nonce">
+   <b><a href="#dom-identityproviderconfig-nonce">#dom-identityproviderconfig-nonce</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dom-identityprovider-nonce">7.3. The CredentialRequestOptions</a>
-    <li><a href="#ref-for-dom-identityprovider-nonce①">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a>
+    <li><a href="#ref-for-dom-identityproviderconfig-nonce">7.3. The CredentialRequestOptions</a>
+    <li><a href="#ref-for-dom-identityproviderconfig-nonce①">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="potentially-create-identitycredential">
    <b><a href="#potentially-create-identitycredential">#potentially-create-identitycredential</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-potentially-create-identitycredential">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a>
+    <li><a href="#ref-for-potentially-create-identitycredential①">10.3.2.2.1. The IdP Sign-in Status API</a> <a href="#ref-for-potentially-create-identitycredential②">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="compute-account-state">
@@ -4297,6 +4527,7 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <b><a href="#fetch-the-accounts-list">#fetch-the-accounts-list</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-fetch-the-accounts-list">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a>
+    <li><a href="#ref-for-fetch-the-accounts-list①">10.3.2.2.1. The IdP Sign-in Status API</a> <a href="#ref-for-fetch-the-accounts-list②">(2)</a> <a href="#ref-for-fetch-the-accounts-list③">(3)</a> <a href="#ref-for-fetch-the-accounts-list④">(4)</a> <a href="#ref-for-fetch-the-accounts-list⑤">(5)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="request-consent-to-sign-up">
@@ -4392,6 +4623,61 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <b><a href="#push-model">#push-model</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-push-model">10.3.2.2. Push Model</a> <a href="#ref-for-push-model①">(2)</a>
+    <li><a href="#ref-for-push-model②">10.3.2.2.1. The IdP Sign-in Status API</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="sign-in-status">
+   <b><a href="#sign-in-status">#sign-in-status</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-sign-in-status">10.3.2.2.1. The IdP Sign-in Status API</a> <a href="#ref-for-sign-in-status①">(2)</a> <a href="#ref-for-sign-in-status②">(3)</a> <a href="#ref-for-sign-in-status③">(4)</a> <a href="#ref-for-sign-in-status④">(5)</a> <a href="#ref-for-sign-in-status⑤">(6)</a> <a href="#ref-for-sign-in-status⑥">(7)</a> <a href="#ref-for-sign-in-status⑦">(8)</a> <a href="#ref-for-sign-in-status⑧">(9)</a> <a href="#ref-for-sign-in-status⑨">(10)</a> <a href="#ref-for-sign-in-status①⓪">(11)</a> <a href="#ref-for-sign-in-status①①">(12)</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="dom-sign-in-status-unknown">
+   <b><a href="#dom-sign-in-status-unknown">#dom-sign-in-status-unknown</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-dom-sign-in-status-unknown">10.3.2.2.1. The IdP Sign-in Status API</a> <a href="#ref-for-dom-sign-in-status-unknown①">(2)</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="dom-sign-in-status-signed-in">
+   <b><a href="#dom-sign-in-status-signed-in">#dom-sign-in-status-signed-in</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-dom-sign-in-status-signed-in">10.3.2.2.1. The IdP Sign-in Status API</a> <a href="#ref-for-dom-sign-in-status-signed-in①">(2)</a> <a href="#ref-for-dom-sign-in-status-signed-in②">(3)</a> <a href="#ref-for-dom-sign-in-status-signed-in③">(4)</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="dom-sign-in-status-signed-out">
+   <b><a href="#dom-sign-in-status-signed-out">#dom-sign-in-status-signed-out</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-dom-sign-in-status-signed-out">10.3.2.2.1. The IdP Sign-in Status API</a> <a href="#ref-for-dom-sign-in-status-signed-out①">(2)</a> <a href="#ref-for-dom-sign-in-status-signed-out②">(3)</a> <a href="#ref-for-dom-sign-in-status-signed-out③">(4)</a> <a href="#ref-for-dom-sign-in-status-signed-out④">(5)</a> <a href="#ref-for-dom-sign-in-status-signed-out⑤">(6)</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="dom-identityprovider-login">
+   <b><a href="#dom-identityprovider-login">#dom-identityprovider-login</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-dom-identityprovider-login">10.3.2.2.1. The IdP Sign-in Status API</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="dom-identityprovider-logout">
+   <b><a href="#dom-identityprovider-logout">#dom-identityprovider-logout</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-dom-identityprovider-logout">10.3.2.2.1. The IdP Sign-in Status API</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="dom-manifest-signin_url">
+   <b><a href="#dom-manifest-signin_url">#dom-manifest-signin_url</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-dom-manifest-signin_url">10.3.2.2.1. The IdP Sign-in Status API</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="maybe-fetch-the-accounts-list">
+   <b><a href="#maybe-fetch-the-accounts-list">#maybe-fetch-the-accounts-list</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-maybe-fetch-the-accounts-list">10.3.2.2.1. The IdP Sign-in Status API</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="sign-in-to-the-idp">
+   <b><a href="#sign-in-to-the-idp">#sign-in-to-the-idp</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-sign-in-to-the-idp">10.3.2.2.1. The IdP Sign-in Status API</a>
    </ul>
   </aside>
 <script>/* script-dfn-panel */
