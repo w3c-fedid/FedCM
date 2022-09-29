@@ -1039,20 +1039,20 @@ This specification starts by introducing an extension to the
 </pre>
 
 The {{IdentityCredentialRequestOptions}} contains a list of
-{{IdentityProvider}}s that the [=Relying Party=] supports and has
+{{IdentityProviderConfig}}s that the [=Relying Party=] supports and has
 pre-registered with (i.e. it has a `clientId`).
 
 <xmp class=idl>
 dictionary IdentityCredentialRequestOptions {
-  sequence<IdentityProvider> providers;
+  sequence<IdentityProviderConfig> providers;
 };
 </xmp>
 
-Each {{IdentityProvider}} represents an [=Identity Provider=] that
+Each {{IdentityProviderConfig}} represents an [=Identity Provider=] that
 the [=Relying Party=] supports (e.g. that it has a pre-registration agreement with).
 
 <xmp class=idl>
-dictionary IdentityProvider {
+dictionary IdentityProviderConfig {
   required USVString configURL;
   required USVString clientId;
   USVString nonce;
@@ -1060,11 +1060,11 @@ dictionary IdentityProvider {
 </xmp>
 
 <dl>
-    :   <b>{{IdentityProvider/configURL}}</b>
+    :   <b>{{IdentityProviderConfig/configURL}}</b>
     ::  The URL of the configuration file for the identity provider.
-    :   <b>{{IdentityProvider/clientId}}</b>
+    :   <b>{{IdentityProviderConfig/clientId}}</b>
     ::  The [=client id=] provided to the [=RP=] out of band by the [=IDP=]
-    :   <b>{{IdentityProvider/nonce}}</b>
+    :   <b>{{IdentityProviderConfig/nonce}}</b>
     ::  A random number of the choice of the [=RP=]. It is generally used to associate a client
         session with a [=token=] and to mitigate replay attacks. Therefore, this value should have
         sufficient entropy such that it would be hard to guess.
@@ -1131,7 +1131,7 @@ requests.
 </div>
 
 <div algorithm>
-To <dfn>potentially create IdentityCredential</dfn>, given an {{IdentityProvider}} |provider|:
+To <dfn>potentially create IdentityCredential</dfn>, given an {{IdentityProviderConfig}} |provider|:
     1. Let |manifest| be the result of running the [=fetch the manifest=]
         algorithm with |provider|.
     1. If |manifest| is null, return null.
@@ -1166,9 +1166,9 @@ To <dfn>potentially create IdentityCredential</dfn>, given an {{IdentityProvider
 </div>
 
 <div algorithm>
-To <dfn>compute account state</dfn> given an {{IdentityProvider}} |provider| and an
+To <dfn>compute account state</dfn> given an {{IdentityProviderConfig}} |provider| and an
     [=Account JSON=] |account|, run the following steps:
-    1. Let |idpURL| be |provider|'s {{IdentityProvider/configURL}}.
+    1. Let |idpURL| be |provider|'s {{IdentityProviderConfig/configURL}}.
     1. Let |idpOrigin| be the [=origin=] corresponding to |idpURL|.
     1. Let |rpOrigin| be [=this=]'s [=Document/origin=].
     1. Let |accountId| be |account|'s {{account_json/id}}.
@@ -1180,11 +1180,11 @@ To <dfn>compute account state</dfn> given an {{IdentityProvider}} |provider| and
 </div>
 
 <div algorithm>
-To <dfn>fetch the accounts list</dfn> given a [=Manifest=] |manifest| and an {{IdentityProvider}}
+To <dfn>fetch the accounts list</dfn> given a [=Manifest=] |manifest| and an {{IdentityProviderConfig}}
     |provider|:
     1. Let |accountsUrl| be the result of running [=url parser=] given
         |manifest|[{{Manifest/accounts_endpoint}}] (the relative URL) and |provider|'s
-        {{IdentityProvider/configURL}} (the base URL).
+        {{IdentityProviderConfig/configURL}} (the base URL).
     1. If |accountsUrl| is failure, return an empty list.
     1. Let |request| be a new <a spec=fetch for=/>request</a> whose [=request/url=] is
         |accountsUrl| and [=request/redirect mode=] set to "error".
@@ -1227,17 +1227,17 @@ To <dfn>fetch the accounts list</dfn> given a [=Manifest=] |manifest| and an {{I
 
 <div algorithm>
 To <dfn>request consent to sign-up</dfn> the user with a given [=Account JSON=] |account|, an
-    [=AccountState=] |accountState|, a [=Manifest=] |manifest|, and an {{IdentityProvider}}
+    [=AccountState=] |accountState|, a [=Manifest=] |manifest|, and an {{IdentityProviderConfig}}
     |provider|:
     1. Let |metadata| be the result of running the [=fetch the client metadata=]
         algorithm with |manifest| and |provider|.
     1. If |metadata| is not null,
         |metadata|["{{client_metadata/privacy_policy_url}}"] is defined, and the |provider|'s
-        {{IdentityProvider/clientId}} is not in the list of
+        {{IdentityProviderConfig/clientId}} is not in the list of
         |account|["{{account_json/approved_clients}}"], then display the
         |metadata|["{{client_metadata/privacy_policy_url}}"] link.
     1. If |metadata| is not null, |metadata|["{{client_metadata/terms_of_service_url}}"] is defined,
-        and the |provider|'s {{IdentityProvider/clientId}} is not in the list of
+        and the |provider|'s {{IdentityProviderConfig/clientId}} is not in the list of
         |account|["{{account_json/approved_clients}}"], then display the
         |metadata|["{{client_metadata/terms_of_service_url}}"] link.
     1. Prompt the user to gather explicit intent to create an account. The user agent MAY use the
@@ -1250,10 +1250,10 @@ To <dfn>request consent to sign-up</dfn> the user with a given [=Account JSON=] 
 
 <div algorithm>
 To <dfn noexport>fetch the client metadata</dfn> given a [=Manifest=] |manifest| and an
-    {{IdentityProvider}} |provider|, run the following steps:
+    {{IdentityProviderConfig}} |provider|, run the following steps:
     1. Let |clientMetadataUrl| be the result of running [=url parser=] given
         |manifest|["{{Manifest/client_metadata_endpoint}}"] (the relative URL) and |provider|'s
-        {{IdentityProvider/configURL}} (the base URL).
+        {{IdentityProviderConfig/configURL}} (the base URL).
     1. If |clientMetadataUrl| is failure, return null.
     1. Let |request| be a new <a spec=fetch for=/>request</a> whose [=request/url=] is
         |clientMetadataUrl| and [=request/redirect mode=] set to "error".
@@ -1294,17 +1294,17 @@ To <dfn>sign-in</dfn> the user with a given an [=AccountState=] |accountState|:
 
 <div algorithm>
 To <dfn>create tokens</dfn> given an [=AccountState=] |accountState|, a {{USVString}} |accountId|,
-    an {{IdentityProvider}} |provider|, and a [=Manifest=] |manifest|:
+    an {{IdentityProviderConfig}} |provider|, and a [=Manifest=] |manifest|:
     1. Assert |accountState|'s {{AccountState/registration state}} is [=registered=].
     1. Assert |accountState|'s {{AccountState/allows logout}} is true.
     1. Let |tokenUrl| be the result of running [=url parser=] given
         |manifest|[{{Manifest/id_token_endpoint}}] (the relative URL) and |provider|'s
-        {{IdentityProvider/configURL}} (the base URL).
+        {{IdentityProviderConfig/configURL}} (the base URL).
     1. If |tokenUrl| is failure, return an empty list.
     1. Let |requestBody| be a new object constructed as follows (TODO: what is the correct type):
         1. Set |requestBody|["account_id"] to |accountId|.
-        1. Set |requestBody|["client_id"] to |provider|'s {{IdentityProvider/clientId}}.
-        1. Set |requestBody|["nonce"] to |provider|'s {{IdentityProvider/nonce}}.
+        1. Set |requestBody|["client_id"] to |provider|'s {{IdentityProviderConfig/clientId}}.
+        1. Set |requestBody|["nonce"] to |provider|'s {{IdentityProviderConfig/nonce}}.
     1. Let |request| be a new <a spec=fetch for=/>request</a> whose [=request/url=] is
         |tokenUrl|, [=request/redirect mode=] set to "error", [=request/mode=] set to `POST`, and
         [=request/body=] set to |requestBody|.
@@ -1327,7 +1327,7 @@ To <dfn>create tokens</dfn> given an [=AccountState=] |accountState|, a {{USVStr
 </div>
 
 <div algorithm>
-The <dfn>fetch the manifest</dfn> algorithm accepts an {{IdentityProvider}} |provider| and returns a [=Manifest=] object:
+The <dfn>fetch the manifest</dfn> algorithm accepts an {{IdentityProviderConfig}} |provider| and returns a [=Manifest=] object:
     1. In parallel, perform the following two steps:
         1. Let |manifestInSet| be the result of running [=check the root manifest=], passing
             |provider|.
@@ -1344,9 +1344,9 @@ to keep their actual manifest on an arbitary path while allowing the user agent 
 manipulation to fingerprint. See [[#manifest-fingerprinting]].
 
 <div algorithm>
-The <dfn>check the root manifest</dfn> accepts an {{IdentityProvider}} |provider| and returns
+The <dfn>check the root manifest</dfn> accepts an {{IdentityProviderConfig}} |provider| and returns
 whether the manifest is included in the manifest list:
-    1. Let |configUrl| be |provider|'s {{IdentityProvider/configURL}}.
+    1. Let |configUrl| be |provider|'s {{IdentityProviderConfig/configURL}}.
     1. Let |rootUrl| be a new [=/URL=].
     1. Set |rootUrl|'s [=url/scheme=] to |configUrl|'s [=url/scheme=].
     1. Set |rootUrl|'s [=url/host=] to |configUrl|'s [=url/host=]'s [=host/registrable domain=].
@@ -1371,16 +1371,16 @@ whether the manifest is included in the manifest list:
 
         1. If |json|["provider_urls"][0] is not a [=string=], return.
         1. Set |check| to true if |json|["provider_urls"][0] [=string/is=] equal to |provider|'s
-            {{IdentityProvider/configURL}}.
+            {{IdentityProviderConfig/configURL}}.
     1. Return |check|.
 </div>
 
 <div algorithm>
-The <dfn>fetch the internal manifest</dfn> algorithm accepts an {{IdentityProvider}} |provider| and returns a [=Manifest=] or null if there is some failure fetching or parsing the manifest:
+The <dfn>fetch the internal manifest</dfn> algorithm accepts an {{IdentityProviderConfig}} |provider| and returns a [=Manifest=] or null if there is some failure fetching or parsing the manifest:
     1. Run a [[!CSP]] check with a [[CSP#directive-connect-src|connect-src]]
-        directive on the URL passed as |provider|'s {{IdentityProvider/configURL}}
+        directive on the URL passed as |provider|'s {{IdentityProviderConfig/configURL}}
         and return if the check fails. TODO: Add parameters to integrate this check into fetch.
-    1. Let |url| be |provider|'s {{IdentityProvider/configURL}}.
+    1. Let |url| be |provider|'s {{IdentityProviderConfig/configURL}}.
     1. Let |request| be a new <a spec=fetch for=/>request</a> whose [=request/url=] is |url| and
         [=request/redirect mode=] set to "error".
     1. TODO: set other fields of the request, including the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]]
@@ -1869,6 +1869,184 @@ While the [=push model=] seems like an improvement for privacy, the current API 
     accounts. The push model requires storing all of the user accounts from all of the [=IDP=]s that
     a user is logged into, regardless of whether the user ever uses the FedCM API or not. This means
     that all users pay the cost, and only some get the reward.
+
+<!-- ============================================================ -->
+##### The IdP Sign-in Status API ##### {#the-idp-sign-in-status-api}
+<!-- ============================================================ -->
+
+Issue: this is a more formal description of what is proposed [here](https://github.com/fedidcg/FedCM/issues/230#issuecomment-1233290946).
+
+A strict subset of the [=push model=] that seems promising is to only push
+the user's sign-in status in the IdP (as opposed to the entirety of the user's account data,
+e.g. name, email).
+
+Since the sign-in status is specific to a browser instance/profile, this bit can reflect reality
+almost perfectly (with the exception of server-side invalidations, e.g. users changing password, and
+deleting accounts on other devices).
+
+Importantly, sign-in status seems easier to degrade gracefully when the client-side state is inconsistent with the server-side state: re-authentication UX. The user's profile information, on the other hand, has a series of legal freshness requirements that are still not quite well understood.
+
+So, in this variation, the [=user agent=] does two things: (a) it stores the user's login status at each [=IDP=] and (b) exposes APIs that allows [=IDP=]s to change them.
+
+This is a compelling variation because (a) it is comparably simpler to implement by [=IDPs=] and (b)
+if the [=user agent=] knew whether the user is signed-in or not to the [=IDP=], it can guarantee that
+a user prompt will always be displayed, which makes the timing attack much less viable to be performed
+invisibly (i.e. without any explicit and observable indication to the user).
+
+<script type="text/typogram">
+.---------------------------------.    .---------------------------------.    .---------------------------------.
+| .-----------------------------. |    | .-----------------------------. |    | .-----------------------------. |
+| | "https://idp.example"       | |    | | "https://idp.example"       | |    | | "https://idp.example"       | |
+| '-----------------------------' |    | '-----------------------------' |    | '-----------------------------' |
+| .-----------------------------. |    | .-----------------------------. |    | .-----------------------------. |
+| |                             | |    | |                     logout -+-+-+  | |                             | |
+| |   Sign-in                   | |    | |  Welcome, Sam!      ------  | | |  | |  Bye!                       | |
+| |                             | |    | |                             | | |  | |                             | |
+| |   username                  | |    | |                             | | |  | |                             | |
+| |  +-----------------------+  | |    | | "// calls"                  | | |  | | "// calls"                  | |
+| |  | you@email.com         |  | | +--+-+>"IdentityProvider.login();" | | +--+-+>"IdentityProvider.logout();"| |
+| |  +-----------------------+  | | |  | |                     :       | |    | |                     :       | |
+| |   password                  | | |  | |                     :       | |    | |                     :       | |
+| |  +-----------------------+  | | |  | |                     :       | |    | |                     :       | |
+| |  |"**********"           |  | | |  | |                     :       | |    | |                     :       | |
+| |  +-----------------------+  | | |  | |                     :       | |    | |                     :       | |
+| |                             | | |  | |                     :       | |    | |                     :       | |
+| |  +-----------------------+  | | |  | |                     :       | |    | |                     :       | |
+| |  |       Sign-in         +--+-+-+  | |                     :       | |    | |                     :       | |
+| |  +-----------------------+  | |    | |                     :       | |    | |                     :       | |
+| |                             | |    | |                     :       | |    | |                     :       | |
+| '-----------------------------' |    | '---------------------:-------' |    | '---------------------:-------' |
+'---------------------------------'    '-----------------------:---------'    '-----------------------:---------'
+                                                               :                                      :
+                                                               +~~~~+    +~~~~~~~~~~~~~~~~~~~~~~~~~~~~+
+                                                                    :    :
+                                                                    v    v
+                                       +-----------------------+-----------------+
+                                       |  Identity Provider    | Sign-in Status  |
+                                       +-----------------------+-----------------+
+                                       | "..."                 | "..."           |
+                                       +-----------------------+-----------------+
+                                       | "https://idp.example" | Signed-in       |
+                                       +-----------------------+-----------------+
+                                       | "..."                 | "..."           |
+                                       +-----------------------+-----------------+
+
+</script>
+
+Internally, each [=user agent=] keeps track of a global <dfn>Sign-in Status</dfn> map per [=IDP=], initially an empty [=map=]. The [=map/keys=] in the [=Sign-in Status=] map is the [=origin=] of the [=IDP=]. The [=map/values=] in the [=Sign-in Status=] map are <dfn>status</dfn> objects which can be one of the following values:
+
+<dl dfn-type="argument" dfn-for="Sign-in Status">
+    :   <dfn>unknown</dfn> (default)
+    ::  By default, the [=user agent=] assumes that the user's signed in status is undefined.
+    :   <dfn>signed-in</dfn>
+    ::  The user has explicitly signed-in to the IDP.
+    :   <dfn>signed-out</dfn>
+    ::  The user has explicitly signed-out to the IDP.
+</dl>
+
+The [=IDPs=] are provided with an API that allows them to set their [=Sign-in Status=].
+
+<xmp class=idl>
+[Exposed=Window, SecureContext]
+interface IdentityProvider {
+  static undefined login();
+  static undefined logout();
+};
+</xmp>
+
+<div algorithm=login>
+When the {{IdentityProvider/login()}} static method is invoked the user agent MUST execute the following
+steps:
+    1. Let |origin| be the [=current settings object=]'s [=environment settings object/origin=].
+    1. Set the [=Sign-in Status=] of the |origin| to {{Sign-in Status/signed-in}}.
+</div>
+
+<div algorithm=logout>
+When the {{IdentityProvider/logout()}} static method is invoked the user agent MUST execute the following
+steps:
+    1. Let |origin| be the [=current settings object=]'s [=environment settings object/origin=].
+    1. Set the [=Sign-in Status=] of the |origin| to {{Sign-in Status/signed-out}}.
+</div>
+
+For example:
+
+<div class="example">
+A possible JS API that allows IDPs to set their Sign-in Status.
+```js
+IdentityProvider.login();
+// ... later ...
+IdentityProvider.logout();
+```
+</div>
+
+For convenience and compatibility with existing deployed flows, the [=user agent=] also exposes the ability for [=IDPs=] to control their [=Sign-in Status=] via HTTP headers:
+
+<div class="example">
+A possible HTTP header API that allows IDPs to set their Sign-in Status.
+```http
+IdP-Sign-in-Status: action=login
+// ... later ...
+IdP-Sign-in-Status: action=logout
+```
+</div>
+
+When site data (e.g. cookies) are cleared manually by the user, the [=user agent=] also sets the [=Sign-in Status=] to {{Sign-in Status/unknown}}.
+
+IDPs are also offered an extension to the [=Manifest=] JSON object to include:
+
+<dl dfn-type="argument" dfn-for="Manifest">
+    :   <dfn>signin_url</dfn> (optional)
+    ::  A URL that allows a user to sign-in to the [=IDP=].
+</dl>
+
+The [=user agent=] uses the following [=maybe fetch the accounts list=] in the [=potentially create IdentityCredential=] algorithm, as opposed to the [=fetch the accounts list=] algorithm. It would also return early on the [=potentially create IdentityCredential=] algorithm if the user was {{Sign-in Status/signed-out}}.
+
+<div algorithm>
+To <dfn>maybe fetch the accounts list</dfn> given a [=Manifest=] |manifest| and an {{IdentityProviderConfig}}
+    |provider|:
+
+    1. Let |idpURL| be |provider|’s {{IdentityProviderConfig/configURL}}.
+    1. Let |idpOrigin| be the origin corresponding to |idpURL|.
+    1. Let |status| be the [=Sign-in Status=] of the |idpOrigin|.
+    1. If |status| is {{Sign-in Status/unknown}}
+        1. Let |accounts| be the result of the [=fetch the accounts list=] algorithm
+        1. Set the [=Sign-in Status=] of the |idpOrigin| to {{Sign-in Status/signed-in}} if |accounts| is non-empty, {{Sign-in Status/signed-out}} otherwise
+
+        NOTE: This handles the case where the [=IDP=] hasn't had the chance to call the API before the accounts list is needed. This can incur into a timing attack, but it is limited to 1 per [=IDP=] per [=user agent=], so not very practical. Albeit small, removing this attack surface is an active area of investigation.
+
+    1. If |status| is {{Sign-in Status/signed-out}}
+        1. Return an empty list
+
+        NOTE: By terminating the request here before running [=fetch the accounts list=] algorithm we prevent the timing attack to be performed without any user prompt.
+
+    1. If |status| is {{Sign-in Status/signed-in}}
+        1. Let |accounts| be the result of the [=fetch the accounts list=] algorithm
+        1. If |accounts|'s size is 0:
+            1. Set the [=Sign-in Status=] of the |idpOrigin| to {{Sign-in Status/signed-out}}
+            1. Ask the user to confirm they want to sign-in to their [=IDP=]
+            1. If they decline, return an empty list
+            1. Return the result of running the [=Sign-in to the IDP=] algorithm.
+
+            NOTE: This can happen when the user's local client credentials are invalidated on the server (e.g. changing passwords or deleting accounts on a different device), or we get network errors (e.g. timeouts, failures, etc).
+
+        1. Return |accounts|.
+</div>
+
+<div algorithm>
+To <dfn>Sign-in to the IDP</dfn> given a [=Manifest=] |manifest| and an {{IdentityProviderConfig}}
+    |provider|:
+    1. Let |idpURL| be |provider|’s {{IdentityProviderConfig/configURL}}.
+    1. Let |idpOrigin| be the origin corresponding to |idpURL|.
+    1. Assert that the [=Sign-in Status=] of the |idpOrigin| is {{Sign-in Status/signed-out}}
+    1. In parallel, wait until one of the following tasks returns to continue:
+        1. Open a dialog that directs the user to the [=IDP=]'s {{Manifest/signin_url}}.
+        1. Wait until the [=Sign-in Status=] of the |idpOrigin| becomes {{Sign-in Status/signed-in}}
+            1. Close the dialog
+            1. Return the result of the [=fetch the accounts list=] algorithm
+        1. Wait until the user explicitly cancels the dialog
+            1. Close the dialog
+            1. Return empty list
+</div>
 
 <!-- ============================================================ -->
 ### IDP Intrusion ### {#idp-intrusion}
