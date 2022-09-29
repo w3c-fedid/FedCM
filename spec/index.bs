@@ -1348,14 +1348,13 @@ To <dfn>create tokens</dfn> given an [=AccountState=] |accountState|, a {{USVStr
     1. If |idTokenUrl| is failure, return null.
     1. If |idTokenUrl| is not [=same origin=] with |configUrl|, return null.
     1. If |idTokenUrl| is not a [=potentially trustworthy URL=], return null.
-    1. Let |requestBody| be a new object constructed as follows (TODO: what is the correct type):
-        1. Set |requestBody|["account_id"] to |accountId|.
-        1. Set |requestBody|["client_id"] to |provider|'s {{IdentityProviderConfig/clientId}}.
-        1. Set |requestBody|["nonce"] to |provider|'s {{IdentityProviderConfig/nonce}}.
+    1. Let |requestBody| be a [=string=] resulting in concatenating "client_id=",
+        |provider|'s {{IdentityProviderConfig/clientId}}, "&nonce=",
+        |provider|'s {{IdentityProviderConfig/nonce}}, "&account_id=", and |accountId|.
     1. Let |request| be a new <a spec=fetch for=/>request</a> with the following properties:
         1. [=request/url=] set to |idTokenUrl|
         1. [=request/mode=] set to "POST"
-        1. [=request/body=] set to |requestBody|
+        1. [=request/body=] set to the [=UTF-8 encode=] of |requestBody|
         1. [=request/redirect mode=] set to "error"
         1. [=request/client=] set to null
         1. [=request/window=] set to "no-window"
@@ -1459,7 +1458,6 @@ The <dfn>fetch the internal manifest</dfn> algorithm accepts an {{IdentityProvid
         steps given a <a spec=fetch for=/>response</a> |response|:
         1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
         1. If |json| is null, return.
-        1. If |json| is a parsing exception, or if |json| is not an [=ordered map=], return.
         1. If |json|["accounts_endpoint"] does not exist, or if it is not a [=string=], return.
         1. If |json|["client_metadata_endpoint"] does not exist, or if it is not a [=string=],
             return.
