@@ -1186,10 +1186,21 @@ To <dfn>fetch the accounts list</dfn> given a [=Manifest=] |manifest| and an {{I
         |manifest|[{{Manifest/accounts_endpoint}}] (the relative URL) and |provider|'s
         {{IdentityProviderConfig/configURL}} (the base URL).
     1. If |accountsUrl| is failure, return an empty list.
-    1. Let |request| be a new <a spec=fetch for=/>request</a> whose [=request/url=] is
-        |accountsUrl| and [=request/redirect mode=] set to "error".
-    1. TODO: set other fields of the request, including the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]]
-        header or equivalent, as well as using [=Identity Provider=]'s cookies.
+    1. If |accountsUrl| is not [=same origin=] with |provider|'s
+        {{IdentityProviderConfig/configURL}}, return an empty list.
+    1. If |accountsUrl| is not a [=potentially trustworthy URL=], return an empty list.
+    1. Let |request| be a new <a spec=fetch for=/>request</a> with the following properties:
+        1. [=request/url=] set to |accountsUrl|
+        1. [=request/redirect mode=] set to "error"
+        1. [=request/client=] set to null
+        1. [=request/window=] set to "no-window"
+        1. [=request/service-workers mode=] set to "none"
+        1. [=request/destination=] set to "identity"
+        1. [=request/origin=] set to a unique [=opaque origin=]
+        1. [=request/header list=] set to a [=list=] containing a single [=header=] with
+            [=header/name=] set to "Accept" and [=header/value=] set to "JSON"
+        1. [=request/referrer policy=] set to "no-referrer"
+        1. [=request/credentials mode=] set to "include"
 
         Issue: The credentialed fetch in this algorithm can lead to a timing attack that leaks the user's identities before the user consents. This is an active area of investigation that is being explored [here](https://github.com/fedidcg/FedCM/issues/230#issuecomment-1089040953).
     1. Let |accountsList| be an empty list.
@@ -1255,10 +1266,21 @@ To <dfn noexport>fetch the client metadata</dfn> given a [=Manifest=] |manifest|
         |manifest|["{{Manifest/client_metadata_endpoint}}"] (the relative URL) and |provider|'s
         {{IdentityProviderConfig/configURL}} (the base URL).
     1. If |clientMetadataUrl| is failure, return null.
-    1. Let |request| be a new <a spec=fetch for=/>request</a> whose [=request/url=] is
-        |clientMetadataUrl| and [=request/redirect mode=] set to "error".
-    1. TODO: set other fields of the request, including the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]]
-        header or equivalent.
+    1. If |clientMetadataUrl| is not a [=potentially trustworthy URL=], return null.
+    1. If |clientMetadataUrl| is not [=same origin=] with |provider|'s
+        {{IdentityProviderConfig/configURL}}, return null.
+    1. Let |request| be a new <a spec=fetch for=/>request</a> with the following properties:
+        1. [=request/url=] set to |clientMetadataUrl|
+        1. [=request/redirect mode=] set to "error"
+        1. [=request/client=] set to null
+        1. [=request/window=] set to "no-window"
+        1. [=request/service-workers mode=] set to "none"
+        1. [=request/destination=] set to "identity"
+        1. [=request/origin=] set to a unique [=opaque origin=]
+        1. [=request/header list=] set to a [=list=] containing a single [=header=] with
+            [=header/name=] set to "Accept" and [=header/value=] set to "JSON"
+        1. [=request/referrer=] set to [=RP=]'s URL (TODO).
+        1. [=request/credentials mode=] set to "omit"
     1. Let |clientMetadata| be a new [=ordered map=].
     1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
         steps given a <a spec=fetch for=/>response</a> |response|:
@@ -1300,16 +1322,28 @@ To <dfn>create tokens</dfn> given an [=AccountState=] |accountState|, a {{USVStr
     1. Let |tokenUrl| be the result of running [=url parser=] given
         |manifest|[{{Manifest/id_token_endpoint}}] (the relative URL) and |provider|'s
         {{IdentityProviderConfig/configURL}} (the base URL).
-    1. If |tokenUrl| is failure, return an empty list.
+    1. If |tokenUrl| is failure, return null.
+    1. If |tokenUrl| is not [=same origin=] with |provider|'s {{IdentityProviderConfig/configURL}},
+        return null.
+    1. If |tokenUrl| is not a [=potentially trustworthy URL=], return null.
     1. Let |requestBody| be a new object constructed as follows (TODO: what is the correct type):
         1. Set |requestBody|["account_id"] to |accountId|.
         1. Set |requestBody|["client_id"] to |provider|'s {{IdentityProviderConfig/clientId}}.
         1. Set |requestBody|["nonce"] to |provider|'s {{IdentityProviderConfig/nonce}}.
-    1. Let |request| be a new <a spec=fetch for=/>request</a> whose [=request/url=] is
-        |tokenUrl|, [=request/redirect mode=] set to "error", [=request/mode=] set to `POST`, and
-        [=request/body=] set to |requestBody|.
-    1. TODO: set other fields of the request, including the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]]
-        header or equivalent, as well as using [=Identity Provider=]'s cookies.
+    1. Let |request| be a new <a spec=fetch for=/>request</a> with the following properties:
+        1. [=request/url=] set to |tokenUrl|
+        1. [=request/mode=] set to "POST"
+        1. [=request/body=] set to |requestBody|
+        1. [=request/redirect mode=] set to "error"
+        1. [=request/client=] set to null
+        1. [=request/window=] set to "no-window"
+        1. [=request/service-workers mode=] set to "none"
+        1. [=request/destination=] set to "identity"
+        1. [=request/origin=] set to a unique [=opaque origin=]
+        1. [=request/header list=] set to a [=list=] containing a single [=header=] with
+            [=header/name=] set to "Accept" and [=header/value=] set to "JSON"
+        1. [=request/referrer=] set to [=RP=]'s URL (TODO).
+        1. [=request/credentials mode=] set to "include"
     1. Let |token| be null.
     1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
         steps given a <a spec=fetch for=/>response</a> |response|:
@@ -1351,8 +1385,19 @@ whether the manifest is included in the manifest list:
     1. Set |rootUrl|'s [=url/scheme=] to |configUrl|'s [=url/scheme=].
     1. Set |rootUrl|'s [=url/host=] to |configUrl|'s [=url/host=]'s [=host/registrable domain=].
     1. Set |rootUrl|'s [=url/path=] to the <a>list</a> «".well-known", "web-identity"».
-    1. Let |request| be a new <a spec=fetch for=/>request</a> whose [=request/url=] is |rootUrl| and
-        [=request/redirect mode=] set to "error". TODO: what other fields need to be set?
+    1. If |rootUrl| is not a [=potentially trustworthy URL=], return false.
+    1. Let |request| be a new <a spec=fetch for=/>request</a> with the following properties:
+        1. [=request/url=] set to |rootUrl|
+        1. [=request/redirect mode=] set to "error"
+        1. [=request/client=] set to null
+        1. [=request/window=] set to "no-window"
+        1. [=request/service-workers mode=] set to "none"
+        1. [=request/destination=] set to "identity"
+        1. [=request/origin=] set to a unique [=opaque origin=]
+        1. [=request/header list=] set to a [=list=] containing a single [=header=] with
+            [=header/name=] set to "Accept" and [=header/value=] set to "JSON"
+        1. [=request/referrer policy=] set to "no-referrer"
+        1. [=request/credentials mode=] set to "omit"
     1. Let |check| be false.
     1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
         steps given a <a spec=fetch for=/>response</a> |response|:
@@ -1379,14 +1424,23 @@ whether the manifest is included in the manifest list:
 The <dfn>fetch the internal manifest</dfn> algorithm accepts an {{IdentityProviderConfig}} |provider| and returns a [=Manifest=] or null if there is some failure fetching or parsing the manifest:
     1. Run a [[!CSP]] check with a [[CSP#directive-connect-src|connect-src]]
         directive on the URL passed as |provider|'s {{IdentityProviderConfig/configURL}}
-        and return if the check fails. TODO: Add parameters to integrate this check into fetch.
+        and return if the check fails.
     1. Let |url| be |provider|'s {{IdentityProviderConfig/configURL}}.
+    1. If |url| is not a [=potentially trustworthy URL=], return null.
+    1. Let |request| be a new <a spec=fetch for=/>request</a> with the following properties:
+        1. [=request/url=] set to |url|
+        1. [=request/redirect mode=] set to "error"
+        1. [=request/client=] set to null
+        1. [=request/window=] set to "no-window"
+        1. [=request/service-workers mode=] set to "none"
+        1. [=request/destination=] set to "identity"
+        1. [=request/origin=] set to a unique [=opaque origin=]
+        1. [=request/header list=] set to a [=list=] containing a single [=header=] with
+            [=header/name=] set to "Accept" and [=header/value=] set to "JSON"
+        1. [=request/referrer policy=] set to "no-referrer"
+        1. [=request/credentials mode=] set to "omit"
     1. Let |request| be a new <a spec=fetch for=/>request</a> whose [=request/url=] is |url| and
         [=request/redirect mode=] set to "error".
-    1. TODO: set other fields of the request, including the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]]
-        header or equivalent.
-
-        Issue: it is unclear if the [[#Sec-FedCM-CSRF|Sec-FedCM-CSRF]] header is [needed](https://github.com/fedidcg/FedCM/issues/267) on the manifest fetch.
     1. Let |manifest| be null.
     1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
         steps given a <a spec=fetch for=/>response</a> |response|:
