@@ -605,7 +605,7 @@ which serves as a discovery device to other endpoints provided by the
 The manifest discovery endpoint is fetched:
 
 (a) **without** cookies,
-(b) **with** a special [[#Sec-FedCM-CSRF]] header,
+(b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `web-identity`,
 (c) **without** a [[RFC9110#header.referer|Referer]] header, and
 (c) **without** following [[RFC9110#header.location|HTTP redirects]].
 
@@ -616,7 +616,7 @@ For example:
 GET /config.json HTTP/1.1
 Host: idp.example
 Accept: application/json
-Sec-FedCM-CSRF: ?1
+Sec-Fetch-Dest: web-identity
 ```
 </div>
 
@@ -709,7 +709,7 @@ The accounts list endpoint provides the list of accounts the user has at the [=I
 
 The accounts list endpoint is fetched
 (a) **with** [=IDP=] cookies,
-(b) **with** a special [[#Sec-FedCM-CSRF]] header,
+(b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `web-identity`,
 (c) **without** a [[RFC9110#header.referer|Referer]] header, and
 (d) **without** following [[RFC9110#header.location|HTTP redirects]].
 
@@ -721,7 +721,7 @@ GET /accounts_list.php HTTP/1.1
 Host: idp.example
 Accept: application/json
 Cookie: 0x23223
-Sec-FedCM-CSRF: ?1
+Sec-Fetch-Dest: web-identity
 ```
 </div>
 
@@ -783,7 +783,7 @@ The client metadata endpoint provides metadata about [=RP=]s.
 
 The client medata endpoint is fetched
 (a) **without** cookies,
-(b) **with** a special [[#Sec-FedCM-CSRF]] header,
+(b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `web-identity`,
 (c) **with** a [[RFC9110#header.referer|Referer]] header indicating the [=RP=]'s origin
     (as if [[referrer-policy#referrer-policy-strict-origin|Referer-Policy: strict-origin]]
     was in use), and
@@ -799,7 +799,7 @@ GET /client_medata.php?client_id=1234 HTTP/1.1
 Host: idp.example
 Referer: https://rp.example/
 Accept: application/json
-Sec-FedCM-CSRF: ?1
+Sec-Fetch-Dest: web-identity
 ```
 </div>
 
@@ -835,7 +835,7 @@ The ID Token endpoint is fetched
 (c) **with** a [[RFC9110#header.referer|Referer]] header indicating the [=RP=]'s origin
     (as if [[referrer-policy#referrer-policy-strict-origin|Referer-Policy: strict-origin]]
     was in use),
-(d) **with** a special [[#Sec-FedCM-CSRF]] header, and
+(d) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `web-identity`,
 (e) **without** following [[RFC9110#header.location|HTTP redirects]].
 
 It will also contain the following parameters in the request body `application/x-www-form-urlencoded`:
@@ -863,7 +863,7 @@ Host: idp.example
 Referer: https://rp.example/
 Content-Type: application/x-www-form-urlencoded
 Cookie: 0x23223
-Sec-FedCM-CSRF: ?1
+Sec-Fetch-Dest: web-identity
 account_id=123&client_id=client1234&nonce=Ct60bD&disclosure_text_shown=true
 ```
 </div>
@@ -901,15 +901,6 @@ For example:
 }
 ```
 </div>
-
-<!-- ============================================================ -->
-## <code><dfn data-export="">`Sec-FedCM-CSRF`</dfn></code> ## {#Sec-FedCM-CSRF}
-<!-- ============================================================ -->
-
-All FedCM HTTP requests sent by the browser must contain a header
-`Sec-FedCM-CSRF` with value `?1`. This allows servers to verify that the request
-was initiated by the browser and not untrusted JavaScript because
-it is a [=forbidden header name=].
 
 <!-- ============================================================ -->
 # The Relying Party API # {#rp-api}
@@ -1627,19 +1618,20 @@ rendering of this image is performed by the user agent, and as such this image c
 [=RP=] site nor can they be inspected by the [=RP=] in any way.
 
 <!-- ============================================================ -->
-## Sec-FedCM-CSRF Header ## {#sec-fedcm-csrf-header}
+## Sec-Fetch-Dest Header ## {#sec-fetch-dest-header}
 <!-- ============================================================ -->
 
-The FedCM API introduces several non-static endpoints on the [=IDP=], so these need to be protected
-from XSS attacks. In order to do so, the FedCM API introduces the [[#Sec-FedCM-CSRF]] header, a
-[=forbidden header name=]. The header cannot be set by random websites, so the [=IDP=] can be
-confident that the request was originated by the FedCM browser rather than sent by a websites trying
-to run an XSS attack. An [=IDP=] must to check for this header in the credentialed requests it
-receives, which ensures that the request was initiated by the user agent, based on the FedCM API. A
-malicious actor cannot spam FedCM API calls, so this is sufficient protection for the new [=IDP=]
-endpoints.
+*This section is non-normative.*
 
-Issue: There is an ongoing investigation on whether we should use this header or CORS [here](https://github.com/fedidcg/FedCM/issues/320).
+The FedCM API introduces several non-static endpoints on the [=IDP=], so these need to be protected
+from XSS attacks. In order to do so, the FedCM API introduces a new value for the
+<a http-header>Sec-Fetch-Dest</a> header, a [=forbidden header name=]. The requests initiated by the FedCM API
+have a `web-identity` value for this header. The value cannot be set by random websites, so the
+[=IDP=] can be confident that the request was originated by the FedCM browser rather than sent by a
+websites trying to run an XSS attack. An [=IDP=] must to check for this header's value in the
+credentialed requests it receives, which ensures that the request was initiated by the user agent,
+based on the FedCM API. A malicious actor cannot spam FedCM API calls, so this is sufficient
+protection for the new [=IDP=] endpoints.
 
 <!-- ============================================================ -->
 ## Browser Surface Impersonation ## {#browser-surface-impersonation}
