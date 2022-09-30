@@ -1174,20 +1174,9 @@ To <dfn>compute account state</dfn> given an {{IdentityProviderConfig}} |provide
 <div algorithm>
 To <dfn>fetch the accounts list</dfn> given a [=Manifest=] |manifest| and an {{IdentityProviderConfig}}
     |provider|:
-    1. Let |configUrl| be the result of running [=url parser=] with |provider|'s
-        {{IdentityProviderConfig/configURL}}.
-    1. Let |accountsUrl| be the result of running [=url parser=] given
+    1. Let |accountsUrl| be the result of [=computing the manifest URL=] given |provider| and
         |manifest|["{{Manifest/accounts_endpoint}}"].
-    1. If |accountsUrl| is failure, let |accountsUrl| be the result of running
-        [=url parser=] given |manifest|["{{Manifest/accounts_endpoint}}"] (the relative URL) and
-        |configUrl| (the base URL).
-    
-    Note: This means the we allow passing the accounts endpoint as either an absolute or relative
-        URL.
-
     1. If |accountsUrl| is failure, return an empty list.
-    1. If |accountsUrl| is not [=same origin=] with |configUrl|, return an empty list.
-    1. If |accountsUrl| is not a [=potentially trustworthy URL=], return an empty list.
     1. Let |request| be a new <a spec=fetch for=/>request</a> with the following properties:
         1. [=request/url=] set to |accountsUrl|
         1. [=request/redirect mode=] set to "error"
@@ -1197,7 +1186,7 @@ To <dfn>fetch the accounts list</dfn> given a [=Manifest=] |manifest| and an {{I
         1. [=request/destination=] set to "web-identity"
         1. [=request/origin=] set to a unique [=opaque origin=]
         1. [=request/header list=] set to a [=list=] containing a single [=header=] with
-            [=header/name=] set to "Accept" and [=header/value=] set to "JSON"
+            [=header/name=] set to `Accept` and [=header/value=] set to `application/json`
         1. [=request/referrer policy=] set to "no-referrer"
         1. [=request/credentials mode=] set to "include"
 
@@ -1227,6 +1216,22 @@ To <dfn>fetch the accounts list</dfn> given a [=Manifest=] |manifest| and an {{I
     1. Return |accountsList|.
 
         Issue: We should validate the accounts list returned here for repeated ids, as described [here](https://github.com/fedidcg/FedCM/issues/336).
+</div>
+
+<div algorithm>
+When <dfn>computing the manifest URL</dfn> given an {{IdentityProviderConfig}} |provider| and a
+[=string=] |manifestString|, perform the following steps:
+    1. Let |configUrl| be the result of running [=url parser=] with |provider|'s
+        {{IdentityProviderConfig/configURL}}.
+    1. Let |manifestUrl| be the result of running [=url parser=] given |manifestString|.
+    1. If |manifestUrl| is failure, let |manifestUrl| be the result of running [=url parser=] given
+        |manifestString| (the relative URL) and |configUrl| (the base URL).
+    
+    Note: This means the we allow passing the manifest string as either an absolute or relative URL.
+
+    1. If |manifestUrl| is failure, return failure.
+    1. If |manifestUrl| is not [=same origin=] with |configUrl|, return failure.
+    1. If |manifestUrl| is not a [=potentially trustworthy URL=], return failure.
 </div>
 
 <div algorithm>
@@ -1268,19 +1273,9 @@ To <dfn>request consent to sign-up</dfn> the user with a given [=Account JSON=] 
 <div algorithm>
 To <dfn noexport>fetch the client metadata</dfn> given a [=Manifest=] |manifest| and an
     {{IdentityProviderConfig}} |provider|, run the following steps:
-    1. Let |configUrl| be the result of running [=url parser=] with |provider|'s
-        {{IdentityProviderConfig/configURL}}.
-    1. Let |clientMetadataUrl| be the result of running [=url parser=] given
+    1. Let |clientMetadataUrl| be the result of [=computing the manifest URL=] given |provider| and
         |manifest|["{{Manifest/client_metadata_endpoint}}"].
-    1. If |clientMetadataUrl| is failure, let |clientMetadataUrl| be the result of running
-        [=url parser=] given |manifest|["{{Manifest/client_metadata_endpoint}}"] (the relative URL) and |configUrl| (the base URL).
-    
-    Note: This means the we allow passing the client metadata endpoint as either an absolute or
-        relative URL.
-
     1. If |clientMetadataUrl| is failure, return null.
-    1. If |clientMetadataUrl| is not a [=potentially trustworthy URL=], return null.
-    1. If |clientMetadataUrl| is not [=same origin=] with |configUrl|, return null.
     1. Let |request| be a new <a spec=fetch for=/>request</a> with the following properties:
         1. [=request/url=] set to |clientMetadataUrl|
         1. [=request/redirect mode=] set to "error"
@@ -1290,7 +1285,7 @@ To <dfn noexport>fetch the client metadata</dfn> given a [=Manifest=] |manifest|
         1. [=request/destination=] set to "web-identity"
         1. [=request/origin=] set to a unique [=opaque origin=]
         1. [=request/header list=] set to a [=list=] containing a single [=header=] with
-            [=header/name=] set to "Accept" and [=header/value=] set to "JSON"
+            [=header/name=] set to `Accept` and [=header/value=] set to `application/json`
         1. [=request/referrer=] set to [=RP=]'s URL (TODO).
         1. [=request/credentials mode=] set to "omit"
     1. Let |clientMetadata| be a new [=ordered map=].
@@ -1325,20 +1320,9 @@ To <dfn>create tokens</dfn> given an [=AccountState=] |accountState|, a {{USVStr
     an {{IdentityProviderConfig}} |provider|, and a [=Manifest=] |manifest|:
     1. Assert |accountState|'s {{AccountState/registration state}} is [=registered=].
     1. Assert |accountState|'s {{AccountState/allows logout}} is true.
-    1. Let |configUrl| be the result of running [=url parser=] with |provider|'s
-        {{IdentityProviderConfig/configURL}}.
-    1. Let |idTokenUrl| be the result of running [=url parser=] given
+    1. Let |idTokenUrl| be the result of [=computing the manifest URL=] given |provider| and
         |manifest|["{{Manifest/id_token_endpoint}}"].
-    1. If |idTokenUrl| is failure, let |idTokenUrl| be the result of running
-        [=url parser=] given |manifest|["{{Manifest/id_token_endpoint}}"] (the relative URL) and
-        |configUrl| (the base URL).
-    
-    Note: This means the we allow passing the id token endpoint as either an absolute or relative
-        URL.
-
     1. If |idTokenUrl| is failure, return null.
-    1. If |idTokenUrl| is not [=same origin=] with |configUrl|, return null.
-    1. If |idTokenUrl| is not a [=potentially trustworthy URL=], return null.
     1. Let |requestBody| be a [=string=] resulting in concatenating "client_id=",
         |provider|'s {{IdentityProviderConfig/clientId}}, "&nonce=",
         |provider|'s {{IdentityProviderConfig/nonce}}, "&account_id=", and |accountId|.
@@ -1353,8 +1337,8 @@ To <dfn>create tokens</dfn> given an [=AccountState=] |accountState|, a {{USVStr
         1. [=request/destination=] set to "web-identity"
         1. [=request/origin=] set to a unique [=opaque origin=]
         1. [=request/header list=] set to a [=list=] containing a single [=header=] with
-            [=header/name=] set to "Accept" and [=header/value=] set to
-            "application/x-www-form-urlencoded"
+            [=header/name=] set to `Accept` and [=header/value=] set to
+            `application/x-www-form-urlencoded`
         1. [=request/referrer=] set to [=RP=]'s URL (TODO).
         1. [=request/credentials mode=] set to "include"
     1. Let |token| be null.
@@ -1403,7 +1387,7 @@ whether the manifest is included in the manifest list:
         1. [=request/destination=] set to "web-identity"
         1. [=request/origin=] set to a unique [=opaque origin=]
         1. [=request/header list=] set to a [=list=] containing a single [=header=] with
-            [=header/name=] set to "Accept" and [=header/value=] set to "JSON"
+            [=header/name=] set to `Accept` and [=header/value=] set to `application/json`
         1. [=request/referrer policy=] set to "no-referrer"
         1. [=request/credentials mode=] set to "omit"
     1. Let |check| be false.
@@ -1439,7 +1423,7 @@ The <dfn>fetch the internal manifest</dfn> algorithm accepts an {{IdentityProvid
         1. [=request/destination=] set to "web-identity"
         1. [=request/origin=] set to a unique [=opaque origin=]
         1. [=request/header list=] set to a [=list=] containing a single [=header=] with
-            [=header/name=] set to "Accept" and [=header/value=] set to "JSON"
+            [=header/name=] set to `Accept` and [=header/value=] set to `application/json`
         1. [=request/referrer policy=] set to "no-referrer"
         1. [=request/credentials mode=] set to "omit"
     1. Let |request| be a new <a spec=fetch for=/>request</a> whose [=request/url=] is |url| and
