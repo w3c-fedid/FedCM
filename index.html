@@ -6,7 +6,7 @@
   <link href="https://www.w3.org/StyleSheets/TR/2021/cg-draft" rel="stylesheet">
   <meta content="Bikeshed version 44af0bf3e, updated Fri Jul 29 17:05:16 2022 -0700" name="generator">
   <link href="https://fedidcg.github.io/FedCM/" rel="canonical">
-  <meta content="f5b72fbb7243062ea8de3baf72f6f8627c5e87d0" name="document-revision">
+  <meta content="dc52de00611969e9572b2358af9f4d01b136a177" name="document-revision">
 <style>
 dl.domintro dt {
     font-family: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
@@ -608,7 +608,7 @@ c-[il] { color: #000000 } /* Literal.Number.Integer.Long */
   <div class="head">
    <p data-fill-with="logo"><a class="logo" href="https://www.w3.org/"> <img alt="W3C" height="48" src="https://www.w3.org/StyleSheets/TR/2021/logos/W3C" width="72"> </a> </p>
    <h1 class="p-name no-ref" id="title">Federated Credential Management API</h1>
-   <p id="w3c-state"><a href="https://www.w3.org/standards/types#CG-DRAFT">Draft Community Group Report</a>, <time class="dt-updated" datetime="2022-09-30">30 September 2022</time></p>
+   <p id="w3c-state"><a href="https://www.w3.org/standards/types#CG-DRAFT">Draft Community Group Report</a>, <time class="dt-updated" datetime="2022-10-06">6 October 2022</time></p>
    <div data-fill-with="spec-metadata">
     <dl>
      <dt>This version:
@@ -683,7 +683,7 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
       <li><a href="#idp-api-manifest"><span class="secno">5.1</span> <span class="content">Manifest</span></a>
       <li><a href="#idp-api-accounts-endpoint"><span class="secno">5.2</span> <span class="content">Accounts List</span></a>
       <li><a href="#idp-api-client-id-metadata-endpoint"><span class="secno">5.3</span> <span class="content">Client Metadata</span></a>
-      <li><a href="#idp-api-id-token-endpoint"><span class="secno">5.4</span> <span class="content">ID Token</span></a>
+      <li><a href="#idp-api-id-assertion-endpoint"><span class="secno">5.4</span> <span class="content">Identity Assertions</span></a>
      </ol>
     <li>
      <a href="#rp-api"><span class="secno">6</span> <span class="content">The Relying Party API</span></a>
@@ -1110,7 +1110,7 @@ identity federation.</p>
       |                               | "GET /config.json"              |
       |                               |-------------------------------->|
       |                               |<--------------------------------| "{"
-      |                               |                                 |   "id_token_endpoint: ...,"
+      |                               |                                 |   "id_assertion_endpoint: ...,"
       |                               |                                 |   "accounts_endpoint: ...,"
       |                               |                                 |   "client_metadata_endpoint: ...,"
       |                               |                                 |   "branding: ...,"
@@ -1143,7 +1143,7 @@ identity federation.</p>
       |                               |                                 |
       |                               |                                 |
       |                               |                                 |
-      |                               | "POST token.php"                |
+      |                               | "POST assertion.php"            |
       |                               | "client_id, cookies, account"   |
       |                               |-------------------------------->|
       |                               |<--------------------------------| "{"
@@ -1175,7 +1175,7 @@ by exposing a series of HTTP endpoints:</p>
     <li data-md>
      <p>A <a href="#idp-api-client-id-metadata-endpoint">§ 5.3 Client Metadata</a> endpoint</p>
     <li data-md>
-     <p>An <a href="#idp-api-id-token-endpoint">§ 5.4 ID Token</a> endpoint</p>
+     <p>An <a href="#idp-api-id-assertion-endpoint">§ 5.4 Identity Assertions</a> endpoint</p>
    </ol>
    <p class="issue" id="issue-c3a28d29"><a class="self-link" href="#issue-c3a28d29"></a> The algorithms used for these endpoints need to <a href="https://github.com/fedidcg/FedCM/issues/261">integrate</a> with <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-fetch" id="ref-for-concept-fetch">fetch</a>.</p>
    <h3 class="heading settled" data-level="5.1" id="idp-api-manifest"><span class="secno">5.1. </span><span class="content">Manifest</span><a class="self-link" href="#idp-api-manifest"></a></h3>
@@ -1204,11 +1204,9 @@ which serves as a discovery device to other endpoints provided by the <a data-li
     <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="Manifest" data-dfn-type="argument" data-export id="dom-manifest-client_metadata_endpoint"><code>client_metadata_endpoint</code></dfn> (required)
     <dd data-md>
      <p>A URL that points to an HTTP API that complies with the <a href="#idp-api-client-id-metadata-endpoint">§ 5.3 Client Metadata</a> API.</p>
-    <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="Manifest" data-dfn-type="argument" data-export id="dom-manifest-id_token_endpoint"><code>id_token_endpoint</code></dfn> (required)
+    <dt data-md><dfn class="idl-code" data-dfn-for="Manifest" data-dfn-type="argument" data-export id="dom-manifest-id_assertion_endpoint"><code>id_assertion_endpoint</code><a class="self-link" href="#dom-manifest-id_assertion_endpoint"></a></dfn> (required)
     <dd data-md>
-     <p>A URL that points to an HTTP API that complies with the <a href="#idp-api-id-token-endpoint">§ 5.4 ID Token</a> API.</p>
-    </dd>
-    <p class="issue" id="issue-a2239cfb"><a class="self-link" href="#issue-a2239cfb"></a> the id_token_endpoint may be confused with OIDC’s endpoint, so we are looking for alternatives <a href="https://github.com/fedidcg/FedCM/issues/254">here</a>.</p>
+     <p>A URL that points to an HTTP API that complies with the <a href="#idp-api-id-assertion-endpoint">§ 5.4 Identity Assertions</a> API.</p>
     <dt data-md><dfn class="idl-code" data-dfn-for="Manifest" data-dfn-type="argument" data-export id="dom-manifest-branding"><code>branding</code><a class="self-link" href="#dom-manifest-branding"></a></dfn> (optional)
     <dd data-md>
      <p>A set of <a data-link-type="dfn" href="#branding-json" id="ref-for-branding-json">Branding JSON</a> options.</p>
@@ -1252,12 +1250,12 @@ all, trim the icon and show a square portion of it, or even transform it into a 
 that.</p>
    <p>The <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="color">color</dfn> is a subset of CSS <a class="production css" data-link-type="type" href="https://drafts.csswg.org/css-color-4/#typedef-color" id="ref-for-typedef-color" title="Expands to: aliceblue | antiquewhite | aqua | aquamarine | azure | beige | bisque | black | blanchedalmond | blue | blueviolet | brown | burlywood | cadetblue | chartreuse | chocolate | coral | cornflowerblue | cornsilk | crimson | currentcolor | cyan | darkblue | darkcyan | darkgoldenrod | darkgray | darkgreen | darkgrey | darkkhaki | darkmagenta | darkolivegreen | darkorange | darkorchid | darkred | darksalmon | darkseagreen | darkslateblue | darkslategray | darkslategrey | darkturquoise | darkviolet | deeppink | deepskyblue | dimgray | dimgrey | dodgerblue | firebrick | floralwhite | forestgreen | fuchsia | gainsboro | ghostwhite | gold | goldenrod | gray | green | greenyellow | grey | honeydew | hotpink | indianred | indigo | ivory | khaki | lavender | lavenderblush | lawngreen | lemonchiffon | lightblue | lightcoral | lightcyan | lightgoldenrodyellow | lightgray | lightgreen | lightgrey | lightpink | lightsalmon | lightseagreen | lightskyblue | lightslategray | lightslategrey | lightsteelblue | lightyellow | lime | limegreen | linen | magenta | maroon | mediumaquamarine | mediumblue | mediumorchid | mediumpurple | mediumseagreen | mediumslateblue | mediumspringgreen | mediumturquoise | mediumvioletred | midnightblue | mintcream | mistyrose | moccasin | navajowhite | navy | none | oldlace | olive | olivedrab | orange | orangered | orchid | palegoldenrod | palegreen | paleturquoise | palevioletred | papayawhip | peachpuff | peru | pink | plum | powderblue | purple | rebeccapurple | red | rosybrown | royalblue | saddlebrown | salmon | sandybrown | seagreen | seashell | sienna | silver | skyblue | slateblue | slategray | slategrey | snow | springgreen | steelblue | tan | teal | thistle | tomato | transparent | turquoise | violet | wheat | white | whitesmoke | yellow | yellowgreen">&lt;color></a> syntax, namely <a class="production css" data-link-type="type" href="https://drafts.csswg.org/css-color-4/#typedef-hex-color" id="ref-for-typedef-hex-color">&lt;hex-color></a>s, <a class="css" data-link-type="maybe" href="https://drafts.csswg.org/css-color-5/#funcdef-hsl" id="ref-for-funcdef-hsl">hsl()</a>s, <a class="css" data-link-type="maybe" href="https://drafts.csswg.org/css-color-5/#funcdef-rgb" id="ref-for-funcdef-rgb">rgb()</a>s and <a class="production css" data-link-type="type" href="https://drafts.csswg.org/css-color-4/#typedef-named-color" id="ref-for-typedef-named-color">&lt;named-color></a>.</p>
    <p>For example:</p>
-   <div class="example" id="example-b77ba6b6">
-    <a class="self-link" href="#example-b77ba6b6"></a> 
+   <div class="example" id="example-90152311">
+    <a class="self-link" href="#example-90152311"></a> 
 <pre class="language-json highlight"><c- p>{</c->
   <c- f>"accounts_endpoint"</c-><c- p>:</c-> <c- u>"/accounts.php"</c-><c- p>,</c->
   <c- f>"client_metadata_endpoint"</c-><c- p>:</c-> <c- u>"/metadata.php"</c-><c- p>,</c->
-  <c- f>"id_token_endpoint"</c-><c- p>:</c-> <c- u>"/idtokens.php"</c-><c- p>,</c->
+  <c- f>"id_assertion_endpoint"</c-><c- p>:</c-> <c- u>"/assertion.php"</c-><c- p>,</c->
   <c- f>"branding"</c-><c- p>:</c-> <c- p>{</c->
     <c- f>"background_color"</c-><c- p>:</c-> <c- u>"green"</c-><c- p>,</c->
     <c- f>"color"</c-><c- p>:</c-> <c- u>"0xFFEEAA"</c-><c- p>,</c->
@@ -1372,10 +1370,10 @@ the <a data-link-type="dfn" href="#privacy-policy" id="ref-for-privacy-policy">P
 <c- p>}</c->
 </pre>
    </div>
-   <h3 class="heading settled" data-level="5.4" id="idp-api-id-token-endpoint"><span class="secno">5.4. </span><span class="content">ID Token</span><a class="self-link" href="#idp-api-id-token-endpoint"></a></h3>
-   <p>The ID Token endpoint is responsible for <a data-link-type="dfn" href="#minting" id="ref-for-minting">minting</a> a new <a data-link-type="dfn" href="#token" id="ref-for-token①">token</a> for the user.</p>
-   <p>The ID Token endpoint is fetched
-(a) as a <strong>POST</strong> request,
+   <h3 class="heading settled" data-level="5.4" id="idp-api-id-assertion-endpoint"><span class="secno">5.4. </span><span class="content">Identity Assertions</span><a class="self-link" href="#idp-api-id-assertion-endpoint"></a></h3>
+   <p>The identity assertion endpoint is responsible for <a data-link-type="dfn" href="#minting" id="ref-for-minting">minting</a> a new <a data-link-type="dfn" href="#token" id="ref-for-token①">token</a> that contains signed assertions about the user.</p>
+   <p>The identity assertion endpoint is fetched</p>
+   <p>(a) as a <strong>POST</strong> request,
 (b) <strong>with</strong> <a data-link-type="dfn" href="#idp" id="ref-for-idp②①">IDP</a> cookies,
 (c) <strong>with</strong> a <a href="https://www.rfc-editor.org/rfc/rfc9110#header.referer">Referer</a> header indicating the <a data-link-type="dfn" href="#rp" id="ref-for-rp②①">RP</a>'s origin
     (as if <a href="https://w3c.github.io/webappsec-referrer-policy/#referrer-policy-strict-origin">Referer-Policy: strict-origin</a> was in use),
@@ -1383,25 +1381,25 @@ the <a data-link-type="dfn" href="#privacy-policy" id="ref-for-privacy-policy">P
 (e) <strong>without</strong> following <a href="https://www.rfc-editor.org/rfc/rfc9110#header.location">HTTP redirects</a>.</p>
    <p>It will also contain the following parameters in the request body <code>application/x-www-form-urlencoded</code>:</p>
    <dl>
-    <dt data-md><dfn class="idl-code" data-dfn-for="id_token_endpoint_request" data-dfn-type="argument" data-export id="dom-id_token_endpoint_request-client_id"><code>client_id</code><a class="self-link" href="#dom-id_token_endpoint_request-client_id"></a></dfn>
+    <dt data-md><dfn class="idl-code" data-dfn-for="id_assertion_endpoint_request" data-dfn-type="argument" data-export id="dom-id_assertion_endpoint_request-client_id"><code>client_id</code><a class="self-link" href="#dom-id_assertion_endpoint_request-client_id"></a></dfn>
     <dd data-md>
      <p>The <a data-link-type="dfn" href="#rp" id="ref-for-rp②②">RP</a>'s <a data-link-type="dfn" href="#client-id" id="ref-for-client-id④">client id</a>.</p>
-    <dt data-md><dfn class="idl-code" data-dfn-for="id_token_endpoint_request" data-dfn-type="argument" data-export id="dom-id_token_endpoint_request-nonce"><code>nonce</code><a class="self-link" href="#dom-id_token_endpoint_request-nonce"></a></dfn>
+    <dt data-md><dfn class="idl-code" data-dfn-for="id_assertion_endpoint_request" data-dfn-type="argument" data-export id="dom-id_assertion_endpoint_request-nonce"><code>nonce</code><a class="self-link" href="#dom-id_assertion_endpoint_request-nonce"></a></dfn>
     <dd data-md>
      <p>The request nonce</p>
-    <dt data-md><dfn class="idl-code" data-dfn-for="id_token_endpoint_request" data-dfn-type="argument" data-export id="dom-id_token_endpoint_request-account_id"><code>account_id</code><a class="self-link" href="#dom-id_token_endpoint_request-account_id"></a></dfn>
+    <dt data-md><dfn class="idl-code" data-dfn-for="id_assertion_endpoint_request" data-dfn-type="argument" data-export id="dom-id_assertion_endpoint_request-account_id"><code>account_id</code><a class="self-link" href="#dom-id_assertion_endpoint_request-account_id"></a></dfn>
     <dd data-md>
      <p>The account identifier that was selected.</p>
-    <dt data-md><dfn class="idl-code" data-dfn-for="id_token_endpoint_request" data-dfn-type="argument" data-export id="dom-id_token_endpoint_request-disclosure_text_shown"><code>disclosure_text_shown</code><a class="self-link" href="#dom-id_token_endpoint_request-disclosure_text_shown"></a></dfn>
+    <dt data-md><dfn class="idl-code" data-dfn-for="id_assertion_endpoint_request" data-dfn-type="argument" data-export id="dom-id_assertion_endpoint_request-disclosure_text_shown"><code>disclosure_text_shown</code><a class="self-link" href="#dom-id_assertion_endpoint_request-disclosure_text_shown"></a></dfn>
     <dd data-md>
      <p>Whether the user agent has explicitly shown to the user what specific information the <a data-link-type="dfn" href="#idp" id="ref-for-idp②②">IDP</a> intends to share with the <a data-link-type="dfn" href="#rp" id="ref-for-rp②③">RP</a> (e.g. "idp.example will share your name, email...
 with rp.example"), used by the <a data-link-type="dfn" href="#request-consent-to-sign-up" id="ref-for-request-consent-to-sign-up①">request consent to sign-up</a> algorithm for new users but
 not by the <a data-link-type="dfn" href="#sign-in" id="ref-for-sign-in">sign-in</a> algorithm for returning users.</p>
    </dl>
    <p>For example:</p>
-   <div class="example" id="example-c13bac7c">
-    <a class="self-link" href="#example-c13bac7c"></a> 
-<pre class="language-http highlight"><c- nf>POST</c-> <c- nn>/fedcm_token_endpoint</c-> <c- kr>HTTP</c-><c- o>/</c-><c- m>1.1</c->
+   <div class="example" id="example-cfa8fd56">
+    <a class="self-link" href="#example-cfa8fd56"></a> 
+<pre class="language-http highlight"><c- nf>POST</c-> <c- nn>/fedcm_assertion_endpoint</c-> <c- kr>HTTP</c-><c- o>/</c-><c- m>1.1</c->
 <c- e>Host</c-><c- o>:</c-> <c- l>idp.example</c->
 <c- e>Referer</c-><c- o>:</c-> <c- l>https://rp.example/</c->
 <c- e>Content-Type</c-><c- o>:</c-> <c- l>application/x-www-form-urlencoded</c->
@@ -1415,7 +1413,7 @@ corresponding to another <a data-link-type="dfn" href="#rp" id="ref-for-rp②⑤
 represented by the <a data-link-type="dfn" href="#client-id" id="ref-for-client-id⑤">client id</a>. As the <a data-link-type="dfn" href="#client-id" id="ref-for-client-id⑥">client ids</a> are <a data-link-type="dfn" href="#idp" id="ref-for-idp②⑤">IDP</a>-specific, the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent⑦">user agent</a> cannot perform this check. </div>
    <p>The response is parsed as a JSON file expecting the following properties:</p>
    <dl>
-    <dt data-md><dfn class="idl-code" data-dfn-for="id_token_endpoint_response" data-dfn-type="argument" data-export id="dom-id_token_endpoint_response-token"><code>token</code><a class="self-link" href="#dom-id_token_endpoint_response-token"></a></dfn>
+    <dt data-md><dfn class="idl-code" data-dfn-for="id_assertion_endpoint_response" data-dfn-type="argument" data-export id="dom-id_assertion_endpoint_response-token"><code>token</code><a class="self-link" href="#dom-id_assertion_endpoint_response-token"></a></dfn>
     <dd data-md>
      <p>The resulting <a data-link-type="dfn" href="#token" id="ref-for-token②">token</a>.</p>
    </dl>
@@ -1876,7 +1874,7 @@ manually selects from the accounts chooser, or null if no account is selected.</
      <li data-md>
       <p>Assert <var>accountState</var>’s <code class="idl"><a data-link-type="idl" href="#dom-accountstate-allows-logout" id="ref-for-dom-accountstate-allows-logout②">allows logout</a></code> is true.</p>
      <li data-md>
-      <p>Let <var>idTokenUrl</var> be the result of <a data-link-type="dfn" href="#computing-the-manifest-url" id="ref-for-computing-the-manifest-url②">computing the manifest URL</a> given <var>provider</var> and <var>manifest</var>["<code class="idl"><a data-link-type="idl" href="#dom-manifest-id_token_endpoint" id="ref-for-dom-manifest-id_token_endpoint">id_token_endpoint</a></code>"].</p>
+      <p>Let <var>idTokenUrl</var> be the result of <a data-link-type="dfn" href="#computing-the-manifest-url" id="ref-for-computing-the-manifest-url②">computing the manifest URL</a> given <var>provider</var> and <var>manifest</var>["<code class="idl"><a data-link-type="idl" href="https://fedidcg.github.io/FedCM/#dom-manifest-id_token_endpoint" id="ref-for-dom-manifest-id_token_endpoint">id_token_endpoint</a></code>"].</p>
      <li data-md>
       <p>If <var>idTokenUrl</var> is failure, return null.</p>
      <li data-md>
@@ -2066,7 +2064,7 @@ return.</p>
        <li data-md>
         <p>If <var>json</var>["id_token_endpoint"] does not exist, or if it is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string①③">string</a>, return.</p>
        <li data-md>
-        <p>Set <var>manifest</var> to a new <a data-link-type="dfn" href="#manifest" id="ref-for-manifest⑦">Manifest</a> with <code class="idl"><a data-link-type="idl" href="#dom-manifest-accounts_endpoint" id="ref-for-dom-manifest-accounts_endpoint①">accounts_endpoint</a></code> set to <var>json</var>["accounts_endpoint"], <code class="idl"><a data-link-type="idl" href="#dom-manifest-client_metadata_endpoint" id="ref-for-dom-manifest-client_metadata_endpoint①">client_metadata_endpoint</a></code> set to <var>json</var>["client_metadata_endpoint"], and <code class="idl"><a data-link-type="idl" href="#dom-manifest-id_token_endpoint" id="ref-for-dom-manifest-id_token_endpoint①">id_token_endpoint</a></code> set to <var>json</var>["id_token_endpoint"].</p>
+        <p>Set <var>manifest</var> to a new <a data-link-type="dfn" href="#manifest" id="ref-for-manifest⑦">Manifest</a> with <code class="idl"><a data-link-type="idl" href="#dom-manifest-accounts_endpoint" id="ref-for-dom-manifest-accounts_endpoint①">accounts_endpoint</a></code> set to <var>json</var>["accounts_endpoint"], <code class="idl"><a data-link-type="idl" href="#dom-manifest-client_metadata_endpoint" id="ref-for-dom-manifest-client_metadata_endpoint①">client_metadata_endpoint</a></code> set to <var>json</var>["client_metadata_endpoint"], and <code class="idl"><a data-link-type="idl" href="https://fedidcg.github.io/FedCM/#dom-manifest-id_token_endpoint" id="ref-for-dom-manifest-id_token_endpoint①">id_token_endpoint</a></code> set to <var>json</var>["id_token_endpoint"].</p>
       </ol>
      <li data-md>
       <p>Return <var>manifest</var>.</p>
@@ -4027,7 +4025,7 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <ul>
     <li><a href="#ref-for-user-agent">1. Introduction</a> <a href="#ref-for-user-agent①">(2)</a>
     <li><a href="#ref-for-user-agent②">5.1. Manifest</a> <a href="#ref-for-user-agent③">(2)</a> <a href="#ref-for-user-agent④">(3)</a> <a href="#ref-for-user-agent⑤">(4)</a> <a href="#ref-for-user-agent⑥">(5)</a>
-    <li><a href="#ref-for-user-agent⑦">5.4. ID Token</a>
+    <li><a href="#ref-for-user-agent⑦">5.4. Identity Assertions</a>
     <li><a href="#ref-for-user-agent⑧">7.1. The State Machine</a>
     <li><a href="#ref-for-user-agent⑨">10.1. Principals</a> <a href="#ref-for-user-agent①⓪">(2)</a> <a href="#ref-for-user-agent①①">(3)</a> <a href="#ref-for-user-agent①②">(4)</a> <a href="#ref-for-user-agent①③">(5)</a>
     <li><a href="#ref-for-user-agent①④">10.3.2. Timing Attacks</a> <a href="#ref-for-user-agent①⑤">(2)</a> <a href="#ref-for-user-agent①⑥">(3)</a> <a href="#ref-for-user-agent①⑦">(4)</a>
@@ -4113,7 +4111,7 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
     <li><a href="#ref-for-http-headerdef-sec-fetch-dest">5.1. Manifest</a>
     <li><a href="#ref-for-http-headerdef-sec-fetch-dest①">5.2. Accounts List</a>
     <li><a href="#ref-for-http-headerdef-sec-fetch-dest②">5.3. Client Metadata</a>
-    <li><a href="#ref-for-http-headerdef-sec-fetch-dest③">5.4. ID Token</a>
+    <li><a href="#ref-for-http-headerdef-sec-fetch-dest③">5.4. Identity Assertions</a>
     <li><a href="#ref-for-http-headerdef-sec-fetch-dest④">9.2. Sec-Fetch-Dest Header</a>
    </ul>
   </aside>
@@ -4461,7 +4459,6 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
   <h2 class="no-num no-ref heading settled" id="issues-index"><span class="content">Issues Index</span><a class="self-link" href="#issues-index"></a></h2>
   <div style="counter-reset:issue">
    <div class="issue"> The algorithms used for these endpoints need to <a href="https://github.com/fedidcg/FedCM/issues/261">integrate</a> with <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-fetch">fetch</a>. <a class="issue-return" href="#issue-c3a28d29" title="Jump to section">↵</a></div>
-   <div class="issue"> the id_token_endpoint may be confused with OIDC’s endpoint, so we are looking for alternatives <a href="https://github.com/fedidcg/FedCM/issues/254">here</a>. <a class="issue-return" href="#issue-a2239cfb" title="Jump to section">↵</a></div>
    <div class="issue"> <a href="https://github.com/fedidcg/FedCM/issues/218">Clarify</a> the IDP API response when the user is not signed in. <a class="issue-return" href="#issue-ef9f6ef5" title="Jump to section">↵</a></div>
    <div class="issue"> Support choosing accounts from multiple <a data-link-type="dfn" href="#identity-provider">Identity Provider</a>s, as described <a href="https://github.com/fedidcg/FedCM/issues/319">here</a>. <a class="issue-return" href="#issue-56baadba" title="Jump to section">↵</a></div>
    <div class="issue"> The credentialed fetch in this algorithm can lead to a timing attack that leaks the user’s identities before the user consents. This is an active area of investigation that is being explored <a href="https://github.com/fedidcg/FedCM/issues/230#issuecomment-1089040953">here</a>. <a class="issue-return" href="#issue-759813ae" title="Jump to section">↵</a></div>
@@ -4490,7 +4487,7 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <ul>
     <li><a href="#ref-for-client-id">3. Terminology</a> <a href="#ref-for-client-id①">(2)</a> <a href="#ref-for-client-id②">(3)</a>
     <li><a href="#ref-for-client-id③">5.2. Accounts List</a>
-    <li><a href="#ref-for-client-id④">5.4. ID Token</a> <a href="#ref-for-client-id⑤">(2)</a> <a href="#ref-for-client-id⑥">(3)</a>
+    <li><a href="#ref-for-client-id④">5.4. Identity Assertions</a> <a href="#ref-for-client-id⑤">(2)</a> <a href="#ref-for-client-id⑥">(3)</a>
     <li><a href="#ref-for-client-id⑦">7.3. The CredentialRequestOptions</a>
     <li><a href="#ref-for-client-id⑧">10.2. Network requests</a> <a href="#ref-for-client-id⑨">(2)</a> <a href="#ref-for-client-id①⓪">(3)</a> <a href="#ref-for-client-id①①">(4)</a>
    </ul>
@@ -4520,7 +4517,7 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <b><a href="#token">#token</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-token">2. Examples</a>
-    <li><a href="#ref-for-token①">5.4. ID Token</a> <a href="#ref-for-token②">(2)</a> <a href="#ref-for-token③">(3)</a>
+    <li><a href="#ref-for-token①">5.4. Identity Assertions</a> <a href="#ref-for-token②">(2)</a> <a href="#ref-for-token③">(3)</a>
     <li><a href="#ref-for-token④">7. The Browser API</a> <a href="#ref-for-token⑤">(2)</a>
     <li><a href="#ref-for-token⑥">7.2. The IdentityCredential Interface</a>
     <li><a href="#ref-for-token⑦">7.3. The CredentialRequestOptions</a>
@@ -4539,7 +4536,7 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
     <li><a href="#ref-for-identity-provider①④">1.1.4.2. IDP Revocation</a> <a href="#ref-for-identity-provider①⑤">(2)</a>
     <li><a href="#ref-for-identity-provider①⑥">1.1.5. Access</a> <a href="#ref-for-identity-provider①⑦">(2)</a> <a href="#ref-for-identity-provider①⑧">(3)</a>
     <li><a href="#ref-for-identity-provider①⑨">3. Terminology</a> <a href="#ref-for-identity-provider②⓪">(2)</a> <a href="#ref-for-identity-provider②①">(3)</a>
-    <li><a href="#ref-for-identity-provider②②">5.4. ID Token</a> <a href="#ref-for-identity-provider②③">(2)</a> <a href="#ref-for-identity-provider②④">(3)</a>
+    <li><a href="#ref-for-identity-provider②②">5.4. Identity Assertions</a> <a href="#ref-for-identity-provider②③">(2)</a> <a href="#ref-for-identity-provider②④">(3)</a>
     <li><a href="#ref-for-identity-provider②⑤">7. The Browser API</a>
     <li><a href="#ref-for-identity-provider②⑥">7.3. The CredentialRequestOptions</a>
     <li><a href="#ref-for-identity-provider②⑦">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a> <a href="#ref-for-identity-provider②⑧">(2)</a>
@@ -4557,7 +4554,7 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
     <li><a href="#ref-for-idp①③">5. The Identity Provider API</a>
     <li><a href="#ref-for-idp①④">5.1. Manifest</a> <a href="#ref-for-idp①⑤">(2)</a> <a href="#ref-for-idp①⑥">(3)</a> <a href="#ref-for-idp①⑦">(4)</a>
     <li><a href="#ref-for-idp①⑧">5.2. Accounts List</a> <a href="#ref-for-idp①⑨">(2)</a> <a href="#ref-for-idp②⓪">(3)</a>
-    <li><a href="#ref-for-idp②①">5.4. ID Token</a> <a href="#ref-for-idp②②">(2)</a> <a href="#ref-for-idp②③">(3)</a> <a href="#ref-for-idp②④">(4)</a> <a href="#ref-for-idp②⑤">(5)</a>
+    <li><a href="#ref-for-idp②①">5.4. Identity Assertions</a> <a href="#ref-for-idp②②">(2)</a> <a href="#ref-for-idp②③">(3)</a> <a href="#ref-for-idp②④">(4)</a> <a href="#ref-for-idp②⑤">(5)</a>
     <li><a href="#ref-for-idp②⑥">6.1. Logout</a> <a href="#ref-for-idp②⑦">(2)</a> <a href="#ref-for-idp②⑧">(3)</a> <a href="#ref-for-idp②⑨">(4)</a>
     <li><a href="#ref-for-idp③⓪">7. The Browser API</a>
     <li><a href="#ref-for-idp③①">7.1. The State Machine</a>
@@ -4605,7 +4602,7 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
   <aside class="dfn-panel" data-for="minting">
    <b><a href="#minting">#minting</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-minting">5.4. ID Token</a>
+    <li><a href="#ref-for-minting">5.4. Identity Assertions</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="out-of-band">
@@ -4629,7 +4626,7 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
     <li><a href="#ref-for-relying-party②⑧">1.1.4.2. IDP Revocation</a> <a href="#ref-for-relying-party②⑨">(2)</a> <a href="#ref-for-relying-party③⓪">(3)</a>
     <li><a href="#ref-for-relying-party③①">1.1.5. Access</a> <a href="#ref-for-relying-party③②">(2)</a> <a href="#ref-for-relying-party③③">(3)</a> <a href="#ref-for-relying-party③④">(4)</a>
     <li><a href="#ref-for-relying-party③⑤">3. Terminology</a> <a href="#ref-for-relying-party③⑥">(2)</a>
-    <li><a href="#ref-for-relying-party③⑦">5.4. ID Token</a>
+    <li><a href="#ref-for-relying-party③⑦">5.4. Identity Assertions</a>
     <li><a href="#ref-for-relying-party③⑧">7. The Browser API</a> <a href="#ref-for-relying-party③⑨">(2)</a> <a href="#ref-for-relying-party④⓪">(3)</a>
     <li><a href="#ref-for-relying-party④①">7.3. The CredentialRequestOptions</a> <a href="#ref-for-relying-party④②">(2)</a>
     <li><a href="#ref-for-relying-party④③">7.4.1. IDP Sign-out</a> <a href="#ref-for-relying-party④④">(2)</a> <a href="#ref-for-relying-party④⑤">(3)</a> <a href="#ref-for-relying-party④⑥">(4)</a>
@@ -4645,7 +4642,7 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
     <li><a href="#ref-for-rp①⑤">4. High Level Design</a>
     <li><a href="#ref-for-rp①⑥">5.2. Accounts List</a>
     <li><a href="#ref-for-rp①⑦">5.3. Client Metadata</a> <a href="#ref-for-rp①⑧">(2)</a> <a href="#ref-for-rp①⑨">(3)</a> <a href="#ref-for-rp②⓪">(4)</a>
-    <li><a href="#ref-for-rp②①">5.4. ID Token</a> <a href="#ref-for-rp②②">(2)</a> <a href="#ref-for-rp②③">(3)</a> <a href="#ref-for-rp②④">(4)</a> <a href="#ref-for-rp②⑤">(5)</a>
+    <li><a href="#ref-for-rp②①">5.4. Identity Assertions</a> <a href="#ref-for-rp②②">(2)</a> <a href="#ref-for-rp②③">(3)</a> <a href="#ref-for-rp②④">(4)</a> <a href="#ref-for-rp②⑤">(5)</a>
     <li><a href="#ref-for-rp②⑥">6. The Relying Party API</a>
     <li><a href="#ref-for-rp②⑦">6.1. Logout</a> <a href="#ref-for-rp②⑧">(2)</a> <a href="#ref-for-rp②⑨">(3)</a> <a href="#ref-for-rp③⓪">(4)</a>
     <li><a href="#ref-for-rp③①">7. The Browser API</a>
@@ -4752,12 +4749,6 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <b><a href="#dom-manifest-client_metadata_endpoint">#dom-manifest-client_metadata_endpoint</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-dom-manifest-client_metadata_endpoint">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a> <a href="#ref-for-dom-manifest-client_metadata_endpoint①">(2)</a>
-   </ul>
-  </aside>
-  <aside class="dfn-panel" data-for="dom-manifest-id_token_endpoint">
-   <b><a href="#dom-manifest-id_token_endpoint">#dom-manifest-id_token_endpoint</a></b><b>Referenced in:</b>
-   <ul>
-    <li><a href="#ref-for-dom-manifest-id_token_endpoint">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a> <a href="#ref-for-dom-manifest-id_token_endpoint①">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="branding-json">
@@ -4961,7 +4952,7 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
    <b><a href="#request-consent-to-sign-up">#request-consent-to-sign-up</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-request-consent-to-sign-up">5.2. Accounts List</a>
-    <li><a href="#ref-for-request-consent-to-sign-up①">5.4. ID Token</a>
+    <li><a href="#ref-for-request-consent-to-sign-up①">5.4. Identity Assertions</a>
     <li><a href="#ref-for-request-consent-to-sign-up②">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a> <a href="#ref-for-request-consent-to-sign-up③">(2)</a>
    </ul>
   </aside>
@@ -4980,7 +4971,7 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
   <aside class="dfn-panel" data-for="sign-in">
    <b><a href="#sign-in">#sign-in</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-sign-in">5.4. ID Token</a>
+    <li><a href="#ref-for-sign-in">5.4. Identity Assertions</a>
     <li><a href="#ref-for-sign-in①">7.4. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method</a> <a href="#ref-for-sign-in②">(2)</a>
    </ul>
   </aside>
