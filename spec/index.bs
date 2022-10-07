@@ -168,7 +168,7 @@ A Sign-up occurs when the user is registering a new account at the
 For instance, a user navigates to a [=Relying Party=] in their browser
 and creates an account. The [=Relying Party=] displays supported
 [=Identity Providers=] to the user who selects their favorite. The user
-is prompted "Do you want to create an account with the [=Identity Provider=]?".
+is prompted "Do you want to sign up on the [=Relying Party=] with the [=Identity Provider=]?".
 Upon user agreement an [=account=] is created with the [=Identity Provider=] and
 the user has a [=session=] initialized on [=Relying Party=].
 
@@ -176,15 +176,11 @@ the user has a [=session=] initialized on [=Relying Party=].
 ### Sign-in ### {#use-cases-sign-in}
 <!-- ============================================================ -->
 
-After a user navigates to a [=Relying Party=] in a browser and decides to
-create an account by going through their [[#use-cases-sign-up]] flow,
-there are two ways a user logs into their [=account=] once their [=session=] expires:
+After a user navigates to a [=Relying Party=] in a browser and create an
+account by going through their [[#use-cases-sign-up]] flow, the user can
+sign into their [=account=] once their [=session=] expires.
 
-<!-- ============================================================ -->
-#### Explicit Sign-in #### {#use-cases-explicit-sign-in}
-<!-- ============================================================ -->
-
-An explicit sign-in occurs when the [=Identity Provider=] believes it is
+A sign-in occurs when the [=Identity Provider=] believes it is
 necessary to gather an explicit permission from the user to sign into a
 [=Relying Party=], typically after the user goes through a
 [[#use-cases-sign-out]] flow.
@@ -196,24 +192,9 @@ For example, after the user has done the [[#use-cases-sign-out]] flow of the
     * the user already has an account with the [=Relying Party=].
     * the user has logged out of the [=Relying Party=].
 
-The user is then prompted, "Do you want to sign-in with the [=Identity Provider=]?"
+The user is then prompted, "Do you want to sign in on the [=Relying Party=] with the [=Identity Provider=]?"
 and upon user agreement the [=Relying Party=] creates a new [=session=] with
 the users existing [=account=].
-
-<!-- ============================================================ -->
-#### Auto Sign-in #### {#use-cases-auto-sign-in}
-<!-- ============================================================ -->
-
-Auto Sign-in occurs when the [=Identity Provider=] has already gathered
-permissions from the user to share their identity with the [=Relying Party=]
-and automatically signs the user in.
-
-For example, the user has previously executed the [[#use-cases-sign-up]] flow
-and then changes from their phone to their laptop. On the new device the
-user goes to the [=Relying Party=] and selects to sign-in using their
-[=Identity Provider=]. The [=Identity Provider=] knows, and proves, the user
-has signed up to the [=Relying Party=] and the [=Relying Party=] creates a
-new [=session=] for the users [=account=].
 
 <!-- ============================================================ -->
 ### Sign-out ### {#use-cases-sign-out}
@@ -230,7 +211,7 @@ there are two ways a user can clear their [=session=]s:
 The user can log out through the [=Relying Party=] by using a provided
 sign-out button or link provided by the [=Relying Party=]. This then
 removes the users [=session=] and, when the user visits the [=Relying Party=]
-again they will need to go through the [[#use-cases-explicit-sign-in]] flow
+again they will need to go through the [[#use-cases-sign-in]] flow
 in order to establish a new session.
 
 <!-- ============================================================ -->
@@ -243,13 +224,13 @@ sign-out system the [=Identity Provider=] will log the user out of all
 [=Relying Parties=] the user has signed into along with logging the user
 out of the [=Identity Provider=] itself. Upon returning to any associated
 [=Relying Party=], or the [=Identity Provider=], the user will have to
-go through the [[#use-cases-explicit-sign-in]] flow.
+go through the [[#use-cases-sign-in]] flow.
 
 <!-- ============================================================ -->
 ### Revocation ### {#use-cases-revocation}
 <!-- ============================================================ -->
 
-After a user has created an account on a [=Relying Party=] there are two
+After a user has created an account at a [=Relying Party=] there are two
 ways a user can cancel their account with the [=Relying Party=]:
 
 <!-- ============================================================ -->
@@ -978,7 +959,7 @@ the following properties:
 
 <dl dfn-type="argument" dfn-for="AccountState">
     :   <dfn>registration state</dfn>
-    ::  Keeps track of whether the user agent is aware that the user has registered an account on the
+    ::  Keeps track of whether the user agent is aware that the user has registered an account at the
         [=RP=] with the [=IDP=] or not.
          Can be [=registered=] or [=unregistered=] (by default).
     :   <dfn>allows logout</dfn>
@@ -1460,7 +1441,7 @@ Each [=Relying Party=] endpoint is responsible for clearing its local state
 (e.g. clearing cookies).
 
 After the completion of this API, the user's session is cleared and will go
-through an [[#use-cases-explicit-sign-in]] upon return.
+through an [[#use-cases-sign-in]] upon return.
 
 <script type="text/typogram">
 .---------------------------------.       .---------------------------------.
@@ -1703,7 +1684,7 @@ network requests performed:
 ┌──────────────────────────┬─────────┬───────────┬──────────┐
 │ Endpoint                 │ cookies │ client_id │ referrer │
 ├──────────────────────────┼─────────┼───────────┼──────────┤
-│ manifests                 │  no     │  no       │  no      │
+│ manifests                │  no     │  no       │  no      │
 ├──────────────────────────┼─────────┼───────────┼──────────┤
 │ accounts_endpoint        │  yes    │  no       │  no      │
 ├──────────────────────────┼─────────┼───────────┼──────────┤
@@ -1908,7 +1889,7 @@ While the [=push model=] seems like an improvement for privacy, the current API 
 ##### The IdP Sign-in Status API ##### {#the-idp-sign-in-status-api}
 <!-- ============================================================ -->
 
-Issue: there is a more formal description of what is proposed [here](https://github.com/fedidcg/FedCM/issues/230#issuecomment-1233290946).
+Issue: this is a more formal description of what is proposed [here](https://github.com/fedidcg/FedCM/issues/230#issuecomment-1233290946).
 
 A strict subset of the [=push model=] that seems promising is to only push
 the user's sign-in status in the IdP (as opposed to the entirety of the user's account data,
