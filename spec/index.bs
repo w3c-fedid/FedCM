@@ -462,15 +462,15 @@ that they can use.
 |   Party   |                  |   Agent   |                      | Provider  |
 |           |                  |           |                      |           |
 |           |                  | Federated |                      |           |
-|           |   +----------->*-+ Credential|     +------------->*-+ manifests |
+|           |   +----------->*-+ Credential|     +------------->*-+ Discovery |
 |           |   |              | Management|     |                |           |
-|           |   |              |    API    |     +------------->*-+ accounts  |
+|           |   |              |    API    |     +------------->*-+ Config    |
 |           |   |              |           |     |                |           |
-|           |   |              |           |     +------------->*-+ client    |
-|           |   |              |           |     |                | metadata  |
+|           |   |              |           |     +------------->*-+ Accounts  |
 |           |   |              |           |     |                |           |
-|           |   |              |           |     +------------->*-+ token     |
+|           |   |              |           |     +------------->*-+ Metadata  |
 |           |   |              |           |     |                |           |
+|           |   |              |           |     +------------->*-+ Assertion |
 |           |   |              |           |     |                |           |
 |           |   |              |           |     |                |           |
 |           |   |              |           |     |                |           |
@@ -495,59 +495,78 @@ identity federation.
     Party                           Agent                           Provider
 
       |                               |                                 |
-      | "navigator.credentials.get()" |                                 |
+      | "navigator.credentials.get({" | "(1) The RP invokes the API."   |
+      | "  identity: {              " |                                 |
+      | "    providers: [{          " |                                 |
+      | "      configURL: ...       " |                                 |
+      | "    }]                     " |                                 |
+      | "  }                        " |                                 |
+      | "})                         " |                                 |
+      |                               |                                 |
       |------------------------------>|                                 |
       |                               |                                 |
-      |                               | "GET /.well-known/web-identity" |
+      |                               |                                 |
+      | "(2) From the configURL, the" | "GET /.well-known/web-identity" |
+      | "browser makes two requests " |-------------------------------->|
+      | "in parallel."                |                                 |
+      |                               | "GET /config.json"              |
       |                               |-------------------------------->|
-      |                               |<--------------------------------| "{"
+      |                               |                                 |
+      | "(3) The IdP responds with a" |                                 |
+      | "discovery file and a config" |                                 |
+      | "file."                       |                                 |
+      |                               |                                 |
+      |                               |                                 |
+      |                               |                                 |
+      | "The discovery file contains" | "Discovery file"                |
+      | "a list of valid config URLs."|<--------------------------------| "{"
       |                               |                                 |   "provider_urls: [ ... ]"
       |                               |                                 | "}"
       |                               |                                 |
-      |                               | "GET /config.json"              |
-      |                               |-------------------------------->|
-      |                               |<--------------------------------| "{"
+      | "The config file contains a " | "Config file"                   |
+      | "a list of endpoints URLs."   |<--------------------------------| "{"
       |                               |                                 |   "id_assertion_endpoint: ...,"
       |                               |                                 |   "accounts_endpoint: ...,"
       |                               |                                 |   "client_metadata_endpoint: ...,"
       |                               |                                 |   "branding: ...,"
       |                               |                                 | "}"
       |                               |                                 |
-      |                               | "GET accounts.php"              |
-      |                               | "cookies"                       |
-      |                               |-------------------------------->|
-      |                               |<--------------------------------| "{"
-      |                               |                                 |   "accounts: [ ... ]"
+      | "(4) If everything checks   " | "GET accounts.php"              |
+      | "out the browser proceeds to" | "cookies"                       |
+      | "fetch the list of accounts " |-------------------------------->|
+      | "that the user is logged in " |<--------------------------------| "{"
+      | "to.                        " |                                 |   "accounts: [ ... ]"
       |                               |                                 | "}"
       |                               |                                 |
       |                               |                                 |
-      |                               | "GET client_metadata.php"       |
-      |                               | "client_id"                     |
-      |                               |-------------------------------->|
+      | "(5) The browser then       " | "GET client_metadata.php"       |
+      | "fetches metadata about the " | "client_id"                     |
+      | "Relying Party.             " |-------------------------------->|
       |                               |<--------------------------------| "{"
       |                               |                                 |   "terms_of_service_url: ...,"
       |                               |                                 |   "privacy_policy_url: ...,"
       |                               |                                 | "}"
       |                               |                                 |
       |                               |                                 |
-      |                     +---------+                                 |
-      |                     |         |                                 |
-      |                     |         |                                 |
-      |                     |         | "account chooser"               |
+      |                     +---------+ "(6) With all of this, the    " |
+      |                     |         | "browser asks for the user's  " |
+      |                     |         | "permission to sign-in to the " |
+      |  "account chooser"  |         | "RP with the IdP's account.   " |
       |                     |         |                                 |
       |                     |         |                                 |
       |                     +-------->|                                 |
       |                               |                                 |
       |                               |                                 |
       |                               |                                 |
-      |                               | "POST assertion.php"            |
-      |                               | "client_id, cookies, account"   |
-      |                               |-------------------------------->|
+      | "(7) With the user's        " | "POST assertion.php"            |
+      | "permission, the browser    " | "client_id, cookies, account"   |
+      | "fetches a token from IdP.  " |-------------------------------->|
       |                               |<--------------------------------| "{"
       |                               |                                 |   "token: ...,"
       |                               |                                 | "}"
-      |                "{ token }"    |                                 |
-      |<------------------------------|                                 |
+      |                               |                                 |
+      |                "{ token }"    | "(8) Which is then ultimately " |
+      |<------------------------------| "used to resolve the promise. " |
       |                               |                                 |
       |                               |                                 |
      -+-                             -+-                               -+-
@@ -573,6 +592,41 @@ by exposing a series of HTTP endpoints:
 1. An [[#idp-api-id-assertion-endpoint]] endpoint
 
 Issue: The algorithms used for these endpoints need to [integrate](https://github.com/fedidcg/FedCM/issues/261) with [=fetch=].
+
+<!-- ============================================================ -->
+## Discovery ## {#idp-api-discovery}
+<!-- ============================================================ -->
+
+NOTE: The browser users the discovery endpoint to prevent the following attack described [here](https://github.com/fedidcg/FedCM/issues/230#issuecomment-1067029200).
+
+The [=IDP=] exposes a discovery endpoint in a pre-defined well-known location, specifically at the "web-identity" file at the [=IDPs=]'s path ".well-known".
+
+The discovery endpoint is fetched:
+
+(a) **without** cookies,
+(b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `web-identity`,
+(c) **without** a [[RFC9110#header.referer|Referer]] header, and
+(c) **without** following [[RFC9110#header.location|HTTP redirects]].
+
+For example:
+
+<div class=example>
+```http
+GET /well-known/web-identity HTTP/1.1
+Host: idp.example
+Accept: application/json
+Sec-Fetch-Dest: web-identity
+```
+</div>
+
+The file is parsed expecting a [=Discovery=] JSON object.
+
+The <dfn>Discovery</dfn> JSON object has the following properties:
+
+<dl dfn-type="argument" dfn-for="Discovery">
+    :   <dfn>provider_urls</dfn> (required)
+    ::  A list of URLs that points to valid [[#idp-api-manifest]]s.
+</dl>
 
 <!-- ============================================================ -->
 ## Manifest ## {#idp-api-manifest}
@@ -1333,11 +1387,11 @@ To <dfn>create tokens</dfn> given an [=AccountState=] |accountState|, a {{USVStr
 <div algorithm>
 The <dfn>fetch the manifest</dfn> algorithm accepts an {{IdentityProviderConfig}} |provider| and returns a [=Manifest=] object:
     1. In parallel, perform the following two steps:
-        1. Let |manifestInSet| be the result of running [=check the root manifest=], passing
+        1. Let |manifestInDiscovery| be the result of running [=check the discovery file=], passing
             |provider|.
         1. Let |manifest| be the result of running [=fetch the internal manifest=], passing
             |provider|.
-    1. If |manifestInSet| is true, return |manifest|, otherwise return null.
+    1. If |manifestInDiscovery| is true, return |manifest|, otherwise return null.
 </div>
 
 NOTE: We use a two-tier manifest list in order to prevent the [=IDP=] to easily determine the [=RP=]
@@ -1348,8 +1402,8 @@ to keep their actual manifest on an arbitary path while allowing the user agent 
 manipulation to fingerprint. See [[#manifest-fingerprinting]].
 
 <div algorithm>
-The <dfn>check the root manifest</dfn> accepts an {{IdentityProviderConfig}} |provider| and returns
-whether the manifest is included in the manifest list:
+The <dfn>check the discovery file</dfn> accepts an {{IdentityProviderConfig}} |provider| and returns
+whether the |provider|'s {{IdentityProviderConfig/configURL}} is included in the [[#idp-api-discovery]] endpoint's {{Discovery/provider_urls}} list:
     1. Let |configUrl| be the result of running [=url parser=] with |provider|'s
         {{IdentityProviderConfig/configURL}}.
     1. If |configUrl| is failure, return false.
@@ -1379,8 +1433,8 @@ whether the manifest is included in the manifest list:
 
             Issue: [relax](https://github.com/fedidcg/FedCM/issues/333) the size of the provider_urls array. 
 
-        1. If |json|["provider_urls"][0] is not a [=string=], return.
-        1. Set |check| to true if |json|["provider_urls"][0] [=string/is=] equal to |provider|'s
+        1. If |json|[{{Discovery/provider_urls}}][0] is not a [=string=], return.
+        1. Set |check| to true if |json|[{{Discovery/provider_urls}}][0] [=string/is=] equal to |provider|'s
             {{IdentityProviderConfig/configURL}}.
     1. Return |check|.
 </div>
@@ -1786,7 +1840,7 @@ NOTE: You can read more about the attack described
 Here, the [=RP=] includes identifies itself when fetching the manifest from the [=IDP=]. This
 coupled with the credentialed fetches that the FedCM API performs would enable the [=IDP=] to easily
 track the website that the user is visiting, without requiring any permission from the user. Our
-mitigation to this problem is to use a top level .well-known file. We enforce a specifically named
+mitigation to this problem is to use the [[#idp-api-discovery]] file. We enforce a specifically named
 file at the root of the [=IDP=]'s domain to ensure that the file name does not introduce
 fingerprints about the [=RP=] being visited.
 
