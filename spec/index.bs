@@ -468,10 +468,10 @@ that they can use.
 |           |   |              |           |     |                |           |
 |           |   |              |           |     +------------->*-+ Accounts  |
 |           |   |              |           |     |                |           |
-|           |   |              |           |     +------------->*-+ Metadata  |
+|           |   |              |           |     +------------->*-+ Client    |
+|           |   |              |           |     |                | Metadata  |
 |           |   |              |           |     |                |           |
 |           |   |              |           |     +------------->*-+ Assertion |
-|           |   |              |           |     |                |           |
 |           |   |              |           |     |                |           |
 |           |   |              |           |     |                |           |
 | +-------+ |   |              | +-------+ |     |                | +-------+ |
@@ -523,19 +523,19 @@ identity federation.
       | "config URLs.               " |                                 |   "provider_urls: [ ... ]"
       |                               |                                 | "}"
       |                               |                                 |
-      | "The config file contains a " | "Config file"                   |
-      | "a list of endpoints URLs."   |<--------------------------------| "{"
+      | "The config file contains   " | "Config file"                   |
+      | "information about the IdP. " |<--------------------------------| "{"
       |                               |                                 |   "id_assertion_endpoint: ...,"
       |                               |                                 |   "accounts_endpoint: ...,"
       |                               |                                 |   "client_metadata_endpoint: ...,"
       |                               |                                 |   "branding: ...,"
       |                               |                                 | "}"
       |                               |                                 |
-      | "(4) If everything checks   " | "GET accounts.php"              |
-      | "out the browser proceeds to" | "cookies"                       |
-      | "fetch the list of accounts " |-------------------------------->|
-      | "that the user is logged in " |<--------------------------------| "{"
-      | "to.                        " |                                 |   "accounts: [ ... ]"
+      | "(4) The browser proceeds to" | "GET accounts.php"              |
+      | "fetch the list of accounts " | "cookies"                       |
+      | "that the user is logged in " |-------------------------------->|
+      | "to.                        " |<--------------------------------| "{"
+      |                               |                                 |   "accounts: [ ... ]"
       |                               |                                 | "}"
       |                               |                                 |
       |                               |                                 |
@@ -604,9 +604,8 @@ The [=IDP=] exposes a well-known file in a pre-defined location, specifically at
 The well-known file is fetched:
 
 (a) **without** cookies,
-(b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `web-identity`,
+(b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`,
 (c) **without** a [[RFC9110#header.referer|Referer]] header, and
-(c) **without** following [[RFC9110#header.location|HTTP redirects]].
 
 For example:
 
@@ -1433,8 +1432,8 @@ whether the |provider|'s {{IdentityProviderConfig/configURL}} is included in the
 
             Issue: [relax](https://github.com/fedidcg/FedCM/issues/333) the size of the provider_urls array. 
 
-        1. If |json|[{{Well-Known/provider_urls}}][0] is not a [=string=], return.
-        1. Set |check| to true if |json|[{{Well-Known/provider_urls}}][0] [=string/is=] equal to |provider|'s
+        1. If |json|["provider_urls"][0] is not a [=string=], return.
+        1. Set |check| to true if |json|["provider_urls"][0] [=string/is=] equal to |provider|'s
             {{IdentityProviderConfig/configURL}}.
     1. Return |check|.
 </div>
