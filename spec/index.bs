@@ -462,7 +462,7 @@ that they can use.
 |   Party   |                  |   Agent   |                      | Provider  |
 |           |                  |           |                      |           |
 |           |                  | Federated |                      |           |
-|           |   +----------->*-+ Credential|     +------------->*-+ Discovery |
+|           |   +----------->*-+ Credential|     +------------->*-+ Well-Known|
 |           |   |              | Management|     |                |           |
 |           |   |              |    API    |     +------------->*-+ Config    |
 |           |   |              |           |     |                |           |
@@ -513,14 +513,14 @@ identity federation.
       |                               |-------------------------------->|
       |                               |                                 |
       | "(3) The IdP responds with a" |                                 |
-      | "discovery file and a config" |                                 |
-      | "file."                       |                                 |
+      | "well-known file and a      " |                                 |
+      | "config file."                |                                 |
       |                               |                                 |
       |                               |                                 |
       |                               |                                 |
-      | "The discovery file contains" | "Discovery file"                |
-      | "a list of valid config URLs."|<--------------------------------| "{"
-      |                               |                                 |   "provider_urls: [ ... ]"
+      | "The well-known file        " | "Well-Known file"               |
+      | "contains a list of valid   " |<--------------------------------| "{"
+      | "config URLs.               " |                                 |   "provider_urls: [ ... ]"
       |                               |                                 | "}"
       |                               |                                 |
       | "The config file contains a " | "Config file"                   |
@@ -594,14 +594,14 @@ by exposing a series of HTTP endpoints:
 Issue: The algorithms used for these endpoints need to [integrate](https://github.com/fedidcg/FedCM/issues/261) with [=fetch=].
 
 <!-- ============================================================ -->
-## Discovery ## {#idp-api-discovery}
+## The Well-Known File ## {#idp-api-well-known}
 <!-- ============================================================ -->
 
-NOTE: The browser users the discovery endpoint to prevent the following attack described [here](https://github.com/fedidcg/FedCM/issues/230#issuecomment-1067029200).
+NOTE: The browser uses the well-known file to prevent the following attack described [here](https://github.com/fedidcg/FedCM/issues/230#issuecomment-1067029200).
 
-The [=IDP=] exposes a discovery endpoint in a pre-defined well-known location, specifically at the "web-identity" file at the [=IDPs=]'s path ".well-known".
+The [=IDP=] exposes a well-known file in a pre-defined location, specifically at the "web-identity" file at the [=IDPs=]'s path ".well-known".
 
-The discovery endpoint is fetched:
+The well-known file is fetched:
 
 (a) **without** cookies,
 (b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `web-identity`,
@@ -619,11 +619,11 @@ Sec-Fetch-Dest: web-identity
 ```
 </div>
 
-The file is parsed expecting a [=Discovery=] JSON object.
+The file is parsed expecting a [=Well-Known=] JSON object.
 
-The <dfn>Discovery</dfn> JSON object has the following properties:
+The <dfn>Well-Known</dfn> JSON object has the following properties:
 
-<dl dfn-type="argument" dfn-for="Discovery">
+<dl dfn-type="argument" dfn-for="Well-Known">
     :   <dfn>provider_urls</dfn> (required)
     ::  A list of URLs that points to valid [[#idp-api-manifest]]s.
 </dl>
@@ -1387,11 +1387,11 @@ To <dfn>create tokens</dfn> given an [=AccountState=] |accountState|, a {{USVStr
 <div algorithm>
 The <dfn>fetch the manifest</dfn> algorithm accepts an {{IdentityProviderConfig}} |provider| and returns a [=Manifest=] object:
     1. In parallel, perform the following two steps:
-        1. Let |manifestInDiscovery| be the result of running [=check the discovery file=], passing
+        1. Let |manifestInWellKnown| be the result of running [=check the well-known file=], passing
             |provider|.
         1. Let |manifest| be the result of running [=fetch the internal manifest=], passing
             |provider|.
-    1. If |manifestInDiscovery| is true, return |manifest|, otherwise return null.
+    1. If |manifestInWellKnown| is true, return |manifest|, otherwise return null.
 </div>
 
 NOTE: We use a two-tier manifest list in order to prevent the [=IDP=] to easily determine the [=RP=]
@@ -1402,8 +1402,8 @@ to keep their actual manifest on an arbitary path while allowing the user agent 
 manipulation to fingerprint. See [[#manifest-fingerprinting]].
 
 <div algorithm>
-The <dfn>check the discovery file</dfn> accepts an {{IdentityProviderConfig}} |provider| and returns
-whether the |provider|'s {{IdentityProviderConfig/configURL}} is included in the [[#idp-api-discovery]] endpoint's {{Discovery/provider_urls}} list:
+The <dfn>check the well-known file</dfn> accepts an {{IdentityProviderConfig}} |provider| and returns
+whether the |provider|'s {{IdentityProviderConfig/configURL}} is included in the [[#idp-api-well-known]] endpoint's {{Well-Known/provider_urls}} list:
     1. Let |configUrl| be the result of running [=url parser=] with |provider|'s
         {{IdentityProviderConfig/configURL}}.
     1. If |configUrl| is failure, return false.
@@ -1433,8 +1433,8 @@ whether the |provider|'s {{IdentityProviderConfig/configURL}} is included in the
 
             Issue: [relax](https://github.com/fedidcg/FedCM/issues/333) the size of the provider_urls array. 
 
-        1. If |json|[{{Discovery/provider_urls}}][0] is not a [=string=], return.
-        1. Set |check| to true if |json|[{{Discovery/provider_urls}}][0] [=string/is=] equal to |provider|'s
+        1. If |json|[{{Well-Known/provider_urls}}][0] is not a [=string=], return.
+        1. Set |check| to true if |json|[{{Well-Known/provider_urls}}][0] [=string/is=] equal to |provider|'s
             {{IdentityProviderConfig/configURL}}.
     1. Return |check|.
 </div>
@@ -1840,7 +1840,7 @@ NOTE: You can read more about the attack described
 Here, the [=RP=] includes identifies itself when fetching the manifest from the [=IDP=]. This
 coupled with the credentialed fetches that the FedCM API performs would enable the [=IDP=] to easily
 track the website that the user is visiting, without requiring any permission from the user. Our
-mitigation to this problem is to use the [[#idp-api-discovery]] file. We enforce a specifically named
+mitigation to this problem is to use the [[#idp-api-well-known]] file. We enforce a specifically named
 file at the root of the [=IDP=]'s domain to ensure that the file name does not introduce
 fingerprints about the [=RP=] being visited.
 
