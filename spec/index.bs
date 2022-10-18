@@ -432,10 +432,10 @@ provides the main security boundary on the web.
     site may or may not know that multiple user identifiers refer to the same user.
 
 :  <dfn>Privacy Policy</dfn>
-:: The policies described at {{client_metadata/privacy_policy_url}}.
+:: The policies described at {{IdentityClientMetadata/privacy_policy_url}}.
 
 :  <dfn>Terms of Service</dfn>
-:: The policies described at {{client_metadata/terms_of_service_url}}.
+:: The policies described at {{IdentityClientMetadata/terms_of_service_url}}.
 
 : <dfn>registered</dfn>
 :: The account is `registered` if the user agent thinks that the user has registered an account in
@@ -572,6 +572,14 @@ by exposing a series of HTTP endpoints:
 1. A [[#idp-api-client-id-metadata-endpoint]] endpoint
 1. An [[#idp-api-id-assertion-endpoint]] endpoint
 
+The [=IDP=] must also host a file at the .well-known/webidentity path of its [=registerable domain=] that has JSON contents that are convertable to a {{Discovery}} object.
+
+<xmp class="idl">
+dictionary Discovery {
+  required sequence<USVString> provider_urls;
+};
+</xmp>
+
 Issue: The algorithms used for these endpoints need to [integrate](https://github.com/fedidcg/FedCM/issues/261) with [=fetch=].
 
 <!-- ============================================================ -->
@@ -600,22 +608,42 @@ Sec-Fetch-Dest: webidentity
 ```
 </div>
 
-The file is parsed expecting [=Manifest=] JSON object.
+The response is parsed as a {{Manifest}} object.
 
-The <dfn>Manifest</dfn> JSON object has the following properties:
+<xmp class=idl>
+dictionary IdentityIcon {
+  required USVString url;
+  unsigned long size;
+};
 
-<dl dfn-type="argument" dfn-for="Manifest">
-    :   <dfn>accounts_endpoint</dfn> (required)
+dictionary IdentityBranding {
+  USVString background_color;
+  USVString color;
+  sequence<IdentityIcon> icons;
+};
+
+dictionary Manifest {
+  required USVString accounts_endpoint;
+  required USVString client_metadata_endpoint;
+  required USVString id_assertion_endpoint;
+  IdentityBranding branding;
+};
+</xmp>
+
+The {{Manifest}} object's members have the following semantics:
+
+<dl dfn-type="dict-member" dfn-for="Manifest">
+    :   <dfn>accounts_endpoint</dfn>
     ::  A URL that points to an HTTP API that complies with the [[#idp-api-accounts-endpoint]] API.
-    :   <dfn>client_metadata_endpoint</dfn> (required)
+    :   <dfn>client_metadata_endpoint</dfn>
     ::  A URL that points to an HTTP API that complies with the [[#idp-api-client-id-metadata-endpoint]] API.
-    :   <dfn>id_assertion_endpoint</dfn> (required)
+    :   <dfn>id_assertion_endpoint</dfn>
     ::  A URL that points to an HTTP API that complies with the [[#idp-api-id-assertion-endpoint]] API.
-    :   <dfn>branding</dfn> (optional)
-    ::  A set of [=Branding JSON=] options.
+    :   <dfn>branding</dfn>
+    ::  A set of {{IdentityBranding}} options.
 </dl>
 
-The <dfn>Branding JSON</dfn> enables an [=IDP=] to express their branding
+The {{IdentityBranding}} enables an [=IDP=] to express their branding
 preferences, which may be used by [=user agents=] to customize the permission prompt.
 
 Note: The branding preferences are deliberately designed to be high level
@@ -623,14 +651,14 @@ Note: The branding preferences are deliberately designed to be high level
 enable different [=user agents=] to offer different UI experiences and
 for them to evolve independently over time.
 
-It may have the following properties:
-<dl dfn-type="argument" dfn-for="manifest_branding">
-    :   <dfn>background_color</dfn> (optional)
+Its members have the following semantics:
+<dl dfn-type="dict-member" dfn-for="IdentityBranding">
+    :   <dfn>background_color</dfn>
     ::  Background [=color=] for [=IDP=]-branded widgets such as buttons.
-    :   <dfn>color</dfn> (optional)
+    :   <dfn>color</dfn>
     ::  [=color=] for text on [=IDP=] branded widgets.
-    :   <dfn>icons</dfn> (optional)
-    ::  A list of [=Icon JSON=] objects.
+    :   <dfn>icons</dfn>
+    ::  A list of {{IdentityIcon}} objects.
 </dl>
 
 Note: The branding preferences are deliberately designed to be high level
@@ -639,14 +667,14 @@ enable different [=user agents=] to offer different UI experiences and
 for them to evolve independently over time.
 
 
-The <dfn>Icon JSON</dfn> may have the following properties:
+The {{IdentityIcon}} has members with the following semantics:
 
-<dl dfn-type="argument" dfn-for="manifest_branding_icons">
-    :   <dfn>url</dfn> (required)
+<dl dfn-type="dict-member" dfn-for="IdentityIcon">
+    :   <dfn>url</dfn>
     ::  The url pointing to the icon image, which must be square and single resolution
         (not a multi-resolution .ico). The icon needs to comply with the
         [maskable](https://www.w3.org/TR/appmanifest/#icon-masks) specification.
-    :   <dfn>size</dfn> (optional)
+    :   <dfn>size</dfn>
     ::  The width/height of the square icon. The size may be omitted if the icon is in a vector
         graphic format (like SVG).
 </dl>
@@ -702,25 +730,34 @@ Sec-Fetch-Dest: webidentity
 ```
 </div>
 
-The response is expected to have the following properties:
+The response is parsed as a {{IdentityAccountList}} object.
 
-<dl dfn-type="argument" dfn-for="accounts_endpoint_response">
-    :   <dfn>accounts</dfn> (required)
-    ::  A list of [=Account JSON=].
-</dl>
 
-Every <dfn>Account JSON</dfn> is expected to have the following properties:
+<xmp class="idl">
+dictionary IdentityAccount {
+  required USVString id;
+  required USVString name;
+  required USVString email;
+  USVString given_name;
+  sequence<USVString> approved_clients;
+};
+dictionary IdentityAccountList {
+  sequence<IdentityAccount> accounts;
+};
+</xmp>
 
-<dl dfn-type="argument" dfn-for="account_json">
-    :   <dfn>id</dfn> (required)
+Every {{IdentityAccount}} is expected to have members with the following semantics:
+
+<dl dfn-type="dict-member" dfn-for="IdentityAccount">
+    :   <dfn>id</dfn>
     ::  The account unique identifier.
-    :   <dfn>name</dfn> (required)
+    :   <dfn>name</dfn>
     ::  The user's full name.
-    :   <dfn>email</dfn> (required)
+    :   <dfn>email</dfn>
     ::  The user's email address.
-    :   <dfn>given_name</dfn> (optional)
+    :   <dfn>given_name</dfn>
     ::  The user's given name.
-    :   <dfn>approved_clients</dfn> (optional)
+    :   <dfn>approved_clients</dfn>
     ::  A list of [=RP=]s (in the form of [=Client ID=]s) this account is already registered with.
         Used in the [=request permission to sign-up=] to allow the [=IDP=] to control whether to show
         the [=Privacy Policy=] and the [=Terms of Service=].
@@ -780,12 +817,21 @@ Sec-Fetch-Dest: webidentity
 ```
 </div>
 
-The file is parsed expecting the following properties:
+The response is parsed as a {{IdentityClientMetadata}} object.
 
-<dl dfn-type="argument" dfn-for="client_metadata">
-    :   <dfn>privacy_policy_url</dfn> (optional)
+<xmp class="idl">
+dictionary IdentityClientMetadata {
+  USVString privacy_policy_url;
+  USVString terms_of_service_url;
+};
+</xmp>
+
+The {{IdentityClientMetadata}} object's members have the following semantics:
+
+<dl dfn-type="dict-member" dfn-for="IdentityClientMetadata">
+    :   <dfn>privacy_policy_url</dfn>
     ::  A link to the [=RP=]'s [=privacy policy=].
-    :   <dfn>terms_of_service_url</dfn> (optional)
+    :   <dfn>terms_of_service_url</dfn>
     ::  A link to the [=RP=]'s [=terms of service=].
 </dl>
 
@@ -853,10 +899,18 @@ represented by the [=client id=]. As the [=client ids=] are [=IDP=]-specific, th
 cannot perform this check.
 </div>
 
-The response is parsed as a JSON file expecting the following properties:
+The response is parsed as a {{IdentityToken}} object.
 
-<dl dfn-type="argument" dfn-for="id_assertion_endpoint_response">
-    :   <dfn>token</dfn> (required)
+<xmp class="idl">
+dictionary IdentityToken {
+  required USVString token;
+};
+</xmp>
+
+Every {{IdentityToken}} is expected to have members with the following semantics:
+
+<dl dfn-type="dict-member" dfn-for="IdentityToken">
+    :   <dfn>token</dfn>
     ::  The resulting [=token=].
 </dl>
 
@@ -1095,7 +1149,7 @@ requests.
       1. Let |provider| be |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"][0].
       1. Let |credential| be the result of running the [=potentially create IdentityCredential=]
           algorithm with |provider|.
-      1. If |credential| is null, wait for the task that throws a {{NetworkError}}, otherwise return
+      1. If |credential| is null or [=potentially create IdentityCredential=] threw a {{TypeError}}, wait for the task that throws a {{NetworkError}}, otherwise return
           |credential|.
 </div>
 
@@ -1128,7 +1182,7 @@ To <dfn>potentially create IdentityCredential</dfn>, given an {{IdentityProvider
         1. Otherwise, run the [=sign-in=] algorithm with |accountState|.
     1. If |accountState|'s {{AccountState/registration state}} is [=unregistered=] then return null.
     1. Let |token| be the result of running the [=create tokens=] algorithm with |accountState|,
-        |account|'s {{account_json/id}}, |provider|, and |manifest|.
+        |account|'s {{IdentityAccount/id}}, |provider|, and |manifest|.
     1. Let |credential| be a new {{IdentityCredential}}.
     1. Set |credential|'s {{IdentityCredential/token}} to |token|.
     1. Return |credential|.
@@ -1136,12 +1190,12 @@ To <dfn>potentially create IdentityCredential</dfn>, given an {{IdentityProvider
 
 <div algorithm>
 To <dfn>compute account state</dfn> given an {{IdentityProviderConfig}} |provider| and an
-    [=Account JSON=] |account|, run the following steps:
+    {{IdentityAccount}} |account|, run the following steps:
     1. Let |configUrl| be the result of running [=url parser=] with |provider|'s
         {{IdentityProviderConfig/configURL}}.
     1. Let |idpOrigin| be the [=origin=] corresponding to |configUrl|.
     1. Let |rpOrigin| be [=this=]'s [=Document/origin=].
-    1. Let |accountId| be |account|'s {{account_json/id}}.
+    1. Let |accountId| be |account|'s {{IdentityAccount/id}}.
     1. Let |triple| be (|rpOrigin|, |idpOrigin|, |accountId|).
     1. If [=state machine map=][|triple|] does not exist, set [=state machine map=][|triple|] to a
         new [=AccountState=].
@@ -1150,7 +1204,7 @@ To <dfn>compute account state</dfn> given an {{IdentityProviderConfig}} |provide
 </div>
 
 <div algorithm>
-To <dfn>fetch the accounts list</dfn> given a [=Manifest=] |manifest| and an {{IdentityProviderConfig}}
+To <dfn>fetch the accounts list</dfn> given a {{Manifest}} |manifest| and an {{IdentityProviderConfig}}
     |provider|:
     1. Let |accountsUrl| be the result of [=computing the manifest URL=] given |provider| and
         |manifest|["{{Manifest/accounts_endpoint}}"].
@@ -1169,29 +1223,12 @@ To <dfn>fetch the accounts list</dfn> given a [=Manifest=] |manifest| and an {{I
         1. [=request/credentials mode=] set to "include"
 
         Issue: The credentialed fetch in this algorithm can lead to a timing attack that leaks the user's identities before the user grants permission. This is an active area of investigation that is being explored [here](https://github.com/fedidcg/FedCM/issues/230#issuecomment-1089040953).
-    1. Let |accountsList| be an empty list.
+    1. Let |accountsList| be a new {{IdentityAccountList}}.  // This operation is not defined but will be removed by #261
     1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
         steps given a <a spec=fetch for=/>response</a> |response|:
         1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
-        1. If |json| is null, return.
-        1. If |json|["accounts"] does not exist, or if it is not a [=list=], return.
-        1. Let |potentialAccountsList| be an empty list.
-        1. For each |account| in |json|["accounts"]:
-            1. If |account| is not an [=ordered map=], return.
-            1. If |account|["id"] does not exist or is not a [=string=], return.
-            1. If |account|["id"] is the same as any other account in the |potentialAccountList|, return.
-            1. If |account|["name"] does not exist or is not a [=string=], return.
-            1. If |account|["email"] does not exist or is not a [=string=], return.
-            1. Let |acc| be a new [=Account JSON=] with {{account_json/id}} set to |account|["id"],
-                {{account_json/name}} set to |account|["name"], and {{account_json/email}} set to
-                |account|["email"].
-            1. If |account|["given_name"] exists and is a [=string=], set |acc|'s
-                {{account_json/given_name}} to |account|["given_name"].
-            1. If |account|["approved_clients"] exists and is a list where each item is a
-                [=string=], set |acc|'s {{account_json/approved_clients}} to
-                |account|["approved_clients"].
-            1. [=list/Append=] |acc| to |potentialAccountsList|.
-        1. Set |accountsList| to |potentialAccountsList|.
+        1. [=converted to an IDL value|Convert=] |json| to an {{IdentityAccountList}}, |potentialAccountsList|.
+        1. Set |accountsList| to |potentialAccountsList|. // This operation is not defined but will be removed by #261
     1. Return |accountsList|.
 
         Issue: We should validate the accounts list returned here for repeated ids, as described [here](https://github.com/fedidcg/FedCM/issues/336).
@@ -1227,22 +1264,21 @@ To <dfn>extract the JSON fetch response</dfn> given a <a spec=fetch for=/>respon
 </div>
 
 <div algorithm>
-To <dfn>request permission to sign-up</dfn> the user with a given [=Account JSON=] |account|, an
-    [=AccountState=] |accountState|, a [=Manifest=] |manifest|, and an {{IdentityProviderConfig}}
+To <dfn>request permission to sign-up</dfn> the user with a given {{IdentityAccount}} |account|, an
+    [=AccountState=] |accountState|, a {{Manifest}} |manifest|, and an {{IdentityProviderConfig}}
     |provider|:
     1. Let |metadata| be the result of running the [=fetch the client metadata=]
         algorithm with |manifest| and |provider|.
-    1. If |metadata| is not null,
-        |metadata|["{{client_metadata/privacy_policy_url}}"] is defined, and the |provider|'s
+    1. If privacy_policy_url is defined in |metadata| and the |provider|'s
         {{IdentityProviderConfig/clientId}} is not in the list of
-        |account|["{{account_json/approved_clients}}"], then display the
-        |metadata|["{{client_metadata/privacy_policy_url}}"] link.
-    1. If |metadata| is not null, |metadata|["{{client_metadata/terms_of_service_url}}"] is defined,
+        |account|["{{IdentityAccount/approved_clients}}"], then display the
+        |metadata|["{{IdentityClientMetadata/privacy_policy_url}}"] link.
+    1. If |metadata| is not null, |metadata|["{{IdentityClientMetadata/terms_of_service_url}}"] is defined,
         and the |provider|'s {{IdentityProviderConfig/clientId}} is not in the list of
-        |account|["{{account_json/approved_clients}}"], then display the
-        |metadata|["{{client_metadata/terms_of_service_url}}"] link.
+        |account|["{{IdentityAccount/approved_clients}}"], then display the
+        |metadata|["{{IdentityClientMetadata/terms_of_service_url}}"] link.
     1. Prompt the user to gather explicit intent to create an account. The user agent MAY use the
-        [=Branding JSON=] to inform the style choices of its UI.
+        {{IdentityBranding}} to inform the style choices of its UI.
     1. If the user does not grants permission, return.
     1. Change |accountState|'s {{AccountState/registration state}} from [=unregistered=] to
         [=registered=].
@@ -1250,7 +1286,7 @@ To <dfn>request permission to sign-up</dfn> the user with a given [=Account JSON
 </div>
 
 <div algorithm>
-To <dfn noexport>fetch the client metadata</dfn> given a [=Manifest=] |manifest| and an
+To <dfn noexport>fetch the client metadata</dfn> given a {{Manifest}} |manifest| and an
     {{IdentityProviderConfig}} |provider|, run the following steps:
     1. Let |clientMetadataUrl| be the result of [=computing the manifest URL=] given |provider| and
         |manifest|["{{Manifest/client_metadata_endpoint}}"].
@@ -1267,23 +1303,20 @@ To <dfn noexport>fetch the client metadata</dfn> given a [=Manifest=] |manifest|
             [=header/name=] set to `Accept` and [=header/value=] set to `application/json`
         1. [=request/referrer=] set to [=RP=]'s URL (TODO).
         1. [=request/credentials mode=] set to "omit"
-    1. Let |clientMetadata| be a new [=ordered map=].
+    1. Let |clientMetadata| be a new {{IdentityClientMetadata}}. // This operation is not defined but will be removed by #261
     1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
         steps given a <a spec=fetch for=/>response</a> |response|:
         1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
-        1. If |json| is null, return.
-        1. If |json|["privacy_policy_url"] exists and is a [=string=], set
-            |clientMetadata|["privacy_policy_url"] to |json|["privacy_policy_url"].
-        1. If |json|["terms_of_service_url"] exists and is a [=string=], set
-            |clientMetadata|["terms_of_service_url"] to |json|["terms_of_service_url"].
-    1. Return |clientMetadata|.    
+        1. [=converted to an IDL value|Convert=] |json| to an {{IdentityClientMetadata}}, |metadata|.
+        1. Copy |metadata| into |clientMetadata|. // This operation is not defined but will be removed by #261
+    1. Return |clientMetadata|.
 </div>
 
 <div algorithm>
 To <dfn>select an account</dfn> given an |accountsList|:
     1. Assert |accountsList|'s [=list/size=] is greater than 1.
     1. Display an account chooser displaying the options from |accountsList|.
-    1. Let |account| be the {{account_json/id}} of the account that the user
+    1. Let |account| be the {{IdentityAccount/id}} of the account that the user
         manually selects from the accounts chooser, or null if no account is selected.
     1. Return |account|
 </div>
@@ -1296,11 +1329,11 @@ To <dfn>sign-in</dfn> the user with a given an [=AccountState=] |accountState|:
 
 <div algorithm>
 To <dfn>create tokens</dfn> given an [=AccountState=] |accountState|, a {{USVString}} |accountId|,
-    an {{IdentityProviderConfig}} |provider|, and a [=Manifest=] |manifest|:
+    an {{IdentityProviderConfig}} |provider|, and a {{Manifest}} |manifest|:
     1. Assert |accountState|'s {{AccountState/registration state}} is [=registered=].
     1. Assert |accountState|'s {{AccountState/allows logout}} is true.
     1. Let |idTokenUrl| be the result of [=computing the manifest URL=] given |provider| and
-        |manifest|["{{Manifest/id_token_endpoint}}"].
+        |manifest|["{{Manifest/id_assertion_endpoint}}"].
     1. If |idTokenUrl| is failure, return null.
     1. Let |requestBody| be a [=string=] resulting in concatenating "client_id=",
         |provider|'s {{IdentityProviderConfig/clientId}}, "&nonce=",
@@ -1320,18 +1353,17 @@ To <dfn>create tokens</dfn> given an [=AccountState=] |accountState|, a {{USVStr
             `application/x-www-form-urlencoded`
         1. [=request/referrer=] set to [=RP=]'s URL (TODO).
         1. [=request/credentials mode=] set to "include"
-    1. Let |token| be null.
+    1. Let |token| be a new {{IdentityToken}}. // This operation is not defined but will be removed by #261
     1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
         steps given a <a spec=fetch for=/>response</a> |response|:
         1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
-        1. If |json| is null, return.
-        1. If |json|["token"] does not exist, or if it is not a [=string=], return.
-        1. Set |token| to |json|["token"].
+        1. [=converted to an IDL value|Convert=] |json| to an {{IdentityToken}}, |fetchedToken|.
+        1. Set |token| to |fetchedToken|. // This operation is not defined but will be removed by #261
     1. Return |token|.
 </div>
 
 <div algorithm>
-The <dfn>fetch the manifest</dfn> algorithm accepts an {{IdentityProviderConfig}} |provider| and returns a [=Manifest=] object:
+The <dfn>fetch the manifest</dfn> algorithm accepts an {{IdentityProviderConfig}} |provider| and returns a {{Manifest}} object:
     1. In parallel, perform the following two steps:
         1. Let |manifestInSet| be the result of running [=check the root manifest=], passing
             |provider|.
@@ -1373,20 +1405,18 @@ whether the manifest is included in the manifest list:
     1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
         steps given a <a spec=fetch for=/>response</a> |response|:
         1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
-        1. If |json| is null, return.
-        1. If |json|["provider_urls"] does not exist, or if it is not a [=list=], return.
-        1. If the [=list/size=] of |json|["provider_urls"] is greater than 1, return.
+        1. [=converted to an IDL value|Convert=] |json| to a {{Discovery}}, |discovery|.
+        1. If the [=list/size=] of |discovery|["{{Discovery/provider_urls}}""] is greater than 1, return.
 
-            Issue: [relax](https://github.com/fedidcg/FedCM/issues/333) the size of the provider_urls array. 
+            Issue: [relax](https://github.com/fedidcg/FedCM/issues/333) the size of the provider_urls array.
 
-        1. If |json|["provider_urls"][0] is not a [=string=], return.
-        1. Set |check| to true if |json|["provider_urls"][0] [=string/is=] equal to |provider|'s
+        1. Set |check| to true if |discovery|["{{Discovery/provider_urls}}""] [=string/is=] equal to |provider|'s
             {{IdentityProviderConfig/configURL}}.
     1. Return |check|.
 </div>
 
 <div algorithm>
-The <dfn>fetch the internal manifest</dfn> algorithm accepts an {{IdentityProviderConfig}} |provider| and returns a [=Manifest=] or null if there is some failure fetching or parsing the manifest:
+The <dfn>fetch the internal manifest</dfn> algorithm accepts an {{IdentityProviderConfig}} |provider| and returns a {{Manifest}} or null if there is some failure fetching or parsing the manifest:
     1. Let |configUrl| be the result of running [=url parser=] with |provider|'s
         {{IdentityProviderConfig/configURL}}.
     1. If |configUrl| is failure, return null.
@@ -1407,19 +1437,12 @@ The <dfn>fetch the internal manifest</dfn> algorithm accepts an {{IdentityProvid
         1. [=request/credentials mode=] set to "omit"
     1. Let |request| be a new <a spec=fetch for=/>request</a> whose [=request/url=] is |url| and
         [=request/redirect mode=] set to "error".
-    1. Let |manifest| be null.
+    1. Let |manifest| be a new {{Manifest}}. // This operation is not defined but will be removed by #261
     1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
         steps given a <a spec=fetch for=/>response</a> |response|:
         1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
-        1. If |json| is null, return.
-        1. If |json|["accounts_endpoint"] does not exist, or if it is not a [=string=], return.
-        1. If |json|["client_metadata_endpoint"] does not exist, or if it is not a [=string=],
-            return.
-        1. If |json|["id_token_endpoint"] does not exist, or if it is not a [=string=], return.
-        1. Set |manifest| to a new [=Manifest=] with {{Manifest/accounts_endpoint}} set to
-            |json|["accounts_endpoint"], {{Manifest/client_metadata_endpoint}} set to
-            |json|["client_metadata_endpoint"], and {{Manifest/id_token_endpoint}} set to
-            |json|["id_token_endpoint"].
+        1. [=converted to an IDL value|Convert=] |json| to a {{Manifest}}, |fetchedManifest|.
+        1. Copy |fetchedManifest| into |manifest|. // This operation is not defined but will be removed by #261
     1. Return |manifest|.
 </div>
 
@@ -2007,7 +2030,7 @@ IdP-Sign-in-Status: action=logout
 
 When site data (e.g. cookies) are cleared manually by the user, the [=user agent=] also sets the [=Sign-in Status=] to {{Sign-in Status/unknown}}.
 
-IDPs are also offered an extension to the [=Manifest=] JSON object to include:
+IDPs are also offered an extension to the {{Manifest}} object to include:
 
 <dl dfn-type="argument" dfn-for="Manifest">
     :   <dfn>signin_url</dfn> (optional)
@@ -2017,7 +2040,7 @@ IDPs are also offered an extension to the [=Manifest=] JSON object to include:
 The [=user agent=] uses the following [=maybe fetch the accounts list=] in the [=potentially create IdentityCredential=] algorithm, as opposed to the [=fetch the accounts list=] algorithm. It would also return early on the [=potentially create IdentityCredential=] algorithm if the user was {{Sign-in Status/signed-out}}.
 
 <div algorithm>
-To <dfn>maybe fetch the accounts list</dfn> given a [=Manifest=] |manifest| and an {{IdentityProviderConfig}}
+To <dfn>maybe fetch the accounts list</dfn> given a {{Manifest}} |manifest| and an {{IdentityProviderConfig}}
     |provider|:
 
     1. Let |configUrl| be the result of running [=url parser=] with |provider|'s
@@ -2049,7 +2072,7 @@ To <dfn>maybe fetch the accounts list</dfn> given a [=Manifest=] |manifest| and 
 </div>
 
 <div algorithm>
-To <dfn>Sign-in to the IDP</dfn> given a [=Manifest=] |manifest| and an {{IdentityProviderConfig}}
+To <dfn>Sign-in to the IDP</dfn> given a {{Manifest}} |manifest| and an {{IdentityProviderConfig}}
     |provider|:
     1. Let |configUrl| be the result of running [=url parser=] with |provider|'s
         {{IdentityProviderConfig/configURL}}.
