@@ -305,7 +305,7 @@ could be implemented.
     return await navigator.credentials.get({
       identity: {
         providers: [{
-          configURL: "https://idp.example/manifest.json",
+          configURL: "https://idp.example/config.json",
           clientId: "123",
           nonce: nonce
         }]
@@ -586,7 +586,7 @@ This document defines the APIs in the following order:
 The [=IDP=] proactively and cooperatively exposes itself as a comformant agent
 by exposing a series of HTTP endpoints:
 
-1. A [[#idp-api-manifest]] endpoint in an agreed upon location that points to
+1. A [[#idp-api-config]] endpoint in an agreed upon location that points to
 1. An [[#idp-api-accounts-endpoint]] endpoint
 1. A [[#idp-api-client-id-metadata-endpoint]] endpoint
 1. An [[#idp-api-id-assertion-endpoint]] endpoint
@@ -624,18 +624,17 @@ The <dfn>Well-Known</dfn> JSON object has the following properties:
 
 <dl dfn-type="argument" dfn-for="Well-Known">
     :   <dfn>provider_urls</dfn> (required)
-    ::  A list of URLs that points to valid [[#idp-api-manifest]]s.
+    ::  A list of URLs that points to valid [[#idp-api-config]]s.
 </dl>
 
 <!-- ============================================================ -->
-## Manifest ## {#idp-api-manifest}
+## The Config File ## {#idp-api-config}
 <!-- ============================================================ -->
 
-The manifest discovery endpoint is an endpoint
-which serves as a discovery device to other endpoints provided by the
-[=IDP=].
+The config endpoint is an endpoint which serves as a discovery device to
+other endpoints provided by the [=IDP=].
 
-The manifest discovery endpoint is fetched:
+The config endpoint is fetched:
 
 (a) **without** cookies,
 (b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`,
@@ -653,11 +652,11 @@ Sec-Fetch-Dest: webidentity
 ```
 </div>
 
-The file is parsed expecting [=Manifest=] JSON object.
+The file is parsed expecting [=Config=] JSON object.
 
-The <dfn>Manifest</dfn> JSON object has the following properties:
+The <dfn>Config</dfn> JSON object has the following properties:
 
-<dl dfn-type="argument" dfn-for="Manifest">
+<dl dfn-type="argument" dfn-for="Config">
     :   <dfn>accounts_endpoint</dfn> (required)
     ::  A URL that points to an HTTP API that complies with the [[#idp-api-accounts-endpoint]] API.
     :   <dfn>client_metadata_endpoint</dfn> (required)
@@ -677,7 +676,7 @@ enable different [=user agents=] to offer different UI experiences and
 for them to evolve independently over time.
 
 It may have the following properties:
-<dl dfn-type="argument" dfn-for="manifest_branding">
+<dl dfn-type="argument" dfn-for="config_branding">
     :   <dfn>background_color</dfn> (optional)
     ::  Background [=color=] for [=IDP=]-branded widgets such as buttons.
     :   <dfn>color</dfn> (optional)
@@ -694,7 +693,7 @@ for them to evolve independently over time.
 
 The <dfn>Icon JSON</dfn> may have the following properties:
 
-<dl dfn-type="argument" dfn-for="manifest_branding_icons">
+<dl dfn-type="argument" dfn-for="config_branding_icons">
     :   <dfn>url</dfn> (required)
     ::  The url pointing to the icon image, which must be square and single resolution
         (not a multi-resolution .ico). The icon needs to comply with the
@@ -983,7 +982,7 @@ authenticate the user.
 const credential = await navigator.credentials.get({
   identity: {
     providers: [{
-      configURL: "https://idp.example/manifest.json",
+      configURL: "https://idp.example/config.json",
       clientId: "123",
     }]
   }
@@ -1154,18 +1153,18 @@ requests.
 
 <div algorithm>
 To <dfn>potentially create IdentityCredential</dfn>, given an {{IdentityProviderConfig}} |provider|:
-    1. Let |manifest| be the result of running the [=fetch the manifest=]
+    1. Let |config| be the result of running the [=fetch the config=]
         algorithm with |provider|.
-    1. If |manifest| is null, return null.
+    1. If |config| is null, return null.
     1. Let |accountsList| be the result of running the
-        [=fetch the accounts list=] algorithm with |manifest| and |provider|.
+        [=fetch the accounts list=] algorithm with |config| and |provider|.
     1. If |accountsList|'s size is 0, return null.
     1. If |accountsList|'s size is 1:
         1. Let |account| be |accountsList|[0].
         1. Let |accountState| be the result of running the [=compute account state=] algorithm
             given |provider| and |account|.
         1. If |accountState|'s {{AccountState/registration state}} is [=unregistered=] then run the
-            [=request permission to sign-up=] algorithm with |account|, |accountState|, |manifest|, and
+            [=request permission to sign-up=] algorithm with |account|, |accountState|, |config|, and
             |provider|.
         1. Otherwise, show a dialog to request user permission to sign in via |account|.
         1. If the user grants permission, run the [=sign-in=] algorithm with |accountState|.
@@ -1176,12 +1175,12 @@ To <dfn>potentially create IdentityCredential</dfn>, given an {{IdentityProvider
         1. Let |accountState| be the result of running the [=compute account state=] algorithm
             given |provider| and |account|.
         1. If |accountState|'s {{AccountState/registration state}} is [=unregistered=] then run the
-            [=request permission to sign-up=] algorithm with |account|, |accountState|, |manifest|, and
+            [=request permission to sign-up=] algorithm with |account|, |accountState|, |config|, and
             |provider|.
         1. Otherwise, run the [=sign-in=] algorithm with |accountState|.
     1. If |accountState|'s {{AccountState/registration state}} is [=unregistered=] then return null.
     1. Let |token| be the result of running the [=create tokens=] algorithm with |accountState|,
-        |account|'s {{account_json/id}}, |provider|, and |manifest|.
+        |account|'s {{account_json/id}}, |provider|, and |config|.
     1. Let |credential| be a new {{IdentityCredential}}.
     1. Set |credential|'s {{IdentityCredential/token}} to |token|.
     1. Return |credential|.
@@ -1203,10 +1202,10 @@ To <dfn>compute account state</dfn> given an {{IdentityProviderConfig}} |provide
 </div>
 
 <div algorithm>
-To <dfn>fetch the accounts list</dfn> given a [=Manifest=] |manifest| and an {{IdentityProviderConfig}}
+To <dfn>fetch the accounts list</dfn> given a [=Config=] |config| and an {{IdentityProviderConfig}}
     |provider|:
-    1. Let |accountsUrl| be the result of [=computing the manifest URL=] given |provider| and
-        |manifest|["{{Manifest/accounts_endpoint}}"].
+    1. Let |accountsUrl| be the result of [=computing the config URL=] given |provider| and
+        |config|["{{Config/accounts_endpoint}}"].
     1. If |accountsUrl| is failure, return an empty list.
     1. Let |request| be a new <a spec=fetch for=/>request</a> with the following properties:
         1. [=request/url=] set to |accountsUrl|
@@ -1251,19 +1250,19 @@ To <dfn>fetch the accounts list</dfn> given a [=Manifest=] |manifest| and an {{I
 </div>
 
 <div algorithm>
-When <dfn>computing the manifest URL</dfn> given an {{IdentityProviderConfig}} |provider| and a
-[=string=] |manifestString|, perform the following steps:
+When <dfn>computing the config URL</dfn> given an {{IdentityProviderConfig}} |provider| and a
+[=string=] |configString|, perform the following steps:
     1. Let |configUrl| be the result of running [=url parser=] with |provider|'s
         {{IdentityProviderConfig/configURL}}.
-    1. Let |manifestUrl| be the result of running [=url parser=] given |manifestString|.
-    1. If |manifestUrl| is failure, let |manifestUrl| be the result of running [=url parser=] given
-        |manifestString| (the relative URL) and |configUrl| (the base URL).
+    1. Let |configUrl| be the result of running [=url parser=] given |configString|.
+    1. If |configUrl| is failure, let |configUrl| be the result of running [=url parser=] given
+        |configString| (the relative URL) and |configUrl| (the base URL).
     
-    Note: This means the we allow passing the manifest string as either an absolute or relative URL.
+    Note: This means the we allow passing the config string as either an absolute or relative URL.
 
-    1. If |manifestUrl| is failure, return failure.
-    1. If |manifestUrl| is not [=same origin=] with |configUrl|, return failure.
-    1. If |manifestUrl| is not a [=potentially trustworthy URL=], return failure.
+    1. If |configUrl| is failure, return failure.
+    1. If |configUrl| is not [=same origin=] with |configUrl|, return failure.
+    1. If |configUrl| is not a [=potentially trustworthy URL=], return failure.
 </div>
 
 <div algorithm>
@@ -1281,10 +1280,10 @@ To <dfn>extract the JSON fetch response</dfn> given a <a spec=fetch for=/>respon
 
 <div algorithm>
 To <dfn>request permission to sign-up</dfn> the user with a given [=Account JSON=] |account|, an
-    [=AccountState=] |accountState|, a [=Manifest=] |manifest|, and an {{IdentityProviderConfig}}
+    [=AccountState=] |accountState|, a [=Config=] |config|, and an {{IdentityProviderConfig}}
     |provider|:
     1. Let |metadata| be the result of running the [=fetch the client metadata=]
-        algorithm with |manifest| and |provider|.
+        algorithm with |config| and |provider|.
     1. If |metadata| is not null,
         |metadata|["{{client_metadata/privacy_policy_url}}"] is defined, and the |provider|'s
         {{IdentityProviderConfig/clientId}} is not in the list of
@@ -1303,10 +1302,10 @@ To <dfn>request permission to sign-up</dfn> the user with a given [=Account JSON
 </div>
 
 <div algorithm>
-To <dfn noexport>fetch the client metadata</dfn> given a [=Manifest=] |manifest| and an
+To <dfn noexport>fetch the client metadata</dfn> given a [=Config=] |config| and an
     {{IdentityProviderConfig}} |provider|, run the following steps:
-    1. Let |clientMetadataUrl| be the result of [=computing the manifest URL=] given |provider| and
-        |manifest|["{{Manifest/client_metadata_endpoint}}"].
+    1. Let |clientMetadataUrl| be the result of [=computing the config URL=] given |provider| and
+        |Config|["{{Config/client_metadata_endpoint}}"].
     1. If |clientMetadataUrl| is failure, return null.
     1. Let |request| be a new <a spec=fetch for=/>request</a> with the following properties:
         1. [=request/url=] set to |clientMetadataUrl|
@@ -1349,11 +1348,11 @@ To <dfn>sign-in</dfn> the user with a given an [=AccountState=] |accountState|:
 
 <div algorithm>
 To <dfn>create tokens</dfn> given an [=AccountState=] |accountState|, a {{USVString}} |accountId|,
-    an {{IdentityProviderConfig}} |provider|, and a [=Manifest=] |manifest|:
+    an {{IdentityProviderConfig}} |provider|, and a [=Config=] |config|:
     1. Assert |accountState|'s {{AccountState/registration state}} is [=registered=].
     1. Assert |accountState|'s {{AccountState/allows logout}} is true.
-    1. Let |idTokenUrl| be the result of [=computing the manifest URL=] given |provider| and
-        |manifest|["{{Manifest/id_assertion_endpoint}}"].
+    1. Let |idTokenUrl| be the result of [=computing the config URL=] given |provider| and
+        |config|["{{Config/id_assertion_endpoint}}"].
     1. If |idTokenUrl| is failure, return null.
     1. Let |requestBody| be a [=string=] resulting in concatenating "client_id=",
         |provider|'s {{IdentityProviderConfig/clientId}}, "&nonce=",
@@ -1384,21 +1383,21 @@ To <dfn>create tokens</dfn> given an [=AccountState=] |accountState|, a {{USVStr
 </div>
 
 <div algorithm>
-The <dfn>fetch the manifest</dfn> algorithm accepts an {{IdentityProviderConfig}} |provider| and returns a [=Manifest=] object:
+The <dfn>fetch the config</dfn> algorithm accepts an {{IdentityProviderConfig}} |provider| and returns a [=Config=] object:
     1. In parallel, perform the following two steps:
-        1. Let |manifestInWellKnown| be the result of running [=check the well-known file=], passing
+        1. Let |configInWellKnown| be the result of running [=check the well-known file=], passing
             |provider|.
-        1. Let |manifest| be the result of running [=fetch the internal manifest=], passing
+        1. Let |config| be the result of running [=fetch the config=], passing
             |provider|.
-    1. If |manifestInWellKnown| is true, return |manifest|, otherwise return null.
+    1. If |configInWellKnown| is true, return |config|, otherwise return null.
 </div>
 
-NOTE: We use a two-tier manifest list in order to prevent the [=IDP=] to easily determine the [=RP=]
-that a user is visiting by encoding the information in the manifest path. We solve this issue by
-requiring a manifest list to be on the root of the [=IDP=]. The manifest itself can be anywhere, but
-it will not be used if the user agent does not find it in the manifest list. This allows the [=IDP=]
-to keep their actual manifest on an arbitary path while allowing the user agent to prevent manifest
-manipulation to fingerprint. See [[#manifest-fingerprinting]].
+NOTE: We use the well-known file and the config file in order to prevent the [=IDP=] to easily determine the [=RP=]
+that a user is visiting by encoding the information in the config path. We solve this issue by
+requiring a well-known file to be on the root of the [=IDP=]. The config itself can be anywhere, but
+it will not be used if the user agent does not find it in the well-known file. This allows the [=IDP=]
+to keep their actual config on an arbitary path while allowing the user agent to prevent config
+manipulation to fingerprint. See [[#config-fingerprinting]].
 
 <div algorithm>
 The <dfn>check the well-known file</dfn> accepts an {{IdentityProviderConfig}} |provider| and returns
@@ -1439,7 +1438,7 @@ whether the |provider|'s {{IdentityProviderConfig/configURL}} is included in the
 </div>
 
 <div algorithm>
-The <dfn>fetch the internal manifest</dfn> algorithm accepts an {{IdentityProviderConfig}} |provider| and returns a [=Manifest=] or null if there is some failure fetching or parsing the manifest:
+The <dfn>fetch the config</dfn> algorithm accepts an {{IdentityProviderConfig}} |provider| and returns a [=Confir=] or null if there is some failure fetching or parsing the config:
     1. Let |configUrl| be the result of running [=url parser=] with |provider|'s
         {{IdentityProviderConfig/configURL}}.
     1. If |configUrl| is failure, return null.
@@ -1460,7 +1459,7 @@ The <dfn>fetch the internal manifest</dfn> algorithm accepts an {{IdentityProvid
         1. [=request/credentials mode=] set to "omit"
     1. Let |request| be a new <a spec=fetch for=/>request</a> whose [=request/url=] is |url| and
         [=request/redirect mode=] set to "error".
-    1. Let |manifest| be null.
+    1. Let |config| be null.
     1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
         steps given a <a spec=fetch for=/>response</a> |response|:
         1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
@@ -1469,11 +1468,11 @@ The <dfn>fetch the internal manifest</dfn> algorithm accepts an {{IdentityProvid
         1. If |json|["client_metadata_endpoint"] does not exist, or if it is not a [=string=],
             return.
         1. If |json|["id_assertion_endpoint"] does not exist, or if it is not a [=string=], return.
-        1. Set |manifest| to a new [=Manifest=] with {{Manifest/accounts_endpoint}} set to
-            |json|["accounts_endpoint"], {{Manifest/client_metadata_endpoint}} set to
-            |json|["client_metadata_endpoint"], and {{Manifest/id_assertion_endpoint}} set to
+        1. Set |config| to a new [=Config=] with {{Config/accounts_endpoint}} set to
+            |json|["accounts_endpoint"], {{Config/client_metadata_endpoint}} set to
+            |json|["client_metadata_endpoint"], and {{Config/id_assertion_endpoint}} set to
             |json|["id_assertion_endpoint"].
-    1. Return |manifest|.
+    1. Return |config|.
 </div>
 
 <!-- ============================================================ -->
@@ -1617,19 +1616,19 @@ separate section for [[#privacy]] considerations.
 ## Content Security Policy ## {#content-security-policy}
 <!-- ============================================================ -->
 
-The first fetches triggered by the FedCM API are the manifest list, which is public, and the
-internal manifest. Imagine a malicious script included by (and running as) the [=RP=] attempting to
+The first fetches triggered by the FedCM API are the well-known file, which is public, and the
+internal config. Imagine a malicious script included by (and running as) the [=RP=] attempting to
 execute the FedCM API calls to a malicious [=IDP=], one which is not trusted by the [=RP=]. If the
 call is successful, this would introduce browser UI on the [=RP=] with sign in options into a
 malicious [=IDP=]. This malicious[=IDP=] could then attempt to trick the user. The protection
-against this attack is the [[!CSP]] check, which would fail because the origin of the manifest of
+against this attack is the [[!CSP]] check, which would fail because the origin of the config of
 the malicious [=IDP=] would not be an origin included in the allowlist specified by the [[!CSP]] of
 the [=RP=], hence preventing the undesired FedCM UI from being shown. Since any subsequent fetches
-are same origin with respect to the internal manifest or at least dependent on the contents of the
-internal manifest, they do not require additional checks.
+are same origin with respect to the internal config or at least dependent on the contents of the
+internal config, they do not require additional checks.
 
 The non-same-origin fetches include, for example, the brand icon. The user agent does not perform a
-[[!CSP]] check on these because they are directly specified from the manifest. In addition, the
+[[!CSP]] check on these because they are directly specified from the config. In addition, the
 rendering of this image is performed by the user agent, and as such this image cannot affect the
 [=RP=] site nor can they be inspected by the [=RP=] in any way.
 
@@ -1737,7 +1736,9 @@ network requests performed:
 ┌──────────────────────────┬─────────┬───────────┬──────────┐
 │ Endpoint                 │ cookies │ client_id │ referrer │
 ├──────────────────────────┼─────────┼───────────┼──────────┤
-│ manifests                │  no     │  no       │  no      │
+│ well-known               │  no     │  no       │  no      │
+├──────────────────────────┼─────────┼───────────┼──────────┤
+│ config                   │  no     │  no       │  no      │
 ├──────────────────────────┼─────────┼───────────┼──────────┤
 │ accounts_endpoint        │  yes    │  no       │  no      │
 ├──────────────────────────┼─────────┼───────────┼──────────┤
@@ -1762,7 +1763,7 @@ issues with regards to which cookies are shared and with whom within the FedCM f
 to ensure that all of these fetches remain same-origin is by disabling redirects and checking the
 origin of the fetched URLs.
 
-* The manifest fetch can't be used to track users because it is performed without cookies, [=client
+* The well-known and config fetch can't be used to track users because it is performed without cookies, [=client
     id=], or referrer. Thus, anyone could perform this fetch, and the information contained therein
     is considered public.
 
@@ -1813,16 +1814,16 @@ mitigations are implemented against ‘bounce tracking’ using link decoration 
 these scenarios consider how user tracking might happen **without** them. See also [[RFC7258]].
 
 <!-- ============================================================ -->
-### Manifest Fingerprinting ### {#manifest-fingerprinting}
+### Config Fingerprinting ### {#config-fingerprinting}
 <!-- ============================================================ -->
 
-Suppose that the FedCM API did not have a two-tier manifest (see the [=fetch the manifest=]
-algorithm), and instead directly had a single manifest. This would introduce the following
+Suppose that the FedCM API did not have a well-known file (see the [=fetch the config=]
+algorithm), and instead directly had a single config file. This would introduce the following
 fingerprinting attack:
 
 <div class=example>
 ```js
-// The following will fetch the manifest JSON file, which will know the origin of the RP :(
+// The following will fetch the config JSON file, which will know the origin of the RP :(
 const cred = await navigator.credentials.get({
   identity: {
     providers: [{
@@ -1836,17 +1837,17 @@ const cred = await navigator.credentials.get({
 NOTE: You can read more about the attack described
 [here](https://github.com/fedidcg/FedCM/issues/230#issuecomment-1067029200).
 
-Here, the [=RP=] includes identifies itself when fetching the manifest from the [=IDP=]. This
+Here, the [=RP=] includes identifies itself when fetching the config from the [=IDP=]. This
 coupled with the credentialed fetches that the FedCM API performs would enable the [=IDP=] to easily
 track the website that the user is visiting, without requiring any permission from the user. Our
 mitigation to this problem is to use the [[#idp-api-well-known]] file. We enforce a specifically named
 file at the root of the [=IDP=]'s domain to ensure that the file name does not introduce
 fingerprints about the [=RP=] being visited.
 
-The whole manifest could be in this location, but we instead choose to only point to the real
-manifest from there. This allows us to have flexibility in the future to allow a small constant
-number of manifests, should an [=IDP=] require this in the future, instead of just a single one. It
-also helps the [=IDP=]'s implementation because they any changes to the manifest are more likely to
+The whole config could be in this location, but we instead choose to only point to the real
+config from there. This allows us to have flexibility in the future to allow a small constant
+number of configs, should an [=IDP=] require this in the future, instead of just a single one. It
+also helps the [=IDP=]'s implementation because they any changes to the config are more likely to
 be performed on a file located anywhere, as opposed to the root of the domain, which may have more
 constraints in terms of ease of update.
 
@@ -2060,9 +2061,9 @@ IdP-Sign-in-Status: action=logout
 
 When site data (e.g. cookies) are cleared manually by the user, the [=user agent=] also sets the [=Sign-in Status=] to {{Sign-in Status/unknown}}.
 
-IDPs are also offered an extension to the [=Manifest=] JSON object to include:
+IDPs are also offered an extension to the [=Config=] JSON object to include:
 
-<dl dfn-type="argument" dfn-for="Manifest">
+<dl dfn-type="argument" dfn-for="Config">
     :   <dfn>signin_url</dfn> (optional)
     ::  A URL that allows a user to sign-in to the [=IDP=].
 </dl>
@@ -2070,7 +2071,7 @@ IDPs are also offered an extension to the [=Manifest=] JSON object to include:
 The [=user agent=] uses the following [=maybe fetch the accounts list=] in the [=potentially create IdentityCredential=] algorithm, as opposed to the [=fetch the accounts list=] algorithm. It would also return early on the [=potentially create IdentityCredential=] algorithm if the user was {{Sign-in Status/signed-out}}.
 
 <div algorithm>
-To <dfn>maybe fetch the accounts list</dfn> given a [=Manifest=] |manifest| and an {{IdentityProviderConfig}}
+To <dfn>maybe fetch the accounts list</dfn> given a [=Config=] |config| and an {{IdentityProviderConfig}}
     |provider|:
 
     1. Let |configUrl| be the result of running [=url parser=] with |provider|'s
@@ -2102,14 +2103,14 @@ To <dfn>maybe fetch the accounts list</dfn> given a [=Manifest=] |manifest| and 
 </div>
 
 <div algorithm>
-To <dfn>Sign-in to the IDP</dfn> given a [=Manifest=] |manifest| and an {{IdentityProviderConfig}}
+To <dfn>Sign-in to the IDP</dfn> given a [=Config=] |config| and an {{IdentityProviderConfig}}
     |provider|:
     1. Let |configUrl| be the result of running [=url parser=] with |provider|'s
         {{IdentityProviderConfig/configURL}}.
     1. Let |idpOrigin| be the origin corresponding to |configUrl|.
     1. Assert that the [=Sign-in Status=] of the |idpOrigin| is {{Sign-in Status/signed-out}}
     1. In parallel, wait until one of the following tasks returns to continue:
-        1. Open a dialog that directs the user to the [=IDP=]'s {{Manifest/signin_url}}.
+        1. Open a dialog that directs the user to the [=IDP=]'s {{Config/signin_url}}.
         1. Wait until the [=Sign-in Status=] of the |idpOrigin| becomes {{Sign-in Status/signed-in}}
             1. Close the dialog
             1. Return the result of the [=fetch the accounts list=] algorithm
