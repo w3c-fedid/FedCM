@@ -583,6 +583,8 @@ This document defines the APIs in the following order:
 # The Identity Provider API # {#idp-api}
 <!-- ============================================================ -->
 
+<em>This section is non-normative.</em>
+
 The [=IDP=] proactively and cooperatively exposes itself as a comformant agent
 by exposing a series of HTTP endpoints:
 
@@ -631,11 +633,11 @@ The <dfn>Well-Known</dfn> JSON object has the following properties:
 ## Manifest ## {#idp-api-manifest}
 <!-- ============================================================ -->
 
-The manifest discovery endpoint is an endpoint
+The config endpoint is an endpoint
 which serves as a discovery device to other endpoints provided by the
 [=IDP=].
 
-The manifest discovery endpoint is fetched:
+The config endpoint is fetched:
 
 (a) **without** cookies,
 (b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`,
@@ -1232,7 +1234,7 @@ To <dfn>fetch the accounts list</dfn> given a [=Manifest=] |manifest| and an {{I
         1. For each |account| in |json|["accounts"]:
             1. If |account| is not an [=ordered map=], return.
             1. If |account|["id"] does not exist or is not a [=string=], return.
-            1. If |account|["id"] is the same as any other account in the |potentialAccountList|, return.
+            1. If |account|["id"] is the same as any other account in the |potentialAccountsList|, return.
             1. If |account|["name"] does not exist or is not a [=string=], return.
             1. If |account|["email"] does not exist or is not a [=string=], return.
             1. Let |acc| be a new [=Account JSON=] with {{account_json/id}} set to |account|["id"],
@@ -1458,7 +1460,7 @@ The <dfn>fetch the internal manifest</dfn> algorithm accepts an {{IdentityProvid
             [=header/name=] set to `Accept` and [=header/value=] set to `application/json`
         1. [=request/referrer policy=] set to "no-referrer"
         1. [=request/credentials mode=] set to "omit"
-    1. Let |request| be a new <a spec=fetch for=/>request</a> whose [=request/url=] is |url| and
+    1. Let |request| be a new <a spec=fetch for=/>request</a> whose [=request/url=] is |configUrl| and
         [=request/redirect mode=] set to "error".
     1. Let |manifest| be null.
     1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
@@ -2001,7 +2003,7 @@ invisibly (i.e. without any explicit and observable indication to the user).
 
 </script>
 
-Internally, each [=user agent=] keeps track of a global <dfn>Sign-in Status</dfn> map per [=IDP=], initially an empty [=map=]. The [=map/keys=] in the [=Sign-in Status=] map is the [=origin=] of the [=IDP=]. The [=map/values=] in the [=Sign-in Status=] map are <dfn>status</dfn> objects which can be one of the following values:
+Internally, each [=user agent=] keeps track of a global <dfn>Sign-in Status</dfn> map per [=IDP=], initially an empty [=map=]. The [=map/keys=] in the [=Sign-in Status=] map is the [=origin=] of the [=IDP=]. The [=map/values=] in the [=Sign-in Status=] map are <b>status</b> objects which can be one of the following values:
 
 <dl dfn-type="argument" dfn-for="Sign-in Status">
     :   <dfn>unknown</dfn> (default)
@@ -2077,24 +2079,24 @@ To <dfn>maybe fetch the accounts list</dfn> given a [=Manifest=] |manifest| and 
         {{IdentityProviderConfig/configURL}}.
     1. Let |idpOrigin| be the origin corresponding to |configUrl|.
     1. Let |status| be the [=Sign-in Status=] of the |idpOrigin|.
-    1. If |status| is {{Sign-in Status/unknown}}
-        1. Let |accounts| be the result of the [=fetch the accounts list=] algorithm
-        1. Set the [=Sign-in Status=] of the |idpOrigin| to {{Sign-in Status/signed-in}} if |accounts| is non-empty, {{Sign-in Status/signed-out}} otherwise
+    1. If |status| is {{Sign-in Status/unknown}}:
+        1. Let |accounts| be the result of the [=fetch the accounts list=] algorithm given |manifest| and |provider|.
+        1. Set the [=Sign-in Status=] of the |idpOrigin| to {{Sign-in Status/signed-in}} if |accounts| is non-empty, {{Sign-in Status/signed-out}} otherwise.
 
         NOTE: This handles the case where the [=IDP=] hasn't had the chance to call the API before the accounts list is needed. This can incur into a timing attack, but it is limited to 1 per [=IDP=] per [=user agent=], so not very practical. Albeit small, removing this attack surface is an active area of investigation.
 
-    1. If |status| is {{Sign-in Status/signed-out}}
-        1. Return an empty list
+    1. If |status| is {{Sign-in Status/signed-out}}:
+        1. Return an empty list.
 
         NOTE: By terminating the request here before running [=fetch the accounts list=] algorithm we prevent the timing attack to be performed without any user prompt.
 
-    1. If |status| is {{Sign-in Status/signed-in}}
-        1. Let |accounts| be the result of the [=fetch the accounts list=] algorithm
+    1. If |status| is {{Sign-in Status/signed-in}}:
+        1. Let |accounts| be the result of the [=fetch the accounts list=] algorithm given |manifest| and |provider|.
         1. If |accounts|'s size is 0:
-            1. Set the [=Sign-in Status=] of the |idpOrigin| to {{Sign-in Status/signed-out}}
-            1. Ask the user to confirm they want to sign-in to their [=IDP=]
-            1. If they decline, return an empty list
-            1. Return the result of running the [=Sign-in to the IDP=] algorithm.
+            1. Set the [=Sign-in Status=] of the |idpOrigin| to {{Sign-in Status/signed-out}}.
+            1. Ask the user to confirm they want to sign-in to their [=IDP=].
+            1. If they decline, return an empty list.
+            1. Return the result of running the [=Sign-in to the IDP=] algorithm given |manifest| and |provider|.
 
             NOTE: This can happen when the user's local client credentials are invalidated on the server (e.g. changing passwords or deleting accounts on a different device), or we get network errors (e.g. timeouts, failures, etc).
 
@@ -2107,15 +2109,15 @@ To <dfn>Sign-in to the IDP</dfn> given a [=Manifest=] |manifest| and an {{Identi
     1. Let |configUrl| be the result of running [=url parser=] with |provider|'s
         {{IdentityProviderConfig/configURL}}.
     1. Let |idpOrigin| be the origin corresponding to |configUrl|.
-    1. Assert that the [=Sign-in Status=] of the |idpOrigin| is {{Sign-in Status/signed-out}}
+    1. Assert that the [=Sign-in Status=] of the |idpOrigin| is {{Sign-in Status/signed-out}}.
     1. In parallel, wait until one of the following tasks returns to continue:
-        1. Open a dialog that directs the user to the [=IDP=]'s {{Manifest/signin_url}}.
-        1. Wait until the [=Sign-in Status=] of the |idpOrigin| becomes {{Sign-in Status/signed-in}}
-            1. Close the dialog
-            1. Return the result of the [=fetch the accounts list=] algorithm
-        1. Wait until the user explicitly cancels the dialog
-            1. Close the dialog
-            1. Return empty list
+        1. Open a dialog that directs the user to |manifest|'s {{Manifest/signin_url}}.
+        1. Wait until the [=Sign-in Status=] of the |idpOrigin| becomes {{Sign-in Status/signed-in}}.
+            1. Close the dialog.
+            1. Return the result of the [=fetch the accounts list=] algorithm.
+        1. Wait until the user explicitly cancels the dialog.
+            1. Close the dialog.
+            1. Return empty list.
 </div>
 
 <!-- ============================================================ -->
