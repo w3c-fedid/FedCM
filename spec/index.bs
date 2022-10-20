@@ -572,7 +572,7 @@ by exposing a series of HTTP endpoints:
 1. A [[#idp-api-client-id-metadata-endpoint]] endpoint
 1. An [[#idp-api-id-assertion-endpoint]] endpoint
 
-The [=IDP=] must also host a file at the ".well-known/web-identity" path of its [=registerable domain=] that has JSON contents that are convertable to a {{IdentityProviderWellKnown}} object.
+The [=IDP=] must also host a file at the ".well-known/web-identity" path of its [=registerable domain=] that has JSON contents that are convertable to an {{IdentityProviderWellKnown}} object.
 
 <xmp class="idl">
 dictionary IdentityProviderWellKnown {
@@ -608,7 +608,7 @@ Sec-Fetch-Dest: webidentity
 ```
 </div>
 
-The response body must be a JSON object that can be [=converted to an IDL value|converted=] to a {{IdentityProviderAPIConfig}} without an exception.
+The response body must be a JSON object that can be [=converted to an IDL value|converted=] to an {{IdentityProviderAPIConfig}} without an exception.
 
 <xmp class=idl>
 dictionary IdentityProviderIcon {
@@ -730,7 +730,7 @@ Sec-Fetch-Dest: webidentity
 ```
 </div>
 
-The response body must be a JSON object that can be [=converted to an IDL value|converted=] to a {{IdentityProviderAccountList}} without an exception.
+The response body must be a JSON object that can be [=converted to an IDL value|converted=] to an {{IdentityProviderAccountList}} without an exception.
 
 
 <xmp class="idl">
@@ -817,7 +817,7 @@ Sec-Fetch-Dest: webidentity
 ```
 </div>
 
-The response body must be a JSON object that can be [=converted to an IDL value|converted=] to a {{IdentityProviderClientMetadata}} without an exception.
+The response body must be a JSON object that can be [=converted to an IDL value|converted=] to an {{IdentityProviderClientMetadata}} without an exception.
 
 <xmp class="idl">
 dictionary IdentityProviderClientMetadata {
@@ -899,7 +899,7 @@ represented by the [=client id=]. As the [=client ids=] are [=IDP=]-specific, th
 cannot perform this check.
 </div>
 
-The response body must be a JSON object that can be [=converted to an IDL value|converted=] to a {{IdentityProviderToken}} without an exception.
+The response body must be a JSON object that can be [=converted to an IDL value|converted=] to an {{IdentityProviderToken}} without an exception.
 
 <xmp class="idl">
 dictionary IdentityProviderToken {
@@ -1204,7 +1204,7 @@ To <dfn>compute account state</dfn> given an {{IdentityProviderConfig}} |provide
 </div>
 
 <div algorithm>
-To <dfn>fetch the accounts list</dfn> given a {{IdentityProviderAPIConfig}} |manifest| and an {{IdentityProviderConfig}}
+To <dfn>fetch the accounts list</dfn> given an {{IdentityProviderAPIConfig}} |manifest| and an {{IdentityProviderConfig}}
     |provider|:
     1. Let |accountsUrl| be the result of [=computing the manifest URL=] given |provider| and
         |manifest|["{{IdentityProviderAPIConfig/accounts_endpoint}}"].
@@ -1269,11 +1269,11 @@ To <dfn>extract the JSON fetch response</dfn> given a <a spec=fetch for=/>respon
 
 <div algorithm>
 To <dfn>request permission to sign-up</dfn> the user with a given {{IdentityProviderAccount}} |account|, an
-    [=AccountState=] |accountState|, a {{IdentityProviderAPIConfig}} |manifest|, and an {{IdentityProviderConfig}}
+    [=AccountState=] |accountState|, an {{IdentityProviderAPIConfig}} |manifest|, and an {{IdentityProviderConfig}}
     |provider|:
     1. Let |metadata| be the result of running the [=fetch the client metadata=]
         algorithm with |manifest| and |provider|.
-    1. If privacy_policy_url is defined in |metadata| and the |provider|'s
+    1. If |metadata|["{{IdentityProviderClientMetadata/privacy_policy_url}}"] is defined and the |provider|'s
         {{IdentityProviderConfig/clientId}} is not in the list of
         |account|["{{IdentityProviderAccount/approved_clients}}"], then display the
         |metadata|["{{IdentityProviderClientMetadata/privacy_policy_url}}"] link.
@@ -1290,7 +1290,7 @@ To <dfn>request permission to sign-up</dfn> the user with a given {{IdentityProv
 </div>
 
 <div algorithm>
-To <dfn noexport>fetch the client metadata</dfn> given a {{IdentityProviderAPIConfig}} |manifest| and an
+To <dfn noexport>fetch the client metadata</dfn> given an {{IdentityProviderAPIConfig}} |manifest| and an
     {{IdentityProviderConfig}} |provider|, run the following steps:
     1. Let |clientMetadataUrl| be the result of [=computing the manifest URL=] given |provider| and
         |manifest|["{{IdentityProviderAPIConfig/client_metadata_endpoint}}"].
@@ -1337,7 +1337,7 @@ To <dfn>sign-in</dfn> the user with a given an [=AccountState=] |accountState|:
 
 <div algorithm>
 To <dfn>create tokens</dfn> given an [=AccountState=] |accountState|, a {{USVString}} |accountId|,
-    an {{IdentityProviderConfig}} |provider|, and a {{IdentityProviderAPIConfig}} |manifest|:
+    an {{IdentityProviderConfig}} |provider|, and an {{IdentityProviderAPIConfig}} |manifest|:
     1. Assert |accountState|'s {{AccountState/registration state}} is [=registered=].
     1. Assert |accountState|'s {{AccountState/allows logout}} is true.
     1. Let |idTokenUrl| be the result of [=computing the manifest URL=] given |provider| and
@@ -1375,7 +1375,7 @@ To <dfn>create tokens</dfn> given an [=AccountState=] |accountState|, a {{USVStr
 </div>
 
 <div algorithm>
-The <dfn>fetch the manifest</dfn> algorithm accepts an {{IdentityProviderConfig}} |provider| and returns a {{IdentityProviderAPIConfig}} object:
+The <dfn>fetch the manifest</dfn> algorithm accepts an {{IdentityProviderConfig}} |provider| and returns an {{IdentityProviderAPIConfig}} object:
     1. In parallel, perform the following two steps:
         1. Let |manifestInSet| be the result of running [=check the root manifest=], passing
             |provider|.
@@ -1417,7 +1417,7 @@ whether the manifest is included in the manifest list:
     1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
         steps given a <a spec=fetch for=/>response</a> |response|:
         1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
-        1. [=converted to an IDL value|Convert=] |json| to a {{IdentityProviderWellKnown}}, |discovery|.
+        1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderWellKnown}}, |discovery|.
         1. If the [=list/size=] of |discovery|["{{IdentityProviderWellKnown/provider_urls}}""] is greater than 1, return.
 
             Issue: [relax](https://github.com/fedidcg/FedCM/issues/333) the size of the provider_urls array.
@@ -1428,7 +1428,7 @@ whether the manifest is included in the manifest list:
 </div>
 
 <div algorithm>
-The <dfn>fetch the internal manifest</dfn> algorithm accepts an {{IdentityProviderConfig}} |provider| and returns a {{IdentityProviderAPIConfig}} or null if there is some failure fetching or parsing the manifest:
+The <dfn>fetch the internal manifest</dfn> algorithm accepts an {{IdentityProviderConfig}} |provider| and returns an {{IdentityProviderAPIConfig}} or null if there is some failure fetching or parsing the manifest:
     1. Let |configUrl| be the result of running [=url parser=] with |provider|'s
         {{IdentityProviderConfig/configURL}}.
     1. If |configUrl| is failure, return null.
@@ -1455,7 +1455,7 @@ The <dfn>fetch the internal manifest</dfn> algorithm accepts an {{IdentityProvid
     1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
         steps given a <a spec=fetch for=/>response</a> |response|:
         1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
-        1. [=converted to an IDL value|Convert=] |json| to a {{IdentityProviderAPIConfig}}, |fetchedConfig|.
+        1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderAPIConfig}}, |fetchedConfig|.
         1. Copy |fetchedConfig| into |manifest|.
 
         Note: This operation is not defined but should be removed when we [integrate](https://github.com/fedidcg/FedCM/issues/261) with Fetch.
@@ -2056,7 +2056,7 @@ IDPs are also offered an extension to the {{IdentityProviderAPIConfig}} object t
 The [=user agent=] uses the following [=maybe fetch the accounts list=] in the [=potentially create IdentityCredential=] algorithm, as opposed to the [=fetch the accounts list=] algorithm. It would also return early on the [=potentially create IdentityCredential=] algorithm if the user was {{Sign-in Status/signed-out}}.
 
 <div algorithm>
-To <dfn>maybe fetch the accounts list</dfn> given a {{IdentityProviderAPIConfig}} |manifest| and an {{IdentityProviderConfig}}
+To <dfn>maybe fetch the accounts list</dfn> given an {{IdentityProviderAPIConfig}} |manifest| and an {{IdentityProviderConfig}}
     |provider|:
 
     1. Let |configUrl| be the result of running [=url parser=] with |provider|'s
@@ -2088,7 +2088,7 @@ To <dfn>maybe fetch the accounts list</dfn> given a {{IdentityProviderAPIConfig}
 </div>
 
 <div algorithm>
-To <dfn>Sign-in to the IDP</dfn> given a {{IdentityProviderAPIConfig}} |manifest| and an {{IdentityProviderConfig}}
+To <dfn>Sign-in to the IDP</dfn> given an {{IdentityProviderAPIConfig}} |manifest| and an {{IdentityProviderConfig}}
     |provider|:
     1. Let |configUrl| be the result of running [=url parser=] with |provider|'s
         {{IdentityProviderConfig/configURL}}.
