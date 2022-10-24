@@ -462,16 +462,16 @@ that they can use.
 |   Party   |                  |   Agent   |                      | Provider  |
 |           |                  |           |                      |           |
 |           |                  | Federated |                      |           |
-|           |   +----------->*-+ Credential|     +------------->*-+ manifests |
+|           |   +----------->*-+ Credential|     +------------->*-+ Well-Known|
 |           |   |              | Management|     |                |           |
-|           |   |              |    API    |     +------------->*-+ accounts  |
+|           |   |              |    API    |     +------------->*-+ Config    |
 |           |   |              |           |     |                |           |
-|           |   |              |           |     +------------->*-+ client    |
-|           |   |              |           |     |                | metadata  |
+|           |   |              |           |     +------------->*-+ Accounts  |
 |           |   |              |           |     |                |           |
-|           |   |              |           |     +------------->*-+ token     |
+|           |   |              |           |     +------------->*-+ Client    |
+|           |   |              |           |     |                | Metadata  |
 |           |   |              |           |     |                |           |
-|           |   |              |           |     |                |           |
+|           |   |              |           |     +------------->*-+ Assertion |
 |           |   |              |           |     |                |           |
 |           |   |              |           |     |                |           |
 | +-------+ |   |              | +-------+ |     |                | +-------+ |
@@ -495,59 +495,78 @@ identity federation.
     Party                           Agent                           Provider
 
       |                               |                                 |
-      | "navigator.credentials.get()" |                                 |
+      | "navigator.credentials.get({" | "(1) The RP invokes the API."   |
+      | "  identity: {              " |                                 |
+      | "    providers: [{          " |                                 |
+      | "      configURL: ...       " |                                 |
+      | "    }]                     " |                                 |
+      | "  }                        " |                                 |
+      | "})                         " |                                 |
+      |                               |                                 |
       |------------------------------>|                                 |
       |                               |                                 |
-      |                               | "GET /.well-known/web-identity" |
-      |                               |-------------------------------->|
-      |                               |<--------------------------------| "{"
-      |                               |                                 |   "provider_urls: [ ... ]"
-      |                               |                                 | "}"
       |                               |                                 |
+      | "(2) From the configURL, the" | "GET /.well-known/web-identity" |
+      | "browser makes two requests " |-------------------------------->|
+      | "in parallel."                |                                 |
       |                               | "GET /config.json"              |
       |                               |-------------------------------->|
-      |                               |<--------------------------------| "{"
+      |                               |                                 |
+      | "(3) The IdP responds with a" |                                 |
+      | "well-known file and a      " |                                 |
+      | "config file."                |                                 |
+      |                               |                                 |
+      |                               |                                 |
+      |                               |                                 |
+      | "The well-known file        " | "Well-Known file"               |
+      | "contains a list of valid   " |<--------------------------------| "{"
+      | "config URLs.               " |                                 |   "provider_urls: [ ... ]"
+      |                               |                                 | "}"
+      |                               |                                 |
+      | "The config file contains   " | "Config file"                   |
+      | "information about the IdP. " |<--------------------------------| "{"
       |                               |                                 |   "id_assertion_endpoint: ...,"
       |                               |                                 |   "accounts_endpoint: ...,"
       |                               |                                 |   "client_metadata_endpoint: ...,"
       |                               |                                 |   "branding: ...,"
       |                               |                                 | "}"
       |                               |                                 |
-      |                               | "GET accounts.php"              |
-      |                               | "cookies"                       |
-      |                               |-------------------------------->|
-      |                               |<--------------------------------| "{"
+      | "(4) The browser proceeds to" | "GET accounts.php"              |
+      | "fetch the list of accounts " | "cookies"                       |
+      | "that the user is logged in " |-------------------------------->|
+      | "to.                        " |<--------------------------------| "{"
       |                               |                                 |   "accounts: [ ... ]"
       |                               |                                 | "}"
       |                               |                                 |
       |                               |                                 |
-      |                               | "GET client_metadata.php"       |
-      |                               | "client_id"                     |
-      |                               |-------------------------------->|
+      | "(5) The browser then       " | "GET client_metadata.php"       |
+      | "fetches metadata about the " | "client_id"                     |
+      | "Relying Party.             " |-------------------------------->|
       |                               |<--------------------------------| "{"
       |                               |                                 |   "terms_of_service_url: ...,"
       |                               |                                 |   "privacy_policy_url: ...,"
       |                               |                                 | "}"
       |                               |                                 |
       |                               |                                 |
-      |                     +---------+                                 |
-      |                     |         |                                 |
-      |                     |         |                                 |
-      |                     |         | "account chooser"               |
+      |                     +---------+ "(6) With all of this, the    " |
+      |                     |         | "browser asks for the user's  " |
+      |                     |         | "permission to sign-in to the " |
+      |  "account chooser"  |         | "RP with the IdP's account.   " |
       |                     |         |                                 |
       |                     |         |                                 |
       |                     +-------->|                                 |
       |                               |                                 |
       |                               |                                 |
       |                               |                                 |
-      |                               | "POST assertion.php"            |
-      |                               | "client_id, cookies, account"   |
-      |                               |-------------------------------->|
+      | "(7) With the user's        " | "POST assertion.php"            |
+      | "permission, the browser    " | "client_id, cookies, account"   |
+      | "fetches a token from IdP.  " |-------------------------------->|
       |                               |<--------------------------------| "{"
       |                               |                                 |   "token: ...,"
       |                               |                                 | "}"
-      |                "{ token }"    |                                 |
-      |<------------------------------|                                 |
+      |                               |                                 |
+      |                "{ token }"    | "(8) Which is then ultimately " |
+      |<------------------------------| "used to resolve the promise. " |
       |                               |                                 |
       |                               |                                 |
      -+-                             -+-                               -+-
@@ -563,6 +582,8 @@ This document defines the APIs in the following order:
 <!-- ============================================================ -->
 # The Identity Provider API # {#idp-api}
 <!-- ============================================================ -->
+
+<em>This section is non-normative.</em>
 
 The [=IDP=] proactively and cooperatively exposes itself as a comformant agent
 by exposing a series of HTTP endpoints:
@@ -583,14 +604,48 @@ dictionary IdentityProviderWellKnown {
 Issue: The algorithms used for these endpoints need to [integrate](https://github.com/fedidcg/FedCM/issues/261) with [=fetch=].
 
 <!-- ============================================================ -->
+## The Well-Known File ## {#idp-api-well-known}
+<!-- ============================================================ -->
+
+NOTE: The browser uses the well-known file to prevent the following attack described [here](https://github.com/fedidcg/FedCM/issues/230#issuecomment-1067029200).
+
+The [=IDP=] exposes a well-known file in a pre-defined location, specifically at the "web-identity" file at the [=IDPs=]'s path ".well-known".
+
+The well-known file is fetched:
+
+(a) **without** cookies,
+(b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`, and
+(c) **without** a [[RFC9110#header.referer|Referer]] header
+
+For example:
+
+<div class=example>
+```http
+GET /well-known/web-identity HTTP/1.1
+Host: idp.example
+Accept: application/json
+Sec-Fetch-Dest: webidentity
+```
+</div>
+
+The file is parsed expecting a [=Well-Known=] JSON object.
+
+The <dfn>Well-Known</dfn> JSON object has the following properties:
+
+<dl dfn-type="argument" dfn-for="Well-Known">
+    :   <dfn>provider_urls</dfn> (required)
+    ::  A list of URLs that points to valid [[#idp-api-manifest]]s.
+</dl>
+
+<!-- ============================================================ -->
 ## Manifest ## {#idp-api-manifest}
 <!-- ============================================================ -->
 
-The manifest discovery endpoint is an endpoint
+The config endpoint is an endpoint
 which serves as a discovery device to other endpoints provided by the
 [=IDP=].
 
-The manifest discovery endpoint is fetched:
+The config endpoint is fetched:
 
 (a) **without** cookies,
 (b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`,
@@ -1377,11 +1432,11 @@ To <dfn>create tokens</dfn> given an [=AccountState=] |accountState|, a {{USVStr
 <div algorithm>
 The <dfn>fetch the manifest</dfn> algorithm accepts an {{IdentityProviderConfig}} |provider| and returns an {{IdentityProviderAPIConfig}} object:
     1. In parallel, perform the following two steps:
-        1. Let |manifestInSet| be the result of running [=check the root manifest=], passing
+        1. Let |manifestInWellKnown| be the result of running [=check the well-known file=], passing
             |provider|.
         1. Let |manifest| be the result of running [=fetch the internal manifest=], passing
             |provider|.
-    1. If |manifestInSet| is true, return |manifest|, otherwise return null.
+    1. If |manifestInWellKnown| is true, return |manifest|, otherwise return null.
 </div>
 
 NOTE: We use a two-tier manifest list in order to prevent the [=IDP=] to easily determine the [=RP=]
@@ -1392,8 +1447,8 @@ to keep their actual manifest on an arbitary path while allowing the user agent 
 manipulation to fingerprint. See [[#manifest-fingerprinting]].
 
 <div algorithm>
-The <dfn>check the root manifest</dfn> accepts an {{IdentityProviderConfig}} |provider| and returns
-whether the manifest is included in the manifest list:
+The <dfn>check the well-known file</dfn> accepts an {{IdentityProviderConfig}} |provider| and returns
+whether the |provider|'s {{IdentityProviderConfig/configURL}} is included in the [[#idp-api-well-known]] endpoint's {{Well-Known/provider_urls}} list:
     1. Let |configUrl| be the result of running [=url parser=] with |provider|'s
         {{IdentityProviderConfig/configURL}}.
     1. If |configUrl| is failure, return false.
@@ -1447,7 +1502,7 @@ The <dfn>fetch the internal manifest</dfn> algorithm accepts an {{IdentityProvid
             [=header/name=] set to `Accept` and [=header/value=] set to `application/json`
         1. [=request/referrer policy=] set to "no-referrer"
         1. [=request/credentials mode=] set to "omit"
-    1. Let |request| be a new <a spec=fetch for=/>request</a> whose [=request/url=] is |url| and
+    1. Let |request| be a new <a spec=fetch for=/>request</a> whose [=request/url=] is |configUrl| and
         [=request/redirect mode=] set to "error".
     1. Let |manifest| be a new {{IdentityProviderAPIConfig}}.
 
@@ -1825,7 +1880,7 @@ NOTE: You can read more about the attack described
 Here, the [=RP=] includes identifies itself when fetching the manifest from the [=IDP=]. This
 coupled with the credentialed fetches that the FedCM API performs would enable the [=IDP=] to easily
 track the website that the user is visiting, without requiring any permission from the user. Our
-mitigation to this problem is to use a top level .well-known file. We enforce a specifically named
+mitigation to this problem is to use the [[#idp-api-well-known]] file. We enforce a specifically named
 file at the root of the [=IDP=]'s domain to ensure that the file name does not introduce
 fingerprints about the [=RP=] being visited.
 
@@ -1987,7 +2042,7 @@ invisibly (i.e. without any explicit and observable indication to the user).
 
 </script>
 
-Internally, each [=user agent=] keeps track of a global <dfn>Sign-in Status</dfn> map per [=IDP=], initially an empty [=map=]. The [=map/keys=] in the [=Sign-in Status=] map is the [=origin=] of the [=IDP=]. The [=map/values=] in the [=Sign-in Status=] map are <dfn>status</dfn> objects which can be one of the following values:
+Internally, each [=user agent=] keeps track of a global <dfn>Sign-in Status</dfn> map per [=IDP=], initially an empty [=map=]. The [=map/keys=] in the [=Sign-in Status=] map is the [=origin=] of the [=IDP=]. The [=map/values=] in the [=Sign-in Status=] map are <b>status</b> objects which can be one of the following values:
 
 <dl dfn-type="argument" dfn-for="Sign-in Status">
     :   <dfn>unknown</dfn> (default)
@@ -2063,24 +2118,24 @@ To <dfn>maybe fetch the accounts list</dfn> given an {{IdentityProviderAPIConfig
         {{IdentityProviderConfig/configURL}}.
     1. Let |idpOrigin| be the origin corresponding to |configUrl|.
     1. Let |status| be the [=Sign-in Status=] of the |idpOrigin|.
-    1. If |status| is {{Sign-in Status/unknown}}
-        1. Let |accounts| be the result of the [=fetch the accounts list=] algorithm
-        1. Set the [=Sign-in Status=] of the |idpOrigin| to {{Sign-in Status/signed-in}} if |accounts| is non-empty, {{Sign-in Status/signed-out}} otherwise
+    1. If |status| is {{Sign-in Status/unknown}}:
+        1. Let |accounts| be the result of the [=fetch the accounts list=] algorithm given |manifest| and |provider|.
+        1. Set the [=Sign-in Status=] of the |idpOrigin| to {{Sign-in Status/signed-in}} if |accounts| is non-empty, {{Sign-in Status/signed-out}} otherwise.
 
         NOTE: This handles the case where the [=IDP=] hasn't had the chance to call the API before the accounts list is needed. This can incur into a timing attack, but it is limited to 1 per [=IDP=] per [=user agent=], so not very practical. Albeit small, removing this attack surface is an active area of investigation.
 
-    1. If |status| is {{Sign-in Status/signed-out}}
-        1. Return an empty list
+    1. If |status| is {{Sign-in Status/signed-out}}:
+        1. Return an empty list.
 
         NOTE: By terminating the request here before running [=fetch the accounts list=] algorithm we prevent the timing attack to be performed without any user prompt.
 
-    1. If |status| is {{Sign-in Status/signed-in}}
-        1. Let |accounts| be the result of the [=fetch the accounts list=] algorithm
+    1. If |status| is {{Sign-in Status/signed-in}}:
+        1. Let |accounts| be the result of the [=fetch the accounts list=] algorithm given |manifest| and |provider|.
         1. If |accounts|'s size is 0:
-            1. Set the [=Sign-in Status=] of the |idpOrigin| to {{Sign-in Status/signed-out}}
-            1. Ask the user to confirm they want to sign-in to their [=IDP=]
-            1. If they decline, return an empty list
-            1. Return the result of running the [=Sign-in to the IDP=] algorithm.
+            1. Set the [=Sign-in Status=] of the |idpOrigin| to {{Sign-in Status/signed-out}}.
+            1. Ask the user to confirm they want to sign-in to their [=IDP=].
+            1. If they decline, return an empty list.
+            1. Return the result of running the [=Sign-in to the IDP=] algorithm given |manifest| and |provider|.
 
             NOTE: This can happen when the user's local client credentials are invalidated on the server (e.g. changing passwords or deleting accounts on a different device), or we get network errors (e.g. timeouts, failures, etc).
 
@@ -2093,7 +2148,7 @@ To <dfn>Sign-in to the IDP</dfn> given an {{IdentityProviderAPIConfig}} |manifes
     1. Let |configUrl| be the result of running [=url parser=] with |provider|'s
         {{IdentityProviderConfig/configURL}}.
     1. Let |idpOrigin| be the origin corresponding to |configUrl|.
-    1. Assert that the [=Sign-in Status=] of the |idpOrigin| is {{Sign-in Status/signed-out}}
+    1. Assert that the [=Sign-in Status=] of the |idpOrigin| is {{Sign-in Status/signed-out}}.
     1. In parallel, wait until one of the following tasks returns to continue:
         1. Open a dialog that directs the user to the [=IDP=]'s {{IdentityProviderAPIConfig/signin_url}}.
         1. Wait until the [=Sign-in Status=] of the |idpOrigin| becomes {{Sign-in Status/signed-in}}
