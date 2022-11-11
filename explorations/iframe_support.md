@@ -18,7 +18,7 @@ The ‘identity-credentials-get’ permissions policy can thus be used to allow 
 it receives explicit permission from the top-level frame ebay.com, it works just as if it had been invoked from the top-level frame. Thus, enabling
 FedCM on iframes allows RPs to keep using IDP scripts within iframes.
 
-## Iframes Requiring FedCM
+## Iframes Requiring FedCM (Authenticated Embeds)
 
 Another use-case of enabling FedCM on iframes is when the iframe itself is the one that needs to know the identity of the user. One example of this
 is AMP, where the page contents are within the AMP iframe. But there are also other examples: chat widgets, calendars, etc. where the main page does
