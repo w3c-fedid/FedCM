@@ -593,7 +593,7 @@ by exposing a series of HTTP endpoints:
 1. A [[#idp-api-client-id-metadata-endpoint]] endpoint
 1. An [[#idp-api-id-assertion-endpoint]] endpoint
 
-The [=IDP=] must also host a file at the ".well-known/web-identity" path of its [=registerable domain=] that has JSON contents that are convertable to an {{IdentityProviderWellKnown}} object.
+The [=IDP=] must also host a file at the ".well-known/web-identity" path of its [=registrable domain=] that has JSON contents that are convertable to an {{IdentityProviderWellKnown}} object.
 
 <xmp class="idl">
 dictionary IdentityProviderWellKnown {
@@ -1007,7 +1007,7 @@ The logout endpoint is an endpoint that is registered with the [=IDP=]
 [=out-of-band=].
 
 The logout endpoint is called
-(a) with a **GET** and
+(a) with a **POST** and
 (b) with the [=RP=]'s cookies.
 
 Note: the logout API introduces a credentialed request from the [=IDP=] to
@@ -1603,19 +1603,27 @@ When the {{IdentityCredential/logoutRPs()}} method is invoked given a [=list=] o
 {{IdentityCredentialLogoutRPsRequest}}s |logoutRequests|, the user agent MUST execute the following
 steps:
     1. Let |promise| be a new {{Promise}}.
-    1. For each |request| in |logoutRequests|
-      1. Let |rpOrigin| be [=this=]'s [=Document/origin=].
-      1. Let |idpOrigin| be |request|'s {{IdentityCredentialLogoutRPsRequest/url}}'s [=origin=].
-      1. Let |account| be |request|'s {{IdentityCredentialLogoutRPsRequest/accountId}}.
-      1. Let |triple| be (|rpOrigin|, |idpOrigin|, |account|).
-      1. If [=state machine map=][|triple|] does not exist, continue.
-      1. Let |accountState| be [=state machine map=][|triple|].
-      1. If the |accountState|'s {{AccountState/registration state}} is [=unregistered=] or
-          |accountState|'s {{AccountState/allows logout}} is false, continue.
-      1. POST to the |request|'s {{IdentityCredentialLogoutRPsRequest/url}} with the
-          [=Relying Parties=] cookies.  This request MUST NOT follow
-          [[RFC9110#header.location|HTTP redirects]] and instead abort the request.
-      1. Set the |accountState| {{AccountState/allows logout}} to false.
+    1. For each |request| in |logoutRequests|:
+        1. Let |rpOrigin| be [=this=]'s [=Document/origin=].
+        1. Let |idpOrigin| be |request|'s {{IdentityCredentialLogoutRPsRequest/url}}'s [=origin=].
+        1. Let |account| be |request|'s {{IdentityCredentialLogoutRPsRequest/accountId}}.
+        1. Let |triple| be (|rpOrigin|, |idpOrigin|, |account|).
+        1. If [=state machine map=][|triple|] does not exist, continue.
+        1. Let |accountState| be [=state machine map=][|triple|].
+        1. If the |accountState|'s {{AccountState/registration state}} is [=unregistered=] or
+            |accountState|'s {{AccountState/allows logout}} is false, continue.
+        1. Let |fetchRequest| be a new <a spec=fetch for=/>request</a> with the following properties:
+            1. [=request/url=] set to |request|'s {{IdentityCredentialLogoutRPsRequest/url}}
+            1. [=request/mode=] set to "POST"
+            1. [=request/redirect mode=] set to "error"
+            1. [=request/client=] set to null
+            1. [=request/window=] set to "no-window"
+            1. [=request/service-workers mode=] set to "none"
+            1. [=request/destination=] set to "webidentity"
+            1. [=request/origin=] set to a unique [=opaque origin=]
+            1. [=request/credentials mode=] set to "include"
+        1. [=Fetch=] |fetchRequest|.
+        1. Set the |accountState| {{AccountState/allows logout}} to false.
     1. <a for=Promise>Resolve</a> |promise| with [undefined] and return |promise|.
 </div>
 
@@ -2150,7 +2158,7 @@ To <dfn>Sign-in to the IDP</dfn> given an {{IdentityProviderAPIConfig}} |manifes
     1. Let |idpOrigin| be the origin corresponding to |configUrl|.
     1. Assert that the [=Sign-in Status=] of the |idpOrigin| is {{Sign-in Status/signed-out}}.
     1. In parallel, wait until one of the following tasks returns to continue:
-        1. Open a dialog that directs the user to the [=IDP=]'s {{IdentityProviderAPIConfig/signin_url}}.
+        1. Open a dialog that directs the user to the |manifest|'s {{IdentityProviderAPIConfig/signin_url}}.
         1. Wait until the [=Sign-in Status=] of the |idpOrigin| becomes {{Sign-in Status/signed-in}}
             1. Close the dialog
             1. Return the result of the [=fetch the accounts list=] algorithm
