@@ -47,6 +47,7 @@ spec: html; urlPrefix: https://html.spec.whatwg.org/multipage/
     type: dfn
         text: origin; for: html-origin-def; url: origin.html#concept-origin
         text: Content-Type Metadata; url: urls-and-fetching.html#content-type
+        text: DOM manipulation task source; url: webappapis.html#dom-manipulation-task-source
     type: method
         text: setTimeout; url: timers-and-user-prompts.html#dom-settimeout
 
@@ -1189,7 +1190,7 @@ requests.
 <div algorithm>
     When the {{IdentityCredential}}'s
     <dfn for="IdentityCredential" method>\[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</dfn>\
-    algorithm is invoked, the user agent MUST execute the following steps:
+    algorithm is invoked, the user agent MUST execute the following steps (note that these are invoked while [=in parallel=]):
 
       1.  Assert: |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"] [=map/exists=].
       1.  Assert: |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"] [=list/size=] is 1.
@@ -1202,27 +1203,29 @@ requests.
           method to return null. If there was no such timer, the developer could easily infer
           whether the user has an account with the [=IDP=] or not, or whether the user closed the UI without granting permission to share the [=IDP=] account information with the [=RP=].
       1. Let |provider| be |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"][0].
-      1. Let |credential| be the result of running the [=potentially create IdentityCredential=]
-          algorithm with |provider|.
+      1. Wait for the |credential| from [=potentially create IdentityCredential=] algorithm with |provider| and |globalObject|.
+
+          Note: The |globalObject| is not currently passed onto the {{Credential/[[DiscoverFromExternalSource]]}}
+          algorithm. See <a href="https://github.com/w3c/webappsec-credential-management/issues/210">issue</a>.
       1. If |credential| is null or [=potentially create IdentityCredential=] threw a {{TypeError}}, wait for the task that throws a {{NetworkError}}, otherwise return
           |credential|.
 </div>
 
 <div algorithm>
-To <dfn>potentially create IdentityCredential</dfn>, given an {{IdentityProviderConfig}} |provider|:
+To <dfn>potentially create IdentityCredential</dfn>, given an {{IdentityProviderConfig}} |provider| and a |globalObject|, execute the following steps:
     1. Let |manifest| be the result of running the [=fetch the manifest=]
-        algorithm with |provider|.
+        algorithm with |provider| and |globalObject|.
     1. If |manifest| is null, return null.
     1. Let |accountsList| be the result of running the
-        [=fetch the accounts list=] algorithm with |manifest| and |provider|.
+        [=fetch the accounts list=] algorithm with |manifest|, |provider|, and |globalObject|.
     1. If |accountsList|'s size is 0, return null.
     1. If |accountsList|'s size is 1:
         1. Let |account| be |accountsList|[0].
         1. Let |accountState| be the result of running the [=compute account state=] algorithm
             given |provider| and |account|.
         1. If |accountState|'s {{AccountState/registration state}} is [=unregistered=] then run the
-            [=request permission to sign-up=] algorithm with |account|, |accountState|, |manifest|, and
-            |provider|.
+            [=request permission to sign-up=] algorithm with |account|, |accountState|, |manifest|,
+            |provider|, and |globalObject|.
         1. Otherwise, show a dialog to request user permission to sign in via |account|.
         1. If the user grants permission, run the [=sign-in=] algorithm with |accountState|.
     1. Otherwise:
@@ -1232,15 +1235,17 @@ To <dfn>potentially create IdentityCredential</dfn>, given an {{IdentityProvider
         1. Let |accountState| be the result of running the [=compute account state=] algorithm
             given |provider| and |account|.
         1. If |accountState|'s {{AccountState/registration state}} is [=unregistered=] then run the
-            [=request permission to sign-up=] algorithm with |account|, |accountState|, |manifest|, and
-            |provider|.
+            [=request permission to sign-up=] algorithm with |account|, |accountState|, |manifest|,
+            |provider|, and |globalObject|.
         1. Otherwise, run the [=sign-in=] algorithm with |accountState|.
     1. If |accountState|'s {{AccountState/registration state}} is [=unregistered=] then return null.
     1. Let |token| be the result of running the [=create tokens=] algorithm with |accountState|,
-        |account|'s {{IdentityProviderAccount/id}}, |provider|, and |manifest|.
-    1. Let |credential| be a new {{IdentityCredential}}.
-    1. Set |credential|'s {{IdentityCredential/token}} to |token|.
-    1. Return |credential|.
+        |account|'s {{IdentityProviderAccount/id}}, |provider|, |manifest|, and |globalObject|.
+    1. Let |credential| be null.
+    1. [=Queue a global task=] on the [=DOM manipulation task source=] given |globalObject| to perform the following steps:
+        1. Create a new {{IdentityCredential}} given |globalObject|'s <a for="global object">realm</a>.
+        1. Set |credential|'s {{IdentityCredential/token}} to |token|.
+    1. Wait until the above task has been executed, and then return |credential|.
 </div>
 
 <div algorithm>
@@ -1259,8 +1264,8 @@ To <dfn>compute account state</dfn> given an {{IdentityProviderConfig}} |provide
 </div>
 
 <div algorithm>
-To <dfn>fetch the accounts list</dfn> given an {{IdentityProviderAPIConfig}} |manifest| and an {{IdentityProviderConfig}}
-    |provider|:
+To <dfn>fetch the accounts list</dfn> given an {{IdentityProviderAPIConfig}} |manifest|, an {{IdentityProviderConfig}}
+    |provider| and a |globalObject|:
     1. Let |accountsUrl| be the result of [=computing the manifest URL=] given |provider| and
         |manifest|["{{IdentityProviderAPIConfig/accounts_endpoint}}"].
     1. If |accountsUrl| is failure, return an empty list.
@@ -1281,14 +1286,15 @@ To <dfn>fetch the accounts list</dfn> given an {{IdentityProviderAPIConfig}} |ma
     1. Let |accountsList| be a new {{IdentityProviderAccountList}}.
 
         Note: This operation is not defined but should be removed when we [integrate](https://github.com/fedidcg/FedCM/issues/261) with Fetch.
-    1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
-        steps given a <a spec=fetch for=/>response</a> |response|:
-        1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
-        1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderAccountList}}, |potentialAccountsList|.
-        1. Set |accountsList| to |potentialAccountsList|.
+    1. [=Queue a global task=] on the [=networking task source=] given |globalObject| to perform the following steps:
+        1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
+            steps given a <a spec=fetch for=/>response</a> |response|:
+            1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
+            1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderAccountList}}, |potentialAccountsList|.
+            1. Set |accountsList| to |potentialAccountsList|.
 
-        Note: This operation is not defined but should be removed when we [integrate](https://github.com/fedidcg/FedCM/issues/261) with Fetch.
-    1. Return |accountsList|.
+            Note: This operation is not defined but should be removed when we [integrate](https://github.com/fedidcg/FedCM/issues/261) with Fetch.
+    1. Wait until the <a spec=fetch>processResponseConsumeBody</a> above terminates, and then return |accountsList|.
 
         Issue: We should validate the accounts list returned here for repeated ids, as described [here](https://github.com/fedidcg/FedCM/issues/336).
 </div>
@@ -1324,10 +1330,10 @@ To <dfn>extract the JSON fetch response</dfn> given a <a spec=fetch for=/>respon
 
 <div algorithm>
 To <dfn>request permission to sign-up</dfn> the user with a given {{IdentityProviderAccount}} |account|, an
-    [=AccountState=] |accountState|, an {{IdentityProviderAPIConfig}} |manifest|, and an {{IdentityProviderConfig}}
-    |provider|:
+    [=AccountState=] |accountState|, an {{IdentityProviderAPIConfig}} |manifest|, an {{IdentityProviderConfig}}
+    |provider|, and a |globalObject|:
     1. Let |metadata| be the result of running the [=fetch the client metadata=]
-        algorithm with |manifest| and |provider|.
+        algorithm with |manifest|, |provider|, and |globalObject|.
     1. If |metadata|["{{IdentityProviderClientMetadata/privacy_policy_url}}"] is defined and the |provider|'s
         {{IdentityProviderConfig/clientId}} is not in the list of
         |account|["{{IdentityProviderAccount/approved_clients}}"], then display the
@@ -1345,8 +1351,8 @@ To <dfn>request permission to sign-up</dfn> the user with a given {{IdentityProv
 </div>
 
 <div algorithm>
-To <dfn noexport>fetch the client metadata</dfn> given an {{IdentityProviderAPIConfig}} |manifest| and an
-    {{IdentityProviderConfig}} |provider|, run the following steps:
+To <dfn noexport>fetch the client metadata</dfn> given an {{IdentityProviderAPIConfig}} |manifest|, an
+    {{IdentityProviderConfig}} |provider|, and a |globalObject|, run the following steps:
     1. Let |clientMetadataUrl| be the result of [=computing the manifest URL=] given |provider| and
         |manifest|["{{IdentityProviderAPIConfig/client_metadata_endpoint}}"].
     1. If |clientMetadataUrl| is failure, return null.
@@ -1365,14 +1371,15 @@ To <dfn noexport>fetch the client metadata</dfn> given an {{IdentityProviderAPIC
     1. Let |clientMetadata| be a new {{IdentityProviderClientMetadata}}.
 
         Note: This operation is not defined but should be removed when we [integrate](https://github.com/fedidcg/FedCM/issues/261) with Fetch.
-    1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
-        steps given a <a spec=fetch for=/>response</a> |response|:
-        1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
-        1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderClientMetadata}}, |metadata|.
-        1. Copy |metadata| into |clientMetadata|.
+    1. [=Queue a global task=] on the [=networking task source=] given |globalObject| to perform the following steps:
+        1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
+            steps given a <a spec=fetch for=/>response</a> |response|:
+            1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
+            1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderClientMetadata}}, |metadata|.
+            1. Copy |metadata| into |clientMetadata|.
 
-        Note: This operation is not defined but should be removed when we [integrate](https://github.com/fedidcg/FedCM/issues/261) with Fetch.
-    1. Return |clientMetadata|.
+            Note: This operation is not defined but should be removed when we [integrate](https://github.com/fedidcg/FedCM/issues/261) with Fetch.
+    1. Wait until the <a spec=fetch>processResponseConsumeBody</a> above terminates, and then return |clientMetadata|.
 </div>
 
 <div algorithm>
@@ -1392,7 +1399,8 @@ To <dfn>sign-in</dfn> the user with a given an [=AccountState=] |accountState|:
 
 <div algorithm>
 To <dfn>create tokens</dfn> given an [=AccountState=] |accountState|, a {{USVString}} |accountId|,
-    an {{IdentityProviderConfig}} |provider|, and an {{IdentityProviderAPIConfig}} |manifest|:
+    an {{IdentityProviderConfig}} |provider|, an {{IdentityProviderAPIConfig}} |manifest|, and a
+    |globalObject|:
     1. Assert |accountState|'s {{AccountState/registration state}} is [=registered=].
     1. Assert |accountState|'s {{AccountState/allows logout}} is true.
     1. Let |idTokenUrl| be the result of [=computing the manifest URL=] given |provider| and
@@ -1419,23 +1427,24 @@ To <dfn>create tokens</dfn> given an [=AccountState=] |accountState|, a {{USVStr
     1. Let |token| be a new {{IdentityProviderToken}}.
 
         Note: This operation is not defined but should be removed when we [integrate](https://github.com/fedidcg/FedCM/issues/261) with Fetch.
-    1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
-        steps given a <a spec=fetch for=/>response</a> |response|:
-        1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
-        1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderToken}}, |fetchedToken|.
-        1. Set |token| to |fetchedToken|.
+    1. [=Queue a global task=] on the [=networking task source=] given |globalObject| to perform the following steps:
+        1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
+            steps given a <a spec=fetch for=/>response</a> |response|:
+            1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
+            1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderToken}}, |fetchedToken|.
+            1. Set |token| to |fetchedToken|.
 
-        Note: This operation is not defined but should be removed when we [integrate](https://github.com/fedidcg/FedCM/issues/261) with Fetch.
-    1. Return |token|.
+            Note: This operation is not defined but should be removed when we [integrate](https://github.com/fedidcg/FedCM/issues/261) with Fetch.
+    1. Wait until the <a spec=fetch>processResponseConsumeBody</a> above terminates, and then return |token|.
 </div>
 
 <div algorithm>
-The <dfn>fetch the manifest</dfn> algorithm accepts an {{IdentityProviderConfig}} |provider| and returns an {{IdentityProviderAPIConfig}} object:
-    1. In parallel, perform the following two steps:
+The <dfn>fetch the manifest</dfn> algorithm accepts an {{IdentityProviderConfig}} |provider| and a |globalObject| and returns an {{IdentityProviderAPIConfig}} object:
+    1. [=In parallel=], perform the following two steps:
         1. Let |manifestInWellKnown| be the result of running [=check the well-known file=], passing
-            |provider|.
+            |provider| and |globalObject|.
         1. Let |manifest| be the result of running [=fetch the internal manifest=], passing
-            |provider|.
+            |provider| and |globalObject|.
     1. If |manifestInWellKnown| is true, return |manifest|, otherwise return null.
 </div>
 
@@ -1447,7 +1456,7 @@ to keep their actual manifest on an arbitary path while allowing the user agent 
 manipulation to fingerprint. See [[#manifest-fingerprinting]].
 
 <div algorithm>
-The <dfn>check the well-known file</dfn> accepts an {{IdentityProviderConfig}} |provider| and returns
+The <dfn>check the well-known file</dfn> accepts an {{IdentityProviderConfig}} |provider| and a |globalObject| and returns
 whether the |provider|'s {{IdentityProviderConfig/configURL}} is included in the [[#idp-api-well-known]] endpoint's {{Well-Known/provider_urls}} list:
     1. Let |configUrl| be the result of running [=url parser=] with |provider|'s
         {{IdentityProviderConfig/configURL}}.
@@ -1469,21 +1478,22 @@ whether the |provider|'s {{IdentityProviderConfig/configURL}} is included in the
         1. [=request/referrer policy=] set to "no-referrer"
         1. [=request/credentials mode=] set to "omit"
     1. Let |check| be false.
-    1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
-        steps given a <a spec=fetch for=/>response</a> |response|:
-        1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
-        1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderWellKnown}}, |discovery|.
-        1. If the [=list/size=] of |discovery|["{{IdentityProviderWellKnown/provider_urls}}""] is greater than 1, return.
+    1. [=Queue a global task=] on the [=networking task source=] given |globalObject| to perform the following steps:
+        1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
+            steps given a <a spec=fetch for=/>response</a> |response|:
+            1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
+            1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderWellKnown}}, |discovery|.
+            1. If the [=list/size=] of |discovery|["{{IdentityProviderWellKnown/provider_urls}}""] is greater than 1, return.
 
-            Issue: [relax](https://github.com/fedidcg/FedCM/issues/333) the size of the provider_urls array.
+                Issue: [relax](https://github.com/fedidcg/FedCM/issues/333) the size of the provider_urls array.
 
-        1. Set |check| to true if |discovery|["{{IdentityProviderWellKnown/provider_urls}}""] [=string/is=] equal to |provider|'s
-            {{IdentityProviderConfig/configURL}}.
-    1. Return |check|.
+            1. Set |check| to true if |discovery|["{{IdentityProviderWellKnown/provider_urls}}""] [=string/is=] equal to |provider|'s
+                {{IdentityProviderConfig/configURL}}.
+    1. Wait until the <a spec=fetch>processResponseConsumeBody</a> above terminates, and then return |check|.
 </div>
 
 <div algorithm>
-The <dfn>fetch the internal manifest</dfn> algorithm accepts an {{IdentityProviderConfig}} |provider| and returns an {{IdentityProviderAPIConfig}} or null if there is some failure fetching or parsing the manifest:
+The <dfn>fetch the internal manifest</dfn> algorithm accepts an {{IdentityProviderConfig}} |provider| anda |globalObject| and returns an {{IdentityProviderAPIConfig}} or null if there is some failure fetching or parsing the manifest:
     1. Let |configUrl| be the result of running [=url parser=] with |provider|'s
         {{IdentityProviderConfig/configURL}}.
     1. If |configUrl| is failure, return null.
@@ -1507,14 +1517,15 @@ The <dfn>fetch the internal manifest</dfn> algorithm accepts an {{IdentityProvid
     1. Let |manifest| be a new {{IdentityProviderAPIConfig}}.
 
         Note: This operation is not defined but should be removed when we [integrate](https://github.com/fedidcg/FedCM/issues/261) with Fetch.
-    1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
-        steps given a <a spec=fetch for=/>response</a> |response|:
-        1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
-        1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderAPIConfig}}, |fetchedConfig|.
-        1. Copy |fetchedConfig| into |manifest|.
+    1. [=Queue a global task=] on the [=networking task source=] given |globalObject| to perform the following steps:
+        1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
+            steps given a <a spec=fetch for=/>response</a> |response|:
+            1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
+            1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderAPIConfig}}, |fetchedConfig|.
+            1. Copy |fetchedConfig| into |manifest|.
 
-        Note: This operation is not defined but should be removed when we [integrate](https://github.com/fedidcg/FedCM/issues/261) with Fetch.
-    1. Return |manifest|.
+            Note: This operation is not defined but should be removed when we [integrate](https://github.com/fedidcg/FedCM/issues/261) with Fetch.
+    1. Wait until the <a spec=fetch>processResponseConsumeBody</a> above terminates, and then return |manifest|.
 </div>
 
 <!-- ============================================================ -->
