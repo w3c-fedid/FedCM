@@ -1203,69 +1203,114 @@ requests.
           method to return null. If there was no such timer, the developer could easily infer
           whether the user has an account with the [=IDP=] or not, or whether the user closed the UI without granting permission to share the [=IDP=] account information with the [=RP=].
       1. Let |provider| be |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"][0].
-      1. Wait for the |credential| from [=potentially create IdentityCredential=] algorithm with |provider| and |globalObject|.
+      1. Run the [=check the well-known file=] algorithm with |provider| and |globalObject|.
 
           Note: The |globalObject| is not currently passed onto the {{Credential/[[DiscoverFromExternalSource]]}}
           algorithm. See <a href="https://github.com/w3c/webappsec-credential-management/issues/210">issue</a>.
-      1. If |credential| is null or [=potentially create IdentityCredential=] threw a {{TypeError}}, wait for the task that throws a {{NetworkError}}, otherwise return
-          |credential|.
+      1. Wait until an error is thrown or an {{IdentityCredential}} <var ignore=''>credential</var>
+          is returned.
 </div>
 
 <div algorithm>
-To <dfn>potentially create IdentityCredential</dfn>, given an {{IdentityProviderConfig}} |provider| and a |globalObject|, execute the following steps:
-    1. Let |manifest| be the result of running the [=fetch the manifest=]
-        algorithm with |provider| and |globalObject|.
-    1. If |manifest| is null, return null.
-    1. Let |accountsList| be the result of running the
-        [=fetch the accounts list=] algorithm with |manifest|, |provider|, and |globalObject|.
-    1. If |accountsList|'s size is 0, return null.
-    1. If |accountsList|'s size is 1:
-        1. Let |account| be |accountsList|[0].
-        1. Let |accountState| be the result of running the [=compute account state=] algorithm
-            given |provider| and |account|.
-        1. If |accountState|'s {{AccountState/registration state}} is [=unregistered=] then run the
-            [=request permission to sign-up=] algorithm with |account|, |accountState|, |manifest|,
-            |provider|, and |globalObject|.
-        1. Otherwise, show a dialog to request user permission to sign in via |account|.
-        1. If the user grants permission, run the [=sign-in=] algorithm with |accountState|.
-    1. Otherwise:
-        1. Let |account| be the result of running the [=select an account=] from the
-            |accountsList|.
-        1. If |account| is null, return null.
-        1. Let |accountState| be the result of running the [=compute account state=] algorithm
-            given |provider| and |account|.
-        1. If |accountState|'s {{AccountState/registration state}} is [=unregistered=] then run the
-            [=request permission to sign-up=] algorithm with |account|, |accountState|, |manifest|,
-            |provider|, and |globalObject|.
-        1. Otherwise, run the [=sign-in=] algorithm with |accountState|.
-    1. If |accountState|'s {{AccountState/registration state}} is [=unregistered=] then return null.
-    1. Let |token| be the result of running the [=create tokens=] algorithm with |accountState|,
-        |account|'s {{IdentityProviderAccount/id}}, |provider|, |manifest|, and |globalObject|.
-    1. Let |credential| be null.
-    1. [=Queue a global task=] on the [=DOM manipulation task source=] given |globalObject| to perform the following steps:
-        1. Create a new {{IdentityCredential}} given |globalObject|'s <a for="global object">realm</a>.
-        1. Set |credential|'s {{IdentityCredential/token}} to |token|.
-    1. Wait until the above task has been executed, and then return |credential|.
-</div>
-
-<div algorithm>
-To <dfn>compute account state</dfn> given an {{IdentityProviderConfig}} |provider| and an
-    {{IdentityProviderAccount}} |account|, run the following steps:
+To <dfn>check the well-known file</dfn> given an {{IdentityProviderConfig}} |provider| and a
+|globalObject|:
     1. Let |configUrl| be the result of running [=url parser=] with |provider|'s
         {{IdentityProviderConfig/configURL}}.
-    1. Let |idpOrigin| be the [=origin=] corresponding to |configUrl|.
-    1. Let |rpOrigin| be [=this=]'s [=Document/origin=].
-    1. Let |accountId| be |account|'s {{IdentityProviderAccount/id}}.
-    1. Let |triple| be (|rpOrigin|, |idpOrigin|, |accountId|).
-    1. If [=state machine map=][|triple|] does not exist, set [=state machine map=][|triple|] to a
-        new [=AccountState=].
-    1. Let |accountState| be [=state machine map=][|triple|].
-    1. Return |accountState|.
+    1. If |configUrl| is failure, return false.
+    1. Let |rootUrl| be a new [=/URL=].
+    1. Set |rootUrl|'s [=url/scheme=] to |configUrl|'s [=url/scheme=].
+    1. Set |rootUrl|'s [=url/host=] to |configUrl|'s [=url/host=]'s [=host/registrable domain=].
+    1. Set |rootUrl|'s [=url/path=] to the <a>list</a> «".well-known", "web-identity"».
+    1. If |rootUrl| is not a [=potentially trustworthy URL=], return false.
+    1. Let |request| be a new <a spec=fetch for=/>request</a> with the following properties:
+        1. [=request/url=] set to |rootUrl|
+        1. [=request/client=] set to null
+        1. [=request/window=] set to "no-window"
+        1. [=request/service-workers mode=] set to "none"
+        1. [=request/destination=] set to "webidentity"
+        1. [=request/origin=] set to a unique [=opaque origin=]
+        1. [=request/header list=] set to a [=list=] containing a single [=header=] with
+            [=header/name=] set to `Accept` and [=header/value=] set to `application/json`
+        1. [=request/referrer policy=] set to "no-referrer"
+        1. [=request/credentials mode=] set to "omit"
+    1. Let |check| be false.
+    1. [=Queue a global task=] on the [=networking task source=] given |globalObject| to perform the
+        following steps:
+        1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the
+            following steps given a <a spec=fetch for=/>response</a> |response|:
+            1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
+            1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderWellKnown}},
+                |discovery|.
+            1. Let |check| be set as follows:
+                1. If the [=list/size=] of |discovery|["{{IdentityProviderWellKnown/provider_urls}}""]
+                    is greater than 1, set |check| to false.
+
+                    Issue: [relax](https://github.com/fedidcg/FedCM/issues/333) the size of the provider_urls array.
+
+                1. Otherwise, set |check| to true if |discovery|["{{IdentityProviderWellKnown/provider_urls}}""]
+                    [=string/is=] equal to |provider|'s {{IdentityProviderConfig/configURL}}.
+            1. Run [=on well-known check completed=], passing |check|, |provider|, and |globalObject|.
 </div>
 
 <div algorithm>
-To <dfn>fetch the accounts list</dfn> given an {{IdentityProviderAPIConfig}} |manifest|, an {{IdentityProviderConfig}}
-    |provider| and a |globalObject|:
+<dfn>On well-known check completed</dfn>, given a boolean |check|, an {{IdentityProviderConfig}}
+|provider| and a |globalObject|:
+    1. If |check| is false, throw a "{{NetworkError}}" {{DOMException}}.
+    1. Run [=fetch the internal manifest=], passing |provider| and |globalObject|.
+</div>
+
+NOTE: The well-known file and internal manifest fetches could be performed simultaneously, it is
+just simpler to specify these as happening one after the other.
+
+<div algorithm>
+To <dfn>fetch the internal manifest</dfn> algorithm given an {{IdentityProviderConfig}} |provider|
+and a |globalObject|:
+    1. Let |configUrl| be the result of running [=url parser=] with |provider|'s
+        {{IdentityProviderConfig/configURL}}.
+    1. If |configUrl| is failure, return null.
+    1. Run a [[!CSP]] check with a [[CSP#directive-connect-src|connect-src]]
+        directive on the URL passed as |configUrl|.
+    1. If |configUrl| is not a [=potentially trustworthy URL=], return null.
+    1. Let |request| be a new <a spec=fetch for=/>request</a> with the following properties:
+        1. [=request/url=] set to |configUrl|
+        1. [=request/redirect mode=] set to "error"
+        1. [=request/client=] set to null
+        1. [=request/window=] set to "no-window"
+        1. [=request/service-workers mode=] set to "none"
+        1. [=request/destination=] set to "webidentity"
+        1. [=request/origin=] set to a unique [=opaque origin=]
+        1. [=request/header list=] set to a [=list=] containing a single [=header=] with
+            [=header/name=] set to `Accept` and [=header/value=] set to `application/json`
+        1. [=request/referrer policy=] set to "no-referrer"
+        1. [=request/credentials mode=] set to "omit"
+    1. Let |request| be a new <a spec=fetch for=/>request</a> whose [=request/url=] is |configUrl| and
+        [=request/redirect mode=] set to "error".
+    1. [=Queue a global task=] on the [=networking task source=] given |globalObject| to perform the
+        following steps:
+        1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
+            steps given a <a spec=fetch for=/>response</a> |response|:
+            1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
+            1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderAPIConfig}}, |manifest|.
+            1. Run [=on internal manifest fetched=], passing |manifest|, provider|, and |globalObject|.
+</div>
+
+NOTE: We use a two-tier manifest list in order to prevent the [=IDP=] to easily determine the [=RP=]
+that a user is visiting by encoding the information in the manifest path. We solve this issue by
+requiring a manifest list to be on the root of the [=IDP=]. The manifest itself can be anywhere, but
+it will not be used if the user agent does not find it in the manifest list. This allows the [=IDP=]
+to keep their actual manifest on an arbitary path while allowing the user agent to prevent manifest
+manipulation to fingerprint. See [[#manifest-fingerprinting]].
+
+<div algorithm>
+<dfn>On internal manifest fetched</dfn>, given an {{IdentityProviderAPIConfig}} |manifest|, an
+{{IdentityProviderConfig}} |provider| and a |globalObject|:
+    1. If |manifest| is null, throw a "{{NetworkError}}" {{DOMException}}.
+    1. Run the [=fetch the accounts list=] algorithm with |manifest|, |provider|, and |globalObject|.
+</div>
+
+<div algorithm>
+To <dfn>fetch the accounts list</dfn> given an {{IdentityProviderAPIConfig}} |manifest|, an
+{{IdentityProviderConfig}} |provider| and a |globalObject|:
     1. Let |accountsUrl| be the result of [=computing the manifest URL=] given |provider| and
         |manifest|["{{IdentityProviderAPIConfig/accounts_endpoint}}"].
     1. If |accountsUrl| is failure, return an empty list.
@@ -1283,20 +1328,103 @@ To <dfn>fetch the accounts list</dfn> given an {{IdentityProviderAPIConfig}} |ma
         1. [=request/credentials mode=] set to "include"
 
         Issue: The credentialed fetch in this algorithm can lead to a timing attack that leaks the user's identities before the user grants permission. This is an active area of investigation that is being explored [here](https://github.com/fedidcg/FedCM/issues/230#issuecomment-1089040953).
-    1. Let |accountsList| be a new {{IdentityProviderAccountList}}.
-
-        Note: This operation is not defined but should be removed when we [integrate](https://github.com/fedidcg/FedCM/issues/261) with Fetch.
     1. [=Queue a global task=] on the [=networking task source=] given |globalObject| to perform the following steps:
         1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
             steps given a <a spec=fetch for=/>response</a> |response|:
             1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
-            1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderAccountList}}, |potentialAccountsList|.
-            1. Set |accountsList| to |potentialAccountsList|.
-
-            Note: This operation is not defined but should be removed when we [integrate](https://github.com/fedidcg/FedCM/issues/261) with Fetch.
-    1. Wait until the <a spec=fetch>processResponseConsumeBody</a> above terminates, and then return |accountsList|.
+            1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderAccountList}}, |accountsList|.
+            1. Run [=on accounts list fetched=], passing |accountsList|, |manifest|, |provider|, and |globalObject|.
 
         Issue: We should validate the accounts list returned here for repeated ids, as described [here](https://github.com/fedidcg/FedCM/issues/336).
+</div>
+
+<div algorithm>
+<dfn>On accounts list fetched</dfn>, given an {{IdentityProviderAccountList}} |accountsList|, an
+{{IdentityProviderAPIConfig}} |manifest|, an {{IdentityProviderConfig}} |provider| and a
+|globalObject|, run the following steps [=in parallel=]:
+    1. If |accountsList|'s size is 1:
+        1. Let |account| be |accountsList|[0].
+        1. Let |accountState| be the result of running the [=compute account state=] algorithm
+            given |provider|, |account|, and |globalObject|.
+        1. If |accountState|'s {{AccountState/registration state}} is [=unregistered=] then run the
+            [=request permission to sign-up=] algorithm with |account|, |accountState|, |manifest|,
+            |provider|, and |globalObject|.
+        1. Otherwise, show a dialog to request user permission to sign in via |account|.
+        1. If the user grants permission, run the [=sign-in=] algorithm with |accountState|.
+    1. Otherwise:
+        1. Let |account| be the result of running the [=select an account=] from the
+            |accountsList|.
+        1. If |account| is null, return null.
+        1. Let |accountState| be the result of running the [=compute account state=] algorithm
+            given |provider| and |account|.
+        1. If |accountState|'s {{AccountState/registration state}} is [=unregistered=] then run the
+            [=request permission to sign-up=] algorithm with |account|, |accountState|, |manifest|,
+            |provider|, and |globalObject|.
+        1. Otherwise, run the [=sign-in=] algorithm with |accountState|.
+    1. Wait until the user agent's dialog is closed and |accountState| has been updated.
+    1. If |accountState|'s {{AccountState/registration state}} is [=unregistered=] then throw a new
+        "{{AbortError}}" {{DOMException}}.
+    1. Run the [=create tokens=] algorithm with |accountState|, |account|'s
+        {{IdentityProviderAccount/id}}, |provider|, |manifest|, and |globalObject|.
+</div>
+
+<div algorithm>
+To <dfn>create tokens</dfn> given an [=AccountState=] |accountState|, a {{USVString}} |accountId|,
+    an {{IdentityProviderConfig}} |provider|, an {{IdentityProviderAPIConfig}} |manifest|, and a
+    |globalObject|:
+    1. Assert |accountState|'s {{AccountState/registration state}} is [=registered=].
+    1. Assert |accountState|'s {{AccountState/allows logout}} is true.
+    1. Let |idTokenUrl| be the result of [=computing the manifest URL=] given |provider| and
+        |manifest|["{{IdentityProviderAPIConfig/id_assertion_endpoint}}"].
+    1. If |idTokenUrl| is failure, return null.
+    1. Let |requestBody| be a [=string=] resulting in concatenating "client_id=",
+        |provider|'s {{IdentityProviderConfig/clientId}}, "&nonce=",
+        |provider|'s {{IdentityProviderConfig/nonce}}, "&account_id=", and |accountId|.
+    1. Let |request| be a new <a spec=fetch for=/>request</a> with the following properties:
+        1. [=request/url=] set to |idTokenUrl|
+        1. [=request/mode=] set to "POST"
+        1. [=request/body=] set to the [=UTF-8 encode=] of |requestBody|
+        1. [=request/redirect mode=] set to "error"
+        1. [=request/client=] set to null
+        1. [=request/window=] set to "no-window"
+        1. [=request/service-workers mode=] set to "none"
+        1. [=request/destination=] set to "webidentity"
+        1. [=request/origin=] set to a unique [=opaque origin=]
+        1. [=request/header list=] set to a [=list=] containing a single [=header=] with
+            [=header/name=] set to `Accept` and [=header/value=] set to
+            `application/x-www-form-urlencoded`
+        1. [=request/referrer=] set to [=RP=]'s URL (TODO).
+        1. [=request/credentials mode=] set to "include"
+    1. [=Queue a global task=] on the [=networking task source=] given |globalObject| to perform the following steps:
+        1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
+            steps given a <a spec=fetch for=/>response</a> |response|:
+            1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
+            1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderToken}}, |token|.
+            1. Run [=on token created=] given |token| and |globalObject|.
+</div>
+
+<div algorithm>
+<dfn>On token created</dfn>, given an {{IdentityProviderToken}} |token| and a |globalObject|:
+    1. [=Queue a global task=] on the [=DOM manipulation task source=] given |globalObject| to perform the following steps:
+        1. Create a new {{IdentityCredential}} given |globalObject|'s <a for="global object">realm</a>.
+        1. Set |credential|'s {{IdentityCredential/token}} to |token|.
+        1. [=In parallel=], pass |credential| to the {{Credential/[[DiscoverFromExternalSource]]}}
+            callback.
+</div>
+
+<div algorithm>
+To <dfn>compute account state</dfn> given an {{IdentityProviderConfig}} |provider|, an
+    {{IdentityProviderAccount}} |account|, and a |globalObject|, run the following steps:
+    1. Let |configUrl| be the result of running [=url parser=] with |provider|'s
+        {{IdentityProviderConfig/configURL}}.
+    1. Let |idpOrigin| be the [=origin=] corresponding to |configUrl|.
+    1. Let |rpOrigin| be |globalObject|'s [=associated Document=]'s [=Document/origin=].
+    1. Let |accountId| be |account|'s {{IdentityProviderAccount/id}}.
+    1. Let |triple| be (|rpOrigin|, |idpOrigin|, |accountId|).
+    1. If [=state machine map=][|triple|] does not exist, set [=state machine map=][|triple|] to a
+        new [=AccountState=].
+    1. Let |accountState| be [=state machine map=][|triple|].
+    1. Return |accountState|.
 </div>
 
 <div algorithm>
@@ -1329,11 +1457,44 @@ To <dfn>extract the JSON fetch response</dfn> given a <a spec=fetch for=/>respon
 </div>
 
 <div algorithm>
-To <dfn>request permission to sign-up</dfn> the user with a given {{IdentityProviderAccount}} |account|, an
+To <dfn>request permission to sign-up</dfn> the user with a given an {{IdentityProviderAccount}} |account|, an
     [=AccountState=] |accountState|, an {{IdentityProviderAPIConfig}} |manifest|, an {{IdentityProviderConfig}}
     |provider|, and a |globalObject|:
-    1. Let |metadata| be the result of running the [=fetch the client metadata=]
-        algorithm with |manifest|, |provider|, and |globalObject|.
+    1. Run the [=fetch the client metadata=] algorithm with |account|, |accountState|, |manifest|,
+        |provider|, and |globalObject|.
+</div>
+
+<div algorithm>
+To <dfn noexport>fetch the client metadata</dfn> given {{IdentityProviderAccount}} |account|, an
+    [=AccountState=] |accountState|, an {{IdentityProviderAPIConfig}} |manifest|, an
+    {{IdentityProviderConfig}} |provider|, and a |globalObject|, run the following steps:
+    1. Let |clientMetadataUrl| be the result of [=computing the manifest URL=] given |provider| and
+        |manifest|["{{IdentityProviderAPIConfig/client_metadata_endpoint}}"].
+    1. If |clientMetadataUrl| is failure, return null.
+    1. Let |request| be a new <a spec=fetch for=/>request</a> with the following properties:
+        1. [=request/url=] set to |clientMetadataUrl|
+        1. [=request/redirect mode=] set to "error"
+        1. [=request/client=] set to null
+        1. [=request/window=] set to "no-window"
+        1. [=request/service-workers mode=] set to "none"
+        1. [=request/destination=] set to "webidentity"
+        1. [=request/origin=] set to a unique [=opaque origin=]
+        1. [=request/header list=] set to a [=list=] containing a single [=header=] with
+            [=header/name=] set to `Accept` and [=header/value=] set to `application/json`
+        1. [=request/referrer=] set to [=RP=]'s URL (TODO).
+        1. [=request/credentials mode=] set to "omit"
+    1. [=Queue a global task=] on the [=networking task source=] given |globalObject| to perform the following steps:
+        1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
+            steps given a <a spec=fetch for=/>response</a> |response|:
+            1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
+            1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderClientMetadata}}, |clientMetadata|.
+            1. Run [=on client metadata fetched=], passing |account|, |accountState|, |clientMetadata|, and |provider|.
+</div>
+
+<div algorithm>
+<dfn>On client metadata fetched</dfn>, given an {{IdentityProviderAccount}} |account|, an
+    [=AccountState=] |accountState|, {{IdentityProviderClientMetadata}} |metadata|, and an
+    {{IdentityProviderConfig}} |provider|, run the following steps [=in parallel=]:
     1. If |metadata|["{{IdentityProviderClientMetadata/privacy_policy_url}}"] is defined and the |provider|'s
         {{IdentityProviderConfig/clientId}} is not in the list of
         |account|["{{IdentityProviderAccount/approved_clients}}"], then display the
@@ -1351,38 +1512,6 @@ To <dfn>request permission to sign-up</dfn> the user with a given {{IdentityProv
 </div>
 
 <div algorithm>
-To <dfn noexport>fetch the client metadata</dfn> given an {{IdentityProviderAPIConfig}} |manifest|, an
-    {{IdentityProviderConfig}} |provider|, and a |globalObject|, run the following steps:
-    1. Let |clientMetadataUrl| be the result of [=computing the manifest URL=] given |provider| and
-        |manifest|["{{IdentityProviderAPIConfig/client_metadata_endpoint}}"].
-    1. If |clientMetadataUrl| is failure, return null.
-    1. Let |request| be a new <a spec=fetch for=/>request</a> with the following properties:
-        1. [=request/url=] set to |clientMetadataUrl|
-        1. [=request/redirect mode=] set to "error"
-        1. [=request/client=] set to null
-        1. [=request/window=] set to "no-window"
-        1. [=request/service-workers mode=] set to "none"
-        1. [=request/destination=] set to "webidentity"
-        1. [=request/origin=] set to a unique [=opaque origin=]
-        1. [=request/header list=] set to a [=list=] containing a single [=header=] with
-            [=header/name=] set to `Accept` and [=header/value=] set to `application/json`
-        1. [=request/referrer=] set to [=RP=]'s URL (TODO).
-        1. [=request/credentials mode=] set to "omit"
-    1. Let |clientMetadata| be a new {{IdentityProviderClientMetadata}}.
-
-        Note: This operation is not defined but should be removed when we [integrate](https://github.com/fedidcg/FedCM/issues/261) with Fetch.
-    1. [=Queue a global task=] on the [=networking task source=] given |globalObject| to perform the following steps:
-        1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
-            steps given a <a spec=fetch for=/>response</a> |response|:
-            1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
-            1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderClientMetadata}}, |metadata|.
-            1. Copy |metadata| into |clientMetadata|.
-
-            Note: This operation is not defined but should be removed when we [integrate](https://github.com/fedidcg/FedCM/issues/261) with Fetch.
-    1. Wait until the <a spec=fetch>processResponseConsumeBody</a> above terminates, and then return |clientMetadata|.
-</div>
-
-<div algorithm>
 To <dfn>select an account</dfn> given an |accountsList|:
     1. Assert |accountsList|'s [=list/size=] is greater than 1.
     1. Display an account chooser displaying the options from |accountsList|.
@@ -1395,137 +1524,6 @@ To <dfn>select an account</dfn> given an |accountsList|:
 To <dfn>sign-in</dfn> the user with a given an [=AccountState=] |accountState|:
     1. Assert that |accountState|'s {{AccountState/registration state}} is [=registered=]
     1. Change |accountState|'s {{AccountState/allows logout}} from false to true.
-</div>
-
-<div algorithm>
-To <dfn>create tokens</dfn> given an [=AccountState=] |accountState|, a {{USVString}} |accountId|,
-    an {{IdentityProviderConfig}} |provider|, an {{IdentityProviderAPIConfig}} |manifest|, and a
-    |globalObject|:
-    1. Assert |accountState|'s {{AccountState/registration state}} is [=registered=].
-    1. Assert |accountState|'s {{AccountState/allows logout}} is true.
-    1. Let |idTokenUrl| be the result of [=computing the manifest URL=] given |provider| and
-        |manifest|["{{IdentityProviderAPIConfig/id_assertion_endpoint}}"].
-    1. If |idTokenUrl| is failure, return null.
-    1. Let |requestBody| be a [=string=] resulting in concatenating "client_id=",
-        |provider|'s {{IdentityProviderConfig/clientId}}, "&nonce=",
-        |provider|'s {{IdentityProviderConfig/nonce}}, "&account_id=", and |accountId|.
-    1. Let |request| be a new <a spec=fetch for=/>request</a> with the following properties:
-        1. [=request/url=] set to |idTokenUrl|
-        1. [=request/mode=] set to "POST"
-        1. [=request/body=] set to the [=UTF-8 encode=] of |requestBody|
-        1. [=request/redirect mode=] set to "error"
-        1. [=request/client=] set to null
-        1. [=request/window=] set to "no-window"
-        1. [=request/service-workers mode=] set to "none"
-        1. [=request/destination=] set to "webidentity"
-        1. [=request/origin=] set to a unique [=opaque origin=]
-        1. [=request/header list=] set to a [=list=] containing a single [=header=] with
-            [=header/name=] set to `Accept` and [=header/value=] set to
-            `application/x-www-form-urlencoded`
-        1. [=request/referrer=] set to [=RP=]'s URL (TODO).
-        1. [=request/credentials mode=] set to "include"
-    1. Let |token| be a new {{IdentityProviderToken}}.
-
-        Note: This operation is not defined but should be removed when we [integrate](https://github.com/fedidcg/FedCM/issues/261) with Fetch.
-    1. [=Queue a global task=] on the [=networking task source=] given |globalObject| to perform the following steps:
-        1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
-            steps given a <a spec=fetch for=/>response</a> |response|:
-            1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
-            1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderToken}}, |fetchedToken|.
-            1. Set |token| to |fetchedToken|.
-
-            Note: This operation is not defined but should be removed when we [integrate](https://github.com/fedidcg/FedCM/issues/261) with Fetch.
-    1. Wait until the <a spec=fetch>processResponseConsumeBody</a> above terminates, and then return |token|.
-</div>
-
-<div algorithm>
-The <dfn>fetch the manifest</dfn> algorithm accepts an {{IdentityProviderConfig}} |provider| and a |globalObject| and returns an {{IdentityProviderAPIConfig}} object:
-    1. [=In parallel=], perform the following two steps:
-        1. Let |manifestInWellKnown| be the result of running [=check the well-known file=], passing
-            |provider| and |globalObject|.
-        1. Let |manifest| be the result of running [=fetch the internal manifest=], passing
-            |provider| and |globalObject|.
-    1. If |manifestInWellKnown| is true, return |manifest|, otherwise return null.
-</div>
-
-NOTE: We use a two-tier manifest list in order to prevent the [=IDP=] to easily determine the [=RP=]
-that a user is visiting by encoding the information in the manifest path. We solve this issue by
-requiring a manifest list to be on the root of the [=IDP=]. The manifest itself can be anywhere, but
-it will not be used if the user agent does not find it in the manifest list. This allows the [=IDP=]
-to keep their actual manifest on an arbitary path while allowing the user agent to prevent manifest
-manipulation to fingerprint. See [[#manifest-fingerprinting]].
-
-<div algorithm>
-The <dfn>check the well-known file</dfn> accepts an {{IdentityProviderConfig}} |provider| and a |globalObject| and returns
-whether the |provider|'s {{IdentityProviderConfig/configURL}} is included in the [[#idp-api-well-known]] endpoint's {{Well-Known/provider_urls}} list:
-    1. Let |configUrl| be the result of running [=url parser=] with |provider|'s
-        {{IdentityProviderConfig/configURL}}.
-    1. If |configUrl| is failure, return false.
-    1. Let |rootUrl| be a new [=/URL=].
-    1. Set |rootUrl|'s [=url/scheme=] to |configUrl|'s [=url/scheme=].
-    1. Set |rootUrl|'s [=url/host=] to |configUrl|'s [=url/host=]'s [=host/registrable domain=].
-    1. Set |rootUrl|'s [=url/path=] to the <a>list</a> «".well-known", "web-identity"».
-    1. If |rootUrl| is not a [=potentially trustworthy URL=], return false.
-    1. Let |request| be a new <a spec=fetch for=/>request</a> with the following properties:
-        1. [=request/url=] set to |rootUrl|
-        1. [=request/client=] set to null
-        1. [=request/window=] set to "no-window"
-        1. [=request/service-workers mode=] set to "none"
-        1. [=request/destination=] set to "webidentity"
-        1. [=request/origin=] set to a unique [=opaque origin=]
-        1. [=request/header list=] set to a [=list=] containing a single [=header=] with
-            [=header/name=] set to `Accept` and [=header/value=] set to `application/json`
-        1. [=request/referrer policy=] set to "no-referrer"
-        1. [=request/credentials mode=] set to "omit"
-    1. Let |check| be false.
-    1. [=Queue a global task=] on the [=networking task source=] given |globalObject| to perform the following steps:
-        1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
-            steps given a <a spec=fetch for=/>response</a> |response|:
-            1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
-            1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderWellKnown}}, |discovery|.
-            1. If the [=list/size=] of |discovery|["{{IdentityProviderWellKnown/provider_urls}}""] is greater than 1, return.
-
-                Issue: [relax](https://github.com/fedidcg/FedCM/issues/333) the size of the provider_urls array.
-
-            1. Set |check| to true if |discovery|["{{IdentityProviderWellKnown/provider_urls}}""] [=string/is=] equal to |provider|'s
-                {{IdentityProviderConfig/configURL}}.
-    1. Wait until the <a spec=fetch>processResponseConsumeBody</a> above terminates, and then return |check|.
-</div>
-
-<div algorithm>
-The <dfn>fetch the internal manifest</dfn> algorithm accepts an {{IdentityProviderConfig}} |provider| anda |globalObject| and returns an {{IdentityProviderAPIConfig}} or null if there is some failure fetching or parsing the manifest:
-    1. Let |configUrl| be the result of running [=url parser=] with |provider|'s
-        {{IdentityProviderConfig/configURL}}.
-    1. If |configUrl| is failure, return null.
-    1. Run a [[!CSP]] check with a [[CSP#directive-connect-src|connect-src]]
-        directive on the URL passed as |configUrl|.
-    1. If |configUrl| is not a [=potentially trustworthy URL=], return null.
-    1. Let |request| be a new <a spec=fetch for=/>request</a> with the following properties:
-        1. [=request/url=] set to |configUrl|
-        1. [=request/redirect mode=] set to "error"
-        1. [=request/client=] set to null
-        1. [=request/window=] set to "no-window"
-        1. [=request/service-workers mode=] set to "none"
-        1. [=request/destination=] set to "webidentity"
-        1. [=request/origin=] set to a unique [=opaque origin=]
-        1. [=request/header list=] set to a [=list=] containing a single [=header=] with
-            [=header/name=] set to `Accept` and [=header/value=] set to `application/json`
-        1. [=request/referrer policy=] set to "no-referrer"
-        1. [=request/credentials mode=] set to "omit"
-    1. Let |request| be a new <a spec=fetch for=/>request</a> whose [=request/url=] is |configUrl| and
-        [=request/redirect mode=] set to "error".
-    1. Let |manifest| be a new {{IdentityProviderAPIConfig}}.
-
-        Note: This operation is not defined but should be removed when we [integrate](https://github.com/fedidcg/FedCM/issues/261) with Fetch.
-    1. [=Queue a global task=] on the [=networking task source=] given |globalObject| to perform the following steps:
-        1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
-            steps given a <a spec=fetch for=/>response</a> |response|:
-            1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
-            1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderAPIConfig}}, |fetchedConfig|.
-            1. Copy |fetchedConfig| into |manifest|.
-
-            Note: This operation is not defined but should be removed when we [integrate](https://github.com/fedidcg/FedCM/issues/261) with Fetch.
-    1. Wait until the <a spec=fetch>processResponseConsumeBody</a> above terminates, and then return |manifest|.
 </div>
 
 <!-- ============================================================ -->
@@ -1876,7 +1874,7 @@ these scenarios consider how user tracking might happen **without** them. See al
 ### Manifest Fingerprinting ### {#manifest-fingerprinting}
 <!-- ============================================================ -->
 
-Suppose that the FedCM API did not have a two-tier manifest (see the [=fetch the manifest=]
+Suppose that the FedCM API did not have a two-tier manifest (see the [=on well-known check completed=]
 algorithm), and instead directly had a single manifest. This would introduce the following
 fingerprinting attack:
 
@@ -2127,7 +2125,7 @@ IDPs are also offered an extension to the {{IdentityProviderAPIConfig}} object t
     ::  A URL that allows a user to sign-in to the [=IDP=].
 </dl>
 
-The [=user agent=] uses the following [=maybe fetch the accounts list=] in the [=potentially create IdentityCredential=] algorithm, as opposed to the [=fetch the accounts list=] algorithm. It would also return early on the [=potentially create IdentityCredential=] algorithm if the user was {{Sign-in Status/signed-out}}.
+The [=user agent=] uses the following [=maybe fetch the accounts list=] instead of the [=fetch the accounts list=] algorithm. It would also return early on if the user was {{Sign-in Status/signed-out}}.
 
 <div algorithm>
 To <dfn>maybe fetch the accounts list</dfn> given an {{IdentityProviderAPIConfig}} |manifest| and an {{IdentityProviderConfig}}
