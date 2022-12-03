@@ -1,7 +1,7 @@
--- champion: goto@google.com
--- status: draft
-
 # FedCM’s Context API
+
+- champion: goto@google.com
+- status: draft
 
 This is an early exploration of a mechanism that would allow websites to identify the context (e.g. logging specific flows like signing-in, signing-up, or more generically using your federated identity to continue on the website) in which the FedCM API prompt is shown, so that the appropriate language can be used. It extends the FedCM API by introducing a “context” attribute to its call.
 Problem
