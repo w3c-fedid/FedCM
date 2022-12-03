@@ -46,23 +46,17 @@ Here are a few examples [[1](https://developers.facebook.com/docs/facebook-login
 
 The API doesn’t make any visual UI structural changes other than the strings that we use. Currently, we have:
 
-+--------------+---------------------------------------+
 | Use Case     | String                                |
-+--------------+---------------------------------------+
-| Status Quo   | “Sign in to ${rp} with ${idp}”        |
-+--------------+---------------------------------------+
+| ------------ | ------------------------------------- |
+| Status Quo   | Sign in to $RP with $IDP              |
 
 And the proposal is to introduce 3 context modes:
 
-+--------------+---------------------------------------+
 | Use Case     | String                                |
-+--------------+---------------------------------------+
-| Sign-up      | “Sign up to ${rp} with ${idp}”        |
-+--------------+---------------------------------------+
-| Continue     | “Continue to ${rp} with ${idp}”       |
-+--------------+---------------------------------------+
-| Use          | “Use ${rp} with ${idp}”               |
-+--------------+---------------------------------------+
+| ------------ | ------------------------------------- |
+| Sign-up      |  Sign up to $RP with $IDP             |
+| Continue     |  Continue to $RP with $IDP            |
+| Use          |  Use $RP with $IDP.                   |
 
 # Examples
 
