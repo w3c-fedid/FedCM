@@ -41,6 +41,12 @@ This is a directory with the proposals to extend FedCM that we are actively work
     - Champions: @you
     - Description: does this awesome thing!
 
+# Stages
+
+We are still trying to figure out what are the most meaningful stages a proposal goes through and what's the entrance criteria for each, but as an early approximation here is a starting point:
+
+draft > interest > prototype > devtrial > origin trial > launch
+
 # Champions
 
 Champions (or, frequently "champion groups" of several members) are authors and editors of proposals. The champion is responsible for the evolution of the proposal, at which point maintenance transfers to the editor group. Champions have admin permissions in the proposal repository and can freely make changes within this repository. Periodically, champions may bring their proposal guidance, for consensus on stage advancement.
