@@ -45,10 +45,12 @@ This is a directory with the proposals to extend FedCM that we are actively work
 
 We are still trying to figure out what are the most meaningful stages a proposal goes through and what's the entrance criteria for each, but as an early approximation here is a starting point:
 
-draft > interest > prototype > devtrial > origin trial > launch
+`draft` > `interest` > `prototype` > `devtrial` > `origin trial` > `launch`
+
+Anyone can create `draft`s, here, in bugs or in personal repos.
 
 # Champions
 
-Champions (or, frequently "champion groups" of several members) are authors and editors of proposals. The champion is responsible for the evolution of the proposal, at which point maintenance transfers to the editor group. Champions have admin permissions in the proposal repository and can freely make changes within this repository. Periodically, champions may bring their proposal guidance, for consensus on stage advancement.
+Anyone can be champion, and is encouraged to. Champions (or, frequently "champion groups" of several members) are authors and editors of proposals. The champion is responsible for the evolution of the proposal, at which point maintenance transfers to the editor group. Champions have admin permissions in the proposal repository and can freely make changes within this repository. Periodically, champions may bring their proposal guidance, for consensus on stage advancement.
 
 > This is more or less based on the good parts of TC39's Process [here](https://tc39.es/process-document/).
