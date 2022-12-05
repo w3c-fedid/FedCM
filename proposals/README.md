@@ -15,7 +15,7 @@ This is a directory with the proposals to extend FedCM that we are actively work
     - Stage: devtrial
     - Champions: @yi-gu
     - Description: allows IdPs to call the FedCM API from iframes
-1. **The Metrics API**
+1. **[The Metrics API](https://github.com/fedidcg/FedCM/issues/352)**
     - Stage: draft
     - Champions: @yi-gu
     - Description: allows IdPs to monitor the performance of IdP in a privacy-preserving manner
