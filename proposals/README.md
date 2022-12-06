@@ -19,7 +19,7 @@ This is a directory with the proposals to extend FedCM that we are actively work
     - Stage: draft
     - Champions: @yi-gu
     - Description: allows IdPs to monitor the performance of IdP in a privacy-preserving manner
-1. **The User Info API**
+1. **[The User Info API](https://github.com/fedidcg/FedCM/issues/382)**
     - Stage: draft
     - Champions: @yi-gu
     - Description: allows IdPs to get the logged-in user information to personalize buttons
