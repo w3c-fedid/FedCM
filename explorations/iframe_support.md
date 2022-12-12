@@ -28,3 +28,17 @@ Without iframe support, identification within iframes suffers from two problems.
 between the top-level frame and the iframe so that the top-level requests the FedCM API, and once it receives an ID token then it can message it to
 the iframe. Second, it exposes information more than needed: the top-level does not need to know the identity of the user which is identifying itself
 to the iframe, but because it acts as intermediary then it gets to know this information.
+
+## Examples
+
+To enable developers the best ergonomics possible, we'd like to support the Permissions-Policy via either attribute or header registration. Thus, a developer can explicitly grant permission to an iframe via the `allow` attribute:
+
+```html
+<iframe src=... allow="identity-credentials-get"></iframe>
+```
+
+And a developer may also choose to explicitly name all origins which should have access to the FedCM API via the HTTP response header. For instance, to fully disable the API on all origins, the developer could have the following HTTP header:
+
+```
+Permissions-Policy: identity-credentials-get=();
+```
