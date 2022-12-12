@@ -40,5 +40,5 @@ To enable developers the best ergonomics possible, we'd like to support the Perm
 And a developer may also choose to explicitly name all origins which should have access to the FedCM API via the HTTP response header. For instance, to fully disable the API on all origins, the developer could have the following HTTP header:
 
 ```
-Permissions-Policy: identity-credentials-get=();
+Permissions-Policy: identity-credentials-get=()
 ```
