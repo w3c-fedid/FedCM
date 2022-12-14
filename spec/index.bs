@@ -1222,34 +1222,51 @@ To <dfn>check the well-known file</dfn> given an {{IdentityProviderConfig}} |pro
     1. Set |rootUrl|'s [=url/host=] to |configUrl|'s [=url/host=]'s [=host/registrable domain=].
     1. Set |rootUrl|'s [=url/path=] to the <a>list</a> «".well-known", "web-identity"».
     1. If |rootUrl| is not a [=potentially trustworthy URL=], return false.
-    1. Let |request| be a new <a spec=fetch for=/>request</a> with the following properties:
-        1. [=request/url=] set to |rootUrl|
-        1. [=request/client=] set to null
-        1. [=request/window=] set to "no-window"
-        1. [=request/service-workers mode=] set to "none"
-        1. [=request/destination=] set to "webidentity"
-        1. [=request/origin=] set to a unique [=opaque origin=]
-        1. [=request/header list=] set to a [=list=] containing a single [=header=] with
-            [=header/name=] set to `Accept` and [=header/value=] set to `application/json`
-        1. [=request/referrer policy=] set to "no-referrer"
-        1. [=request/credentials mode=] set to "omit"
+    1. Let |request| be a new <a spec=fetch for=/>request</a> as follows:
+
+        :  [=request/URL=]
+        :: |rootUrl|
+        :  [=request/client=]
+        :: null
+        :  [=request/window=]
+        :: "no-window"
+        :  [=request/service-workers mode=]
+        :: "none"
+        :  [=request/destination=]
+        :: "webidentity"
+        :  [=request/origin=]
+        :: a unique [=opaque origin=]
+        :  [=request/header list=]
+        :: a [=list=] containing a single [=header=] with [=header/name=] set to `Accept` and
+            [=header/value=] set to `application/json`
+        :  [=request/referrer policy=]
+        :: "no-referrer"
+        :  [=request/credentials mode=]
+        :: "omit"
+    
+    Note: The spec is yet to be updated so that this <a spec=fetch for=/>request</a> is created with
+    [=request/mode=] set to "unsafe-no-cors". See the relevant
+    [pull request](https://github.com/whatwg/fetch/pull/1533) for details.
     1. Let |check| be false.
     1. [=Queue a global task=] on the [=networking task source=] given |globalObject| to perform the
         following steps:
         1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the
             following steps given a <a spec=fetch for=/>response</a> |response|:
-            1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
-            1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderWellKnown}},
-                |discovery|.
-            1. Let |check| be set as follows:
-                1. If the [=list/size=] of |discovery|["{{IdentityProviderWellKnown/provider_urls}}""]
-                    is greater than 1, set |check| to false.
+            1. [=Queue a global task=] on the [=DOM manipulation task source=] given |globalObject|
+                to perform the following steps:
+                1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
+                1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderWellKnown}},
+                    |discovery|.
+                1. Let |check| be set as follows:
+                    1. If the [=list/size=] of |discovery|["{{IdentityProviderWellKnown/provider_urls}}"]
+                        is greater than 1, set |check| to false.
 
-                    Issue: [relax](https://github.com/fedidcg/FedCM/issues/333) the size of the provider_urls array.
+                        Issue: [relax](https://github.com/fedidcg/FedCM/issues/333) the size of the
+                        provider_urls array.
 
-                1. Otherwise, set |check| to true if |discovery|["{{IdentityProviderWellKnown/provider_urls}}""]
-                    [=string/is=] equal to |provider|'s {{IdentityProviderConfig/configURL}}.
-            1. Run [=on well-known check completed=], passing |check|, |provider|, and |globalObject|.
+                    1. Otherwise, set |check| to |discovery|["{{IdentityProviderWellKnown/provider_urls}}"]
+                        [=string/is=] equal to |provider|'s {{IdentityProviderConfig/configURL}}.
+                1. Run [=on well-known check completed=], passing |check|, |provider|, and |globalObject|.
 </div>
 
 <div algorithm>
@@ -1271,20 +1288,33 @@ and a |globalObject|:
     1. Run a [[!CSP]] check with a [[CSP#directive-connect-src|connect-src]]
         directive on the URL passed as |configUrl|.
     1. If |configUrl| is not a [=potentially trustworthy URL=], return null.
-    1. Let |request| be a new <a spec=fetch for=/>request</a> with the following properties:
-        1. [=request/url=] set to |configUrl|
-        1. [=request/redirect mode=] set to "error"
-        1. [=request/client=] set to null
-        1. [=request/window=] set to "no-window"
-        1. [=request/service-workers mode=] set to "none"
-        1. [=request/destination=] set to "webidentity"
-        1. [=request/origin=] set to a unique [=opaque origin=]
-        1. [=request/header list=] set to a [=list=] containing a single [=header=] with
-            [=header/name=] set to `Accept` and [=header/value=] set to `application/json`
-        1. [=request/referrer policy=] set to "no-referrer"
-        1. [=request/credentials mode=] set to "omit"
-    1. Let |request| be a new <a spec=fetch for=/>request</a> whose [=request/url=] is |configUrl| and
-        [=request/redirect mode=] set to "error".
+    1. Let |request| be a new <a spec=fetch for=/>request</a> as follows:
+
+        :  [=request/url=]
+        :: |configUrl|
+        :  [=request/redirect mode=]
+        :: "error"
+        :  [=request/client=]
+        :: null
+        :  [=request/window=]
+        :: "no-window"
+        :  [=request/service-workers mode=]
+        :: "none"
+        :  [=request/destination=]
+        :: "webidentity"
+        :  [=request/origin=]
+        :: a unique [=opaque origin=]
+        :  [=request/header list=]
+        :: a [=list=] containing a single [=header=] with [=header/name=] set to `Accept` and
+            [=header/value=] set to `application/json`
+        :  [=request/referrer policy=]
+        :: "no-referrer"
+        :  [=request/credentials mode=]
+        :: "omit"
+
+    Note: The spec is yet to be updated so that this <a spec=fetch for=/>request</a> is created with
+    [=request/mode=] set to "unsafe-no-cors". See the relevant
+    [pull request](https://github.com/whatwg/fetch/pull/1533) for details.
     1. [=Queue a global task=] on the [=networking task source=] given |globalObject| to perform the
         following steps:
         1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
@@ -1314,20 +1344,35 @@ To <dfn>fetch the accounts list</dfn> given an {{IdentityProviderAPIConfig}} |ma
     1. Let |accountsUrl| be the result of [=computing the manifest URL=] given |provider| and
         |manifest|["{{IdentityProviderAPIConfig/accounts_endpoint}}"].
     1. If |accountsUrl| is failure, return an empty list.
-    1. Let |request| be a new <a spec=fetch for=/>request</a> with the following properties:
-        1. [=request/url=] set to |accountsUrl|
-        1. [=request/redirect mode=] set to "error"
-        1. [=request/client=] set to null
-        1. [=request/window=] set to "no-window"
-        1. [=request/service-workers mode=] set to "none"
-        1. [=request/destination=] set to "webidentity"
-        1. [=request/origin=] set to a unique [=opaque origin=]
-        1. [=request/header list=] set to a [=list=] containing a single [=header=] with
-            [=header/name=] set to `Accept` and [=header/value=] set to `application/json`
-        1. [=request/referrer policy=] set to "no-referrer"
-        1. [=request/credentials mode=] set to "include"
+    1. Let |request| be a new <a spec=fetch for=/>request</a> as follows:
 
-        Issue: The credentialed fetch in this algorithm can lead to a timing attack that leaks the user's identities before the user grants permission. This is an active area of investigation that is being explored [here](https://github.com/fedidcg/FedCM/issues/230#issuecomment-1089040953).
+        :  [=request/url=]
+        :: |accountsUrl|
+        :  [=request/redirect mode=]
+        :: "error"
+        :  [=request/client=]
+        :: null
+        :  [=request/window=]
+        :: "no-window"
+        :  [=request/service-workers mode=]
+        :: "none"
+        :  [=request/destination=]
+        :: "webidentity"
+        :  [=request/origin=]
+        :: a unique [=opaque origin=]
+        :  [=request/header list=]
+        :: a [=list=] containing a single [=header=] with [=header/name=] set to `Accept` and
+            [=header/value=] set to `application/json`
+        :  [=request/referrer policy=]
+        :: "no-referrer"
+        :  [=request/credentials mode=]
+        :: "include"
+
+    Note: The spec is yet to be updated so that this <a spec=fetch for=/>request</a> is created with
+    [=request/mode=] set to "unsafe-no-cors". See the relevant
+    [pull request](https://github.com/whatwg/fetch/pull/1533) for details.
+
+    Issue: The credentialed fetch in this algorithm can lead to a timing attack that leaks the user's identities before the user grants permission. This is an active area of investigation that is being explored [here](https://github.com/fedidcg/FedCM/issues/230#issuecomment-1089040953).
     1. [=Queue a global task=] on the [=networking task source=] given |globalObject| to perform the following steps:
         1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
             steps given a <a spec=fetch for=/>response</a> |response|:
@@ -1380,21 +1425,37 @@ To <dfn>create tokens</dfn> given an [=AccountState=] |accountState|, a {{USVStr
     1. Let |requestBody| be a [=string=] resulting in concatenating "client_id=",
         |provider|'s {{IdentityProviderConfig/clientId}}, "&nonce=",
         |provider|'s {{IdentityProviderConfig/nonce}}, "&account_id=", and |accountId|.
-    1. Let |request| be a new <a spec=fetch for=/>request</a> with the following properties:
-        1. [=request/url=] set to |idTokenUrl|
-        1. [=request/mode=] set to "POST"
-        1. [=request/body=] set to the [=UTF-8 encode=] of |requestBody|
-        1. [=request/redirect mode=] set to "error"
-        1. [=request/client=] set to null
-        1. [=request/window=] set to "no-window"
-        1. [=request/service-workers mode=] set to "none"
-        1. [=request/destination=] set to "webidentity"
-        1. [=request/origin=] set to a unique [=opaque origin=]
-        1. [=request/header list=] set to a [=list=] containing a single [=header=] with
-            [=header/name=] set to `Accept` and [=header/value=] set to
-            `application/x-www-form-urlencoded`
-        1. [=request/referrer=] set to [=RP=]'s URL (TODO).
-        1. [=request/credentials mode=] set to "include"
+    1. Let |request| be a new <a spec=fetch for=/>request</a> as follows:
+
+        :  [=request/url=]
+        :: |idTokenUrl|
+        :  [=request/mode=]
+        :: "POST"
+        :  [=request/body=]
+        :: the [=UTF-8 encode=] of |requestBody|
+        :  [=request/redirect mode=]
+        :: "error"
+        :  [=request/client=]
+        :: null
+        :  [=request/window=]
+        :: "no-window"
+        :  [=request/service-workers mode=]
+        :: "none"
+        :  [=request/destination=]
+        :: "webidentity"
+        :  [=request/origin=]
+        :: a unique [=opaque origin=]
+        :  [=request/header list=]
+        :: a [=list=] containing a single [=header=] with [=header/name=] set to `Accept` and
+            [=header/value=] set to `application/x-www-form-urlencoded`
+        :  [=request/referrer=]
+        :: [=RP=]'s URL (TODO).
+        :  [=request/credentials mode=]
+        :: "include"
+
+    Note: The spec is yet to be updated so that this <a spec=fetch for=/>request</a> is created with
+    [=request/mode=] set to "unsafe-no-cors". See the relevant
+    [pull request](https://github.com/whatwg/fetch/pull/1533) for details.
     1. [=Queue a global task=] on the [=networking task source=] given |globalObject| to perform the following steps:
         1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
             steps given a <a spec=fetch for=/>response</a> |response|:
@@ -1471,18 +1532,33 @@ To <dfn noexport>fetch the client metadata</dfn> given {{IdentityProviderAccount
     1. Let |clientMetadataUrl| be the result of [=computing the manifest URL=] given |provider| and
         |manifest|["{{IdentityProviderAPIConfig/client_metadata_endpoint}}"].
     1. If |clientMetadataUrl| is failure, return null.
-    1. Let |request| be a new <a spec=fetch for=/>request</a> with the following properties:
-        1. [=request/url=] set to |clientMetadataUrl|
-        1. [=request/redirect mode=] set to "error"
-        1. [=request/client=] set to null
-        1. [=request/window=] set to "no-window"
-        1. [=request/service-workers mode=] set to "none"
-        1. [=request/destination=] set to "webidentity"
-        1. [=request/origin=] set to a unique [=opaque origin=]
-        1. [=request/header list=] set to a [=list=] containing a single [=header=] with
-            [=header/name=] set to `Accept` and [=header/value=] set to `application/json`
-        1. [=request/referrer=] set to [=RP=]'s URL (TODO).
-        1. [=request/credentials mode=] set to "omit"
+    1. Let |request| be a new <a spec=fetch for=/>request</a> as follows:
+
+        :  [=request/url=]
+        :: |clientMetadataUrl|
+        :  [=request/redirect mode=]
+        :: "error"
+        :  [=request/client=]
+        :: null
+        :  [=request/window=]
+        :: "no-window"
+        :  [=request/service-workers mode=]
+        :: "none"
+        :  [=request/destination=]
+        :: "webidentity"
+        :  [=request/origin=]
+        :: a unique [=opaque origin=]
+        :  [=request/header list=]
+        :: a [=list=] containing a single [=header=] with [=header/name=] set to `Accept` and
+            [=header/value=] set to `application/json`
+        :  [=request/referrer=]
+        :: [=RP=]'s URL (TODO).
+        :  [=request/credentials mode=]
+        :: "omit"
+
+    Note: The spec is yet to be updated so that this <a spec=fetch for=/>request</a> is created with
+    [=request/mode=] set to "unsafe-no-cors". See the relevant
+    [pull request](https://github.com/whatwg/fetch/pull/1533) for details.
     1. [=Queue a global task=] on the [=networking task source=] given |globalObject| to perform the following steps:
         1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
             steps given a <a spec=fetch for=/>response</a> |response|:
@@ -1621,16 +1697,30 @@ steps:
         1. Let |accountState| be [=state machine map=][|triple|].
         1. If the |accountState|'s {{AccountState/registration state}} is [=unregistered=] or
             |accountState|'s {{AccountState/allows logout}} is false, continue.
-        1. Let |fetchRequest| be a new <a spec=fetch for=/>request</a> with the following properties:
-            1. [=request/url=] set to |request|'s {{IdentityCredentialLogoutRPsRequest/url}}
-            1. [=request/mode=] set to "GET"
-            1. [=request/redirect mode=] set to "error"
-            1. [=request/client=] set to null
-            1. [=request/window=] set to "no-window"
-            1. [=request/service-workers mode=] set to "none"
-            1. [=request/destination=] set to "webidentity"
-            1. [=request/origin=] set to a unique [=opaque origin=]
-            1. [=request/credentials mode=] set to "include"
+        1. Let |fetchRequest| be a new <a spec=fetch for=/>request</a> as follows:
+
+            :  [=request/url=]
+            :: |request|'s {{IdentityCredentialLogoutRPsRequest/url}}
+            :  [=request/mode=]
+            :: "GET"
+            :  [=request/redirect mode=]
+            :: "error"
+            :  [=request/client=]
+            :: null
+            :  [=request/window=]
+            :: "no-window"
+            :  [=request/service-workers mode=]
+            :: "none"
+            :  [=request/destination=]
+            :: "webidentity"
+            :  [=request/origin=]
+            :: a unique [=opaque origin=]
+            :  [=request/credentials mode=]
+            :: "include"
+
+        Note: The spec is yet to be updated so that this <a spec=fetch for=/>request</a> is created
+        with [=request/mode=] set to "unsafe-no-cors". See the relevant
+        [pull request](https://github.com/whatwg/fetch/pull/1533) for details.
         1. [=Fetch=] |fetchRequest|.
         1. Set the |accountState| {{AccountState/allows logout}} to false.
     1. <a for=Promise>Resolve</a> |promise| with [undefined] and return |promise|.
