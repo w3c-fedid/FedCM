@@ -3,7 +3,7 @@
 This is a directory with the proposals to extend FedCM that we are actively working on:
 
 
-1. **[The IdP Sign-in Status API](https://fedidcg.github.io/FedCM/#the-idp-sign-in-status-api)**
+1. **[The IdP Sign-in Status API](idp-sign-in-status-api.md)**
     - Stage: prototype
     - Champions: @cbiesinger, @bvandersloot-mozilla
     - Description: addresses the timing attack problem described [here](https://github.com/fedidcg/FedCM/issues/230#issuecomment-1233290946)
