@@ -11,8 +11,8 @@ This is a directory with the proposals to extend FedCM that we are actively work
     - Stage: prototype
     - Champions: @npm1, @tttzach, @bvandersloot-mozilla
     - Description: allows the account chooser to contain multiple IdPs as described [here](https://github.com/fedidcg/FedCM/issues/319)
-1. **The Iframe API**
-    - Stage: devtrial
+1. **[The Iframe API](https://groups.google.com/a/chromium.org/g/blink-dev/c/IGvFrHYMH7A)**
+    - Stage: I2S
     - Champions: @yi-gu
     - Description: allows IdPs to call the FedCM API from iframes
 1. **[The Metrics API](https://github.com/fedidcg/FedCM/issues/352)**
