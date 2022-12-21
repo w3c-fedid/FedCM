@@ -23,6 +23,10 @@ This is a directory with the proposals to extend FedCM that we are actively work
     - Stage: draft
     - Champions: @yi-gu
     - Description: allows IdPs to get the logged-in user information to personalize buttons
+1. **[The Login Hint API](https://github.com/fedidcg/FedCM/blob/main/proposals/login-hint.md)**
+    - Stage: draft
+    - Champions: @npm1
+    - Description: allows RPs to give a hint of an account that was used in the past
 1. **The Revocation API**
     - Stage: draft
     - Champions: @yi-gu
