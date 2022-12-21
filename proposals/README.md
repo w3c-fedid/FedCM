@@ -15,10 +15,6 @@ This is a directory with the proposals to extend FedCM that we are actively work
     - Stage: I2S
     - Champions: @yi-gu
     - Description: allows IdPs to call the FedCM API from iframes
-1. **[The Metrics API](https://github.com/fedidcg/FedCM/issues/352)**
-    - Stage: draft
-    - Champions: @yi-gu
-    - Description: allows IdPs to monitor the performance of IdP in a privacy-preserving manner
 1. **[The User Info API](https://github.com/fedidcg/FedCM/issues/382)**
     - Stage: draft
     - Champions: @yi-gu
@@ -27,6 +23,14 @@ This is a directory with the proposals to extend FedCM that we are actively work
     - Stage: draft
     - Champions: @npm1
     - Description: allows RPs to give a hint of an account that was used in the past
+1. **[The Context API](context-api.md)**
+    - Stage: draft
+    - Champions: @samuelgoto
+    - Description: allows an RP to specify and customize the context of the FedCM prompt
+1. **[The Metrics API](https://github.com/fedidcg/FedCM/issues/352)**
+    - Stage: draft
+    - Champions: @yi-gu
+    - Description: allows IdPs to monitor the performance of IdP in a privacy-preserving manner
 1. **The Revocation API**
     - Stage: draft
     - Champions: @yi-gu
@@ -35,10 +39,6 @@ This is a directory with the proposals to extend FedCM that we are actively work
     - Stage: draft
     - Champions: @yi-gu
     - Description: allows a user to get automatically signed-in across devices after the browser has observed the sign-up
-1. **[The Context API](context-api.md)**
-    - Stage: draft
-    - Champions: @samuelgoto
-    - Description: allows an RP to specify and customize the context of the FedCM prompt
 1. ... add yours below with the template ...
 1. **[Your API](yours.md)**
     - Stage: draft > interest > prototype > devtrial > origin trial > launch
