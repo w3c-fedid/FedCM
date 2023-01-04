@@ -7,7 +7,7 @@ This is a directory with the proposals to extend FedCM that we are actively work
     - Stage: prototype
     - Champions: @cbiesinger, @bvandersloot-mozilla
     - Description: addresses the timing attack problem described [here](https://github.com/fedidcg/FedCM/issues/230#issuecomment-1233290946)
-1. **[The Multi-IdP API](https://github.com/tttzach/FedCM/blob/315ff81e801eb297cdefd3d00cda5f07787dcc34/proposals/multi-idp-api.md)**
+1. **[The Multi-IdP API](multi-idp-api.md)**
     - Stage: prototype
     - Champions: @npm1, @tttzach, @bvandersloot-mozilla
     - Description: allows the account chooser to contain multiple IdPs as described [here](https://github.com/fedidcg/FedCM/issues/319)
