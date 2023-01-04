@@ -9,11 +9,15 @@ The [Federated Credential Management (FedCM) API](https://fedidcg.github.io/FedC
 
 This is an example of what we have now. Users can only login with their federated accounts from a single IDP at a time, in this example, Google.
 
-![FedCM single IDP dialog](https://github.com/fedidcg/FedCM/tree/main/proposals/images/multi-idp-explainer-1.png)
-
+<p align="center">
+     <img width="467" src="/proposals/images/multi-idp-explainer-1.png"/>
+</p>
+     
 With multi IDP support, we want to allow users to login with their federated accounts from a set of IDPs at a time, in this example, Facebook, Google or Apple.
 
-![FedCM multi IDP dialog](https://github.com/fedidcg/FedCM/tree/main/proposals/images/multi-idp-explainer-2.png)
+<p align="center">
+     <img align="center" width="450" src="/proposals/images/multi-idp-explainer-2.png"/>
+</p>
 
 ## Why do we care?
 
@@ -33,7 +37,9 @@ Browser vendors such as Mozilla have expressed interest in having multi IDP supp
 
 Providing multi IDP support can be an essential requirement for other use cases. For example, in education scenarios, each institution is an IDP and many RPs tend to support login with a lot of institutions.
 
-![Education example](https://github.com/fedidcg/FedCM/tree/main/proposals/images/multi-idp-explainer-3.png)
+<p align="center">
+     <img align="center" width="745" src="/proposals/images/multi-idp-explainer-3.png"/>
+</p>
 
 ## Key scenarios
 
@@ -43,13 +49,17 @@ Here are key scenarios that we plan on covering in our implementation.
 
 The FedCM dialog appears without user interaction, usually the instant a website has finished loading.
 
-![FedCM appearing on page load](https://github.com/fedidcg/FedCM/tree/main/proposals/images/multi-idp-explainer-4.gif)
+<p align="center">
+     <img align="center" width="700" src="/proposals/images/multi-idp-explainer-4.gif"/>
+</p>
 
 ### User interaction
 
 The FedCM dialog appears only when user interaction occurs such as clicking on a button.
 
-![FedCM appearing upon user interaction](https://github.com/fedidcg/FedCM/tree/main/proposals/images/multi-idp-explainer-5.gif)
+<p align="center">
+     <img align="center" width="700" src="/proposals/images/multi-idp-explainer-5.gif"/>
+</p>
 
 ### HTML API
 
@@ -178,7 +188,9 @@ RP's script
 
 The window onload event is fired when the whole page is loaded, including all dependent resources such as the scripts idp1.js and idp2.js. Thus, in this scenario, both IDP scripts are loaded before the window onload event. We would collect the get call parameters for both IDPs and combine them to produce a single dialog which is shown at the user agent's discretion.
 
-![Before or during window onload diagram](https://github.com/fedidcg/FedCM/tree/main/proposals/images/multi-idp-explainer-6.png)
+<p align="center">
+     <img align="center" width="700" src="/proposals/images/multi-idp-explainer-6.png"/>
+</p>
 
 **b. After window onload**
 
@@ -241,7 +253,9 @@ function onButtonClick() {
 
 In this scenario, navigator.credentials.get is not called when IDP scripts are loaded but instead in methods that are called when a button is clicked. This means the navigator.credentials.get calls occur in the same task. Upon the first invocation of FedCM, we would post a task to fetch from endpoints of all registered IDPs. When a task is posted, it is not executed immediately but it is queued. Once it is the task's turn to be executed, the process of fetching from the endpoints of all registered IDPs begins. Finally, the get call parameters for both IDPs are combined to produce a single dialog which is shown at the user agent's discretion.
 
-![After window onload diagram](https://github.com/fedidcg/FedCM/tree/main/proposals/images/multi-idp-explainer-7.png)
+<p align="center">
+     <img align="center" width="700" src="/proposals/images/multi-idp-explainer-7.png"/>
+</p>
 
 | Key scenarios | Covered by implementation? How so? |
 | --- | --- |
@@ -254,4 +268,3 @@ In this scenario, navigator.credentials.get is not called when IDP scripts are l
 | Easy to understand | No, the implementation depends on the onload heuristic and the collation of get calls that don't seem related to one another. |
 
 The main issue with this implementation is that it can be confusing for web developers because it behaves differently depending on whether the API is called before, during or after onload.
-
