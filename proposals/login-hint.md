@@ -21,8 +21,22 @@ When the RP includes this parameter, the user agent would only show accounts who
 This enables the RP to provide a better user experience for users when some part of their identity is known a priori.
 Note that returning users are the most common use case but not the only one,
 as the RP first asking for an identifier and then showing FedCM would not require the user to be a returning user.
-Therefore, the `loginHint` would not interact with approved_clients:
+Therefore, the `loginHint` would not interact with `approved_clients`:
 the user agent would not verify that the given user is deemed a returning user.
+
+## Optional vs required
+
+There are two scenarios in which `loginHint` could be used, which necessitates a parameter for differing behavior when the hint does not match with
+any of the available accounts:
+
+1. The RP and IDP want to simplify the login journey of a returning user. In this case, they use `loginHint` to skip the account chooser,
+   but it would be OK if the user logs in with a different account. Thus, the `loginHint` is optional. If there is no account that matches
+   the login hint, then the browser can show a list of all of the available accounts.
+1. The RP and IDP are using the `loginHint` for some authorization or authentication which requires using the specified account. In this case,
+   it does not make sense to show other accounts if there are no accounts matching the login hint. Therefore, the browser should not show a list
+   of the available accounts.
+  
+In order to support both scenarios, the `loginHint`'s dictionary can have a `isRequired` parameter, which defaults to false.
 
 ## Extensibility
 
@@ -33,16 +47,14 @@ being matched to. There are a few options here:
 * IDP provides the login hint types, either in the accounts list response or the config response.
   This means that the IDP is the one who picks what are the allowable filters,
   and the `loginHint` provided by the RP call tries to match against those.
-* RP provides the login hint types it wants to match against, perhaps as a new parameter in the `get()` call
-  (which would also be optional, but perhaps required when `loginHint` is provided).
+* RP provides the login hint types it wants to match against, perhaps as a new parameter in the `get()` call.
   In this case, the IDP does not have control over the allowable filters,
   and it is instead the RP call which decides what it is trying to match against.
 
-The latter option seems more intuitive.
-The simplest way to achieve it would be to add a `loginHintTypes` which receives an array of strings.
-However, that solution would not allow the RP to filter based on multiple filters at once.
-For example, this could be something desired when the RP knows the email of the user but also wants to ensure that the
-[hostedDomain](https://developers.google.com/identity/openid-connect/openid-connect#hd-param) matches the requirements of the site.
+The latter option seems more intuitive. It does require the RP specifying both the attribute to match against as well as the value.
+This points to having a dictionary (type being the key, the value desired being the value) as the most natural option for the RP to
+specify the information. Having a dictionary also makes it trivial to have optional or required: it is just one of the items of the
+dictionary.
 
 Sample code snippet which uses the `loginHint` parameter:
 
@@ -53,7 +65,7 @@ Sample code snippet which uses the `loginHint` parameter:
           configURL: "https://idp.example/manifest.json",
           clientId: "123",
           nonce: nonce,
-	    loginHint: {email: "user@email.com"}
+	  loginHint: {email: "user@email.com"}
         }]
       }
     });
