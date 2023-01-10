@@ -1220,18 +1220,14 @@ algorithm is invoked, the user agent MUST execute the following steps. This retu
 To <dfn>create an IdentityCredential</dfn> given an {{IdentityProviderConfig}}
 |provider| and a |globalObject|, run the following steps. This returns an {{IdentityCredential}}.
     1. Assert: These steps are running [=in parallel=].
-    1. Let |check|, |config| be variables initially null.
-    1.  [=Queue a global task=] on the [=DOM manipulation task source=]  given |globalObject| and
-        run the following steps:
-        1. Set |check| to the result of [=check the well-known file=] with |provider|.
-        1. Set |config| to the result of [=fetch the config file=] with |provider|.
-    1. Wait for |check| and |config| to become non-null.
-    1. Assert: |check| is true and |config| is an {{IdentityProviderAPIConfig}}.
-    1. Let |accountsList| be null.
+    1. [=Queue a global task=] on the [=DOM manipulation task source=]  given |globalObject| to
+        set |check| to the result of [=check the well-known file=] with |provider|.
+    1. [=Queue a global task=] on the [=DOM manipulation task source=]  given |globalObject| to
+        set |config| to the result of [=fetch the config file=] with |provider|.
+    1. Wait until |check| and |config| are set.
     1. [=Queue a global task=] on the [=DOM manipulation task source=]  given |globalObject| to
         set |accountsList| to the result of [=fetch the accounts list=] with |config| and |provider|.
-    1. Wait for |accountsList| to become non-null.
-    1. Assert: |accountsList| is an {{IdentityProviderAccountList}}.
+    1. Wait until |accountsList| is set.
     1. If |accountsList|'s size is 1:
         1. Let |account| be |accountsList|[0].
         1. Let |accountState| be the result of running the [=compute account state=] algorithm
@@ -1255,12 +1251,10 @@ To <dfn>create an IdentityCredential</dfn> given an {{IdentityProviderConfig}}
     1. Wait until the [=user agent=]'s dialog is closed and |accountState| has been updated.
     1. If |accountState|'s {{AccountState/registration state}} is [=unregistered=] then throw a new
         "{{NetworkError}}" {{DOMException}}.
-    1. Let |credential| be null.
     1. [=Queue a global task=] on the [=DOM manipulation task source=] given |globalObject| to 
         set |credential| to the result of running [=create tokens=] algorithm with |accountState|,
         |account|'s {{IdentityProviderAccount/id}}, |provider|, |config|, and |globalObject|.
-    1. Wait until |credential| is not null.
-    1. Assert: |credential| is an {{IdentityCredential}}.
+    1. Wait until |credential| is set.
     1. Return |credential|.
 </div>
 
@@ -1479,7 +1473,7 @@ an [=AccountState=].
     1. [=Queue a global task=] on the [=DOM manipulation task source=] given |globalObject| to
         compute |configUrl| as the result of running [=url parser=] with |provider|'s
         {{IdentityProviderConfig/configURL}}.
-    1. Wait for the above task to run, and let |idpOrigin| be the [=origin=] corresponding to
+    1. Wait until |configUrl| is set, and let |idpOrigin| be the [=origin=] corresponding to
         |configUrl|.
     1. Let |rpOrigin| be |globalObject|'s [=associated Document=]'s [=Document/origin=].
     1. Let |accountId| be |account|'s {{IdentityProviderAccount/id}}.
@@ -1531,11 +1525,10 @@ To <dfn>request permission to sign-up</dfn> the user with a given an {{IdentityP
 [=AccountState=] |accountState|, an {{IdentityProviderAPIConfig}} |config|, an {{IdentityProviderConfig}}
 |provider|, and a |globalObject|, run the following steps. This returns a boolean.
     1. Assert: These steps are running [=in parallel=].
-    1. Let |metadata| be false (|metadata| could be set to null, hence initialize differently here).
     1. [=Queue a global task=] on the [=DOM manipulation task source=] given |globalObject| to
         [=fetch the client metadata=] algorithm with |config| and |provider|, and set the result to
         |metadata|.
-    1. Wait until |metadata| is not false.
+    1. Wait until |metadata| is set.
     1. Assert: |metadata| is null or an {{IdentityProviderClientMetadata}}.
     1. If |metadata|["{{IdentityProviderClientMetadata/privacy_policy_url}}"] is defined and the |provider|'s
         {{IdentityProviderConfig/clientId}} is not in the list of
@@ -1700,39 +1693,43 @@ When the {{IdentityCredential/logoutRPs()}} method is invoked given a [=list=] o
 {{IdentityCredentialLogoutRPsRequest}}s |logoutRequests|, the user agent MUST execute the following
 steps. This returns a {{Promise}}.
     1. Let |promise| be a new {{Promise}}.
-    1. For each |request| in |logoutRequests|:
-        1. Let |rpOrigin| be [=this=]'s [=Document/origin=].
-        1. Let |idpOrigin| be |request|'s {{IdentityCredentialLogoutRPsRequest/url}}'s [=origin=].
-        1. Let |account| be |request|'s {{IdentityCredentialLogoutRPsRequest/accountId}}.
-        1. Let |triple| be (|rpOrigin|, |idpOrigin|, |account|).
-        1. If [=state machine map=][|triple|] does not exist, continue.
-        1. Let |accountState| be [=state machine map=][|triple|].
-        1. If the |accountState|'s {{AccountState/registration state}} is [=unregistered=] or
-            |accountState|'s {{AccountState/allows logout}} is false, continue.
-        1. Let |fetchRequest| be a new <a spec=fetch for=/>request</a> as follows:
+    1. Let |globalObject| be <a>this</a>'s <a>relevant global object</a>.
+    1. [=In parallel=], perform the following steps:
+        1. For each |request| in |logoutRequests|:
+            1. Let |rpOrigin| be [=this=]'s [=Document/origin=].
+            1. Let |idpOrigin| be |request|'s {{IdentityCredentialLogoutRPsRequest/url}}'s [=origin=].
+            1. Let |account| be |request|'s {{IdentityCredentialLogoutRPsRequest/accountId}}.
+            1. Let |triple| be (|rpOrigin|, |idpOrigin|, |account|).
+            1. If [=state machine map=][|triple|] does not exist, continue.
+            1. Let |accountState| be [=state machine map=][|triple|].
+            1. If the |accountState|'s {{AccountState/registration state}} is [=unregistered=] or
+                |accountState|'s {{AccountState/allows logout}} is false, continue.
+            1. Let |fetchRequest| be a new <a spec=fetch for=/>request</a> as follows:
 
-            :  [=request/url=]
-            :: |request|'s {{IdentityCredentialLogoutRPsRequest/url}}
-            :  [=request/mode=]
-            :: "GET"
-            :  [=request/redirect mode=]
-            :: "error"
-            :  [=request/client=]
-            :: null
-            :  [=request/window=]
-            :: "no-window"
-            :  [=request/service-workers mode=]
-            :: "none"
-            :  [=request/destination=]
-            :: "webidentity"
-            :  [=request/origin=]
-            :: a unique [=opaque origin=]
-            :  [=request/credentials mode=]
-            :: "include"
+                :  [=request/url=]
+                :: |request|'s {{IdentityCredentialLogoutRPsRequest/url}}
+                :  [=request/mode=]
+                :: "GET"
+                :  [=request/redirect mode=]
+                :: "error"
+                :  [=request/client=]
+                :: null
+                :  [=request/window=]
+                :: "no-window"
+                :  [=request/service-workers mode=]
+                :: "none"
+                :  [=request/destination=]
+                :: "webidentity"
+                :  [=request/origin=]
+                :: a unique [=opaque origin=]
+                :  [=request/credentials mode=]
+                :: "include"
 
-        1. [=Fetch=] |fetchRequest|.
-        1. Set the |accountState| {{AccountState/allows logout}} to false.
-    1. <a for=Promise>Resolve</a> |promise| with [undefined] and return |promise|.
+            1. [=Queue a global task=] on the [=network task source=]  given |globalObject|
+                to [=fetch=] |fetchRequest|.
+            1. Set the |accountState| {{AccountState/allows logout}} to false.
+        1. <a for=Promise>Resolve</a> |promise| with [undefined].
+    1. Return |promise|.
 </div>
 
 
