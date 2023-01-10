@@ -1220,11 +1220,9 @@ algorithm is invoked, the user agent MUST execute the following steps. This retu
 To <dfn>create an IdentityCredential</dfn> given an {{IdentityProviderConfig}}
 |provider| and a |globalObject|, run the following steps. This returns an {{IdentityCredential}}.
     1. Assert: These steps are running [=in parallel=].
-    1. [=Queue a global task=] on the [=DOM manipulation task source=]  given |globalObject| to
-        set |check| to the result of [=check the well-known file=] with |provider|.
-    1. [=Queue a global task=] on the [=DOM manipulation task source=]  given |globalObject| to
-        set |config| to the result of [=fetch the config file=] with |provider|.
-    1. Wait until |check| and |config| are set.
+    1. Let |check| be the result of running [=check the well-known file=] with |provider|.
+    1. Let |config| be the result of running [=fetch the config file=] with |provider|.
+    1. Wait until |check| and |config| are both set.
     1. [=Queue a global task=] on the [=DOM manipulation task source=]  given |globalObject| to
         set |accountsList| to the result of [=fetch the accounts list=] with |config| and |provider|.
     1. Wait until |accountsList| is set.
@@ -1259,12 +1257,25 @@ To <dfn>create an IdentityCredential</dfn> given an {{IdentityProviderConfig}}
 </div>
 
 <div algorithm>
+To <dfn>queue url parser</dfn> given a {{USVString}} |stringURL| |globalObject|, run the following
+steps. This returns a {{URL}} or failure.
+    1. Let |configURL| be null.
+    1. [=Queue a global task=] on the [=DOM manipulation task source=] given |globalObject| to:
+        1. Let |configURL| be the result of running [=url parser=] with |stringURL|.
+    Note: We queue a task since the [=url parser=] needs to be run within a task, not
+        [=in parallel=].
+    1. Wait until |configURL| is set.
+    1. Return |configURL|.
+</div>
+
+<div algorithm>
 To <dfn>check the well-known file</dfn> given an {{IdentityProviderConfig}} |provider|, run the
 following steps. This returns a boolean.
     1. Assert: These steps are running on the [=DOM manipulation task source=].
-    1. Let |configUrl| be the result of running [=url parser=] with |provider|'s
+    1. Let |configUrl| be the result of running [=queue url parser=] with |provider|'s
         {{IdentityProviderConfig/configURL}}.
-    1. If |configUrl| is failure, return false.
+    1. Wait until |configUrl| is set.
+    1. If |configURL| is failure, return false.
     1. Let |rootUrl| be a new [=/URL=].
     1. Set |rootUrl|'s [=url/scheme=] to |configUrl|'s [=url/scheme=].
     1. Set |rootUrl|'s [=url/host=] to |configUrl|'s [=url/host=]'s [=host/registrable domain=].
