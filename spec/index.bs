@@ -1192,7 +1192,7 @@ requests.
 When the {{IdentityCredential}}'s
 <dfn for="IdentityCredential" method>\[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</dfn>
 algorithm is invoked, the user agent MUST execute the following steps. This returns an
-{{IdentityCredential}}, null, or an error.
+{{IdentityCredential}} (or throws an error to the caller).
 
     1. Assert: These steps are running [=in parallel=].
     1. Assert: |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"] [=map/exists=].
@@ -1206,68 +1206,67 @@ algorithm is invoked, the user agent MUST execute the following steps. This retu
         [issue](https://github.com/fedidcg/FedCM/issues/389).
 
         Note: the purpose of having a timer here is to avoid leaking the reason causing this
-        method to return null. If there was no such timer, the developer could easily infer
+        method to throw an error. If there was no such timer, the developer could easily infer
         whether the user has an account with the [=IDP=] or not, or whether the user closed the UI without granting permission to share the [=IDP=] account information with the [=RP=].
     1. Let |provider| be |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"][0].
-    1. Let |outputCredential| be null.
-    1. Run the [=potentially create an IdentityCredential=] algorithm with |provider|,
-        |globalObject|, and |outputCredential|.
+    1. Return the result of running [=create an IdentityCredential=] with |provider| and
+        |globalObject|.
 
         Note: The |globalObject| is not currently passed onto the {{Credential/[[DiscoverFromExternalSource]]}}
         algorithm. See <a href="https://github.com/w3c/webappsec-credential-management/issues/210">issue</a>.
-
-    1. Wait until an error is thrown or |outputCredential| becomes non-null.
-    1. Assert: |outputCredential| is an {{IdentityCredential}}.
-    1. Return |outputCredential|.
 </div>
 
 <div algorithm>
-To <dfn>potentially create an IdentityCredential</dfn> given an {{IdentityProviderConfig}}
-|provider|, |globalObject|, and |outputCredential|, run the following steps:
+To <dfn>create an IdentityCredential</dfn> given an {{IdentityProviderConfig}}
+|provider| and a |globalObject|, run the following steps. This returns an {{IdentityCredential}}.
     1. Assert: These steps are running [=in parallel=].
-    1. Let |check| be null.
-    1.  [=Queue a global task=] on the [=DOM manipulation task source=]  given |globalObject| to
-        [=check the well-known file=] with |provider| and |check|.
-    1. Let |config| be null.
-    1.  [=Queue a global task=] on the [=DOM manipulation task source=]  given |globalObject| to
-        [=fetch the config file=] with |provider| and |config|.
-    1. Wait for |check| and |config| to become non-null (or for errors to be thrown).
+    1. Let |check|, |config| be variables initially null.
+    1.  [=Queue a global task=] on the [=DOM manipulation task source=]  given |globalObject| and
+        run the following steps:
+        1. Set |check| to the result of [=check the well-known file=] with |provider|.
+        1. Set |config| to the result of [=fetch the config file=] with |provider|.
+    1. Wait for |check| and |config| to become non-null.
     1. Assert: |check| is true and |config| is an {{IdentityProviderAPIConfig}}.
     1. Let |accountsList| be null.
     1. [=Queue a global task=] on the [=DOM manipulation task source=]  given |globalObject| to
-        [=fetch the accounts list=] algorithm with |config|, |provider|, and |accountsList|.
+        set |accountsList| to the result of [=fetch the accounts list=] with |config| and |provider|.
     1. Wait for |accountsList| to become non-null.
     1. Assert: |accountsList| is an {{IdentityProviderAccountList}}.
     1. If |accountsList|'s size is 1:
         1. Let |account| be |accountsList|[0].
         1. Let |accountState| be the result of running the [=compute account state=] algorithm
             given |provider|, |account|, and |globalObject|.
-        1. If |accountState|'s {{AccountState/registration state}} is [=unregistered=] then run the
+        1. If |accountState|'s {{AccountState/registration state}} is [=unregistered=],
             [=request permission to sign-up=] algorithm with |account|, |accountState|, |config|,
-            |provider|, and |globalObject|.
-        1. Otherwise, show a dialog to request user permission to sign in via |account|.
-        1. If the user grants permission, run the [=sign-in=] algorithm with |accountState|.
+            |provider|, and |globalObject| and set the result in |permission|.
+        1. Otherwise, show a dialog to request user permission to sign in via |account|, and set the
+            result in |permission|.
+        1. If |permission|, [=sign-in=] with |accountState|.
     1. Otherwise:
         1. Let |account| be the result of running the [=select an account=] from the
             |accountsList|.
-        1. If |account| is null, return null.
         1. Let |accountState| be the result of running the [=compute account state=] algorithm
             given |provider| and |account|.
-        1. If |accountState|'s {{AccountState/registration state}} is [=unregistered=] then run the
-            [=request permission to sign-up=] algorithm with |account|, |accountState|, |config|,
-            |provider|, and |globalObject|.
-        1. Otherwise, run the [=sign-in=] algorithm with |accountState|.
+        1. If |accountState|'s {{AccountState/registration state}} is [=unregistered=]:
+            1. Run the [=request permission to sign-up=] algorithm with |account|, |accountState|,
+                |config|, |provider|, and |globalObject| and set the result in |permission|.
+            1. If |permission|, [=sign-in=] with |accountState|.
+        1. Otherwise, [=sign-in=] with |accountState|.
     1. Wait until the [=user agent=]'s dialog is closed and |accountState| has been updated.
     1. If |accountState|'s {{AccountState/registration state}} is [=unregistered=] then throw a new
-        "{{AbortError}}" {{DOMException}}.
-    1. [=Queue a global task=] on the [=DOM manipulation task source=] given |globalObject| to run
-        the [=create tokens=] algorithm with |accountState|, |account|'s
-        {{IdentityProviderAccount/id}}, |provider|, |config|, |globalObject|, and |outputCredential|.
+        "{{NetworkError}}" {{DOMException}}.
+    1. Let |credential| be null.
+    1. [=Queue a global task=] on the [=DOM manipulation task source=] given |globalObject| to 
+        set |credential| to the result of running [=create tokens=] algorithm with |accountState|,
+        |account|'s {{IdentityProviderAccount/id}}, |provider|, |config|, and |globalObject|.
+    1. Wait until |credential| is not null.
+    1. Assert: |credential| is an {{IdentityCredential}}.
+    1. Return |credential|.
 </div>
 
 <div algorithm>
-To <dfn>check the well-known file</dfn> given an {{IdentityProviderConfig}} |provider| and
-|outputCheck|, run the following steps:
+To <dfn>check the well-known file</dfn> given an {{IdentityProviderConfig}} |provider|, run the
+following steps. This returns a boolean.
     1. Assert: These steps are running on the [=DOM manipulation task source=].
     1. Let |configUrl| be the result of running [=url parser=] with |provider|'s
         {{IdentityProviderConfig/configURL}}.
@@ -1303,33 +1302,36 @@ To <dfn>check the well-known file</dfn> given an {{IdentityProviderConfig}} |pro
         with [=request/mode=] set to "unsafe-no-cors". See the relevant
         [pull request](https://github.com/whatwg/fetch/pull/1533) for details.</p>
 
+    1. Let |check| be null.
     1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the
         following steps given a <a spec=fetch for=/>response</a> |response|:
         1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
         1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderWellKnown}},
             |discovery|.
-        1. Set |outputCheck| as follows:
+        1. Set |check| as follows:
             1. If the [=list/size=] of |discovery|["{{IdentityProviderWellKnown/provider_urls}}"]
-                is greater than 1, set |outputCheck| to false.
+                is greater than 1, set |check| to false.
 
                 Issue: [relax](https://github.com/fedidcg/FedCM/issues/333) the size of the
                 provider_urls array.
 
-            1. Otherwise, set |outputCheck| to |discovery|["{{IdentityProviderWellKnown/provider_urls}}"]
+            1. Otherwise, set |check| to |discovery|["{{IdentityProviderWellKnown/provider_urls}}"]
                 [=string/is=] equal to |provider|'s {{IdentityProviderConfig/configURL}}.
-        1. If |outputCheck| is false, throw a "{{NetworkError}}" {{DOMException}}.
+        1. If |check| is false, throw a "{{NetworkError}}" {{DOMException}}.
+    1. [=In parallel=], wait until |check| becomes non-null, and return it.
 </div>
 
 <div algorithm>
 To <dfn>fetch the config file</dfn> algorithm given an {{IdentityProviderConfig}} |provider|,
-and an |outputConfig|:
+run the following steps. This returns an {{IdentityProviderAPIConfig}}:
     1. Assert: These steps are running on the [=DOM manipulation task source=].
     1. Let |configUrl| be the result of running [=url parser=] with |provider|'s
         {{IdentityProviderConfig/configURL}}.
-    1. If |configUrl| is failure, return null.
+    1. If |configUrl| is failure, throw a new "{{NetworkError}}" {{DOMException}}.
     1. Run a [[!CSP]] check with a [[CSP#directive-connect-src|connect-src]]
         directive on the URL passed as |configUrl|.
-    1. If |configUrl| is not a [=potentially trustworthy URL=], return null.
+    1. If |configUrl| is not a [=potentially trustworthy URL=], throw a new "{{NetworkError}}"
+        {{DOMException}}.
     1. Let |request| be a new <a spec=fetch for=/>request</a> as follows:
 
         :  [=request/url=]
@@ -1354,12 +1356,13 @@ and an |outputConfig|:
         :  [=request/credentials mode=]
         :: "omit"
 
+    1. Let |config| be null.
     1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
         steps given a <a spec=fetch for=/>response</a> |response|:
         1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
         1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderAPIConfig}} stored
-            in |outputConfig|.
-        1. If |outputConfig| is null, throw a "{{NetworkError}}" {{DOMException}}.
+            in |config|.
+    1. [=In parallel=], wait until |config| is not null, and return it.
 </div>
 
 NOTE: We use a two-tier file system in order to prevent the [=IDP=] to easily determine the [=RP=]
@@ -1372,7 +1375,8 @@ path manipulation to fingerprint (for instance, by including the RP in the path)
 
 <div algorithm>
 To <dfn>fetch the accounts list</dfn> given an {{IdentityProviderAPIConfig}} |config|, an
-{{IdentityProviderConfig}} |provider|, and |outputAccountsList|:
+{{IdentityProviderConfig}} |provider|, run the following steps. This returns an
+{{IdentityProviderAccountList}}.
     1. Assert: These steps are running on the [=DOM manipulation task source=].
     1. Let |accountsUrl| be the result of [=computing the manifest URL=] given |provider| and
         |config|["{{IdentityProviderAPIConfig/accounts_endpoint}}"].
@@ -1403,25 +1407,28 @@ To <dfn>fetch the accounts list</dfn> given an {{IdentityProviderAPIConfig}} |co
 
     Issue: The credentialed fetch in this algorithm can lead to a timing attack that leaks the user's identities before the user grants permission. This is an active area of investigation that is being explored [here](https://github.com/fedidcg/FedCM/issues/230#issuecomment-1089040953).
 
+    1. Let |accountsList| be null.
     1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
         steps given a <a spec=fetch for=/>response</a> |response|:
         1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
         1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderAccountList}}, and
-            store the result in |outputAccountsList|.
+            store the result in |accountsList|.
 
     Issue: We should validate the accounts list returned here for repeated ids, as described [here](https://github.com/fedidcg/FedCM/issues/336).
+
+    1. [=In parallel=], wait for |accountsList| to become non-null, and return it.
 </div>
 
 <div algorithm>
 To <dfn>create tokens</dfn> given an [=AccountState=] |accountState|, a {{USVString}} |accountId|,
-    an {{IdentityProviderConfig}} |provider|, an {{IdentityProviderAPIConfig}} |config|,
-    |globalObject|, and |outputCredential|:
+    an {{IdentityProviderConfig}} |provider|, an {{IdentityProviderAPIConfig}} |config|, and
+    |globalObject|, run the following steps. This returns an {{IdentityCredential}}.
     1. Assert: These steps are running on the [=DOM manipulation task source=].
     1. Assert |accountState|'s {{AccountState/registration state}} is [=registered=].
     1. Assert |accountState|'s {{AccountState/allows logout}} is true.
     1. Let |idTokenUrl| be the result of [=computing the manifest URL=] given |provider| and
         |config|["{{IdentityProviderAPIConfig/id_assertion_endpoint}}"].
-    1. If |idTokenUrl| is failure, return null.
+    1. If |idTokenUrl| is failure, throw a new "{{NetworkError}}" {{DOMException}}.
     1. Let |requestBody| be a [=string=] resulting in concatenating "client_id=",
         |provider|'s {{IdentityProviderConfig/clientId}}, "&nonce=",
         |provider|'s {{IdentityProviderConfig/nonce}}, "&account_id=", and |accountId|.
@@ -1453,13 +1460,15 @@ To <dfn>create tokens</dfn> given an [=AccountState=] |accountState|, a {{USVStr
         :  [=request/credentials mode=]
         :: "include"
 
-      1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
-          steps given a <a spec=fetch for=/>response</a> |response|:
-          1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
-          1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderToken}}, |token|.
-          1. Let |outputCredential| be a new {{IdentityCredential}} given |globalObject|'s
-              <a for="global object">realm</a>.
-          1. Set |outputCredential|'s {{IdentityCredential/token}} to |token|.
+    1. Let |credential| be null.
+    1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
+        steps given a <a spec=fetch for=/>response</a> |response|:
+        1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
+        1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderToken}}, |token|.
+        1. Let |credential| be a new {{IdentityCredential}} given |globalObject|'s
+            <a for="global object">realm</a>.
+        1. Set |credential|'s {{IdentityCredential/token}} to |token|.
+    1. [=In parallel=], wait for |credential| to be non-null, and return it.
 </div>
 
 <div algorithm>
@@ -1502,37 +1511,57 @@ failure.
 
 <div algorithm>
 To <dfn>extract the JSON fetch response</dfn> given a <a spec=fetch for=/>response</a> |response|,
-run the following steps. This returns an [=ordered map=] or null.
+run the following steps. This returns an [=ordered map=].
     1. Assert: These steps are running on the [=DOM manipulation task source=].
     1. If |response| is a [=network error=] or its [=response/status=] is not an [=ok status=],
-        return null.
+        throw a new "{{NetworkError}}" {{DOMException}}.
     1. Let |mimeType| be the result of <a>extracting a MIME TYPE</a> from |response|'s
         <a for=response>header list</a>.
-    1. If |mimeType| is failure or is not a [=JSON MIME Type=], return null.
+    1. If |mimeType| is failure or is not a [=JSON MIME Type=], throw a new "{{NetworkError}}"
+        {{DOMException}}.
     1. Let |json| be the result of [=parse JSON bytes to an Infra value=] passing |response|'s
         [=response/body=].
-    1. If |json| is a parsing exception, or if |json| is not an [=ordered map=], return null.
+    1. If |json| is a parsing exception, or if |json| is not an [=ordered map=], throw a new
+        "{{NetworkError}}" {{DOMException}}.
     1. Return |json|.
 </div>
 
 <div algorithm>
 To <dfn>request permission to sign-up</dfn> the user with a given an {{IdentityProviderAccount}} |account|, an
 [=AccountState=] |accountState|, an {{IdentityProviderAPIConfig}} |config|, an {{IdentityProviderConfig}}
-|provider|, and a |globalObject|:
+|provider|, and a |globalObject|, run the following steps. This returns a boolean.
     1. Assert: These steps are running [=in parallel=].
+    1. Let |metadata| be false (|metadata| could be set to null, hence initialize differently here).
     1. [=Queue a global task=] on the [=DOM manipulation task source=] given |globalObject| to
-        [=fetch the client metadata=] algorithm with |account|, |accountState|, |config|,
-        |provider|.
+        [=fetch the client metadata=] algorithm with |config| and |provider|, and set the result to
+        |metadata|.
+    1. Wait until |metadata| is not false.
+    1. Assert: |metadata| is null or an {{IdentityProviderClientMetadata}}.
+    1. If |metadata|["{{IdentityProviderClientMetadata/privacy_policy_url}}"] is defined and the |provider|'s
+        {{IdentityProviderConfig/clientId}} is not in the list of
+        |account|["{{IdentityProviderAccount/approved_clients}}"], then display the
+        |metadata|["{{IdentityProviderClientMetadata/privacy_policy_url}}"] link.
+    1. If |metadata| is not null, |metadata|["{{IdentityProviderClientMetadata/terms_of_service_url}}"] is defined,
+        and the |provider|'s {{IdentityProviderConfig/clientId}} is not in the list of
+        |account|["{{IdentityProviderAccount/approved_clients}}"], then display the
+        |metadata|["{{IdentityProviderClientMetadata/terms_of_service_url}}"] link.
+    1. Prompt the user to gather explicit intent to create an account. The user agent MAY use the
+        {{IdentityProviderBranding}} to inform the style choices of its UI.
+    1. If the user does not grant permission, return false.
+    1. Change |accountState|'s {{AccountState/registration state}} from [=unregistered=] to
+        [=registered=].
+    1. Change |accountState|'s {{AccountState/allows logout}} from false to true.
+    1. Return true.
 </div>
 
 <div algorithm>
-To <dfn noexport>fetch the client metadata</dfn> given {{IdentityProviderAccount}} |account|, an
-[=AccountState=] |accountState|, an {{IdentityProviderAPIConfig}} |config|, an
-{{IdentityProviderConfig}} |provider|, run the following steps:
+To <dfn noexport>fetch the client metadata</dfn> given an {{IdentityProviderAPIConfig}} |config| and
+an {{IdentityProviderConfig}} |provider|, run the following steps. This returns an
+{{IdentityProviderClientMetadata}}.
     1. Assert: These steps are running on the [=DOM manipulation task source=].
     1. Let |clientMetadataUrl| be the result of [=computing the manifest URL=] given |provider| and
         |config|["{{IdentityProviderAPIConfig/client_metadata_endpoint}}"].
-    1. If |clientMetadataUrl| is failure, return null.
+    1. If |clientMetadataUrl| is failure, throw a new "{{NetworkError}}" {{DOMException}}.
     1. Let |request| be a new <a spec=fetch for=/>request</a> as follows:
 
         :  [=request/url=]
@@ -1557,41 +1586,24 @@ To <dfn noexport>fetch the client metadata</dfn> given {{IdentityProviderAccount
         :  [=request/credentials mode=]
         :: "omit"
 
+    1. Let |metadata| be null.
     1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to the following
         steps given a <a spec=fetch for=/>response</a> |response|:
         1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
-        1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderClientMetadata}}, |clientMetadata|.
-        1. Run [=on client metadata fetched=], passing |account|, |accountState|, |clientMetadata|, and |provider|.
-</div>
-
-<div algorithm>
-<dfn>On client metadata fetched</dfn>, given an {{IdentityProviderAccount}} |account|, an
-[=AccountState=] |accountState|, {{IdentityProviderClientMetadata}} |metadata|, and an
-{{IdentityProviderConfig}} |provider|, run the following steps [=in parallel=]:
-    1. If |metadata|["{{IdentityProviderClientMetadata/privacy_policy_url}}"] is defined and the |provider|'s
-        {{IdentityProviderConfig/clientId}} is not in the list of
-        |account|["{{IdentityProviderAccount/approved_clients}}"], then display the
-        |metadata|["{{IdentityProviderClientMetadata/privacy_policy_url}}"] link.
-    1. If |metadata| is not null, |metadata|["{{IdentityProviderClientMetadata/terms_of_service_url}}"] is defined,
-        and the |provider|'s {{IdentityProviderConfig/clientId}} is not in the list of
-        |account|["{{IdentityProviderAccount/approved_clients}}"], then display the
-        |metadata|["{{IdentityProviderClientMetadata/terms_of_service_url}}"] link.
-    1. Prompt the user to gather explicit intent to create an account. The user agent MAY use the
-        {{IdentityProviderBranding}} to inform the style choices of its UI.
-    1. If the user does not grants permission, return.
-    1. Change |accountState|'s {{AccountState/registration state}} from [=unregistered=] to
-        [=registered=].
-    1. Change |accountState|'s {{AccountState/allows logout}} from false to true.
+        1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderClientMetadata}},
+            and store the result in |metadata|.
+    1. [=In parallel=], wait until |metadata| becomes not null, and return it.
 </div>
 
 <div algorithm>
 To <dfn>select an account</dfn> given an |accountsList|, run the following steps. This returns an
-{{IdentityProviderAccount}} or null.
+{{IdentityProviderAccount}}.
     1. Assert: These steps are running [=in parallel=].
     1. Assert |accountsList|'s [=list/size=] is greater than 1.
     1. Display an account chooser displaying the options from |accountsList|.
     1. Let |account| be the {{IdentityProviderAccount}} of the account that the user
-        manually selects from the accounts chooser, or null if no account is selected.
+        manually selects from the accounts chooser, or throw a new "{{NetworkError}}"
+        {{DOMException}} if no account is selected.
     1. Return |account|.
 </div>
 
@@ -1961,7 +1973,7 @@ these scenarios consider how user tracking might happen **without** them. See al
 ### Manifest Fingerprinting ### {#manifest-fingerprinting}
 <!-- ============================================================ -->
 
-Suppose that the FedCM API did not have a two-tier manifest (see the [=potentially create an IdentityCredential=]
+Suppose that the FedCM API did not have a two-tier manifest (see the [=create an IdentityCredential=]
 algorithm), and instead directly had a single manifest. This would introduce the following
 fingerprinting attack:
 
