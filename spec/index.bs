@@ -1262,10 +1262,11 @@ failure.
 <div algorithm>
 To <dfn>parse url</dfn> given a {{USVString}} |stringUrl|, a |globalObject|, and an optional
 |baseUrl| (default null), run the following steps. This returns a [=/URL=] or failure.
-    1. [=Queue a global task=] on the [=DOM manipulation task source=] given |globalObject| to:
-        1. Let |configUrl| be the result of running [=url parser=] with |stringUrl| and |baseUrl|.
+    1. Let |configUrl| be null.
+    1. [=Queue a global task=] on the [=DOM manipulation task source=] given |globalObject| to set
+        |configUrl| to the result of running [=url parser=] with |stringUrl| and |baseUrl|.
 
-    Note: We queue a task since the [=url parser=] needs to be run within a task, not
+        Note: We queue a task since the [=url parser=] needs to be run within a task, not
         [=in parallel=].
 
     1. Wait for |configUrl| to be set.
@@ -1410,14 +1411,19 @@ To <dfn>fetch the accounts list</dfn> given an {{IdentityProviderAPIConfig}} |co
         :  [=request/credentials mode=]
         :: "include"
 
-    Issue: The credentialed fetch in this algorithm can lead to a timing attack that leaks the user's identities before the user grants permission. This is an active area of investigation that is being explored [here](https://github.com/fedidcg/FedCM/issues/230#issuecomment-1089040953).
+        Issue: The credentialed fetch in this algorithm can lead to a timing attack that leaks the
+        user's identities before the user grants permission. This is an active area of investigation
+        that is being explored [here](https://github.com/fedidcg/FedCM/issues/230#issuecomment-1089040953).
+
+    1. Let |accountsList| be null.
     1. [=Fetch request=] with |request|, |globalObject|, and <var ignore=>processResponseConsumeBody</var>
         set to the following steps given a <a spec=fetch for=/>response</a> |response|:
         1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
         1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderAccountList}}, and
             store the result in |accountsList|.
 
-    Issue: We should validate the accounts list returned here for repeated ids, as described [here](https://github.com/fedidcg/FedCM/issues/336).
+        Issue: We should validate the accounts list returned here for repeated ids, as described
+        [here](https://github.com/fedidcg/FedCM/issues/336).
 
     1. Wait for |accountsList| to be set.
     1. Return |accountsList|.
@@ -1463,6 +1469,7 @@ To <dfn>fetch an identity assertion</dfn> given an [=AccountState=] |accountStat
         :  [=request/credentials mode=]
         :: "include"
 
+    1. Let |credential| be null.
     1. [=Fetch request=] with |request|, |globalObject|, and <var ignore=>processResponseConsumeBody</var>
         set to the following steps given a <a spec=fetch for=/>response</a> |response|:
         1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
@@ -1502,7 +1509,8 @@ When <dfn>computing the manifest URL</dfn> given an {{IdentityProviderConfig}} |
         given |manifestString| (the relative URL), |globalObject|, and |configUrl| (the base URL).
         Wait until |manifestUrl| is set again.
 
-    Note: This means the we allow passing the manifest string as either an absolute or relative URL.
+        Note: This means the we allow passing the manifest string as either an absolute or relative
+        URL.
 
     1. If |manifestUrl| is failure, return failure.
     1. If |manifestUrl| is not [=same origin=] with |configUrl|, return failure.
@@ -1582,6 +1590,7 @@ an {{IdentityProviderConfig}} |provider|, run the following steps. This returns 
         :  [=request/credentials mode=]
         :: "omit"
 
+    1. Let |metadata| be null.
     1. [=Fetch request=] with |request|, |globalObject|, and <var ignore=>processResponseConsumeBody</var>
         set to the following steps given a <a spec=fetch for=/>response</a> |response|:
         1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
