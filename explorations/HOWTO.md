@@ -16,7 +16,7 @@ From the Relying Party (RP):
 
 From the Identity Provider (IdP):
 
-* `FederatedCredential.logoutRPs()`: Sends a signal to specified RPs to logout the user.
+* `IdentityCredential.logoutRPs()`: Sends a signal to specified RPs to logout the user.
 * A request for the `/fedcm.json` configuration.
 * A request for a list of accounts that the user can use for federated sign-in.
 * A request for a metadata about clients (RPs).
@@ -92,7 +92,7 @@ async function login() {
 
     // In this example, https://idp.example is the IdP's URL.
     var idAssertion = await navigator.credentials.get({
-      federated: {
+      identity: {
         providers: [{
           url: "https://idp.example", // IdP domain
           clientId: "1234", // Client ID of the RP
@@ -233,7 +233,7 @@ only implemented proposal is an API for Logout.
 
 ### Logout API
 
-The Logout API, `FederatedCredential.logoutRPs()` which is being explored as a way
+The Logout API, `IdentityCredential.logoutRPs()` which is being explored as a way
 to preserve OIDC front-channel logout and SAML Single Signout with loss of
 access to third-party cookies in embedded contexts. It is intended to replace
 situations where an IDP logging out a user also must log out the user in RP
@@ -244,7 +244,7 @@ determines if the user is known to have previously logged in to the RP using
 that IDP, and if it has, it sends a credentialed GET request to that URL.
 
 ```js
-FederatedCredential.logoutRPs([{
+IdentityCredential.logoutRPs([{
   url: "https://rp1.example/logout",
   accountId: "123",
 }, {
