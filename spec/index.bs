@@ -1209,19 +1209,24 @@ algorithm is invoked, the user agent MUST execute the following steps. This retu
         method to throw an error. If there was no such timer, the developer could easily infer
         whether the user has an account with the [=IDP=] or not, or whether the user closed the UI without granting permission to share the [=IDP=] account information with the [=RP=].
     1. Let |provider| be |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"][0].
-    1. Return the result of running [=create an IdentityCredential=] with |provider| and
+    1. Let |credential| be the result of running [=create an IdentityCredential=] with |provider| and
         |globalObject|.
 
         Note: The |globalObject| is not currently passed onto the {{Credential/[[DiscoverFromExternalSource]]}}
         algorithm. See <a href="https://github.com/w3c/webappsec-credential-management/issues/210">issue</a>.
+    
+    1. If |credential| is failure, [=queue a global task=] on the [=DOM manipulation task source=]
+        to throw a new "{{NetworkError}}" {{DOMException}}.
 </div>
 
 <div algorithm>
 To <dfn>create an IdentityCredential</dfn> given an {{IdentityProviderConfig}}
-|provider| and a |globalObject|, run the following steps. This returns an {{IdentityCredential}}.
+|provider| and a |globalObject|, run the following steps. This returns an {{IdentityCredential}} or
+failure.
     1. Assert: These steps are running [=in parallel=].
     1. Let |config| be the result of running [=fetch the config file=] with |provider| and
         |globalObject|.
+    1. If |config| is failure, return failure.
     1. Let |accountsList| be the result of [=fetch the accounts list=] with |config|, |provider|,
         and |globalObject|.
     1. If |accountsList|'s size is 1:
@@ -1237,6 +1242,7 @@ To <dfn>create an IdentityCredential</dfn> given an {{IdentityProviderConfig}}
     1. Otherwise:
         1. Let |account| be the result of running the [=select an account=] from the
             |accountsList|.
+        1. If |account| is failure, return failure.
         1. Let |accountState| be the result of running the [=compute account state=] algorithm
             given |provider| and |account|.
         1. If |accountState|'s {{AccountState/registration state}} is [=unregistered=]:
@@ -1245,8 +1251,8 @@ To <dfn>create an IdentityCredential</dfn> given an {{IdentityProviderConfig}}
             1. If |permission|, [=sign-in=] with |accountState|.
         1. Otherwise, [=sign-in=] with |accountState|.
     1. Wait until the [=user agent=]'s dialog is closed.
-    1. If |accountState|'s {{AccountState/registration state}} is [=unregistered=] then throw a new
-        "{{NetworkError}}" {{DOMException}}.
+    1. If |accountState|'s {{AccountState/registration state}} is [=unregistered=] then return
+        failure.
     1. Let |credential| be the result of running the [=fetch an identity assertion=] algorithm with
         |accountState|, |account|'s {{IdentityProviderAccount/id}}, |provider|, |config|, and
         |globalObject|.
@@ -1281,17 +1287,15 @@ To <dfn>fetch the config file</dfn> given an {{IdentityProviderConfig}} |provide
 |globalObject|, run the following steps. This returns an {{IdentityProviderAPIConfig}}.
     1. Let |configUrl| be the result of running [=parse url=] with |provider|'s
         {{IdentityProviderConfig/configURL}} and |globalObject|.
-    1. If |configUrl| is failure, throw a "{{NetworkError}}" {{DOMException}}.
+    1. If |configUrl| is failure, return failure.
     1. Run a [[!CSP]] check with a [[CSP#directive-connect-src|connect-src]] directive on the URL
-        passed as |configUrl|. If it fails, throw a new "{{NetworkError}}" {{DOMException}}.
-    1. If |configUrl| is not a [=potentially trustworthy URL=], throw a new "{{NetworkError}}"
-        {{DOMException}}.
+        passed as |configUrl|. If it fails, return failure.
+    1. If |configUrl| is not a [=potentially trustworthy URL=], return failure.
     1. Let |rootUrl| be a new [=/URL=].
     1. Set |rootUrl|'s [=url/scheme=] to |configUrl|'s [=url/scheme=].
     1. Set |rootUrl|'s [=url/host=] to |configUrl|'s [=url/host=]'s [=host/registrable domain=].
     1. Set |rootUrl|'s [=url/path=] to the <a>list</a> «".well-known", "web-identity"».
-    1. If |rootUrl| is not a [=potentially trustworthy URL=], throw a "{{NetworkError}}"
-        {{DOMException}}.
+    1. If |rootUrl| is not a [=potentially trustworthy URL=], return failure.
     1. Let |wellKnownRequest| be a new [=/request=] as follows:
 
         :  [=request/URL=]
@@ -1318,20 +1322,21 @@ To <dfn>fetch the config file</dfn> given an {{IdentityProviderConfig}} |provide
         with [=request/mode=] set to "unsafe-no-cors". See the relevant
         [pull request](https://github.com/whatwg/fetch/pull/1533) for details.</p>
 
+    1. Let |config| be null.
     1. [=Fetch request=] with |wellKnownRequest|, |globalObject|, and <var ignore=>processResponseConsumeBody</var>
         set to the following steps given a <a spec=fetch for=/>response</a> |response|:
         1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
         1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderWellKnown}},
             |discovery|.
         1. If the [=list/size=] of |discovery|["{{IdentityProviderWellKnown/provider_urls}}"]
-            is greater than 1, throw a new "{{NetworkError}}" {{DOMException}}.
+            is greater than 1, set |config| to failure.
 
             Issue: [relax](https://github.com/fedidcg/FedCM/issues/333) the size of the
             provider_urls array.
 
         1. If |discovery|["{{IdentityProviderWellKnown/provider_urls}}"]
-            [=string/is=] NOT equal to |provider|'s {{IdentityProviderConfig/configURL}}, throw a
-            "{{NetworkError}}" {{DOMException}}.
+            [=string/is=] NOT equal to |provider|'s {{IdentityProviderConfig/configURL}}, set
+            |config| to failure.
 
     1. Let |configRequest| be a new <a spec=fetch for=/>request</a> as follows:
 
@@ -1361,7 +1366,7 @@ To <dfn>fetch the config file</dfn> given an {{IdentityProviderConfig}} |provide
         set to the following steps given a <a spec=fetch for=/>response</a> |response|:
         1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
         1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderAPIConfig}} stored
-            in |config|.
+            in |config|, unless |config| has been set to failure.
     1. Wait for both fetch responses to be completed.
     1. Return |config|.
 </div>
@@ -1427,7 +1432,7 @@ To <dfn>fetch an identity assertion</dfn> given an [=AccountState=] |accountStat
     1. Assert |accountState|'s {{AccountState/allows logout}} is true.
     1. Let |idTokenUrl| be the result of [=computing the manifest URL=] given |provider|,
         |config|["{{IdentityProviderAPIConfig/id_assertion_endpoint}}"], and |globalObject|.
-    1. If |idTokenUrl| is failure, throw a new "{{NetworkError}}" {{DOMException}}.
+    1. If |idTokenUrl| is failure, return failure.
     1. Let |requestBody| be a [=string=] resulting in concatenating "client_id=",
         |provider|'s {{IdentityProviderConfig/clientId}}, "&nonce=",
         |provider|'s {{IdentityProviderConfig/nonce}}, "&account_id=", and |accountId|.
@@ -1530,12 +1535,12 @@ To <dfn>request permission to sign-up</dfn> the user with a given an {{IdentityP
     1. Assert: These steps are running [=in parallel=].
     1. Let |metadata| be the result of running [=fetch the client metadata=] with |config|,
         |provider|, and |globalObject|.
-    1. If |metadata|["{{IdentityProviderClientMetadata/privacy_policy_url}}"] is defined and the |provider|'s
-        {{IdentityProviderConfig/clientId}} is not in the list of
+    1. If |metadata| is not null, |metadata|["{{IdentityProviderClientMetadata/privacy_policy_url}}"]
+        is defined and the |provider|'s {{IdentityProviderConfig/clientId}} is not in the list of
         |account|["{{IdentityProviderAccount/approved_clients}}"], then display the
         |metadata|["{{IdentityProviderClientMetadata/privacy_policy_url}}"] link.
-    1. If |metadata| is not null, |metadata|["{{IdentityProviderClientMetadata/terms_of_service_url}}"] is defined,
-        and the |provider|'s {{IdentityProviderConfig/clientId}} is not in the list of
+    1. If |metadata| is not null, |metadata|["{{IdentityProviderClientMetadata/terms_of_service_url}}"]
+        is defined, and the |provider|'s {{IdentityProviderConfig/clientId}} is not in the list of
         |account|["{{IdentityProviderAccount/approved_clients}}"], then display the
         |metadata|["{{IdentityProviderClientMetadata/terms_of_service_url}}"] link.
     1. Prompt the user to gather explicit intent to create an account. The user agent MAY use the
@@ -1550,10 +1555,10 @@ To <dfn>request permission to sign-up</dfn> the user with a given an {{IdentityP
 <div algorithm>
 To <dfn noexport>fetch the client metadata</dfn> given an {{IdentityProviderAPIConfig}} |config| and
 an {{IdentityProviderConfig}} |provider|, run the following steps. This returns an
-{{IdentityProviderClientMetadata}}.
+{{IdentityProviderClientMetadata}} or null.
     1. Let |clientMetadataUrl| be the result of [=computing the manifest URL=] given |provider|,
         |config|["{{IdentityProviderAPIConfig/client_metadata_endpoint}}"], and |globalObject|.
-    1. If |clientMetadataUrl| is failure, throw a new "{{NetworkError}}" {{DOMException}}.
+    1. If |clientMetadataUrl| is failure, return null.
     1. Let |request| be a new <a spec=fetch for=/>request</a> as follows:
 
         :  [=request/url=]
@@ -1589,12 +1594,11 @@ an {{IdentityProviderConfig}} |provider|, run the following steps. This returns 
 
 <div algorithm>
 To <dfn>select an account</dfn> given an |accountsList|, run the following steps. This returns an
-{{IdentityProviderAccount}}.
+{{IdentityProviderAccount}} or failure.
     1. Assert |accountsList|'s [=list/size=] is greater than 1.
     1. Display an account chooser displaying the options from |accountsList|.
     1. Let |account| be the {{IdentityProviderAccount}} of the account that the user
-        manually selects from the accounts chooser, or throw a new "{{NetworkError}}"
-        {{DOMException}} if no account is selected.
+        manually selects from the accounts chooser, or failure if no account is selected.
     1. Return |account|.
 </div>
 
