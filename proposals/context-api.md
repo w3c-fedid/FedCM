@@ -50,10 +50,11 @@ The API doesn’t make any visual UI structural changes other than the strings t
 | ------------ | ------------------------------------- |
 | Status Quo   | Sign in to $RP with $IDP              |
 
-And the proposal is to introduce 3 context modes:
+And the proposal is to introduce 3 context modes (in addition to the default, "signin"):
 
 | Use Case     | String                                |
 | ------------ | ------------------------------------- |
+| Sign-in      |  Sign in to $RP with $IDP (default)    |
 | Sign-up      |  Sign up to $RP with $IDP             |
 | Continue     |  Continue to $RP with $IDP            |
 | Use          |  Use $RP with $IDP.                   |
