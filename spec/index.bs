@@ -1220,8 +1220,8 @@ algorithm is invoked, the user agent MUST execute the following steps. This retu
 To <dfn>create an IdentityCredential</dfn> given an {{IdentityProviderConfig}}
 |provider| and a |globalObject|, run the following steps. This returns an {{IdentityCredential}}.
     1. Assert: These steps are running [=in parallel=].
-    1. Let |config| be the result of running [=check the well-known file and fetch the config file=]
-        with |provider| and |globalObject|.
+    1. Let |config| be the result of running [=fetch the config file=] with |provider| and
+        |globalObject|.
     1. Let |accountsList| be the result of [=fetch the accounts list=] with |config|, |provider|,
         and |globalObject|.
     1. If |accountsList|'s size is 1:
@@ -1229,8 +1229,8 @@ To <dfn>create an IdentityCredential</dfn> given an {{IdentityProviderConfig}}
         1. Let |accountState| be the result of running the [=compute account state=] algorithm
             given |provider|, |account|, and |globalObject|.
         1. If |accountState|'s {{AccountState/registration state}} is [=unregistered=],
-            [=request permission to sign-up=] algorithm with |account|, |accountState|, |config|,
-            |provider|, and |globalObject| and set the result in |permission|.
+            let |permission| be the result of running [=request permission to sign-up=] algorithm
+            with |account|, |accountState|, |config|, |provider|, and |globalObject|.
         1. Otherwise, show a dialog to request user permission to sign in via |account|, and set the
             result in |permission|.
         1. If |permission|, [=sign-in=] with |accountState|.
@@ -1240,21 +1240,21 @@ To <dfn>create an IdentityCredential</dfn> given an {{IdentityProviderConfig}}
         1. Let |accountState| be the result of running the [=compute account state=] algorithm
             given |provider| and |account|.
         1. If |accountState|'s {{AccountState/registration state}} is [=unregistered=]:
-            1. Run the [=request permission to sign-up=] algorithm with |account|, |accountState|,
-                |config|, |provider|, and |globalObject| and set the result in |permission|.
+            1. Let |permission| be the result of running the [=request permission to sign-up=]
+                algorithm with |account|, |accountState|, |config|, |provider|, and |globalObject|.
             1. If |permission|, [=sign-in=] with |accountState|.
         1. Otherwise, [=sign-in=] with |accountState|.
-    1. Wait until the [=user agent=]'s dialog is closed and |accountState| has been updated.
+    1. Wait until the [=user agent=]'s dialog is closed.
     1. If |accountState|'s {{AccountState/registration state}} is [=unregistered=] then throw a new
         "{{NetworkError}}" {{DOMException}}.
-    1. Let |credential| be the result of running the [=create a credential=] algorithm with
+    1. Let |credential| be the result of running the [=fetch an identity assertion=] algorithm with
         |accountState|, |account|'s {{IdentityProviderAccount/id}}, |provider|, |config|, and
         |globalObject|.
     1. Return |credential|.
 </div>
 
 <div algorithm>
-To <dfn>queue url parser</dfn> given a {{USVString}} |stringUrl|, a |globalObject|, and an optional
+To <dfn>parse url</dfn> given a {{USVString}} |stringUrl|, a |globalObject|, and an optional
 |baseUrl| (default null), run the following steps. This returns a [=/URL=] or failure.
     1. [=Queue a global task=] on the [=DOM manipulation task source=] given |globalObject| to:
         1. Let |configUrl| be the result of running [=url parser=] with |stringUrl| and |baseUrl|.
@@ -1267,7 +1267,7 @@ To <dfn>queue url parser</dfn> given a {{USVString}} |stringUrl|, a |globalObjec
 </div>
 
 <div algorithm>
-To <dfn>queue fetch</dfn> given a [=/request=] |request|, |globalObject|, and an algorithm
+To <dfn>fetch request</dfn> given a [=/request=] |request|, |globalObject|, and an algorithm
 |processResponseConsumeBody|, run the following steps:
   1. [=Queue a global task=] on the [=network task source=] given |globalObject| to:
       1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to
@@ -1277,10 +1277,9 @@ To <dfn>queue fetch</dfn> given a [=/request=] |request|, |globalObject|, and an
 </div>
 
 <div algorithm>
-To <dfn>check the well-known file and fetch the config file</dfn> given an
-{{IdentityProviderConfig}} |provider| and |globalObject|, run the following steps. This returns an
-{{IdentityProviderAPIConfig}}.
-    1. Let |configUrl| be the result of running [=queue url parser=] with |provider|'s
+To <dfn>fetch the config file</dfn> given an {{IdentityProviderConfig}} |provider| and
+|globalObject|, run the following steps. This returns an {{IdentityProviderAPIConfig}}.
+    1. Let |configUrl| be the result of running [=parse url=] with |provider|'s
         {{IdentityProviderConfig/configURL}} and |globalObject|.
     1. If |configUrl| is failure, throw a "{{NetworkError}}" {{DOMException}}.
     1. Run a [[!CSP]] check with a [[CSP#directive-connect-src|connect-src]] directive on the URL
@@ -1319,21 +1318,20 @@ To <dfn>check the well-known file and fetch the config file</dfn> given an
         with [=request/mode=] set to "unsafe-no-cors". See the relevant
         [pull request](https://github.com/whatwg/fetch/pull/1533) for details.</p>
 
-    1. [=Queue fetch=] with |wellKnownRequest|, |globalObject|, and <var ignore=>processResponseConsumeBody</var>
+    1. [=Fetch request=] with |wellKnownRequest|, |globalObject|, and <var ignore=>processResponseConsumeBody</var>
         set to the following steps given a <a spec=fetch for=/>response</a> |response|:
         1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
         1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderWellKnown}},
             |discovery|.
-        1. Let |check| be set as follows:
-            1. If the [=list/size=] of |discovery|["{{IdentityProviderWellKnown/provider_urls}}"]
-                is greater than 1, set |check| to false.
+        1. If the [=list/size=] of |discovery|["{{IdentityProviderWellKnown/provider_urls}}"]
+            is greater than 1, throw a new "{{NetworkError}}" {{DOMException}}.
 
-                Issue: [relax](https://github.com/fedidcg/FedCM/issues/333) the size of the
-                provider_urls array.
+            Issue: [relax](https://github.com/fedidcg/FedCM/issues/333) the size of the
+            provider_urls array.
 
-            1. Otherwise, set |check| to |discovery|["{{IdentityProviderWellKnown/provider_urls}}"]
-                [=string/is=] equal to |provider|'s {{IdentityProviderConfig/configURL}}.
-        1. If |check| is false, throw a "{{NetworkError}}" {{DOMException}}.
+        1. If |discovery|["{{IdentityProviderWellKnown/provider_urls}}"]
+            [=string/is=] NOT equal to |provider|'s {{IdentityProviderConfig/configURL}}, throw a
+            "{{NetworkError}}" {{DOMException}}.
 
     1. Let |configRequest| be a new <a spec=fetch for=/>request</a> as follows:
 
@@ -1359,13 +1357,12 @@ To <dfn>check the well-known file and fetch the config file</dfn> given an
         :  [=request/credentials mode=]
         :: "omit"
 
-    1. [=Queue fetch=] with |configRequest|, |globalObject|, and <var ignore=>processResponseConsumeBody</var>
+    1. [=Fetch request=] with |configRequest|, |globalObject|, and <var ignore=>processResponseConsumeBody</var>
         set to the following steps given a <a spec=fetch for=/>response</a> |response|:
         1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
         1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderAPIConfig}} stored
             in |config|.
-    1. Wait for both |check| and |config| to be set.
-    1. Assert: |check| (should have thrown an exception if it is false).
+    1. Wait for both fetch responses to be completed.
     1. Return |config|.
 </div>
 
@@ -1410,7 +1407,7 @@ To <dfn>fetch the accounts list</dfn> given an {{IdentityProviderAPIConfig}} |co
 
     Issue: The credentialed fetch in this algorithm can lead to a timing attack that leaks the user's identities before the user grants permission. This is an active area of investigation that is being explored [here](https://github.com/fedidcg/FedCM/issues/230#issuecomment-1089040953).
 
-    1. [=Queue fetch=] with |request|, |globalObject|, and <var ignore=>processResponseConsumeBody</var>
+    1. [=Fetch request=] with |request|, |globalObject|, and <var ignore=>processResponseConsumeBody</var>
         set to the following steps given a <a spec=fetch for=/>response</a> |response|:
         1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
         1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderAccountList}}, and
@@ -1423,7 +1420,7 @@ To <dfn>fetch the accounts list</dfn> given an {{IdentityProviderAPIConfig}} |co
 </div>
 
 <div algorithm>
-To <dfn>create a credential</dfn> given an [=AccountState=] |accountState|, a {{USVString}}
+To <dfn>fetch an identity assertion</dfn> given an [=AccountState=] |accountState|, a {{USVString}}
     |accountId|, an {{IdentityProviderConfig}} |provider|, an {{IdentityProviderAPIConfig}}
     |config|, and |globalObject|, run the following steps. This returns an {{IdentityCredential}}.
     1. Assert |accountState|'s {{AccountState/registration state}} is [=registered=].
@@ -1462,7 +1459,7 @@ To <dfn>create a credential</dfn> given an [=AccountState=] |accountState|, a {{
         :  [=request/credentials mode=]
         :: "include"
 
-    1. [=Queue fetch=] with |request|, |globalObject|, and <var ignore=>processResponseConsumeBody</var>
+    1. [=Fetch request=] with |request|, |globalObject|, and <var ignore=>processResponseConsumeBody</var>
         set to the following steps given a <a spec=fetch for=/>response</a> |response|:
         1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
         1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderToken}}, |token|.
@@ -1477,7 +1474,7 @@ To <dfn>create a credential</dfn> given an [=AccountState=] |accountState|, a {{
 To <dfn>compute account state</dfn> given an {{IdentityProviderConfig}} |provider|, an
 {{IdentityProviderAccount}} |account|, and a |globalObject|, run the following steps. This returns
 an [=AccountState=].
-    1. Let |configUrl| be the result of running [=queue url parser=] with |provider|'s
+    1. Let |configUrl| be the result of running [=parse url=] with |provider|'s
         {{IdentityProviderConfig/configURL}} and |globalObject|.
     1. Let |idpOrigin| be the [=origin=] corresponding to |configUrl|.
     1. Let |rpOrigin| be |globalObject|'s [=associated Document=]'s [=Document/origin=].
@@ -1493,11 +1490,11 @@ an [=AccountState=].
 When <dfn>computing the manifest URL</dfn> given an {{IdentityProviderConfig}} |provider|, a
 [=string=] |manifestString|, and |globalObject|, perform the following steps. This returns a
 <a spec=url for=/>URL</a> or failure.
-    1. Let |configUrl| be the result of running [=queue url parser=] with |provider|'s
+    1. Let |configUrl| be the result of running [=parse url=] with |provider|'s
         {{IdentityProviderConfig/configURL}} and |globalObject|.
-    1. Let |manifestUrl| be the result of running [=queue url parser=] given |manifestString| and
+    1. Let |manifestUrl| be the result of running [=parse url=] given |manifestString| and
         |globalObject|.
-    1. If |manifestUrl| is failure, let |manifestUrl| be the result of running [=queue url parser=]
+    1. If |manifestUrl| is failure, let |manifestUrl| be the result of running [=parse url=]
         given |manifestString| (the relative URL), |globalObject|, and |configUrl| (the base URL).
         Wait until |manifestUrl| is set again.
 
@@ -1581,7 +1578,7 @@ an {{IdentityProviderConfig}} |provider|, run the following steps. This returns 
         :  [=request/credentials mode=]
         :: "omit"
 
-    1. [=Queue fetch=] with |request|, |globalObject|, and <var ignore=>processResponseConsumeBody</var>
+    1. [=Fetch request=] with |request|, |globalObject|, and <var ignore=>processResponseConsumeBody</var>
         set to the following steps given a <a spec=fetch for=/>response</a> |response|:
         1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
         1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderClientMetadata}},
@@ -2227,7 +2224,7 @@ The [=user agent=] uses the following [=maybe fetch the accounts list=] instead 
 To <dfn>maybe fetch the accounts list</dfn> given an {{IdentityProviderAPIConfig}} |config|, an {{IdentityProviderConfig}}
 |provider|, and a |globalObject|, run the following steps. This returns a [=list=].
 
-    1. Let |configUrl| be the result of running [=queue url parser=] with |provider|'s
+    1. Let |configUrl| be the result of running [=parse url=] with |provider|'s
         {{IdentityProviderConfig/configURL}} and |globalObject|.
     1. Let |idpOrigin| be the origin corresponding to |configUrl|.
     1. Let |status| be the [=Sign-in Status=] of the |idpOrigin|.
@@ -2258,7 +2255,7 @@ To <dfn>maybe fetch the accounts list</dfn> given an {{IdentityProviderAPIConfig
 <div algorithm>
 To <dfn>Sign-in to the IDP</dfn> given an {{IdentityProviderAPIConfig}} |config| and an {{IdentityProviderConfig}}
 |provider|. This returns a [=list=].
-    1. Let |configUrl| be the result of running [=queue url parser=] with |provider|'s
+    1. Let |configUrl| be the result of running [=parse url=] with |provider|'s
         {{IdentityProviderConfig/configURL}}.
     1. Let |idpOrigin| be the origin corresponding to |configUrl|.
     1. Assert that the [=Sign-in Status=] of the |idpOrigin| is {{Sign-in Status/signed-out}}.
