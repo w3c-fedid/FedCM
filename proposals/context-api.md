@@ -63,7 +63,7 @@ And the proposal is to introduce 3 context modes:
 ```js
 const {token} = await navigator.credentials.get({
   identity: {
-    // “signin” is the default, “use” and “continue” can also be used
+    // “signin” is the default, “signup”, “use” and “continue” can also be used
     context: "signup", 
     providers: [{
           configURL: "https://idp.example/fedcm.json",
