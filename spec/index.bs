@@ -21,43 +21,14 @@ Abstract: A Web Platform API that allows users to login to websites with their f
 Test Suite: https://github.com/web-platform-tests/wpt/blob/master/credential-management/
 </pre>
 
-<!-- Remove the HTML entries once https://github.com/whatwg/html/pull/6360 is resolved. -->
 <pre class=anchors>
 spec: ecma262; urlPrefix: https://tc39.github.io/ecma262/
     type: dfn
-        text: time values; url: sec-time-values-and-time-range
-        text: promise; url: sec-promise-objects
         text: internal method; url: sec-ordinary-object-internal-methods-and-internal-slots
 
 spec: credential-management-1; urlPrefix: https://w3c.github.io/webappsec-credential-management/
-    type: dictionary
-        text: CredentialRequestOptions; url: dictdef-credentialrequestoptions
-    type: enum
-        text: CredentialMediationRequirement; url: enumdef-credentialmediationrequirement
-    for: Credential
-        type: method
-            text: [[CollectFromCredentialStore]](origin, options, sameOriginWithAncestors)
-            text: [[Create]](origin, options, sameOriginWithAncestors)
-            text: [[DiscoverFromExternalSource]]; url: algorithm-discover-creds
-            text: [[Store]](credential, sameOriginWithAncestors)
     type: dfn
-        text: signal
         text: same-origin with its ancestors; url: same-origin-with-its-ancestors
-
-spec: html; urlPrefix: https://html.spec.whatwg.org/multipage/
-    type: dfn
-        text: origin; for: html-origin-def; url: origin.html#concept-origin
-        text: Content-Type Metadata; url: urls-and-fetching.html#content-type
-        text: DOM manipulation task source; url: webappapis.html#dom-manipulation-task-source
-    type: method
-        text: setTimeout; url: timers-and-user-prompts.html#dom-settimeout
-
-spec: webidl; urlPrefix: https://webidl.spec.whatwg.org/
-    for: Promise
-        type: dfn
-            text: reject
-            text: resolve
-
 </pre>
 
 <pre class=link-defaults>
@@ -324,7 +295,7 @@ could be implemented.
 # Terminology # {#terminology}
 <!-- ============================================================ -->
 
-[[HTML]] defines an [=origin=] as the tuple of a scheme, hostname, and port that
+[[HTML]] defines an [=/origin=] as the tuple of a scheme, hostname, and port that
 provides the main security boundary on the web.
 
 : <dfn>account</dfn>
@@ -417,7 +388,7 @@ provides the main security boundary on the web.
     * [[OIDC-Connect-Core]]
 
 : <dfn>site</dfn>
-:: A set of [=origins=] that are all [=site/same site=] with each other. Note that
+:: A set of [=/origins=] that are all [=site/same site=] with each other. Note that
     there are problems ([[PSL-PROBLEMS]]) with using [=registrable domains=] as
     a logical boundary.
 
@@ -617,7 +588,7 @@ The well-known file is fetched:
 
 (a) **without** cookies,
 (b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`, and
-(c) **without** a [[RFC9110#header.referer|Referer]] header
+(c) **without** a [[RFC9110#field.referer|Referer]] header
 
 For example:
 
@@ -651,8 +622,8 @@ The config endpoint is fetched:
 
 (a) **without** cookies,
 (b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`,
-(c) **without** a [[RFC9110#header.referer|Referer]] header, and
-(c) **without** following [[RFC9110#header.location|HTTP redirects]].
+(c) **without** a [[RFC9110#field.referer|Referer]] header, and
+(c) **without** following [[RFC9110#field.location|HTTP redirects]].
 
 For example:
 
@@ -772,8 +743,8 @@ The accounts list endpoint provides the list of accounts the user has at the [=I
 The accounts list endpoint is fetched
 (a) **with** [=IDP=] cookies,
 (b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`,
-(c) **without** a [[RFC9110#header.referer|Referer]] header, and
-(d) **without** following [[RFC9110#header.location|HTTP redirects]].
+(c) **without** a [[RFC9110#field.referer|Referer]] header, and
+(d) **without** following [[RFC9110#field.location|HTTP redirects]].
 
 For example:
 
@@ -855,10 +826,10 @@ The client metadata endpoint provides metadata about [=RP=]s.
 The client medata endpoint is fetched
 (a) **without** cookies,
 (b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`,
-(c) **with** a [[RFC9110#header.referer|Referer]] header indicating the [=RP=]'s origin
+(c) **with** a [[RFC9110#field.referer|Referer]] header indicating the [=RP=]'s origin
     (as if [[referrer-policy#referrer-policy-strict-origin|Referer-Policy: strict-origin]]
     was in use), and
-(d) **without** following [[RFC9110#header.location|HTTP redirects]].
+(d) **without** following [[RFC9110#field.location|HTTP redirects]].
 
 The user agent also passes the **client_id**.
 
@@ -913,11 +884,11 @@ The identity assertion endpoint is fetched
 
 (a) as a **POST** request,
 (b) **with** [=IDP=] cookies,
-(c) **with** a [[RFC9110#header.referer|Referer]] header indicating the [=RP=]'s origin
+(c) **with** a [[RFC9110#field.referer|Referer]] header indicating the [=RP=]'s origin
     (as if [[referrer-policy#referrer-policy-strict-origin|Referer-Policy: strict-origin]]
     was in use),
 (d) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`,
-(e) **without** following [[RFC9110#header.location|HTTP redirects]].
+(e) **without** following [[RFC9110#field.location|HTTP redirects]].
 
 It will also contain the following parameters in the request body `application/x-www-form-urlencoded`:
 
@@ -1060,7 +1031,7 @@ First, it introduces a new {{Credential}} type, called {{IdentityCredential}}.
 Second, it introduces an extension to {{CredentialRequestOptions}}.
 
 Lastly, it overrides {{IdentityCredential}}'s implementation of
-    {{Credential/[[DiscoverFromExternalSource]]}}.
+{{Credential/[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)}}.
 
 <!-- ============================================================ -->
 ## The State Machine ## {#browser-api-state-machine}
@@ -1068,7 +1039,7 @@ Lastly, it overrides {{IdentityCredential}}'s implementation of
 
 Each [=user agent=] keeps track of a global <dfn>state machine map</dfn>, an initially empty
 [=map=]. The [=map/keys=] in the [=state machine map=] are triples of the form (|rp|, |idp|, |account|) where |rp| is
-the [=origin=] of the [=RP=], |idp| is the [=origin=] of the [=IDP=], and |account| is a string representing
+the [=/origin=] of the [=RP=], |idp| is the [=/origin=] of the [=IDP=], and |account| is a string representing
 an account identifier. The [=map/values=] in the [=state machine map=] are <dfn>AccountState</dfn> objects which have
 the following properties:
 
@@ -1158,9 +1129,9 @@ dictionary IdentityProviderConfig {
 ## The <code>\[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</code> internal method ## {#browser-api-rp-sign-in}
 <!-- ============================================================ -->
 
-The {{Credential/[[DiscoverFromExternalSource]]}} algorithm runs in parallel inside the
-[[CM#algorithm-request]] to request credentials and returns a set of {{IdentityCredential}} for the
-requested [=Identity Provider=]s.
+The {{Credential/[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)}}
+algorithm runs in parallel inside the [[CM#algorithm-request]] to request credentials and returns a
+set of {{IdentityCredential}} for the requested [=Identity Provider=]s.
 
 This [=internal method=] accepts three arguments:
 
@@ -1203,10 +1174,10 @@ algorithm is invoked, the user agent MUST execute the following steps. This retu
     1. Assert: |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"] [=list/size=] is 1.
 
           Issue: Support choosing accounts from multiple [=Identity Provider=]s, as described [here](https://github.com/fedidcg/FedCM/issues/319).
-    1. Run {{setTimeout}} passing a [=task=] which throws a {{NetworkError}}, after a timeout of
-        60 seconds.
+    1. Run {{WindowOrWorkerGlobalScope/setTimeout()}} passing a [=task=] which throws a
+        {{NetworkError}}, after a timeout of 60 seconds.
 
-        Issue: Do not use {{setTimeout}} directly, as that is not correct. See the relevant
+        Issue: Do not use {{WindowOrWorkerGlobalScope/setTimeout()}} directly, as that is not correct. See the relevant
         [issue](https://github.com/fedidcg/FedCM/issues/389).
 
         Note: the purpose of having a timer here is to avoid leaking the reason causing this
@@ -1216,7 +1187,8 @@ algorithm is invoked, the user agent MUST execute the following steps. This retu
     1. Let |credential| be the result of running [=create an IdentityCredential=] with |provider| and
         |globalObject|.
 
-        Note: The |globalObject| is not currently passed onto the {{Credential/[[DiscoverFromExternalSource]]}}
+        Note: The |globalObject| is not currently passed onto the
+        {{Credential/[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)}}
         algorithm. See <a href="https://github.com/w3c/webappsec-credential-management/issues/210">issue</a>.
     
     1. If |credential| is failure, [=queue a global task=] on the [=DOM manipulation task source=]
@@ -1491,7 +1463,7 @@ To <dfn>compute account state</dfn> given an {{IdentityProviderConfig}} |provide
 an [=AccountState=].
     1. Let |configUrl| be the result of running [=parse url=] with |provider|'s
         {{IdentityProviderConfig/configURL}} and |globalObject|.
-    1. Let |idpOrigin| be the [=origin=] corresponding to |configUrl|.
+    1. Let |idpOrigin| be the [=/origin=] corresponding to |configUrl|.
     1. Let |rpOrigin| be |globalObject|'s [=associated Document=]'s [=Document/origin=].
     1. Let |accountId| be |account|'s {{IdentityProviderAccount/id}}.
     1. Let |triple| be (|rpOrigin|, |idpOrigin|, |accountId|).
@@ -1710,7 +1682,7 @@ steps. This returns a {{Promise}}.
     1. [=In parallel=], perform the following steps:
         1. For each |request| in |logoutRequests|:
             1. Let |rpOrigin| be [=this=]'s [=Document/origin=].
-            1. Let |idpOrigin| be |request|'s {{IdentityCredentialLogoutRPsRequest/url}}'s [=origin=].
+            1. Let |idpOrigin| be |request|'s {{IdentityCredentialLogoutRPsRequest/url}}'s [=/origin=].
             1. Let |account| be |request|'s {{IdentityCredentialLogoutRPsRequest/accountId}}.
             1. Let |triple| be (|rpOrigin|, |idpOrigin|, |account|).
             1. If [=state machine map=][|triple|] does not exist, continue.
@@ -1741,7 +1713,7 @@ steps. This returns a {{Promise}}.
             1. [=Queue a global task=] on the [=network task source=]  given |globalObject|
                 to [=fetch=] |fetchRequest|.
             1. Set the |accountState| {{AccountState/allows logout}} to false.
-        1. <a for=Promise>Resolve</a> |promise| with [undefined].
+        1. [=Resolve=] |promise| with [undefined].
     1. Return |promise|.
 </div>
 
@@ -1808,7 +1780,7 @@ rendering of this image is performed by the user agent, and as such this image c
 
 The FedCM API introduces several non-static endpoints on the [=IDP=], so these need to be protected
 from XSS attacks. In order to do so, the FedCM API introduces a new value for the
-<a http-header>Sec-Fetch-Dest</a> header, a [=forbidden header name=]. The requests initiated by the FedCM API
+<a http-header>Sec-Fetch-Dest</a> header, a [=forbidden request-header=]. The requests initiated by the FedCM API
 have a `webidentity` value for this header. The value cannot be set by random websites, so the
 [=IDP=] can be confident that the request was originated by the FedCM browser rather than sent by a
 websites trying to run an XSS attack. An [=IDP=] must to check for this header's value in the
@@ -2168,7 +2140,10 @@ invisibly (i.e. without any explicit and observable indication to the user).
 
 </script>
 
-Internally, each [=user agent=] keeps track of a global <dfn>Sign-in Status</dfn> map per [=IDP=], initially an empty [=map=]. The [=map/keys=] in the [=Sign-in Status=] map is the [=origin=] of the [=IDP=]. The [=map/values=] in the [=Sign-in Status=] map are <b>status</b> objects which can be one of the following values:
+Internally, each [=user agent=] keeps track of a global <dfn>Sign-in Status</dfn> map per [=IDP=],
+initially an empty [=map=]. The [=map/keys=] in the [=Sign-in Status=] map is the [=/origin=] of the
+[=IDP=]. The [=map/values=] in the [=Sign-in Status=] map are <b>status</b> objects which can be one
+of the following values:
 
 <dl dfn-type="argument" dfn-for="Sign-in Status">
     :   <dfn>unknown</dfn> (default)
