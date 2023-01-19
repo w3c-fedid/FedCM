@@ -59,7 +59,7 @@ IdentityCredential.logoutRPs([{
 }, {
   url: "https://rp2.example/logout",
   accountId: "456",
-]);
+}]);
 ```
 
 For security reasons, the IDP does not learn whether any of the network requests
