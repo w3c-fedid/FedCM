@@ -13,7 +13,7 @@ This is a directory with the proposals to extend FedCM that we are actively work
     - Description: allows the account chooser to contain multiple IdPs as described [here](https://github.com/fedidcg/FedCM/issues/319)
 1. **[The Iframe API](https://groups.google.com/a/chromium.org/g/blink-dev/c/IGvFrHYMH7A)**
     - Stage: I2S
-    - Champions: @yi-gu
+    - Champions: @yi-gu, @npm1
     - Description: allows IdPs to call the FedCM API from iframes
 1. **[The User Info API](https://github.com/fedidcg/FedCM/issues/382)**
     - Stage: draft
@@ -39,6 +39,10 @@ This is a directory with the proposals to extend FedCM that we are actively work
     - Stage: draft
     - Champions: @yi-gu
     - Description: allows a user to get automatically signed-in across devices after the browser has observed the sign-up
+1. **Hosted Domain**
+    - Stage: draft
+    - Champions: @npm1
+    - Description: allows the developer to ask FedCM to only show accounts from a specific hosted domain.
 1. ... add yours below with the template ...
 1. **[Your API](yours.md)**
     - Stage: draft > interest > prototype > devtrial > origin trial > launch
