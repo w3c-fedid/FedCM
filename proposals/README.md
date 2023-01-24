@@ -39,7 +39,7 @@ This is a directory with the proposals to extend FedCM that we are actively work
     - Stage: draft
     - Champions: @yi-gu
     - Description: allows a user to get automatically signed-in across devices after the browser has observed the sign-up
-1. **Hosted Domain**
+1. **[Hosted Domain](hosted-domain.md)**
     - Stage: draft
     - Champions: @npm1
     - Description: allows the developer to ask FedCM to only show accounts from a specific hosted domain.
