@@ -41,12 +41,15 @@ settings page allowing the user to disable certain IDPs for use with FedCM.
 
 ```
 IdP-SignIn-Status: action=signin
-IdP-SignIn-Status: action=signout
+IdP-SignIn-Status: action=signout-all
 ```
 
 These headers can be sent on the toplevel load as well as subresources such as
 XMLHttpRequest (this is necessary for at least one IDP).
 
+The signout-all header should only be sent when no accounts remain signed in
+to the IDP, i.e. when this action has signed out all accounts or if this
+was the last/only account getting signed out.
 
 ### JS API (future)
 
@@ -125,5 +128,35 @@ When an error is received from the accounts endpoint or no accounts are returned
 
 ## Alternatives considered
 
+### Big picture
+
 See [https://github.com/fedidcg/FedCM/blob/main/meetings/2022/FedCM_%20Options%20for%20the%20Timing%20Attack%20Problem%202022-08-31.pdf](https://github.com/fedidcg/FedCM/blob/main/meetings/2022/FedCM_%20Options%20for%20the%20Timing%20Attack%20Problem%202022-08-31.pdf) 
 
+### Header syntax
+
+We chose action=signout-all to make it clear that this header should only be
+sent when all accounts from this IDP are signed out.
+
+We could instead or in addition have allowed notifying the user agent of
+individual accounts being signed in/out, such as:
+
+```
+IdP-SignIn-Status: action=signin; count=2
+IdP-SignIn-Status: action=signout; new-count=1
+```
+
+Or
+
+```
+IdP-SignIn-Status: action=signin; accountid=foo@bar.com
+IdP-SignIn-Status: action=signout; accountid=foo@bar.com
+```
+
+However, we decided to go with the simpler syntax because we do not currently
+have a use case that requires the extra information.
+
+Additionally, the second option would require the browser to track which
+specific account IDs are signed in, so that it can tell when there no
+more signed in accounts for this IDP. This introduces extra complexity,
+whereas the IDP already knows how many accounts are signed in and thus
+whether no accounts remain after this signout action.
