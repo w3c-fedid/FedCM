@@ -767,6 +767,7 @@ dictionary IdentityProviderAccount {
   required USVString name;
   required USVString email;
   USVString given_name;
+  USVString picture;
   sequence<USVString> approved_clients;
 };
 dictionary IdentityProviderAccountList {
@@ -785,6 +786,8 @@ Every {{IdentityProviderAccount}} is expected to have members with the following
     ::  The user's email address.
     :   <dfn>given_name</dfn>
     ::  The user's given name.
+    :   <dfn>picture</dfn>
+    ::  URL for the account's picture.
     :   <dfn>approved_clients</dfn>
     ::  A list of [=RP=]s (in the form of [=Client ID=]s) this account is already registered with.
         Used in the [=request permission to sign-up=] to allow the [=IDP=] to control whether to show
@@ -1205,6 +1208,13 @@ failure.
     1. If |config| is failure, return failure.
     1. Let |accountsList| be the result of [=fetch the accounts list=] with |config|, |provider|,
         and |globalObject|.
+    1. For each |account| in |accountsList|:
+        1. If |account|["{{IdentityProviderAccount/picture}}"] is present,
+            [=fetch the account picture=] with |account| and |globalObject|.
+
+        Note: The [=user agent=] may choose to show UI which does not initially require fetching the
+        account pictures. In these cases, the [=user agent=] may delay these fetches until they are
+        needed.
     1. If |accountsList|'s size is 1:
         1. Let |account| be |accountsList|[0].
         1. Let |accountState| be the result of running the [=compute account state=] algorithm
@@ -1403,6 +1413,36 @@ To <dfn>fetch the accounts list</dfn> given an {{IdentityProviderAPIConfig}} |co
 
     1. Wait for |accountsList| to be set.
     1. Return |accountsList|.
+</div>
+
+<div algorithm>
+To <dfn>fetch the account picture</dfn> given an {{IdentityProviderAccount}} |account| and a
+|globalObject|, run the following steps:
+    1. Let |pictureRequest| be a new <a spec=fetch for=/>request</a> as follows:
+
+        :  [=request/url=]
+        :: |account|["{{IdentityProviderAccount/picture}}"]
+        :  [=request/client=]
+        :: null
+        :  [=request/window=]
+        :: "no-window"
+        :  [=request/service-workers mode=]
+        :: "none"
+        :  [=request/destination=]
+        :: "image"
+        :  [=request/origin=]
+        :: a unique [=opaque origin=]
+        :  [=request/referrer policy=]
+        :: "no-referrer"
+        :  [=request/credentials mode=]
+        :: "omit"
+
+    1. [=Fetch request=] with |pictureRequest|, |globalObject|, and <var ignore=>processResponseConsumeBody</var>
+        set to the following steps given a <a spec=fetch for=/>response</a> |response| and a |responseBody|:
+        1. If |responseBody| is some null or failure, the user agent may choose an arbitrary placeholder image
+            and associate it with the |account|.
+        1. Otherwise, decode |responseBody| into an image, and associate it with |account| if successful. This
+            allows the user agent to use the decoded image in a dialog displaying |account|.
 </div>
 
 <div algorithm>
