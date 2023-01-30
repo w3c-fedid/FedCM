@@ -1219,8 +1219,6 @@ failure.
         1. Let |account| be |accountsList|[0].
         1. Let |accountState| be the result of running the [=compute account state=] algorithm
             given |provider|, |account|, and |globalObject|.
-        1. If |account|["{{IdentityProviderAccount/picture}}"] is present,
-            [=fetch the account picture=] with |account| and |globalObject|.
         1. If |accountState|'s {{AccountState/registration state}} is [=unregistered=],
             let |permission| be the result of running [=request permission to sign-up=] algorithm
             with |account|, |accountState|, |config|, |provider|, and |globalObject|.
@@ -1440,8 +1438,10 @@ To <dfn>fetch the account picture</dfn> given an {{IdentityProviderAccount}} |ac
         :: "omit"
 
     1. [=Fetch request=] with |pictureRequest|, |globalObject|, and <var ignore=>processResponseConsumeBody</var>
-        set to the following steps given a <a spec=fetch for=/>response</a> |response|:
-        1. Decode |response| into an image, and associate it with |account| if successful. This
+        set to the following steps given a <a spec=fetch for=/>response</a> |response| and a |responseBody|:
+        1. If |responseBody| is some null or failure, the user agent may choose an arbitrary placeholder image
+            and associate it with the |account|.
+        1. Otherwise, decode |responseBody| into an image, and associate it with |account| if successful. This
             allows the user agent to use the decoded image in a dialog displaying |account|.
 </div>
 
