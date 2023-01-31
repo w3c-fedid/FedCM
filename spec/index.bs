@@ -1311,8 +1311,9 @@ To <dfn>fetch the config file</dfn> given an {{IdentityProviderConfig}} |provide
 
     1. Let |config| be null.
     1. [=Fetch request=] with |wellKnownRequest|, |globalObject|, and <var ignore=>processResponseConsumeBody</var>
-        set to the following steps given a <a spec=fetch for=/>response</a> |response|:
-        1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
+        set to the following steps given a <a spec=fetch for=/>response</a> |response| and |responseBody|:
+        1. Let |json| be the result of [=extract the JSON fetch response=] from |response| and
+            |responseBody|.
         1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderWellKnown}},
             |discovery|.
         1. If the [=list/size=] of |discovery|["{{IdentityProviderWellKnown/provider_urls}}"]
@@ -1350,8 +1351,9 @@ To <dfn>fetch the config file</dfn> given an {{IdentityProviderConfig}} |provide
         :: "omit"
 
     1. [=Fetch request=] with |configRequest|, |globalObject|, and <var ignore=>processResponseConsumeBody</var>
-        set to the following steps given a <a spec=fetch for=/>response</a> |response|:
-        1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
+        set to the following steps given a <a spec=fetch for=/>response</a> |response| and |responseBody|:
+        1. Let |json| be the result of [=extract the JSON fetch response=] from |response| and
+            |responseBody|.
         1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderAPIConfig}} stored
             in |config|, unless |config| has been set to failure.
     1. Wait for both fetch responses to be completed.
@@ -1403,8 +1405,9 @@ To <dfn>fetch the accounts list</dfn> given an {{IdentityProviderAPIConfig}} |co
 
     1. Let |accountsList| be null.
     1. [=Fetch request=] with |request|, |globalObject|, and <var ignore=>processResponseConsumeBody</var>
-        set to the following steps given a <a spec=fetch for=/>response</a> |response|:
-        1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
+        set to the following steps given a <a spec=fetch for=/>response</a> |response| and |responseBody|:
+        1. Let |json| be the result of [=extract the JSON fetch response=] from |response| and
+            |responseBody|.
         1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderAccountList}}, and
             store the result in |accountsList|.
 
@@ -1438,8 +1441,8 @@ To <dfn>fetch the account picture</dfn> given an {{IdentityProviderAccount}} |ac
         :: "omit"
 
     1. [=Fetch request=] with |pictureRequest|, |globalObject|, and <var ignore=>processResponseConsumeBody</var>
-        set to the following steps given a <a spec=fetch for=/>response</a> |response| and a |responseBody|:
-        1. If |responseBody| is some null or failure, the user agent may choose an arbitrary placeholder image
+        set to the following steps given a <var ignore=''>response</var> and a |responseBody|:
+        1. If |responseBody| is null or failure, the user agent may choose an arbitrary placeholder image
             and associate it with the |account|.
         1. Otherwise, decode |responseBody| into an image, and associate it with |account| if successful. This
             allows the user agent to use the decoded image in a dialog displaying |account|.
@@ -1487,8 +1490,9 @@ To <dfn>fetch an identity assertion</dfn> given an [=AccountState=] |accountStat
 
     1. Let |credential| be null.
     1. [=Fetch request=] with |request|, |globalObject|, and <var ignore=>processResponseConsumeBody</var>
-        set to the following steps given a <a spec=fetch for=/>response</a> |response|:
-        1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
+        set to the following steps given a <a spec=fetch for=/>response</a> |response| and |responseBody|:
+        1. Let |json| be the result of [=extract the JSON fetch response=] from |response| and
+            |responseBody|.
         1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderToken}}, |token|.
         1. Let |credential| be a new {{IdentityCredential}} given |globalObject|'s
             <a for="global object">realm</a>.
@@ -1535,17 +1539,12 @@ When <dfn>computing the manifest URL</dfn> given an {{IdentityProviderConfig}} |
 </div>
 
 <div algorithm>
-To <dfn>extract the JSON fetch response</dfn> given a <a spec=fetch for=/>response</a> |response|,
-run the following steps. This returns an [=ordered map=].
+To <dfn>extract the JSON fetch response</dfn> given a <a spec=fetch for=/>response</a> |response|
+and a |responseBody|, run the following steps. This returns an [=ordered map=].
     1. Assert: These steps are running on the [=networking task source=].
     1. If |response| is a [=network error=] or its [=response/status=] is not an [=ok status=],
         throw a new "{{NetworkError}}" {{DOMException}}.
-    1. Let |mimeType| be the result of <a>extracting a MIME TYPE</a> from |response|'s
-        <a for=response>header list</a>.
-    1. If |mimeType| is failure or is not a [=JSON MIME Type=], throw a new "{{NetworkError}}"
-        {{DOMException}}.
-    1. Let |json| be the result of [=parse JSON bytes to an Infra value=] passing |response|'s
-        [=response/body=].
+    1. Let |json| be the result of [=parse JSON bytes to an Infra value=] passing |responseBody|.
     1. If |json| is a parsing exception, or if |json| is not an [=ordered map=], throw a new
         "{{NetworkError}}" {{DOMException}}.
     1. Return |json|.
@@ -1608,8 +1607,9 @@ an {{IdentityProviderConfig}} |provider|, run the following steps. This returns 
 
     1. Let |metadata| be null.
     1. [=Fetch request=] with |request|, |globalObject|, and <var ignore=>processResponseConsumeBody</var>
-        set to the following steps given a <a spec=fetch for=/>response</a> |response|:
-        1. Let |json| be the result of [=extract the JSON fetch response=] from |response|.
+        set to the following steps given a <a spec=fetch for=/>response</a> |response| and |responseBody|:
+        1. Let |json| be the result of [=extract the JSON fetch response=] from |response| and
+            |responseBody|.
         1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderClientMetadata}},
             and store the result in |metadata|.
     1. Wait until |metadata| is set.
