@@ -31,6 +31,10 @@ This is a directory with the proposals to extend FedCM that we are actively work
     - Stage: draft
     - Champions: @yi-gu
     - Description: allows IdPs to monitor the performance of IdP in a privacy-preserving manner
+1. **[Webdriver support](webdriver.md)**
+    - Stage: draft
+    - Champions: @cbiesinger
+    - Description: Adds a Webdriver API to allow RPs/IDPs to interact with the FedCM dialog for automated testing
 1. **The Revocation API**
     - Stage: draft
     - Champions: @yi-gu
