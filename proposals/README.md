@@ -12,11 +12,19 @@ This is a directory with the proposals to extend FedCM that we are actively work
     - Champions: @npm1, @tttzach, @bvandersloot-mozilla
     - Description: allows the account chooser to contain multiple IdPs as described [here](https://github.com/fedidcg/FedCM/issues/319)
 1. **[The Iframe API](https://github.com/fedidcg/FedCM/blob/main/explorations/iframe_support.md)**
-    - Stage: I2S
+    - Stage: Shipped
     - Champions: @yi-gu, @npm1
     - Description: allows IdPs to call the FedCM API from iframes
-1. **[The User Info API](https://github.com/fedidcg/FedCM/issues/382)**
+1. **[Webdriver support](webdriver.md)**
     - Stage: draft
+    - Champions: @cbiesinger
+    - Description: Adds a Webdriver API to allow RPs/IDPs to interact with the FedCM dialog for automated testing
+1. **[The Auto Re-authentication API](auto-re-authentication-api.md)**
+    - Stage: prototype
+    - Champions: @yi-gu
+    - Description: allows a user to get automatically re-authenticated after the browser has observed the sign-up
+1. **[The User Info API](https://github.com/fedidcg/FedCM/issues/382)**
+    - Stage: prototype
     - Champions: @yi-gu
     - Description: allows IdPs to get the logged-in user information to personalize buttons
 1. **[The Login Hint API](https://github.com/fedidcg/FedCM/blob/main/proposals/login-hint.md)**
@@ -24,25 +32,17 @@ This is a directory with the proposals to extend FedCM that we are actively work
     - Champions: @npm1
     - Description: allows RPs to give a hint of an account that was used in the past
 1. **[The Context API](context-api.md)**
-    - Stage: draft
+    - Stage: prototype
     - Champions: @samuelgoto
     - Description: allows an RP to specify and customize the context of the FedCM prompt
 1. **[The Metrics API](https://github.com/fedidcg/FedCM/issues/352)**
     - Stage: draft
     - Champions: @yi-gu
     - Description: allows IdPs to monitor the performance of IdP in a privacy-preserving manner
-1. **[Webdriver support](webdriver.md)**
-    - Stage: draft
-    - Champions: @cbiesinger
-    - Description: Adds a Webdriver API to allow RPs/IDPs to interact with the FedCM dialog for automated testing
 1. **The Revocation API**
     - Stage: draft
     - Champions: @yi-gu
     - Description: allows an RP to indicate to the IdP that the user is interested in unregistering
-1. **The Auto Sign-in API**
-    - Stage: draft
-    - Champions: @yi-gu
-    - Description: allows a user to get automatically signed-in across devices after the browser has observed the sign-up
 1. **[Hosted Domain](hosted-domain.md)**
     - Stage: draft
     - Champions: @npm1
