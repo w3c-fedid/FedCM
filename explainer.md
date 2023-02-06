@@ -104,6 +104,108 @@ Features which are out-of-scope for the **current** version of FedCM, but are
 * Replace OIDC / SAML / OAuth: these efforts should continue to thrive by
    offering a better identity-specific foundation
 
+## Use Cases
+
+The below use case scenarios illustrate some basic supported flows. Each
+supported flow below occurs inside an iframe or in an XHR request.
+
+
+### Sign-up
+
+A Sign-up occurs when the user is registering a new account at the
+Relying Party using their Identity Provider.
+
+For instance, a user navigates to a Relying Party in their browser
+and creates an account. The Relying Party displays supported
+Identity Providers to the user who selects their favorite. The user
+is prompted "Do you want to sign up on the Relying Party with the Identity Provider?".
+Upon user agreement an account is created with the Identity Provider and
+the user has a session initialized on Relying Party.
+
+### Sign-in
+
+After a user navigates to a Relying Party in a browser and creates an
+account by going through their sign up flow, the user can
+sign into their account once their session expires.
+
+A sign-in occurs when the Identity Provider believes it is
+necessary to gather an explicit permission from the user to sign into a
+Relying Party, typically after the user goes through a
+sign out flow.
+
+For example, after the user has done the sign out flow of the
+Relying Party they decide to log in again. The user visits the
+Relying Party and selects their Identity Provider to sign-in. The
+Identity Provider knows:
+    * the user already has an account with the Relying Party.
+    * the user has logged out of the Relying Party.
+
+The user is then prompted, "Do you want to sign in on the Relying Party with the Identity Provider?"
+and upon user agreement the Relying Party creates a new session with
+the users existing account.
+
+### Sign-out
+
+After a user navigates to a Relying Party in a browser and decides to
+create an account by going through their sign up flow,
+there are two ways a user can clear their sessions:
+
+#### RP Sign-out
+
+The user can log out through the Relying Party by using a provided
+sign-out button or link provided by the Relying Party. This then
+removes the users session and, when the user visits the Relying Party
+again they will need to go through the sign in flow
+in order to establish a new session.
+
+#### IDP Sign-out
+
+The user can log out through the Identity Provider by using a provided
+sign-out system provided by the Identity Provider. After using the
+sign-out system the Identity Provider will log the user out of all
+Relying Parties the user has signed into along with logging the user
+out of the Identity Provider itself. Upon returning to any associated
+Relying Party, the user will need to sign in with the Identity Provider
+first and go through the sign in flow on the Relying Party.
+
+### Revocation
+
+After a user has created an account on a Relying Party there are two
+ways a user can cancel their account with the Relying Party:
+
+#### RP Revocation
+
+The user can delete their account through the Relying Party by using
+the provided account revocation system. The Relying Party informs the
+Identity Provider that the user has deleted (revoked) their account.
+When the user returns to the Relying Party they will need to complete
+the sign up flow in order to access the site.
+
+#### IDP Revocation
+
+The user can delete their account with a Relying Party by revoking
+Relying Party access through the Identity Provider. This can be done
+by going to the Identity Provider and using their revoke access system.
+Once access is revoked, when the user returns to the Relying Party they
+will need to complete the sign up flow in order to access the
+site.
+
+### Access
+
+The Identity Provider while authenticating the user may also authorize
+access to users resources such as calendars, contacts, etc. The granting
+of access can be done at either sign-up or post sign-up by requesting
+permission from the user.
+
+For example, a user executes the sign up flow with a
+Relying Party. During the flow the Relying Party has informed the
+Identity Provider they need calendar access for the user. The user will
+be presented with a prompt, "Do you want to give access to your Calendar
+to the Relying Party?". The user grants permission to providing access and when
+the flow is complete the Relying Party shows the user their calendar
+entries provided by the Identity Provider.
+
+
 ## Example
 
 The following is an example of a website allowing a user to login with
