@@ -92,6 +92,20 @@ While disabling auto re-authn after explicit user sign-out of the RP is also an 
 ### Cancellable auto re-authn
 When auto re-authn flow is triggered, it’s possible that a user wants to cancel it. One possible solution is that before the browser fetches the token automatically, it shows a UI for users to cancel the auto re-authn flow. If users don’t take any action in 5s, the browser proceeds with the token fetch. While this solution provides more controls to some users, it does raise accessibility concerns due to the call-to-action UI being timed out. We could use a longer timeout value but that would negate the benefits of auto re-authn.
 
+## Considered alternatives
+### mediation: silent
+The Credential Management API [supports]([url](https://www.w3.org/TR/credential-management-1/#dom-credentialmediationrequirement-silent)) `mediation: silent` to achieve similar goals. In particular, the intended usage of `mediation: silent` is to
+> support "Keep me signed-into this site" scenarios, where a developer may wish to silently obtain credentials if a user should be automatically signed in, but to delay bothering the user with a sign-in prompt until they actively choose to sign-in.
+
+While the concepts are similar, there are some notable differences from our use case:
+1. Fallback strategy. With `mediation: silent`, the operation will return null rather than involving the user when the requested credential is unavailable. e.g. when a user visits an RP for the first time on a new device, if `mediation: silent` is used, the user won't see any UI as if the API is never called. For FedCM, we'd like to fallback to the explicit authentication flow if the user is not "returning" such that RPs don't need to choose different mediation modes. It aligns with our activation strategy: pulling as much effort as possible from RP side to the browser side.
+
+1. Stored credential. `mediation: silent` works when there's a single local credential that gets stored previously. However, FedCM does not store any Credential object (e.g. IdentityCredential) locally and always fetches from IDP on the fly. 
+
+1. sign-in v.s. authentication. In a successful FedCM flow, we resolve the promise with an id token as part of the authentication. However, an RP can require extra steps before actually signing the user in. e.g. 2-step verification. i.e. FedCM API cannot guarantee that the user is signed in post authentication which deviates a bit from the intended purpose of `mediation: silent`. 
+
+Reusing the existing `mediation: silent` without monkey patching seems suboptimal from both API and ergonomics's perspective. It may be feasible to introduce another mediation mode for our use case. That said, the differences above are mostly FedCM specific. We should probably also add `IdentityCredential` to the Credential Management API if this option is desirable. 
+
 ## FedCM extensions consideration
 ### Multiple IDP support
 FedCM is adding multiple IDP support (explainer) which may have an intersection with auto re-authn. e.g. if both IDP1 and IDP2 are eligible for FedCM, how does FedCM handle auto re-authn?
