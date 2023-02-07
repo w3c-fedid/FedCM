@@ -144,46 +144,6 @@ The user is then prompted, "Do you want to sign in on the Relying Party with the
 and upon user agreement the Relying Party creates a new session with
 the users existing account.
 
-#### RP Sign-out
-
-The user can log out through the Relying Party by using a provided
-sign-out button or link provided by the Relying Party. This then
-removes the user's session and, when the user visits the Relying Party
-again they will need to go through the sign in flow
-in order to establish a new session.
-
-#### IDP Sign-out
-
-The user can log out through the Identity Provider by using a provided
-sign-out system provided by the Identity Provider. After using the
-sign-out system the Identity Provider will log the user out of all
-Relying Parties the user has signed into along with logging the user
-out of the Identity Provider itself. Upon returning to any associated
-Relying Party, the user will need to sign in with the Identity Provider
-first and go through the sign in flow on the Relying Party.
-
-### Revocation
-
-After a user has created an account on a Relying Party there are two
-ways a user can cancel their account with the Relying Party:
-
-#### RP Revocation
-
-The user can delete their account through the Relying Party by using
-the provided account revocation system. The Relying Party informs the
-Identity Provider that the user has deleted (revoked) their account.
-When the user returns to the Relying Party they will need to complete
-the sign up flow in order to access the site.
-
-#### IDP Revocation
-
-The user can delete their account with a Relying Party by revoking
-Relying Party access through the Identity Provider. This can be done
-by going to the Identity Provider and using their revoke access system.
-Once access is revoked, when the user returns to the Relying Party they
-will need to complete the sign up flow in order to access the
-site.
-
 ## Example
 
 The following is an example of a website allowing a user to login with
