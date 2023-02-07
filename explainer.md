@@ -144,17 +144,11 @@ The user is then prompted, "Do you want to sign in on the Relying Party with the
 and upon user agreement the Relying Party creates a new session with
 the users existing account.
 
-### Sign-out
-
-After a user navigates to a Relying Party in a browser and decides to
-create an account by going through their sign up flow,
-there are two ways a user can clear their sessions:
-
 #### RP Sign-out
 
 The user can log out through the Relying Party by using a provided
 sign-out button or link provided by the Relying Party. This then
-removes the users session and, when the user visits the Relying Party
+removes the user's session and, when the user visits the Relying Party
 again they will need to go through the sign in flow
 in order to establish a new session.
 
@@ -189,22 +183,6 @@ by going to the Identity Provider and using their revoke access system.
 Once access is revoked, when the user returns to the Relying Party they
 will need to complete the sign up flow in order to access the
 site.
-
-### Access
-
-The Identity Provider while authenticating the user may also authorize
-access to users resources such as calendars, contacts, etc. The granting
-of access can be done at either sign-up or post sign-up by requesting
-permission from the user.
-
-For example, a user executes the sign up flow with a
-Relying Party. During the flow the Relying Party has informed the
-Identity Provider they need calendar access for the user. The user will
-be presented with a prompt, "Do you want to give access to your Calendar
-to the Relying Party?". The user grants permission to providing access and when
-the flow is complete the Relying Party shows the user their calendar
-entries provided by the Identity Provider.
-
 
 ## Example
 

@@ -1,5 +1,5 @@
 
-# IDP Sign-out
+# IDP Front-Channel Sign-out
 
 Note: The API specified in this section is not launched in any user agent,
 and as such should be considered very experimental and subject to change.
@@ -29,7 +29,7 @@ Each RP endpoint is responsible for clearing its local state
 | |                             | |       | |                             | |
 | +-----------------------------+ |       | |  +~~~~~~~~~~~~~~~~~~~~~~~+  | |
 | |   Sign-in to rp.example     | |       | |  :"<script>"             :  | |
-| |     with idp.example?       | |       | |  :" IdentityCredential. ":  | |
+| |     with idp.example?       | |       | |  :"  IdentityProvider.  ":  | |
 | |                             | |       | |  :"    logoutRPs([{     ":  | |
 | | .----.                      | |       | |  :"       url: ...      ":  | |
 | | | :) | "John Doe"           | |  -->  | |  :"       accountId: ...":  | |
@@ -72,13 +72,14 @@ dictionary IdentityCredentialLogoutRPsRequest {
 [Exposed=Window, SecureContext]
 partial interface IdentityCredential {
   static Promise<undefined> logoutRPs(sequence<IdentityCredentialLogoutRPsRequest> logoutRequests);
-};```
+};
+```
 
 
-Proposed algorithm:
+Proposed algorithm in bikeshed:
 
-```bikeshed
-When the {{IdentityCredential/logoutRPs()}} method is invoked given a [=list=] of
+```
+When the {{IdentityProvider/logoutRPs()}} method is invoked given a [=list=] of
 {{IdentityCredentialLogoutRPsRequest}}s |logoutRequests|, the user agent MUST execute the following
 steps. This returns a {{Promise}}.
     1. Let |promise| be a new {{Promise}}.
