@@ -588,7 +588,7 @@ The well-known file is fetched:
 
 (a) **without** cookies,
 (b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`, and
-(c) **without** a [[RFC9110#field.referer|Referer]] header
+(c) **without** revealing the [=RP=] in the <a http-header>Origin</a> header.
 
 For example:
 
@@ -622,7 +622,7 @@ The config endpoint is fetched:
 
 (a) **without** cookies,
 (b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`,
-(c) **without** a [[RFC9110#field.referer|Referer]] header, and
+(c) **without** revealing the [=RP=] in the <a http-header>Origin</a> header, and
 (c) **without** following [[RFC9110#field.location|HTTP redirects]].
 
 For example:
@@ -743,7 +743,7 @@ The accounts list endpoint provides the list of accounts the user has at the [=I
 The accounts list endpoint is fetched
 (a) **with** [=IDP=] cookies,
 (b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`,
-(c) **without** a [[RFC9110#field.referer|Referer]] header, and
+(c) **without** revealing the [=RP=] in the <a http-header>Origin</a> header, and
 (d) **without** following [[RFC9110#field.location|HTTP redirects]].
 
 For example:
@@ -829,9 +829,7 @@ The client metadata endpoint provides metadata about [=RP=]s.
 The client medata endpoint is fetched
 (a) **without** cookies,
 (b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`,
-(c) **with** a [[RFC9110#field.referer|Referer]] header indicating the [=RP=]'s origin
-    (as if [[referrer-policy#referrer-policy-strict-origin|Referer-Policy: strict-origin]]
-    was in use), and
+(c) **with** the [=RP=]'s origin in the <a http-header>Origin</a> header, and
 (d) **without** following [[RFC9110#field.location|HTTP redirects]].
 
 The user agent also passes the **client_id**.
@@ -842,7 +840,7 @@ For example:
 ```http
 GET /client_medata?client_id=1234 HTTP/1.1
 Host: idp.example
-Referer: https://rp.example/
+Origin: https://rp.example/
 Accept: application/json
 Sec-Fetch-Dest: webidentity
 ```
@@ -887,9 +885,7 @@ The identity assertion endpoint is fetched
 
 (a) as a **POST** request,
 (b) **with** [=IDP=] cookies,
-(c) **with** a [[RFC9110#field.referer|Referer]] header indicating the [=RP=]'s origin
-    (as if [[referrer-policy#referrer-policy-strict-origin|Referer-Policy: strict-origin]]
-    was in use),
+(c) **with** the [=RP=]'s origin in the <a http-header>Origin</a> header, and
 (d) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`,
 (e) **without** following [[RFC9110#field.location|HTTP redirects]].
 
@@ -915,7 +911,7 @@ For example:
 ```http
 POST /fedcm_assertion_endpoint HTTP/1.1
 Host: idp.example
-Referer: https://rp.example/
+Origin: https://rp.example/
 Content-Type: application/x-www-form-urlencoded
 Cookie: 0x23223
 Sec-Fetch-Dest: webidentity
@@ -924,10 +920,10 @@ account_id=123&client_id=client1234&nonce=Ct60bD&disclosure_text_shown=true
 </div>
 
 <div class=idp-normative-text>
-An [=IDP=] MUST check the referrer to ensure that a malicious [=RP=] does not receive an ID token
-corresponding to another [=RP=]. In other words, the [=IDP=] MUST check that the referrer is
-represented by the [=client id=]. As the [=client ids=] are [=IDP=]-specific, the [=user agent=]
-cannot perform this check.
+An [=IDP=] MUST check the <a http-header>Origin</a> header to ensure that a malicious [=RP=] does
+not receive an ID token corresponding to another [=RP=]. In other words, the [=IDP=] MUST check that
+the <a http-header>Origin</a> header value is represented by the [=client id=]. As the
+[=client ids=] are [=IDP=]-specific, the [=user agent=] cannot perform this check.
 </div>
 
 The response body must be a JSON object that can be [=converted to an IDL value|converted=] to an {{IdentityProviderToken}} without an exception.
@@ -1479,12 +1475,10 @@ To <dfn>fetch an identity assertion</dfn> given an [=AccountState=] |accountStat
         :  [=request/destination=]
         :: "webidentity"
         :  [=request/origin=]
-        :: a unique [=opaque origin=]
+        :: [=RP=]'s [=/origin=] (TODO)
         :  [=request/header list=]
         :: a [=list=] containing a single [=header=] with [=header/name=] set to `Accept` and
             [=header/value=] set to `application/x-www-form-urlencoded`
-        :  [=request/referrer=]
-        :: [=RP=]'s URL (TODO).
         :  [=request/credentials mode=]
         :: "include"
 
@@ -1596,12 +1590,10 @@ an {{IdentityProviderConfig}} |provider|, run the following steps. This returns 
         :  [=request/destination=]
         :: "webidentity"
         :  [=request/origin=]
-        :: a unique [=opaque origin=]
+        :: [=RP=]'s [=/origin=] (TODO)
         :  [=request/header list=]
         :: a [=list=] containing a single [=header=] with [=header/name=] set to `Accept` and
             [=header/value=] set to `application/json`
-        :  [=request/referrer=]
-        :: [=RP=]'s URL (TODO).
         :  [=request/credentials mode=]
         :: "omit"
 
