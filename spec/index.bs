@@ -89,169 +89,16 @@ The API provides the primitives needed to support federated identity when/where
 it depends on third-party cookies, from sign-in to sign-out and revocation.
 
 In order to provide the federated identity primitives without the use of
-third-party cookies the API places the [=user agent=] as a mediator between
-[=RPs=] and [=IDPs=]. This mediation requires user permission before allowing
-the [=RPs=] and [=IDPs=] to know about their connection to the user.
-
-<script type="text/typogram">
-.---------------------------------.       .---------------------------------.
-| .-----------------------------. |       | .-----------------------------. |
-| | "https://rp.example"        | |       | | "https://rp.example"        | |
-| '-----------------------------' |       | '-----------------------------' |
-| .-----------------------------. |       | .-----------------------------. |
-| |                             | |       | |                             | |
-| |   Welcome to my website!    | |       | |  Welcome to my website!     | |
-| |                             | |       | |                             | |
-| |                             | |       | |                             | |
-| +-----------------------------+ |       | +-----------------------------+ |
-| |       Choose an account     | |       | |    Sign-in to rp.example    | |
-| |   to sign-in to rp.example  | |       | |      with idp.example?      | |
-| |                             | |       | |                             | |
-| | .----.                      | |       | | .----.                      | |
-| | | :) |  John Doe            | |  -->  | | | :) |  John Doe            | |
-| | '----'  john@email.com      | |       | | '----'  john@email.com      | |
-| | .----.                      | |       | |                             | |
-| | | :] |  John Doe            | |       | | +-------------------------+ | |
-| | '----'  john.doe@work.com   | |       | | |    Continue as John     | | |
-| |                             | |       | | +-------------------------+ | |
-| '-----------------------------' |       | '-----------------------------' |
-'---------------------------------'       '---------------------------------'
-</script>
+third-party cookies the API places the [=user agent=] as a mediator between a
+<dfn><abbr title="Relying Party">RP</abbr></dfn> (website that requests user information for
+federated sign in) and an <dfn><abbr title="Identity Provider">IDP</abbr></dfn> (website that provides
+user information for federated sign in). This mediation requires user
+permission before allowing the [=RPs=] and [=IDPs=] to know about their
+connection to the user.
 
 The specification leans heavily on changes in the [=user agent=] and [=IDP=]
-and minimally on the [=RP=]. The FedCM API provides a way to authenticate,
-fetch tokens, revoke the provided tokens, and allow for front-channel logout.
-
-<!-- ============================================================ -->
-## Use Cases ## {#use-cases}
-<!-- ============================================================ -->
-
-The below use case scenarios illustrate some basic supported flows. Each
-supported flow below occurs inside an iframe or in an XHR request. Additional
-scenarios, including sample code, are given in the
-[[Identity-Use-Cases-in-Browser-Catalog]].
-
-<!-- ============================================================ -->
-### Sign-up ### {#use-cases-sign-up}
-<!-- ============================================================ -->
-
-A Sign-up occurs when the user is registering a new account at the
-[=Relying Party=] using their [=Identity Provider=].
-
-For instance, a user navigates to a [=Relying Party=] in their browser
-and creates an account. The [=Relying Party=] displays supported
-[=Identity Providers=] to the user who selects their favorite. The user
-is prompted "Do you want to sign up on the [=Relying Party=] with the [=Identity Provider=]?".
-Upon user agreement an [=account=] is created with the [=Identity Provider=] and
-the user has a [=session=] initialized on [=Relying Party=].
-
-<!-- ============================================================ -->
-### Sign-in ### {#use-cases-sign-in}
-<!-- ============================================================ -->
-
-After a user navigates to a [=Relying Party=] in a browser and creates an
-account by going through their [[#use-cases-sign-up]] flow, the user can
-sign into their [=account=] once their [=session=] expires.
-
-A sign-in occurs when the [=Identity Provider=] believes it is
-necessary to gather an explicit permission from the user to sign into a
-[=Relying Party=], typically after the user goes through a
-[[#use-cases-sign-out]] flow.
-
-For example, after the user has done the [[#use-cases-sign-out]] flow of the
-[=Relying Party=] they decide to log in again. The user visits the
-[=Relying Party=] and selects their [=Identity Provider=] to sign-in. The
-[=Identity Provider=] knows:
-    * the user already has an account with the [=Relying Party=].
-    * the user has logged out of the [=Relying Party=].
-
-The user is then prompted, "Do you want to sign in on the [=Relying Party=] with the [=Identity Provider=]?"
-and upon user agreement the [=Relying Party=] creates a new [=session=] with
-the users existing [=account=].
-
-<!-- ============================================================ -->
-### Sign-out ### {#use-cases-sign-out}
-<!-- ============================================================ -->
-
-After a user navigates to a [=Relying Party=] in a browser and decides to
-create an [=account=] by going through their [[#use-cases-sign-up]] flow,
-there are two ways a user can clear their [=session=]s:
-
-<!-- ============================================================ -->
-#### RP Sign-out #### {#use-cases-rp-sign-out}
-<!-- ============================================================ -->
-
-The user can log out through the [=Relying Party=] by using a provided
-sign-out button or link provided by the [=Relying Party=]. This then
-removes the users [=session=] and, when the user visits the [=Relying Party=]
-again they will need to go through the [[#use-cases-sign-in]] flow
-in order to establish a new session.
-
-<!-- ============================================================ -->
-#### IDP Sign-out #### {#use-cases-idp-sign-out}
-<!-- ============================================================ -->
-
-The user can log out through the [=Identity Provider=] by using a provided
-sign-out system provided by the [=Identity Provider=]. After using the
-sign-out system the [=Identity Provider=] will log the user out of all
-[=Relying Parties=] the user has signed into along with logging the user
-out of the [=Identity Provider=] itself. Upon returning to any associated
-[=Relying Party=], the user will need to sign in with the [=Identity Provider=]
-first and go through the [[#use-cases-sign-in]] flow on the [=Relying Party=].
-
-<!-- ============================================================ -->
-### Revocation ### {#use-cases-revocation}
-<!-- ============================================================ -->
-
-After a user has created an account on a [=Relying Party=] there are two
-ways a user can cancel their account with the [=Relying Party=]:
-
-<!-- ============================================================ -->
-#### RP Revocation #### {#use-cases-rp-revocation}
-<!-- ============================================================ -->
-
-The user can delete their account through the [=Relying Party=] by using
-the provided account revocation system. The [=Relying Party=] informs the
-[=Identity Provider=] that the user has deleted (revoked) their account.
-When the user returns to the [=Relying Party=] they will need to complete
-the [[#use-cases-sign-up]] flow in order to access the site.
-
-<!-- ============================================================ -->
-#### IDP Revocation #### {#use-cases-idp-revocation}
-<!-- ============================================================ -->
-
-The user can delete their account with a [=Relying Party=] by revoking
-[=Relying Party=] access through the [=Identity Provider=]. This can be done
-by going to the [=Identity Provider=] and using their revoke access system.
-Once access is revoked, when the user returns to the [=Relying Party=] they
-will need to complete the [[#use-cases-sign-up]] flow in order to access the
-site.
-
-<!-- ============================================================ -->
-### Access ### {#use-cases-access}
-<!-- ============================================================ -->
-
-The [=Identity Provider=] while authenticating the user may also authorize
-access to users resources such as calendars, contacts, etc. The granting
-of access can be done at either sign-up or post sign-up by requesting
-permission from the user.
-
-For example, a user executes the [[#use-cases-sign-up]] flow with a
-[=Relying Party=]. During the flow the [=Relying Party=] has informed the
-[=Identity Provider=] they need calendar access for the user. The user will
-be presented with a prompt, "Do you want to give access to your Calendar
-to the [=Relying Party=]?". The user grants permission to providing access and when
-the flow is complete the [=Relying Party=] shows the user their calendar
-entries provided by the [=Identity Provider=].
-
-<!-- ============================================================ -->
-# Examples # {#examples}
-<!-- ============================================================ -->
-
-This specification defines a new {{IdentityCredential}} type and internal
-algorithms to allow the exchange of identity between [=IDP=]s and [=RP=]s.
-When it succeeds, it returns to the [=RP=] a signed [=token=] which the
-[=RP=] can use to authenticate the user.
+and minimally on the [=RP=]. The FedCM API provides a way to authenticate and
+fetch tokens.
 
 <div class=example>
 Example showing how a website allowing for a single logged in account
@@ -291,140 +138,11 @@ could be implemented.
 ```
 </div>
 
-<!-- ============================================================ -->
-# Terminology # {#terminology}
-<!-- ============================================================ -->
-
-[[HTML]] defines an [=/origin=] as the tuple of a scheme, hostname, and port that
-provides the main security boundary on the web.
-
-: <dfn>account</dfn>
-:: TODO(goto): find existing definition.
-
-: <dfn>authentication</dfn>
-:: Process used by an [=Identity Provider=] to achieve sufficient confidence in
-    the binding between the user and a presented identity.
-
-    Note that in some discussions and documentation, the term _authentication_ is
-    used to refer to the [=federated sign-in=] process. However, the user does not
-    authenticate to the [=RP=] during [=federated sign-in=]. The user
-    authenticates to the [=IDP=], which then provides a claim to the [=RP=]
-    asserting the user’s identity. The user does not prove their identity to the
-    [=RP=].
-
-    See also:
-    * [[OIDC-Connect-Core#Terminology]]
-    * [[OIDC-Connect-Core#Authentication]]
-    * [[SAML-Glossary]]
-
-: <dfn>client id</dfn>
-:: Each [=IDP=] assigns to each [=RP=] a [=client id=] to uniquely identify the [=RP=]. Note that
-    this ID is dependent on both the [=IDP=] and the [=RP=], but the [=client id=] of an [=RP=] only
-    needs to be unique with respect to any other [=client id=] within the same [=IDP=].
-
-: <dfn>directed identifier</dfn>
-:: A [=user identifier=] that that is unique for each [=site=] the user visits. A
-    goal of anti-tracking policy is to promote [=user identifiers=] to become
-    [=directed identifiers=].
-
-: <dfn>global identifier</dfn>
-:: A string that identifies a particular [=user=] independent of which site
-    they're visiting (e.g. email addresses and phone numbers). Users generally
-    have relatively few global identifiers and can usually list and recognize
-    them. A goal of anti-tracking policy is to prevent [=user identifiers=] from
-    becoming [=global identifiers=].
-
-: <dfn>high-level API</dfn>
-:: A use case specific API, as opposed to a [=low-level API=]. See also
-    [high level vs low level](https://w3ctag.github.io/design-principles/#high-level-low-level).
-
-: <dfn>token</dfn>
-:: TODO(goto): find existing definition.
-
-: <dfn>Identity Provider</dfn>
-: <dfn>IDP</dfn>
-:: A service that has information about the user and can grant that information
-    to [=Relying Parties=].
-
-    See also:
-    * [[OIDC-Connect-Core#Terminology]]
-
-: <dfn>Tracker</dfn>
-:: A third-party origin that has injected a script within the [=RP=] and that is not an [=IDP=]. Its
-    goal is to track the user's behavior and build profiles that it can then sell to the highest
-    bidder.
-
-: <dfn>joining</dfn>
-:: TODO(goto): find existing definition.
-
-: <dfn>low-level API</dfn>
-:: A general purpose API, as opposed to a [=high-level API=]. See also
-    [high level vs low level](https://w3ctag.github.io/design-principles/#high-level-low-level)
-
-: <dfn>minting</dfn>
-:: The act of a new token being creating
-
-: <dfn>out-of-band</dfn>
-:: Outside of the user agent's context.
-
-: <dfn>Relying Party</dfn>
-: <dfn>RP</dfn>
-: <dfn noexport>Website</dfn>
-:: A service that requests user information from an [=Identity Provider=] for
-    [=federated sign-in=] or for other purposes.
-
-    See also:
-    * [[OIDC-Connect-Core#Terminology]]
-    * [[SAML-Glossary]]
-
-: <dfn>session</dfn>
-:: TODO(goto): find existing definition.
-
-: <dfn>Federated sign-in</dfn>
-:: Process used by a [=Relying Party=] to obtain a [=user identifier=] from an
-    [=Identity Provider=] to which the user performed [=authentication=].
-
-    See also:
-    * [[OIDC-Connect-Core]]
-
-: <dfn>site</dfn>
-:: A set of [=/origins=] that are all [=site/same site=] with each other. Note that
-    there are problems ([[PSL-PROBLEMS]]) with using [=registrable domains=] as
-    a logical boundary.
-
-: <df>unsanctioned tracking</dfn>
-:: [[UNSANCTIONED-TRACKING]]
-
-: <dfn>user</dfn>
-:: A human or program that controls a user agent.
-
-: <dfn>user identifier</dfn>
-:: A pair of a [=site=] and a (potentially-large) integer
-    allocated by that site that is used to identify a [=user=] on that site. A
-    single user will generally have many user IDs that refer to them, and a single
-    site may or may not know that multiple user identifiers refer to the same user.
-
-:  <dfn>Privacy Policy</dfn>
-:: The policies described at {{IdentityProviderClientMetadata/privacy_policy_url}}.
-
-:  <dfn>Terms of Service</dfn>
-:: The policies described at {{IdentityProviderClientMetadata/terms_of_service_url}}.
-
-: <dfn>registered</dfn>
-:: The account is `registered` if the user agent thinks that the user has registered an account in
-    the [=RP=] using the account from the [=IDP=].
-
-: <dfn>unregistered</dfn>
-:: The account is `unregistered` if it's not registered.
-
-<!-- ============================================================ -->
-# High Level Design # {#high-level-design}
-<!-- ============================================================ -->
 
 At a high level, the Federated Credential Management API works by the
 intermediation of cooperating [=IDP=]s and [=RP=]s.
 
-The [[#idp-api]] and the [[#rp-api]] defines a set of HTTP APIs that cooperating
+The [[#idp-api]] defines a set of HTTP APIs that cooperating
 [=IDP=]s and [=IDP=]s exposes as well as the entry points in the [[#browser-api]]
 that they can use.
 
@@ -546,12 +264,6 @@ identity federation.
 </script>
 
 
-This document defines the APIs in the following order:
-
-1. The [[#idp-api]]
-1. The [[#rp-api]]
-1. The [[#browser-api]]
-
 <!-- ============================================================ -->
 # The Identity Provider API # {#idp-api}
 <!-- ============================================================ -->
@@ -566,6 +278,7 @@ by exposing a series of HTTP endpoints:
 1. A [[#idp-api-client-id-metadata-endpoint]] endpoint
 1. An [[#idp-api-id-assertion-endpoint]] endpoint
 
+
 The [=IDP=] must also host a file at the ".well-known/web-identity" path of its [=registrable domain=] that has JSON contents that are convertable to an {{IdentityProviderWellKnown}} object.
 
 <xmp class="idl">
@@ -574,7 +287,25 @@ dictionary IdentityProviderWellKnown {
 };
 </xmp>
 
-Issue: The algorithms used for these endpoints need to [integrate](https://github.com/fedidcg/FedCM/issues/261) with [=fetch=].
+The FedCM API introduces the ability for a site to ask the browser to execute a few different
+network requests. It is important for the browser
+to execute these in such a way that it does not allow the user to be tracked (by an attacker
+impersonating an [=IDP=]) on to the site using FedCM. The following table has information about the
+network requests performed:
+
+<script type="text/typogram">
+┌──────────────────────────┬─────────┬───────────┬──────────┐
+│ Endpoint                 │ cookies │ client_id │ referrer │
+├──────────────────────────┼─────────┼───────────┼──────────┤
+│ manifests                │  no     │  no       │  no      │
+├──────────────────────────┼─────────┼───────────┼──────────┤
+│ accounts_endpoint        │  yes    │  no       │  no      │
+├──────────────────────────┼─────────┼───────────┼──────────┤
+│ client_metadata_endpoint │  no     │  yes      │  yes     │
+├──────────────────────────┼─────────┼───────────┼──────────┤
+│ id_assertion_endpoint    │  yes    │  yes      │  yes     │
+└──────────────────────────┴─────────┴───────────┴──────────┘
+</script>
 
 <!-- ============================================================ -->
 ## The Well-Known File ## {#idp-api-well-known}
@@ -792,9 +523,9 @@ Every {{IdentityProviderAccount}} is expected to have members with the following
     :   <dfn>picture</dfn>
     ::  URL for the account's picture.
     :   <dfn>approved_clients</dfn>
-    ::  A list of [=RP=]s (in the form of [=Client ID=]s) this account is already registered with.
+    ::  A list of [=RP=]s (that gets matched against the requesting {{IdentityProviderConfig/clientId}}) this account is already registered with.
         Used in the [=request permission to sign-up=] to allow the [=IDP=] to control whether to show
-        the [=Privacy Policy=] and the [=Terms of Service=].
+        the Privacy Policy and the Terms of Service.
 </dl>
 
 For example:
@@ -862,9 +593,9 @@ The {{IdentityProviderClientMetadata}} object's members have the following seman
 
 <dl dfn-type="dict-member" dfn-for="IdentityProviderClientMetadata">
     :   <dfn>privacy_policy_url</dfn>
-    ::  A link to the [=RP=]'s [=privacy policy=].
+    ::  A link to the [=RP=]'s Privacy Policy.
     :   <dfn>terms_of_service_url</dfn>
-    ::  A link to the [=RP=]'s [=terms of service=].
+    ::  A link to the [=RP=]'s Terms of Service.
 </dl>
 
 For example:
@@ -882,7 +613,7 @@ For example:
 ## Identity Assertions ## {#idp-api-id-assertion-endpoint}
 <!-- ============================================================ -->
 
-The identity assertion endpoint is responsible for [=minting=] a new [=token=] that contains signed assertions about the user.
+The identity assertion endpoint is responsible for minting a new token that contains signed assertions about the user.
 
 The identity assertion endpoint is fetched
 
@@ -896,7 +627,7 @@ It will also contain the following parameters in the request body `application/x
 
 <dl dfn-type="argument" dfn-for="id_assertion_endpoint_request">
     :   <dfn>client_id</dfn>
-    ::  The [=RP=]'s [=client id=].
+    ::  The [=RP=]'s unique identifier from the [=IDP=]
     :   <dfn>nonce</dfn>
     ::  The request nonce
     :   <dfn>account_id</dfn>
@@ -925,8 +656,9 @@ account_id=123&client_id=client1234&nonce=Ct60bD&disclosure_text_shown=true
 <div class=idp-normative-text>
 An [=IDP=] MUST check the <a http-header>Origin</a> header to ensure that a malicious [=RP=] does
 not receive an ID token corresponding to another [=RP=]. In other words, the [=IDP=] MUST check that
-the <a http-header>Origin</a> header value is represented by the [=client id=]. As the
-[=client ids=] are [=IDP=]-specific, the [=user agent=] cannot perform this check.
+the <a http-header>Origin</a> header value is represented by the
+{{IdentityProviderConfig/clientId}}. As the {{IdentityProviderConfig/clientId}} are
+[=IDP=]-specific, the [=user agent=] cannot perform this check.
 </div>
 
 The response body must be a JSON object that can be [=converted to an IDL value|converted=] to an {{IdentityProviderToken}} without an exception.
@@ -941,20 +673,20 @@ Every {{IdentityProviderToken}} is expected to have members with the following s
 
 <dl dfn-type="dict-member" dfn-for="IdentityProviderToken">
     :   <dfn>token</dfn>
-    ::  The resulting [=token=].
+    ::  The resulting token.
 </dl>
 
-The content of the [=token=] is opaque to the user agent and can contain
-anything that the [=Identity Provider=] would like to pass to the
-[=Relying Party=] to facilitate the login. For this reason the [=Relying Party=]
-is expected to be the party responsible for validating the [=token=] passed 
-along from the [=Identity Provider=] using the appropriate token validation 
+The content of the {{IdentityProviderToken/token}} is opaque to the user agent and can contain
+anything that the [=IDP=] would like to pass to the
+[=RP=] to facilitate the login. For this reason the [=RP=]
+is expected to be the party responsible for validating the {{IdentityProviderToken/token}} passed
+along from the [=IDP=] using the appropriate token validation
 algorithms defined. One example of how this might be done is defined 
 in [[OIDC-Connect-Core#IDTokenValidation]].
 
-NOTE: For [=Identity Providers=], it is worth considering how
+NOTE: For [=IDPs=], it is worth considering how
 [portable](https://github.com/fedidcg/FedCM/issues/314) accounts are.
-Portability is left entirely up to [=Identity Providers=], who can choose
+Portability is left entirely up to [=IDPs=], who can choose
 between a variety of different mechanisms to accomplish it
 (e.g. [OIDC's Account Porting](https://openid.net/specs/openid-connect-account-porting-1_0.html)).
 
@@ -969,49 +701,21 @@ For example:
 </div>
 
 <!-- ============================================================ -->
-# The Relying Party API # {#rp-api}
-<!-- ============================================================ -->
-
-[=RPs=] expose a [[#rp-api-logout-endpoint]] to facilitate with [[#use-cases-idp-sign-out]].
-
-<!-- ============================================================ -->
-## Logout ## {#rp-api-logout-endpoint}
-<!-- ============================================================ -->
-
-When [=IDP=]s call the [[#browser-api-idp-sign-out]] API, every [=RP=] gets a
-chance to log the user out (e.g. clear cookies, clear local storage)
-via the logout endpoint.
-
-The logout endpoint is an endpoint that is registered with the [=IDP=]
-[=out-of-band=].
-
-The logout endpoint is called
-(a) with a **GET** and
-(b) with the [=RP=]'s cookies.
-
-Note: the logout API introduces a credentialed request from the [=IDP=] to
-the [=RP=]s, so it exposes a potential tracking surface area. It is a fairly
-limited and controlled tracking area because the logout API is only available
-when accounts **and** sessions are already established between the [=IDP=] and
-the [=RP=].
-
-<!-- ============================================================ -->
 # The Browser API # {#browser-api}
 <!-- ============================================================ -->
 
 The Browser API exposes APIs to [=RP=]s and [=IDP=]s to call and intermediates
 the exchange of the user's identity.
 
-The Sign-up and Sign-in APIs are used by the [=Relying Party=]s to ask the browser
-to intermediate the relationship with the [=Identity Provider=] and the
-provisioning of a [=token=].
+The Sign-up and Sign-in APIs are used by the [=RP=]s to ask the browser
+to intermediate the relationship with the [=IDP=] and the
+provisioning of a token.
 
-NOTE: The [=Relying Party=] makes no delineation between Sign-up and Sign-in, but
+NOTE: The [=RP=] makes no delineation between Sign-up and Sign-in, but
 rather calls the same API indistinguishably.
 
-If all goes well, the [=Relying Party=] receives back an {{IdentityCredential}}
-which contains a [=token=] in the form of a signed [[JWT]] which it can use to
-authenticate the user.
+If all goes well, the Relying Party receives back an {{IdentityCredential}}
+which contains a token it can use to authenticate the user.
 
 <div class=example>
 ```js
@@ -1035,6 +739,15 @@ Second, it introduces an extension to {{CredentialRequestOptions}}.
 Lastly, it overrides {{IdentityCredential}}'s implementation of
 {{Credential/[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)}}.
 
+
+For fetches that are sent with cookies we include unpartitioned cookies,
+as if the resource was loaded as a same-origin request, e.g.
+regardless of the
+[SameSite](https://httpwg.org/http-extensions/draft-ietf-httpbis-rfc6265bis.html#name-the-samesite-attribute-2)
+value (which is used when a resource loaded as a third-party, not first-party). This makes it easy
+for an [=IDP=] to adopt the FedCM API without introducing security issues on the API, since the
+[=RP=] cannot inspect the results from the fetches in any way.
+
 <!-- ============================================================ -->
 ## The State Machine ## {#browser-api-state-machine}
 <!-- ============================================================ -->
@@ -1049,7 +762,7 @@ the following properties:
     :   <dfn>registration state</dfn>
     ::  Keeps track of whether the user agent is aware that the user has registered an account on the
         [=RP=] with the [=IDP=] or not.
-         Can be [=registered=] or [=unregistered=] (by default).
+         Can be <dfn>registered</dfn> or <dfn>unregistered</dfn> (by default).
     :   <dfn>allows logout</dfn>
     ::  Boolean which keeps track of whether the user agent would allow the |account| to be logged
         out via {{IdentityCredential/logoutRPs()}}. It is initialized to false by default. Note that
@@ -1076,7 +789,7 @@ This specification introduces a new type of {{Credential}}, called an {{Identity
 <dl>
     :   <b>{{IdentityCredential/token}}</b>
     ::  The {{IdentityCredential/token}}'s attribute getter returns the value it is set to.
-        It represents the minted [=token=] provided by the [=IDP=].
+        It represents the minted {{IdentityProviderToken/token}} provided by the [=IDP=].
 </dl>
 
 The main entrypoint in this specification is through the entrypoints exposed
@@ -1096,7 +809,7 @@ This specification starts by introducing an extension to the
 </pre>
 
 The {{IdentityCredentialRequestOptions}} contains a list of
-{{IdentityProviderConfig}}s that the [=Relying Party=] supports and has
+{{IdentityProviderConfig}}s that the [=RP=] supports and has
 pre-registered with (i.e. it has a `clientId`).
 
 <xmp class=idl>
@@ -1105,8 +818,8 @@ dictionary IdentityCredentialRequestOptions {
 };
 </xmp>
 
-Each {{IdentityProviderConfig}} represents an [=Identity Provider=] that
-the [=Relying Party=] supports (e.g. that it has a pre-registration agreement with).
+Each {{IdentityProviderConfig}} represents an [=IDP=] that
+the [=RP=] supports (e.g. that it has a pre-registration agreement with).
 
 <xmp class=idl>
 dictionary IdentityProviderConfig {
@@ -1120,10 +833,10 @@ dictionary IdentityProviderConfig {
     :   <b>{{IdentityProviderConfig/configURL}}</b>
     ::  The URL of the configuration file for the identity provider.
     :   <b>{{IdentityProviderConfig/clientId}}</b>
-    ::  The [=client id=] provided to the [=RP=] out of band by the [=IDP=]
+    ::  The {{id_assertion_endpoint_request/client_id}} provided to the [=RP=] out of band by the [=IDP=]
     :   <b>{{IdentityProviderConfig/nonce}}</b>
     ::  A random number of the choice of the [=RP=]. It is generally used to associate a client
-        session with a [=token=] and to mitigate replay attacks. Therefore, this value should have
+        session with a {{IdentityProviderToken/token}} and to mitigate replay attacks. Therefore, this value should have
         sufficient entropy such that it would be hard to guess.
 </dl>
 
@@ -1133,7 +846,7 @@ dictionary IdentityProviderConfig {
 
 The {{Credential/[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)}}
 algorithm runs in parallel inside the [[CM#algorithm-request]] to request credentials and returns a
-set of {{IdentityCredential}} for the requested [=Identity Provider=]s.
+set of {{IdentityCredential}} for the requested [=IDP=]s.
 
 This [=internal method=] accepts three arguments:
 
@@ -1175,7 +888,7 @@ algorithm is invoked, the user agent MUST execute the following steps. This retu
     1. Assert: |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"] [=map/exists=].
     1. Assert: |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"] [=list/size=] is 1.
 
-          Issue: Support choosing accounts from multiple [=Identity Provider=]s, as described [here](https://github.com/fedidcg/FedCM/issues/319).
+          Issue: Support choosing accounts from multiple [=IDP=]s, as described [here](https://github.com/fedidcg/FedCM/issues/319).
     1. Run {{WindowOrWorkerGlobalScope/setTimeout()}} passing a [=task=] which throws a
         {{NetworkError}}, after a timeout of 60 seconds.
 
@@ -1218,7 +931,7 @@ failure.
         1. Let |account| be |accountsList|[0].
         1. Let |accountState| be the result of running the [=compute account state=] algorithm
             given |provider|, |account|, and |globalObject|.
-        1. If |accountState|'s {{AccountState/registration state}} is [=unregistered=],
+        1. If |accountState|'s {{AccountState/registration state}} is {{unregistered}},
             let |permission| be the result of running [=request permission to sign-up=] algorithm
             with |account|, |accountState|, |config|, |provider|, and |globalObject|.
         1. Otherwise, show a dialog to request user permission to sign in via |account|, and set the
@@ -1230,13 +943,13 @@ failure.
         1. If |account| is failure, return failure.
         1. Let |accountState| be the result of running the [=compute account state=] algorithm
             given |provider| and |account|.
-        1. If |accountState|'s {{AccountState/registration state}} is [=unregistered=]:
+        1. If |accountState|'s {{AccountState/registration state}} is {{unregistered}}:
             1. Let |permission| be the result of running the [=request permission to sign-up=]
                 algorithm with |account|, |accountState|, |config|, |provider|, and |globalObject|.
             1. If |permission|, [=sign-in=] with |accountState|.
         1. Otherwise, [=sign-in=] with |accountState|.
     1. Wait until the [=user agent=]'s dialog is closed.
-    1. If |accountState|'s {{AccountState/registration state}} is [=unregistered=] then return
+    1. If |accountState|'s {{AccountState/registration state}} is {{unregistered}} then return
         failure.
     1. Let |credential| be the result of running the [=fetch an identity assertion=] algorithm with
         |accountState|, |account|'s {{IdentityProviderAccount/id}}, |provider|, |config|, and
@@ -1451,7 +1164,7 @@ To <dfn>fetch the account picture</dfn> given an {{IdentityProviderAccount}} |ac
 To <dfn>fetch an identity assertion</dfn> given an [=AccountState=] |accountState|, a {{USVString}}
     |accountId|, an {{IdentityProviderConfig}} |provider|, an {{IdentityProviderAPIConfig}}
     |config|, and |globalObject|, run the following steps. This returns an {{IdentityCredential}}.
-    1. Assert |accountState|'s {{AccountState/registration state}} is [=registered=].
+    1. Assert |accountState|'s {{AccountState/registration state}} is {{registered}}.
     1. Assert |accountState|'s {{AccountState/allows logout}} is true.
     1. Let |idTokenUrl| be the result of [=computing the manifest URL=] given |provider|,
         |config|["{{IdentityProviderAPIConfig/id_assertion_endpoint}}"], and |globalObject|.
@@ -1541,6 +1254,10 @@ and a |responseBody|, run the following steps. This returns an [=ordered map=].
     1. Assert: These steps are running on the [=networking task source=].
     1. If |response| is a [=network error=] or its [=response/status=] is not an [=ok status=],
         throw a new "{{NetworkError}}" {{DOMException}}.
+    1. Let |mimeType| be the result of <a>extracting a MIME TYPE</a> from |response|'s
+        <a for=response>header list</a>.
+    1. If |mimeType| is failure or is not a [=JSON MIME Type=], throw a new "{{NetworkError}}"
+        {{DOMException}}.
     1. Let |json| be the result of [=parse JSON bytes to an Infra value=] passing |responseBody|.
     1. If |json| is a parsing exception, or if |json| is not an [=ordered map=], throw a new
         "{{NetworkError}}" {{DOMException}}.
@@ -1565,8 +1282,8 @@ To <dfn>request permission to sign-up</dfn> the user with a given an {{IdentityP
     1. Prompt the user to gather explicit intent to create an account. The user agent MAY use the
         {{IdentityProviderBranding}} to inform the style choices of its UI.
     1. If the user does not grant permission, return false.
-    1. Change |accountState|'s {{AccountState/registration state}} from [=unregistered=] to
-        [=registered=].
+    1. Change |accountState|'s {{AccountState/registration state}} from {{unregistered}} to
+        {{registered}}.
     1. Change |accountState|'s {{AccountState/allows logout}} from false to true.
     1. Return true.
 </div>
@@ -1623,138 +1340,9 @@ To <dfn>select an account</dfn> given an |accountsList|, run the following steps
 
 <div algorithm>
 To <dfn>sign-in</dfn> the user with a given an [=AccountState=] |accountState|:
-    1. Assert that |accountState|'s {{AccountState/registration state}} is [=registered=]
+    1. Assert that |accountState|'s {{AccountState/registration state}} is {{registered}}
     1. Change |accountState|'s {{AccountState/allows logout}} from false to true.
 </div>
-
-<!-- ============================================================ -->
-### IDP Sign-out ### {#browser-api-idp-sign-out}
-<!-- ============================================================ -->
-
-Note: The API specified in this section is not launched in any user agent,
-and as such should be considered very experimental and subject to change.
-
-In enterprise scenarios, it is common for the user to want to clear all of
-their existing sessions in all of the [=Relying Party=]s they are logged into.
-
-It does so by being navigated to their [=Identity Provider=] who initiates
-what's called a [[Front-Channel-Logout]].
-
-The browser exposes an API that takes the list of [=Relying Party=]s that the
-[=Identity Provider=] wants to initiate the logout which are loaded in parallel
-with cookies.
-
-Each [=Relying Party=] endpoint is responsible for clearing its local state
-(e.g. clearing cookies).
-
-After the completion of this API, the user's session is cleared and will go
-through an [[#use-cases-sign-in]] upon return.
-
-<script type="text/typogram">
-.---------------------------------.       .---------------------------------.
-| .-----------------------------. |       | .-----------------------------. |
-| | "https://rp.example"        | |       | | "https://idp.example"       | |
-| '-----------------------------' |       | '-----------------------------' |
-| .-----------------------------. |       | .-----------------------------. |
-| |                             | |       | |                             | |
-| |   Welcome to my website!    | |       | |  John, we are logging out   | |
-| |                             | |       | |  of the relying parties.    | |
-| |                             | |       | |                             | |
-| +-----------------------------+ |       | |  +~~~~~~~~~~~~~~~~~~~~~~~+  | |
-| |   Sign-in to rp.example     | |       | |  :"<script>"             :  | |
-| |     with idp.example?       | |       | |  :" IdentityCredential. ":  | |
-| |                             | |       | |  :"    logoutRPs([{     ":  | |
-| | .----.                      | |       | |  :"       url: ...      ":  | |
-| | | :) | "John Doe"           | |  -->  | |  :"       accountId: ...":  | |
-| | '----' "john@email.com"     | |       | |  :"    }, {             ":  | |
-| |                             | |       | |  :"       ...           ":  | |
-| | +-------------------------+ | |       | |  :"    }]);             ":  | |
-| | |     Continue as John    | | |       | |  :"<\/script>"           :  | |
-| | +------------+------------+ | |       | |  +~~~~~~~~~~~+~~~~~~~~~~~+  | |
-| '--------------|--------------' |       | '--------------|--------------' |
-'----------------|----------------'       '----------------|----------------'
-                 |                                         |
-                 |                                         |
-                 |        +------------------------+       |        +-------+
-                 |        |                        |       |        |       |
-                 +------->|     Registered RPs     |-------+------->| Queue |
-                          |                        |                |       |
-                          +------------------------+                +-------+
-
-
-</script>
-
-<div class=example>
-```js
-await IdentityCredential.logoutRPs([{
-    url: "https://rp1.example",
-    accountId: "123"
-  }, {
-    url: "https://rpN.example",
-    accountId: "456"
-  }]);
-```
-</div>
-
-[=IDP=]s can call {{IdentityCredential/logoutRPs()}} to log the user out of the [=RP=]s they are
-signed into.
-
-<xmp class=idl>
-dictionary IdentityCredentialLogoutRPsRequest {
-  required USVString url;
-  required USVString accountId;
-};
-
-[Exposed=Window, SecureContext]
-partial interface IdentityCredential {
-  static Promise<undefined> logoutRPs(sequence<IdentityCredentialLogoutRPsRequest> logoutRequests);
-};
-</xmp>
-
-<div algorithm=logoutRPs>
-When the {{IdentityCredential/logoutRPs()}} method is invoked given a [=list=] of
-{{IdentityCredentialLogoutRPsRequest}}s |logoutRequests|, the user agent MUST execute the following
-steps. This returns a {{Promise}}.
-    1. Let |promise| be a new {{Promise}}.
-    1. Let |globalObject| be <a>this</a>'s <a>relevant global object</a>.
-    1. [=In parallel=], perform the following steps:
-        1. For each |request| in |logoutRequests|:
-            1. Let |rpOrigin| be [=this=]'s [=Document/origin=].
-            1. Let |idpOrigin| be |request|'s {{IdentityCredentialLogoutRPsRequest/url}}'s [=/origin=].
-            1. Let |account| be |request|'s {{IdentityCredentialLogoutRPsRequest/accountId}}.
-            1. Let |triple| be (|rpOrigin|, |idpOrigin|, |account|).
-            1. If [=state machine map=][|triple|] does not exist, continue.
-            1. Let |accountState| be [=state machine map=][|triple|].
-            1. If the |accountState|'s {{AccountState/registration state}} is [=unregistered=] or
-                |accountState|'s {{AccountState/allows logout}} is false, continue.
-            1. Let |fetchRequest| be a new <a spec=fetch for=/>request</a> as follows:
-
-                :  [=request/url=]
-                :: |request|'s {{IdentityCredentialLogoutRPsRequest/url}}
-                :  [=request/mode=]
-                :: "GET"
-                :  [=request/redirect mode=]
-                :: "error"
-                :  [=request/client=]
-                :: null
-                :  [=request/window=]
-                :: "no-window"
-                :  [=request/service-workers mode=]
-                :: "none"
-                :  [=request/destination=]
-                :: "webidentity"
-                :  [=request/origin=]
-                :: a unique [=opaque origin=]
-                :  [=request/credentials mode=]
-                :: "include"
-
-            1. [=Queue a global task=] on the [=network task source=]  given |globalObject|
-                to [=fetch=] |fetchRequest|.
-            1. Set the |accountState| {{AccountState/allows logout}} to false.
-        1. [=Resolve=] |promise| with [undefined].
-    1. Return |promise|.
-</div>
-
 
 <!-- ============================================================ -->
 ## Backwards Compatibility ## {#browser-api-backwards-compatibility}
@@ -1866,17 +1454,17 @@ expectations around their behavior.
 1. The [=user agent=] implements [[#browser-api]] and controls the execution contexts for the [=RP=]
     and [=IDP=] content. The [=user agent=] is assumed to be trusted by the user, and transitively
     trusted by the [=RP=] and [=IDP=].
-1. [=Relying Party=]s ([=RP=]s) are websites that invoke the FedCM API for the purpose of
+1. [=RP=]s are websites that invoke the FedCM API for the purpose of
     authenticating a user to their account or for requesting information about that user. Since any
     site can invoke the API, [=RP=]s cannot necessarily be trusted to limit the user information it
     collects or use that information in an acceptable way.
-1. [=Identity Provider=]s ([=IDP=]s) are third-party websites that are the target of a FedCM call to
-    attempt to fetch a [=token=]. Usually,the [=IDP=] has a higher level of trust than the
+1. [=IDP=]s are third-party websites that are the target of a FedCM call to
+    attempt to fetch a token. Usually,the [=IDP=] has a higher level of trust than the
     [=RP=] since it already has the user’s personal information, but it is possible that the [=IDP=]
     might use the user’s information in non-approved ways. In addition, it is possible that the
     [=IDP=] specified in the API call may not be an [=IDP=] the user knows about. In this case, it
     likely does not have personal user information in advance.
-1. A [=tracker=] is a third-party website that is not an [=IDP=] but could abuse the FedCM API
+1. A <dfn>tracker</dfn> is a third-party website that is not an [=IDP=] but could abuse the FedCM API
     exclusively for the purpose of tracking a user as they visit various websites. A [=tracker=] may
     be injected by the [=RP=] with or without their knowledge (e.g. injected into one of the various
     script tags that the [=RP=] embeds that is loaded dynamically), but they usually do not modify
@@ -1904,34 +1492,6 @@ Based on the above, the privacy discussion makes the following assumptions:
 ## Network requests ## {#network-requests}
 <!-- ============================================================ -->
 
-The FedCM API introduces the ability for a site to ask the browser to execute a few different
-network requests, as shown in the [[#high-level-design]] section. It is important for the browser
-to execute these in such a way that it does not allow the user to be tracked (by an attacker
-impersonating an [=IDP=]) on to the site using FedCM. The following table has information about the
-network requests performed:
-
-<script type="text/typogram">
-┌──────────────────────────┬─────────┬───────────┬──────────┐
-│ Endpoint                 │ cookies │ client_id │ referrer │
-├──────────────────────────┼─────────┼───────────┼──────────┤
-│ manifests                │  no     │  no       │  no      │
-├──────────────────────────┼─────────┼───────────┼──────────┤
-│ accounts_endpoint        │  yes    │  no       │  no      │
-├──────────────────────────┼─────────┼───────────┼──────────┤
-│ client_metadata_endpoint │  no     │  yes      │  yes     │
-├──────────────────────────┼─────────┼───────────┼──────────┤
-│ id_assertion_endpoint    │  yes    │  yes      │  yes     │
-└──────────────────────────┴─────────┴───────────┴──────────┘
-</script>
-
-For fetches that are sent with cookies, we actually consider them equivalent to first-party fetches,
-and hence include first-party cookies as if the resource was loaded as a first-party, e.g.
-regardless of the
-[SameSite](https://httpwg.org/http-extensions/draft-ietf-httpbis-rfc6265bis.html#name-the-samesite-attribute-2)
-value (which is used when a resource loaded as a third-party, not first-party). This makes it easy
-for an [=IDP=] to adopt the FedCM API without introducing security issues on the API, since the
-[=RP=] cannot inspect the results from the fetches in any way.
-
 We want to ensure that the FedCM fetches are all same-origin with respect to the provider specified
 by the [=RP=]. The reason for this is because fetches with cookies would use the cookies from the
 origin specified, so allowing arbitrary origins would introduce confusion and potential privacy
@@ -1939,12 +1499,12 @@ issues with regards to which cookies are shared and with whom within the FedCM f
 to ensure that all of these fetches remain same-origin is by disabling redirects and checking the
 origin of the fetched URLs.
 
-* The manifest fetch can't be used to track users because it is performed without cookies, [=client
-    id=], or referrer. Thus, anyone could perform this fetch, and the information contained therein
+* The manifest fetch can't be used to track users because it is performed without cookies, {{id_assertion_endpoint_request/client_id}},
+    or referrer. Thus, anyone could perform this fetch, and the information contained therein
     is considered public.
 
 * The accounts fetch can't be used to track users because it is performed with cookies from the
-    [=IDP=] but, importantly, without the [=client id=] or referrer. This in theory is a new power
+    [=IDP=] but, importantly, without the {{id_assertion_endpoint_request/client_id}} or referrer. This in theory is a new power
     that the [=RP=] gains that it would not have otherwise. Preventing too many of these fetches may
     be important, but [=IDP=]s are already expected to protect against DoS attacks. In addition, the
     user agent should only allow one FedCM flow per page at any given moment, immediately rejecting
@@ -1953,14 +1513,14 @@ origin of the fetched URLs.
     does learn a lot about the user from this fetch, but this is discussed in detail below.
 
 * The client metadata fetch can't be used to track users too because it is performed without cookies
-    from the [=IDP=], albeit with a [=client id=] and a referrer. This allows the [=IDP=] to
-    communicate the relevant [=Privacy Policy=] and [=Terms of Service=] to the user agent, in case
+    from the [=IDP=], albeit with a {{id_assertion_endpoint_request/client_id}} and a referrer. This allows the [=IDP=] to
+    communicate the relevant Privacy Policy and Terms of Service to the user agent, in case
     they need to be displayed. Again, besides possible timing attacks described here, the [=RP=]
     gains nothing from this fetch, and the [=RP=] could already perform this fetch if it wanted to
     since it involves no cookies from the [=IDP=].
 
 * By design, the token fetch exposes the user at the website to the [=IDP=]: it is
-    peformed with cookies, [=client id=], and referrer. Because of that, it is gated on the user
+    peformed with cookies, {{id_assertion_endpoint_request/client_id}}, and referrer. Because of that, it is gated on the user
     interacting with the user agent UI, and enables the [=IDP=] to communicate to the [=RP=] the
     information required to perform a federated signin/signup. It is not possible for the [=RP=] or
     the [=IDP=] to force the token fetch to happen without user permission, as the user agent cannot be
@@ -2063,244 +1623,6 @@ invisible to the user).
 
 The [=user agent=] should mitigate this attack to protect users, in an interoperable way.
 
-The following are mitigations under investigation.
-
-<!-- ============================================================ -->
-#### Heuristics #### {#timing-attack-heuristics}
-<!-- ============================================================ -->
-
-One mitigation under investigation is to try to use heuristics to limit the attack surface:
-
-* Any [=RP=]s or [=IDP=]s observed to be using this API to compromise user privacy in a deceptive or
-    abusive manner could be explicitly blocked from using it or put behind an interstitial.
-* The [=user agent=] could detect [=trackers=] by noting alleged [=IDP=]s that do either of the
-    following:
-    * Never show UI despite the FedCM API fetches being performed.
-    * Provide generic user identification, such as "Anonymous", or "Guest" or "Incognito" as the
-        user's name.
-    * Have a suspiciously low click-through rate (e.g. most users don't recognize the value in using
-        this [=IDP=]).
-* The [=user agent=] could block the API or show a static interstitial after the user has already
-    expressed lack of interest in the API because they did at least one of the following:
-    * Repeatedly ignored the FedCM API in the past in a similar scenario.
-    * Provide user settings to disable the FedCM API.
-    * Pressed some [=user agent=] UI to close the FedCM API's request for permission.
-* The [=user agent=] could gate the FedCM fetches on a user interaction so that the timing attack is
-    only possible once the user has expressed some interest in the API. Note that this may provide a
-    poor user experience for users that do want to use the API, and may also result in worse success
-    metrics for the API.
-
-<!-- ============================================================ -->
-#### Push Model #### {#push-model-mitigation}
-<!-- ============================================================ -->
-
-Another potential future mitigation for timing attacks is the [=push model=]. The current API is the
-<dfn>pull model</dfn>: the API pulls the user accounts from the [=IDP=] every time they are needed
-by the FedCM API. In the <dfn>push model</dfn>, the [=IDP=] needs to tell the [=user agent=] that a
-user has signed in whenever this happens. This way, when the FedCM API is called, the [=user agent=]
-already knows the user accounts that the user can select from, and thus does not require any
-credentialed fetches to the [=IDP=] in order to show the UI. It would only be when the user
-grants permission that the [=IDP=] is notified, thus resolving the timing attack problem entirely.
-
-While the [=push model=] seems like an improvement for privacy, the current API uses the
-[=pull model=] for these reasons:
-
-* It introduces a lot of complexity for the [=IDP=]s, as they now need to declare the user accounts
-    and keep them updated all the time. In particular, they need to be updated when a user logs out,
-    deletes their account or simply change name, etc. A user can also use browser UX to logout, e.g.
-    by clearing cookies. While those are not high-frequency changes (e.g. once every other year for
-    each user), keeping them in sync is non-trivial.
-* It requires a lot of the [=IDP=]'s trust in [=user agent=] to protect all of their user's
-    accounts. The push model requires storing all of the user accounts from all of the [=IDP=]s that
-    a user is logged into, regardless of whether the user ever uses the FedCM API or not. This means
-    that all users pay the cost, and only some get the reward.
-
-<!-- ============================================================ -->
-##### The IdP Sign-in Status API ##### {#the-idp-sign-in-status-api}
-<!-- ============================================================ -->
-
-Note: The API specified in this section is not launched in any user agent,
-and as such should be considered very experimental and subject to change.
-
-Issue: this is a more formal description of what is proposed [here](https://github.com/fedidcg/FedCM/issues/230#issuecomment-1233290946).
-
-A strict subset of the [=push model=] that seems promising is to only push
-the user's sign-in status in the IdP (as opposed to the entirety of the user's account data,
-e.g. name, email).
-
-Since the sign-in status is specific to a browser instance/profile, this bit can reflect reality
-almost perfectly (with the exception of server-side invalidations, e.g. users changing password, and
-deleting accounts on other devices).
-
-Importantly, sign-in status seems easier to degrade gracefully when the client-side state is inconsistent with the server-side state: re-authentication UX. The user's profile information, on the other hand, has a series of legal freshness requirements that are still not quite well understood.
-
-So, in this variation, the [=user agent=] does two things: (a) it stores the user's login status at each [=IDP=] and (b) exposes APIs that allows [=IDP=]s to change them.
-
-This is a compelling variation because (a) it is comparably simpler to implement by [=IDPs=] and (b)
-if the [=user agent=] knew whether the user is signed-in or not to the [=IDP=], it can guarantee that
-a user prompt will always be displayed, which makes the timing attack much less viable to be performed
-invisibly (i.e. without any explicit and observable indication to the user).
-
-<script type="text/typogram">
-.---------------------------------.    .---------------------------------.    .---------------------------------.
-| .-----------------------------. |    | .-----------------------------. |    | .-----------------------------. |
-| | "https://idp.example"       | |    | | "https://idp.example"       | |    | | "https://idp.example"       | |
-| '-----------------------------' |    | '-----------------------------' |    | '-----------------------------' |
-| .-----------------------------. |    | .-----------------------------. |    | .-----------------------------. |
-| |                             | |    | |                     logout -+-+-+  | |                             | |
-| |   Sign-in                   | |    | |  Welcome, Sam!      ------  | | |  | |  Bye!                       | |
-| |                             | |    | |                             | | |  | |                             | |
-| |   username                  | |    | |                             | | |  | |                             | |
-| |  +-----------------------+  | |    | | "// calls"                  | | |  | | "// calls"                  | |
-| |  | you@email.com         |  | | +--+-+>"IdentityProvider.login();" | | +--+-+>"IdentityProvider.logout();"| |
-| |  +-----------------------+  | | |  | |                     :       | |    | |                     :       | |
-| |   password                  | | |  | |                     :       | |    | |                     :       | |
-| |  +-----------------------+  | | |  | |                     :       | |    | |                     :       | |
-| |  |"**********"           |  | | |  | |                     :       | |    | |                     :       | |
-| |  +-----------------------+  | | |  | |                     :       | |    | |                     :       | |
-| |                             | | |  | |                     :       | |    | |                     :       | |
-| |  +-----------------------+  | | |  | |                     :       | |    | |                     :       | |
-| |  |       Sign-in         +--+-+-+  | |                     :       | |    | |                     :       | |
-| |  +-----------------------+  | |    | |                     :       | |    | |                     :       | |
-| |                             | |    | |                     :       | |    | |                     :       | |
-| '-----------------------------' |    | '---------------------:-------' |    | '---------------------:-------' |
-'---------------------------------'    '-----------------------:---------'    '-----------------------:---------'
-                                                               :                                      :
-                                                               +~~~~+    +~~~~~~~~~~~~~~~~~~~~~~~~~~~~+
-                                                                    :    :
-                                                                    v    v
-                                       +-----------------------+-----------------+
-                                       |  Identity Provider    | Sign-in Status  |
-                                       +-----------------------+-----------------+
-                                       | "..."                 | "..."           |
-                                       +-----------------------+-----------------+
-                                       | "https://idp.example" | Signed-in       |
-                                       +-----------------------+-----------------+
-                                       | "..."                 | "..."           |
-                                       +-----------------------+-----------------+
-
-</script>
-
-Internally, each [=user agent=] keeps track of a global <dfn>Sign-in Status</dfn> map per [=IDP=],
-initially an empty [=map=]. The [=map/keys=] in the [=Sign-in Status=] map is the [=/origin=] of the
-[=IDP=]. The [=map/values=] in the [=Sign-in Status=] map are <b>status</b> objects which can be one
-of the following values:
-
-<dl dfn-type="argument" dfn-for="Sign-in Status">
-    :   <dfn>unknown</dfn> (default)
-    ::  By default, the [=user agent=] assumes that the user's signed in status is undefined.
-    :   <dfn>signed-in</dfn>
-    ::  The user has explicitly signed-in to the IDP.
-    :   <dfn>signed-out</dfn>
-    ::  The user has explicitly signed-out to the IDP.
-</dl>
-
-The [=IDPs=] are provided with an API that allows them to set their [=Sign-in Status=].
-
-<xmp class=idl>
-[Exposed=Window, SecureContext]
-interface IdentityProvider {
-  static undefined login();
-  static undefined logout();
-};
-</xmp>
-
-<div algorithm=login>
-When the {{IdentityProvider/login()}} static method is invoked the user agent MUST execute the following
-steps:
-    1. Let |origin| be the [=current settings object=]'s [=environment settings object/origin=].
-    1. Set the [=Sign-in Status=] of the |origin| to {{Sign-in Status/signed-in}}.
-</div>
-
-<div algorithm=logout>
-When the {{IdentityProvider/logout()}} static method is invoked the user agent MUST execute the following
-steps:
-    1. Let |origin| be the [=current settings object=]'s [=environment settings object/origin=].
-    1. Set the [=Sign-in Status=] of the |origin| to {{Sign-in Status/signed-out}}.
-</div>
-
-For example:
-
-<div class="example">
-A possible JS API that allows IDPs to set their Sign-in Status.
-```js
-IdentityProvider.login();
-// ... later ...
-IdentityProvider.logout();
-```
-</div>
-
-For convenience and compatibility with existing deployed flows, the [=user agent=] also exposes the ability for [=IDPs=] to control their [=Sign-in Status=] via HTTP headers:
-
-<div class="example">
-A possible HTTP header API that allows IDPs to set their Sign-in Status.
-```http
-IdP-Sign-in-Status: action=login
-// ... later ...
-IdP-Sign-in-Status: action=logout
-```
-</div>
-
-When site data (e.g. cookies) are cleared manually by the user, the [=user agent=] also sets the [=Sign-in Status=] to {{Sign-in Status/unknown}}.
-
-IDPs are also offered an extension to the {{IdentityProviderAPIConfig}} object to include:
-
-<dl dfn-type="argument" dfn-for="IdentityProviderAPIConfig">
-    :   <dfn>signin_url</dfn> (optional)
-    ::  A URL that allows a user to sign-in to the [=IDP=].
-</dl>
-
-The [=user agent=] uses the following [=maybe fetch the accounts list=] instead of the [=fetch the accounts list=] algorithm. It would also return early on if the user was {{Sign-in Status/signed-out}}.
-
-<div algorithm>
-To <dfn>maybe fetch the accounts list</dfn> given an {{IdentityProviderAPIConfig}} |config|, an {{IdentityProviderConfig}}
-|provider|, and a |globalObject|, run the following steps. This returns a [=list=].
-
-    1. Let |configUrl| be the result of running [=parse url=] with |provider|'s
-        {{IdentityProviderConfig/configURL}} and |globalObject|.
-    1. Let |idpOrigin| be the origin corresponding to |configUrl|.
-    1. Let |status| be the [=Sign-in Status=] of the |idpOrigin|.
-    1. If |status| is {{Sign-in Status/unknown}}:
-        1. Let |accounts| be the result of the [=fetch the accounts list=] algorithm given |config| and |provider|.
-        1. Set the [=Sign-in Status=] of the |idpOrigin| to {{Sign-in Status/signed-in}} if |accounts| is non-empty, {{Sign-in Status/signed-out}} otherwise.
-
-        NOTE: This handles the case where the [=IDP=] hasn't had the chance to call the API before the accounts list is needed. This can incur into a timing attack, but it is limited to 1 per [=IDP=] per [=user agent=], so not very practical. Albeit small, removing this attack surface is an active area of investigation.
-
-    1. If |status| is {{Sign-in Status/signed-out}}:
-        1. Return an empty list.
-
-        NOTE: By terminating the request here before running [=fetch the accounts list=] algorithm we prevent the timing attack to be performed without any user prompt.
-
-    1. If |status| is {{Sign-in Status/signed-in}}:
-        1. Let |accounts| be the result of the [=fetch the accounts list=] algorithm given |config| and |provider|.
-        1. If |accounts|'s size is 0:
-            1. Set the [=Sign-in Status=] of the |idpOrigin| to {{Sign-in Status/signed-out}}.
-            1. Ask the user to confirm they want to sign-in to their [=IDP=].
-            1. If they decline, return an empty list.
-            1. Return the result of running the [=Sign-in to the IDP=] algorithm given |config| and |provider|.
-
-            NOTE: This can happen when the user's local client credentials are invalidated on the server (e.g. changing passwords or deleting accounts on a different device), or we get network errors (e.g. timeouts, failures, etc).
-
-        1. Return |accounts|.
-</div>
-
-<div algorithm>
-To <dfn>Sign-in to the IDP</dfn> given an {{IdentityProviderAPIConfig}} |config| and an {{IdentityProviderConfig}}
-|provider|. This returns a [=list=].
-    1. Let |configUrl| be the result of running [=parse url=] with |provider|'s
-        {{IdentityProviderConfig/configURL}}.
-    1. Let |idpOrigin| be the origin corresponding to |configUrl|.
-    1. Assert that the [=Sign-in Status=] of the |idpOrigin| is {{Sign-in Status/signed-out}}.
-    1. In parallel, wait until one of the following tasks returns to continue:
-        1. Open a dialog that directs the user to the |config|'s {{IdentityProviderAPIConfig/signin_url}}.
-        1. Wait until the [=Sign-in Status=] of the |idpOrigin| becomes {{Sign-in Status/signed-in}}
-            1. Close the dialog
-            1. Return the result of the [=fetch the accounts list=] algorithm
-        1. Wait until the user explicitly cancels the dialog
-            1. Close the dialog
-            1. Return empty list
-</div>
-
 <!-- ============================================================ -->
 ### IDP Intrusion ### {#idp-intrusion}
 <!-- ============================================================ -->
@@ -2325,7 +1647,7 @@ show a loud / disruptive modal mediated dialog when it has enough confidence of 
 show a quiet / conservative UI hint when it doesn't.
 
 A [=user agent=] could also choose to control disruption of the user's experience based on the risks
-involved. For example, when a [=directed identifier=] is being exchanged it can be more confident of
+involved. For example, when a directed identifier is being exchanged it can be more confident of
 the unintended consequeces and offer a more aggressive user experience, whereas when global
 identifiers are exchanged a more conservative user experience.
 
@@ -2336,24 +1658,13 @@ identifiers are exchanged a more conservative user experience.
 </div>
 
 <!-- ============================================================ -->
-## Other Attack Scenarios ## {#other-attack-scenarios}
-<!-- ============================================================ -->
-
-The following are other attack scenarios considered but for which we do not **currently**  have specific
-mitigations in this API, but would ideally like to see addressed in future revisions of this API. This is usually because the attacks rely on the user already granted
-permission. Usually stopping such attacks would be very hard since the [=RP=] and [=IDP=] communication
-has been established. In addition, such attacks would still be possible when using regular login
-mechanisms. Still, they are worth mentioning as they showcase some risks users take when signing
-into [=RP=]s. In some cases, future mitigations are discussed.
-
-<!-- ============================================================ -->
 ### Cross-Site Correlation ### {#attack-scenarios-by-rp-cross-site-correlation}
 <!-- ============================================================ -->
 
 This attack happens when multiple [=RP=]s collude to use their user's data to correlate them and
 build a richer profile. When a user willingly provides their full name, email address, phone number,
 etc, to multiple relying parties, those relying parties can collaborate to build a profile of that
-user and their activity across collaborating sites. Sometimes this is referred to as [=joining=]
+user and their activity across collaborating sites. Sometimes this is referred to as joining
 since it amounts to a join of user records between the account databases of multiple RPs. This
 correlation and profile-building is outside the user’s control and entirely out of the [=user
 agent=]’s or [=IDP=]’s view.
@@ -2377,8 +1688,8 @@ agent=]’s or [=IDP=]’s view.
     1. User is surprised that RP2 knows that they are shopping for wedding rings.
 </div>
 
-The problem of [=RP=]s [=joining=] user data via back-channels is inherent to the proliferation of
-identifying user data. This can be solved by issuing [=directed identifiers=] that provide an
+The problem of [=RP=]s joining user data via back-channels is inherent to the proliferation of
+identifying user data. This can be solved by issuing directed identifiers that provide an
 effective handle to a user's identity with a given [=IDP=] that is unique and therefore cannot be
 correlated with other [=RP=]s. In the past, there have been schemes to accomplish this using one-way
 hashes of, for example, the user’s name, the [=IDP=], and the [=RP=]. These identifiers would be
@@ -2399,7 +1710,7 @@ the user. When the user agrees to allow the [=IDP=] to provide information to th
 permission is specific to certain purposes, such as sign-in and personalization. For instance, the
 [=RP=] might use that data for other purposes that the user would not expect and did not authorize,
 such as selling email addresses to a spam list. Spamming risk can exist even when using
-[=directed identifiers=].
+directed identifiers.
 
 <!-- ============================================================ -->
 ### RP Fingerprinting ### {#rp-fingerprinting}
@@ -2426,7 +1737,7 @@ perimssion for a purpose different from that for which the information was colle
 happens when [=IDP=]s misuse the the information collected to enable sign-in for other
 purposes.
 
-Existing federation protocols require that the [=IDP=] know which service is requesting a [=token=]
+Existing federation protocols require that the [=IDP=] know which service is requesting a token
 in order to allow identity federation. Identity providers can use this fact to build profiles of
 users across sites where the user has decided to use federation with the same account. This profile
 could be used, for example, to serve targeted advertisements to those users browsing on sites that
@@ -2482,21 +1793,6 @@ Note: write down the Acknowledgements section.
     "href": "https://w3c.github.io/webappsec-credential-management/",
     "title": "Credential Management"
   },
-  "Front-Channel-Logout": {
-    "authors": [ "M. Jones" ],
-    "href": "https://openid.net/specs/openid-connect-frontchannel-1_0.html",
-    "title": "Front-Channel Logout"
-  },
-  "Identity-Use-Cases-in-Browser-Catalog": {
-    "authors": [ "V. Bertocci", "G. Fletcher" ],
-    "href": "https://datatracker.ietf.org/doc/html/draft-bertocci-identity-in-browser-00",
-    "title": "Identity Use Cases in Browser Catalog"
-  },
-  "JWT": {
-    "authors": [ "M. Jones", "J. Bradley", "N. Sakimura" ],
-    "href": "https://datatracker.ietf.org/doc/html/rfc7519",
-    "title": "JWT"
-  },
   "OIDC-Connect-Core": {
     "href": "https://openid.net/specs/openid-connect-core-1_0.html",
     "title": "OIDC Connect Core"
@@ -2513,18 +1809,9 @@ Note: write down the Acknowledgements section.
     "href": "https://w3cping.github.io/privacy-threat-model/",
     "title": "Target Privacy Threat Model"
   },
-  "PSL-PROBLEMS": {
-    "authors": ["Ryan Sleevi"],
-    "href": "https://github.com/sleevi/psl-problems",
-    "title": "Public Suffix List Problems"
-  },
   "RFC7258": {
     "href": "https://datatracker.ietf.org/doc/html/rfc7258",
     "title": "Pervasive Monitoring Is an Attack"
-  },
-  "SAML-Glossary": {
-    "href": "https://docs.oasis-open.org/security/saml/v2.0/saml-glossary-2.0-os.pdf",
-    "title": "SAML glossary"
   }
 }
 </pre>
