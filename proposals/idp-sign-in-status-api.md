@@ -56,7 +56,8 @@ was the last/only account getting signed out.
 Tentatively:
 
 ```
-partial interface IdentityProvider {
+[Exposed=Window]
+interface IdentityProvider {
   static void login();
   static void logout();
 }
