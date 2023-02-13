@@ -655,6 +655,30 @@ to keep their actual config files on an arbitary path while allowing the user ag
 path manipulation to fingerprint (for instance, by including the RP in the path). See
 [[#manifest-fingerprinting]].
 
+<xmp class="idl">
+dictionary IdentityProviderWellKnown {
+  required sequence<USVString> provider_urls;
+};
+
+dictionary IdentityProviderIcon {
+  required USVString url;
+  unsigned long size;
+};
+
+dictionary IdentityProviderBranding {
+  USVString background_color;
+  USVString color;
+  sequence<IdentityProviderIcon> icons;
+};
+
+dictionary IdentityProviderAPIConfig {
+  required USVString accounts_endpoint;
+  required USVString client_metadata_endpoint;
+  required USVString id_assertion_endpoint;
+  IdentityProviderBranding branding;
+};
+</xmp>
+
 <div algorithm>
 To <dfn>fetch the accounts list</dfn> given an {{IdentityProviderAPIConfig}} |config|, an
 {{IdentityProviderConfig}} |provider|, and |globalObject|, run the following steps. This returns an
@@ -704,6 +728,20 @@ To <dfn>fetch the accounts list</dfn> given an {{IdentityProviderAPIConfig}} |co
     1. Wait for |accountsList| to be set.
     1. Return |accountsList|.
 </div>
+
+<xmp class="idl">
+dictionary IdentityProviderAccount {
+  required USVString id;
+  required USVString name;
+  required USVString email;
+  USVString given_name;
+  USVString picture;
+  sequence<USVString> approved_clients;
+};
+dictionary IdentityProviderAccountList {
+  sequence<IdentityProviderAccount> accounts;
+};
+</xmp>
 
 <div algorithm>
 To <dfn>fetch the account picture</dfn> given an {{IdentityProviderAccount}} |account| and a
@@ -785,6 +823,12 @@ To <dfn>fetch an identity assertion</dfn> given an [=AccountState=] |accountStat
     1. Wait for |credential| to be set.
     1. Return |credential|.
 </div>
+
+<xmp class="idl">
+dictionary IdentityProviderToken {
+  required USVString token;
+};
+</xmp>
 
 <div algorithm>
 When <dfn>computing the manifest URL</dfn> given an {{IdentityProviderConfig}} |provider|, a
@@ -887,6 +931,13 @@ an {{IdentityProviderConfig}} |provider|, run the following steps. This returns 
     1. Return |metadata|.
 </div>
 
+<xmp class="idl">
+dictionary IdentityProviderClientMetadata {
+  USVString privacy_policy_url;
+  USVString terms_of_service_url;
+};
+</xmp>
+
 <div algorithm>
 To <dfn>select an account</dfn> given an |accountsList|, run the following steps. This returns an
 {{IdentityProviderAccount}} or failure.
@@ -958,12 +1009,6 @@ Sec-Fetch-Dest: webidentity
 ```
 </div>
 
-<xmp class="idl">
-dictionary IdentityProviderWellKnown {
-  required sequence<USVString> provider_urls;
-};
-</xmp>
-
 The file is parsed expecting a {{IdentityProviderWellKnown}} JSON object.
 
 The {{IdentityProviderWellKnown}} JSON object has the following semantics:
@@ -1001,26 +1046,6 @@ Sec-Fetch-Dest: webidentity
 </div>
 
 The response body must be a JSON object that can be [=converted to an IDL value|converted=] to an {{IdentityProviderAPIConfig}} without an exception.
-
-<xmp class=idl>
-dictionary IdentityProviderIcon {
-  required USVString url;
-  unsigned long size;
-};
-
-dictionary IdentityProviderBranding {
-  USVString background_color;
-  USVString color;
-  sequence<IdentityProviderIcon> icons;
-};
-
-dictionary IdentityProviderAPIConfig {
-  required USVString accounts_endpoint;
-  required USVString client_metadata_endpoint;
-  required USVString id_assertion_endpoint;
-  IdentityProviderBranding branding;
-};
-</xmp>
 
 The {{IdentityProviderAPIConfig}} object's members have the following semantics:
 
@@ -1125,21 +1150,6 @@ Sec-Fetch-Dest: webidentity
 
 The response body must be a JSON object that can be [=converted to an IDL value|converted=] to an {{IdentityProviderAccountList}} without an exception.
 
-
-<xmp class="idl">
-dictionary IdentityProviderAccount {
-  required USVString id;
-  required USVString name;
-  required USVString email;
-  USVString given_name;
-  USVString picture;
-  sequence<USVString> approved_clients;
-};
-dictionary IdentityProviderAccountList {
-  sequence<IdentityProviderAccount> accounts;
-};
-</xmp>
-
 Every {{IdentityProviderAccount}} is expected to have members with the following semantics:
 
 <dl dfn-type="dict-member" dfn-for="IdentityProviderAccount">
@@ -1212,13 +1222,6 @@ Sec-Fetch-Dest: webidentity
 </div>
 
 The response body must be a JSON object that can be [=converted to an IDL value|converted=] to an {{IdentityProviderClientMetadata}} without an exception.
-
-<xmp class="idl">
-dictionary IdentityProviderClientMetadata {
-  USVString privacy_policy_url;
-  USVString terms_of_service_url;
-};
-</xmp>
 
 The {{IdentityProviderClientMetadata}} object's members have the following semantics:
 
@@ -1295,12 +1298,6 @@ the <a http-header>Origin</a> header value is represented by the
 Note: An [=IDP=] should validate the nonce, if present, to prevent CSRF-style attacks.
 
 The response body must be a JSON object that can be [=converted to an IDL value|converted=] to an {{IdentityProviderToken}} without an exception.
-
-<xmp class="idl">
-dictionary IdentityProviderToken {
-  required USVString token;
-};
-</xmp>
 
 Every {{IdentityProviderToken}} is expected to have members with the following semantics:
 
