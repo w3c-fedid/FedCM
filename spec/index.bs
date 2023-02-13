@@ -263,443 +263,6 @@ identity federation.
      -+-                             -+-                               -+-
 </script>
 
-
-<!-- ============================================================ -->
-# The Identity Provider API # {#idp-api}
-<!-- ============================================================ -->
-
-<em>This section is non-normative.</em>
-
-The [=IDP=] proactively and cooperatively exposes itself as a comformant agent
-by exposing a series of HTTP endpoints:
-
-1. A [[#idp-api-manifest]] endpoint in an agreed upon location that points to
-1. An [[#idp-api-accounts-endpoint]] endpoint
-1. A [[#idp-api-client-id-metadata-endpoint]] endpoint
-1. An [[#idp-api-id-assertion-endpoint]] endpoint
-
-
-The [=IDP=] must also host a file at the ".well-known/web-identity" path of its [=registrable domain=] that has JSON contents that are convertable to an {{IdentityProviderWellKnown}} object.
-
-<xmp class="idl">
-dictionary IdentityProviderWellKnown {
-  required sequence<USVString> provider_urls;
-};
-</xmp>
-
-The FedCM API introduces the ability for a site to ask the browser to execute a few different
-network requests. It is important for the browser
-to execute these in such a way that it does not allow the user to be tracked (by an attacker
-impersonating an [=IDP=]) on to the site using FedCM. The following table has information about the
-network requests performed:
-
-<script type="text/typogram">
-┌──────────────────────────┬─────────┬───────────┬──────────┐
-│ Endpoint                 │ cookies │ client_id │ referrer │
-├──────────────────────────┼─────────┼───────────┼──────────┤
-│ manifests                │  no     │  no       │  no      │
-├──────────────────────────┼─────────┼───────────┼──────────┤
-│ accounts_endpoint        │  yes    │  no       │  no      │
-├──────────────────────────┼─────────┼───────────┼──────────┤
-│ client_metadata_endpoint │  no     │  yes      │  yes     │
-├──────────────────────────┼─────────┼───────────┼──────────┤
-│ id_assertion_endpoint    │  yes    │  yes      │  yes     │
-└──────────────────────────┴─────────┴───────────┴──────────┘
-</script>
-
-<!-- ============================================================ -->
-## The Well-Known File ## {#idp-api-well-known}
-<!-- ============================================================ -->
-
-NOTE: The browser uses the well-known file to prevent the following attack described [here](https://github.com/fedidcg/FedCM/issues/230#issuecomment-1067029200).
-
-The [=IDP=] exposes a well-known file in a pre-defined location, specifically at the "web-identity" file at the [=IDPs=]'s path ".well-known".
-
-The well-known file is fetched:
-
-(a) **without** cookies,
-(b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`, and
-(c) **without** revealing the [=RP=] in the <a http-header>Origin</a> or
-    [[RFC9110#field.referer|Referer]] headers.
-
-For example:
-
-<div class=example>
-```http
-GET /.well-known/web-identity HTTP/1.1
-Host: idp.example
-Accept: application/json
-Sec-Fetch-Dest: webidentity
-```
-</div>
-
-The file is parsed expecting a [=Well-Known=] JSON object.
-
-The <dfn>Well-Known</dfn> JSON object has the following properties:
-
-<dl dfn-type="argument" dfn-for="Well-Known">
-    :   <dfn>provider_urls</dfn> (required)
-    ::  A list of URLs that points to valid [[#idp-api-manifest]]s.
-</dl>
-
-<!-- ============================================================ -->
-## Manifest ## {#idp-api-manifest}
-<!-- ============================================================ -->
-
-The config endpoint is an endpoint
-which serves as a discovery device to other endpoints provided by the
-[=IDP=].
-
-The config endpoint is fetched:
-
-(a) **without** cookies,
-(b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`,
-(c) **without** revealing the [=RP=] in the <a http-header>Origin</a> or
-    [[RFC9110#field.referer|Referer]] headers, and
-(c) **without** following [[RFC9110#field.location|HTTP redirects]].
-
-For example:
-
-<div class=example>
-```http
-GET /config.json HTTP/1.1
-Host: idp.example
-Accept: application/json
-Sec-Fetch-Dest: webidentity
-```
-</div>
-
-The response body must be a JSON object that can be [=converted to an IDL value|converted=] to an {{IdentityProviderAPIConfig}} without an exception.
-
-<xmp class=idl>
-dictionary IdentityProviderIcon {
-  required USVString url;
-  unsigned long size;
-};
-
-dictionary IdentityProviderBranding {
-  USVString background_color;
-  USVString color;
-  sequence<IdentityProviderIcon> icons;
-};
-
-dictionary IdentityProviderAPIConfig {
-  required USVString accounts_endpoint;
-  required USVString client_metadata_endpoint;
-  required USVString id_assertion_endpoint;
-  IdentityProviderBranding branding;
-};
-</xmp>
-
-The {{IdentityProviderAPIConfig}} object's members have the following semantics:
-
-<dl dfn-type="dict-member" dfn-for="IdentityProviderAPIConfig">
-    :   <dfn>accounts_endpoint</dfn>
-    ::  A URL that points to an HTTP API that complies with the [[#idp-api-accounts-endpoint]] API.
-    :   <dfn>client_metadata_endpoint</dfn>
-    ::  A URL that points to an HTTP API that complies with the [[#idp-api-client-id-metadata-endpoint]] API.
-    :   <dfn>id_assertion_endpoint</dfn>
-    ::  A URL that points to an HTTP API that complies with the [[#idp-api-id-assertion-endpoint]] API.
-    :   <dfn>branding</dfn>
-    ::  A set of {{IdentityProviderBranding}} options.
-</dl>
-
-The {{IdentityProviderBranding}} enables an [=IDP=] to express their branding
-preferences, which may be used by [=user agents=] to customize the permission prompt.
-
-Note: The branding preferences are deliberately designed to be high level
-/ abstract (rather than opinionated about a specific UI structure), to
-enable different [=user agents=] to offer different UI experiences and
-for them to evolve independently over time.
-
-Its members have the following semantics:
-<dl dfn-type="dict-member" dfn-for="IdentityProviderBranding">
-    :   <dfn>background_color</dfn>
-    ::  Background [=color=] for [=IDP=]-branded widgets such as buttons.
-    :   <dfn>color</dfn>
-    ::  [=color=] for text on [=IDP=] branded widgets.
-    :   <dfn>icons</dfn>
-    ::  A list of {{IdentityProviderIcon}} objects.
-</dl>
-
-Note: The branding preferences are deliberately designed to be high level
-/ abstract (rather than opinionated about a specific UI structure), to
-enable different [=user agents=] to offer different UI experiences and
-for them to evolve independently over time.
-
-
-The {{IdentityProviderIcon}} has members with the following semantics:
-
-<dl dfn-type="dict-member" dfn-for="IdentityProviderIcon">
-    :   <dfn>url</dfn>
-    ::  The url pointing to the icon image, which must be square and single resolution
-        (not a multi-resolution .ico). The icon needs to comply with the
-        [maskable](https://www.w3.org/TR/appmanifest/#icon-masks) specification.
-    :   <dfn>size</dfn>
-    ::  The width/height of the square icon. The size may be omitted if the icon is in a vector
-        graphic format (like SVG).
-</dl>
-
-Note: the [=user agent=] reserves a square size for the icons provided by the developer. If the
-developer provides an icon that is not square, the [=user agent=] may choose to not display it at
-all, trim the icon and show a square portion of it, or even transform it into a square icon and show
-that.
-
-The <dfn>color</dfn> is a subset of CSS <<color>> syntax, namely <<hex-color>>s, ''hsl()''s, ''rgb()''s and <<named-color>>.
-
-For example:
-
-<div class=example>
-```json
-{
-  "accounts_endpoint": "/accounts",
-  "client_metadata_endpoint": "/metadata",
-  "id_assertion_endpoint": "/assertion",
-  "branding": {
-    "background_color": "green",
-    "color": "0xFFEEAA",
-    "icons": [{
-      "url": "https://idp.example/icon.ico",
-      "size": 25
-    }]
-  }
-}
-```
-</div>
-
-<!-- ============================================================ -->
-## Accounts List ## {#idp-api-accounts-endpoint}
-<!-- ============================================================ -->
-
-The accounts list endpoint provides the list of accounts the user has at the [=IDP=].
-
-The accounts list endpoint is fetched
-(a) **with** [=IDP=] cookies,
-(b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`,
-(c) **without** revealing the [=RP=] in the <a http-header>Origin</a> or
-    [[RFC9110#field.referer|Referer]] headers, and
-(d) **without** following [[RFC9110#field.location|HTTP redirects]].
-
-For example:
-
-<div class=example>
-```http
-GET /accounts_list HTTP/1.1
-Host: idp.example
-Accept: application/json
-Cookie: 0x23223
-Sec-Fetch-Dest: webidentity
-```
-</div>
-
-The response body must be a JSON object that can be [=converted to an IDL value|converted=] to an {{IdentityProviderAccountList}} without an exception.
-
-
-<xmp class="idl">
-dictionary IdentityProviderAccount {
-  required USVString id;
-  required USVString name;
-  required USVString email;
-  USVString given_name;
-  USVString picture;
-  sequence<USVString> approved_clients;
-};
-dictionary IdentityProviderAccountList {
-  sequence<IdentityProviderAccount> accounts;
-};
-</xmp>
-
-Every {{IdentityProviderAccount}} is expected to have members with the following semantics:
-
-<dl dfn-type="dict-member" dfn-for="IdentityProviderAccount">
-    :   <dfn>id</dfn>
-    ::  The account unique identifier.
-    :   <dfn>name</dfn>
-    ::  The user's full name.
-    :   <dfn>email</dfn>
-    ::  The user's email address.
-    :   <dfn>given_name</dfn>
-    ::  The user's given name.
-    :   <dfn>picture</dfn>
-    ::  URL for the account's picture.
-    :   <dfn>approved_clients</dfn>
-    ::  A list of [=RP=]s (that gets matched against the requesting {{IdentityProviderConfig/clientId}}) this account is already registered with.
-        Used in the [=request permission to sign-up=] to allow the [=IDP=] to control whether to show
-        the Privacy Policy and the Terms of Service.
-</dl>
-
-For example:
-
-<div class=example>
-```json
-{
- "accounts": [{
-   "id": "1234",
-   "given_name": "John",
-   "name": "John Doe",
-   "email": "john_doe@idp.example",
-   "picture": "https://idp.example/profile/123",
-   "approved_clients": ["123", "456", "789"]
-  }, {
-   "id": "5678",
-   "given_name": "Johnny",
-   "name": "Johnny",
-   "email": "johnny@idp.example",
-   "picture": "https://idp.example/profile/456"
-   "approved_clients": ["abc", "def", "ghi"]
-  }]
-}
-```
-</div>
-
-Issue: [Clarify](https://github.com/fedidcg/FedCM/issues/218) the IDP API response when the user is not signed in.
-
-<!-- ============================================================ -->
-## Client Metadata ## {#idp-api-client-id-metadata-endpoint}
-<!-- ============================================================ -->
-
-The client metadata endpoint provides metadata about [=RP=]s.
-
-The client medata endpoint is fetched
-(a) **without** cookies,
-(b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`,
-(c) **with** the [=RP=]'s origin in the <a http-header>Origin</a> header, and
-(d) **without** following [[RFC9110#field.location|HTTP redirects]].
-
-The user agent also passes the **client_id**.
-
-For example:
-
-<div class=example>
-```http
-GET /client_medata?client_id=1234 HTTP/1.1
-Host: idp.example
-Origin: https://rp.example/
-Accept: application/json
-Sec-Fetch-Dest: webidentity
-```
-</div>
-
-The response body must be a JSON object that can be [=converted to an IDL value|converted=] to an {{IdentityProviderClientMetadata}} without an exception.
-
-<xmp class="idl">
-dictionary IdentityProviderClientMetadata {
-  USVString privacy_policy_url;
-  USVString terms_of_service_url;
-};
-</xmp>
-
-The {{IdentityProviderClientMetadata}} object's members have the following semantics:
-
-<dl dfn-type="dict-member" dfn-for="IdentityProviderClientMetadata">
-    :   <dfn>privacy_policy_url</dfn>
-    ::  A link to the [=RP=]'s Privacy Policy.
-    :   <dfn>terms_of_service_url</dfn>
-    ::  A link to the [=RP=]'s Terms of Service.
-</dl>
-
-For example:
-
-<div class=example>
-```json
-{
-  "privacy_policy_url": "https://rp.example/clientmetadata/privacy_policy.html",
-  "terms_of_service_url": "https://rp.example/clientmetadata/terms_of_service.html"
-}
-```
-</div>
-
-<!-- ============================================================ -->
-## Identity Assertions ## {#idp-api-id-assertion-endpoint}
-<!-- ============================================================ -->
-
-The identity assertion endpoint is responsible for minting a new token that contains signed assertions about the user.
-
-The identity assertion endpoint is fetched
-
-(a) as a **POST** request,
-(b) **with** [=IDP=] cookies,
-(c) **with** the [=RP=]'s origin in the <a http-header>Origin</a> header, and
-(d) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`,
-(e) **without** following [[RFC9110#field.location|HTTP redirects]].
-
-It will also contain the following parameters in the request body `application/x-www-form-urlencoded`:
-
-<dl dfn-type="argument" dfn-for="id_assertion_endpoint_request">
-    :   <dfn>client_id</dfn>
-    ::  The [=RP=]'s unique identifier from the [=IDP=]
-    :   <dfn>nonce</dfn>
-    ::  The request nonce
-    :   <dfn>account_id</dfn>
-    ::  The account identifier that was selected.
-    :   <dfn>disclosure_text_shown</dfn>
-    ::  Whether the user agent has explicitly shown to the user what specific information the
-        [=IDP=] intends to share with the [=RP=] (e.g. "idp.example will share your name, email...
-        with rp.example"), used by the [=request permission to sign-up=] algorithm for new users but
-        not by the [=sign-in=] algorithm for returning users.
-</dl>
-
-For example:
-
-<div class=example>
-```http
-POST /fedcm_assertion_endpoint HTTP/1.1
-Host: idp.example
-Origin: https://rp.example/
-Content-Type: application/x-www-form-urlencoded
-Cookie: 0x23223
-Sec-Fetch-Dest: webidentity
-account_id=123&client_id=client1234&nonce=Ct60bD&disclosure_text_shown=true
-```
-</div>
-
-<div class=idp-normative-text>
-An [=IDP=] MUST check the <a http-header>Origin</a> header to ensure that a malicious [=RP=] does
-not receive an ID token corresponding to another [=RP=]. In other words, the [=IDP=] MUST check that
-the <a http-header>Origin</a> header value is represented by the
-{{IdentityProviderConfig/clientId}}. As the {{IdentityProviderConfig/clientId}} are
-[=IDP=]-specific, the [=user agent=] cannot perform this check.
-</div>
-
-The response body must be a JSON object that can be [=converted to an IDL value|converted=] to an {{IdentityProviderToken}} without an exception.
-
-<xmp class="idl">
-dictionary IdentityProviderToken {
-  required USVString token;
-};
-</xmp>
-
-Every {{IdentityProviderToken}} is expected to have members with the following semantics:
-
-<dl dfn-type="dict-member" dfn-for="IdentityProviderToken">
-    :   <dfn>token</dfn>
-    ::  The resulting token.
-</dl>
-
-The content of the {{IdentityProviderToken/token}} is opaque to the user agent and can contain
-anything that the [=IDP=] would like to pass to the
-[=RP=] to facilitate the login. For this reason the [=RP=]
-is expected to be the party responsible for validating the {{IdentityProviderToken/token}} passed
-along from the [=IDP=] using the appropriate token validation
-algorithms defined. One example of how this might be done is defined 
-in [[OIDC-Connect-Core#IDTokenValidation]].
-
-NOTE: For [=IDPs=], it is worth considering how
-[portable](https://github.com/fedidcg/FedCM/issues/314) accounts are.
-Portability is left entirely up to [=IDPs=], who can choose
-between a variety of different mechanisms to accomplish it
-(e.g. [OIDC's Account Porting](https://openid.net/specs/openid-connect-account-porting-1_0.html)).
-
-For example:
-
-<div class=example>
-```json
-{
-  "token" : "eyJC...J9.eyJzdWTE2...MjM5MDIyfQ.SflV_adQssw....5c"
-}
-```
-</div>
-
 <!-- ============================================================ -->
 # The Browser API # {#browser-api}
 <!-- ============================================================ -->
@@ -1342,6 +905,442 @@ To <dfn>select an account</dfn> given an |accountsList|, run the following steps
 To <dfn>sign-in</dfn> the user with a given an [=AccountState=] |accountState|:
     1. Assert that |accountState|'s {{AccountState/registration state}} is {{registered}}
     1. Change |accountState|'s {{AccountState/allows logout}} from false to true.
+</div>
+
+<!-- ============================================================ -->
+# Identity Provider HTTP API # {#idp-api}
+<!-- ============================================================ -->
+
+<em>This section is non-normative.</em>
+
+The [=IDP=] proactively and cooperatively exposes itself as a comformant agent
+by exposing a series of HTTP endpoints:
+
+1. A [[#idp-api-manifest]] endpoint in an agreed upon location that points to
+1. An [[#idp-api-accounts-endpoint]] endpoint
+1. A [[#idp-api-client-id-metadata-endpoint]] endpoint
+1. An [[#idp-api-id-assertion-endpoint]] endpoint
+
+
+The [=IDP=] must also host a file at the ".well-known/web-identity" path of its [=registrable domain=] that has JSON contents that are convertable to an {{IdentityProviderWellKnown}} object.
+
+<xmp class="idl">
+dictionary IdentityProviderWellKnown {
+  required sequence<USVString> provider_urls;
+};
+</xmp>
+
+The FedCM API introduces the ability for a site to ask the browser to execute a few different
+network requests. It is important for the browser
+to execute these in such a way that it does not allow the user to be tracked (by an attacker
+impersonating an [=IDP=]) on to the site using FedCM. The following table has information about the
+network requests performed:
+
+<script type="text/typogram">
+┌──────────────────────────┬─────────┬───────────┬──────────┐
+│ Endpoint                 │ cookies │ client_id │ referrer │
+├──────────────────────────┼─────────┼───────────┼──────────┤
+│ manifests                │  no     │  no       │  no      │
+├──────────────────────────┼─────────┼───────────┼──────────┤
+│ accounts_endpoint        │  yes    │  no       │  no      │
+├──────────────────────────┼─────────┼───────────┼──────────┤
+│ client_metadata_endpoint │  no     │  yes      │  yes     │
+├──────────────────────────┼─────────┼───────────┼──────────┤
+│ id_assertion_endpoint    │  yes    │  yes      │  yes     │
+└──────────────────────────┴─────────┴───────────┴──────────┘
+</script>
+
+<!-- ============================================================ -->
+## The Well-Known File ## {#idp-api-well-known}
+<!-- ============================================================ -->
+
+NOTE: The browser uses the well-known file to prevent the following attack described [here](https://github.com/fedidcg/FedCM/issues/230#issuecomment-1067029200).
+
+The [=IDP=] exposes a well-known file in a pre-defined location, specifically at the "web-identity" file at the [=IDPs=]'s path ".well-known".
+
+The well-known file is fetched:
+
+(a) **without** cookies,
+(b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`, and
+(c) **without** revealing the [=RP=] in the <a http-header>Origin</a> or
+    [[RFC9110#field.referer|Referer]] headers.
+
+For example:
+
+<div class=example>
+```http
+GET /.well-known/web-identity HTTP/1.1
+Host: idp.example
+Accept: application/json
+Sec-Fetch-Dest: webidentity
+```
+</div>
+
+The file is parsed expecting a [=Well-Known=] JSON object.
+
+The <dfn>Well-Known</dfn> JSON object has the following properties:
+
+<dl dfn-type="argument" dfn-for="Well-Known">
+    :   <dfn>provider_urls</dfn> (required)
+    ::  A list of URLs that points to valid [[#idp-api-manifest]]s.
+</dl>
+
+<!-- ============================================================ -->
+## Manifest ## {#idp-api-manifest}
+<!-- ============================================================ -->
+
+The config endpoint is an endpoint
+which serves as a discovery device to other endpoints provided by the
+[=IDP=].
+
+The config endpoint is fetched:
+
+(a) **without** cookies,
+(b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`,
+(c) **without** revealing the [=RP=] in the <a http-header>Origin</a> or
+    [[RFC9110#field.referer|Referer]] headers, and
+(c) **without** following [[RFC9110#field.location|HTTP redirects]].
+
+For example:
+
+<div class=example>
+```http
+GET /config.json HTTP/1.1
+Host: idp.example
+Accept: application/json
+Sec-Fetch-Dest: webidentity
+```
+</div>
+
+The response body must be a JSON object that can be [=converted to an IDL value|converted=] to an {{IdentityProviderAPIConfig}} without an exception.
+
+<xmp class=idl>
+dictionary IdentityProviderIcon {
+  required USVString url;
+  unsigned long size;
+};
+
+dictionary IdentityProviderBranding {
+  USVString background_color;
+  USVString color;
+  sequence<IdentityProviderIcon> icons;
+};
+
+dictionary IdentityProviderAPIConfig {
+  required USVString accounts_endpoint;
+  required USVString client_metadata_endpoint;
+  required USVString id_assertion_endpoint;
+  IdentityProviderBranding branding;
+};
+</xmp>
+
+The {{IdentityProviderAPIConfig}} object's members have the following semantics:
+
+<dl dfn-type="dict-member" dfn-for="IdentityProviderAPIConfig">
+    :   <dfn>accounts_endpoint</dfn>
+    ::  A URL that points to an HTTP API that complies with the [[#idp-api-accounts-endpoint]] API.
+    :   <dfn>client_metadata_endpoint</dfn>
+    ::  A URL that points to an HTTP API that complies with the [[#idp-api-client-id-metadata-endpoint]] API.
+    :   <dfn>id_assertion_endpoint</dfn>
+    ::  A URL that points to an HTTP API that complies with the [[#idp-api-id-assertion-endpoint]] API.
+    :   <dfn>branding</dfn>
+    ::  A set of {{IdentityProviderBranding}} options.
+</dl>
+
+The {{IdentityProviderBranding}} enables an [=IDP=] to express their branding
+preferences, which may be used by [=user agents=] to customize the permission prompt.
+
+Note: The branding preferences are deliberately designed to be high level
+/ abstract (rather than opinionated about a specific UI structure), to
+enable different [=user agents=] to offer different UI experiences and
+for them to evolve independently over time.
+
+Its members have the following semantics:
+<dl dfn-type="dict-member" dfn-for="IdentityProviderBranding">
+    :   <dfn>background_color</dfn>
+    ::  Background [=color=] for [=IDP=]-branded widgets such as buttons.
+    :   <dfn>color</dfn>
+    ::  [=color=] for text on [=IDP=] branded widgets.
+    :   <dfn>icons</dfn>
+    ::  A list of {{IdentityProviderIcon}} objects.
+</dl>
+
+Note: The branding preferences are deliberately designed to be high level
+/ abstract (rather than opinionated about a specific UI structure), to
+enable different [=user agents=] to offer different UI experiences and
+for them to evolve independently over time.
+
+
+The {{IdentityProviderIcon}} has members with the following semantics:
+
+<dl dfn-type="dict-member" dfn-for="IdentityProviderIcon">
+    :   <dfn>url</dfn>
+    ::  The url pointing to the icon image, which must be square and single resolution
+        (not a multi-resolution .ico). The icon needs to comply with the
+        [maskable](https://www.w3.org/TR/appmanifest/#icon-masks) specification.
+    :   <dfn>size</dfn>
+    ::  The width/height of the square icon. The size may be omitted if the icon is in a vector
+        graphic format (like SVG).
+</dl>
+
+Note: the [=user agent=] reserves a square size for the icons provided by the developer. If the
+developer provides an icon that is not square, the [=user agent=] may choose to not display it at
+all, trim the icon and show a square portion of it, or even transform it into a square icon and show
+that.
+
+The <dfn>color</dfn> is a subset of CSS <<color>> syntax, namely <<hex-color>>s, ''hsl()''s, ''rgb()''s and <<named-color>>.
+
+For example:
+
+<div class=example>
+```json
+{
+  "accounts_endpoint": "/accounts",
+  "client_metadata_endpoint": "/metadata",
+  "id_assertion_endpoint": "/assertion",
+  "branding": {
+    "background_color": "green",
+    "color": "0xFFEEAA",
+    "icons": [{
+      "url": "https://idp.example/icon.ico",
+      "size": 25
+    }]
+  }
+}
+```
+</div>
+
+<!-- ============================================================ -->
+## Accounts List ## {#idp-api-accounts-endpoint}
+<!-- ============================================================ -->
+
+The accounts list endpoint provides the list of accounts the user has at the [=IDP=].
+
+The accounts list endpoint is fetched
+(a) **with** [=IDP=] cookies,
+(b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`,
+(c) **without** revealing the [=RP=] in the <a http-header>Origin</a> or
+    [[RFC9110#field.referer|Referer]] headers, and
+(d) **without** following [[RFC9110#field.location|HTTP redirects]].
+
+For example:
+
+<div class=example>
+```http
+GET /accounts_list HTTP/1.1
+Host: idp.example
+Accept: application/json
+Cookie: 0x23223
+Sec-Fetch-Dest: webidentity
+```
+</div>
+
+The response body must be a JSON object that can be [=converted to an IDL value|converted=] to an {{IdentityProviderAccountList}} without an exception.
+
+
+<xmp class="idl">
+dictionary IdentityProviderAccount {
+  required USVString id;
+  required USVString name;
+  required USVString email;
+  USVString given_name;
+  USVString picture;
+  sequence<USVString> approved_clients;
+};
+dictionary IdentityProviderAccountList {
+  sequence<IdentityProviderAccount> accounts;
+};
+</xmp>
+
+Every {{IdentityProviderAccount}} is expected to have members with the following semantics:
+
+<dl dfn-type="dict-member" dfn-for="IdentityProviderAccount">
+    :   <dfn>id</dfn>
+    ::  The account unique identifier.
+    :   <dfn>name</dfn>
+    ::  The user's full name.
+    :   <dfn>email</dfn>
+    ::  The user's email address.
+    :   <dfn>given_name</dfn>
+    ::  The user's given name.
+    :   <dfn>picture</dfn>
+    ::  URL for the account's picture.
+    :   <dfn>approved_clients</dfn>
+    ::  A list of [=RP=]s (that gets matched against the requesting {{IdentityProviderConfig/clientId}}) this account is already registered with.
+        Used in the [=request permission to sign-up=] to allow the [=IDP=] to control whether to show
+        the Privacy Policy and the Terms of Service.
+</dl>
+
+For example:
+
+<div class=example>
+```json
+{
+ "accounts": [{
+   "id": "1234",
+   "given_name": "John",
+   "name": "John Doe",
+   "email": "john_doe@idp.example",
+   "picture": "https://idp.example/profile/123",
+   "approved_clients": ["123", "456", "789"]
+  }, {
+   "id": "5678",
+   "given_name": "Johnny",
+   "name": "Johnny",
+   "email": "johnny@idp.example",
+   "picture": "https://idp.example/profile/456"
+   "approved_clients": ["abc", "def", "ghi"]
+  }]
+}
+```
+</div>
+
+Issue: [Clarify](https://github.com/fedidcg/FedCM/issues/218) the IDP API response when the user is not signed in.
+
+<!-- ============================================================ -->
+## Client Metadata ## {#idp-api-client-id-metadata-endpoint}
+<!-- ============================================================ -->
+
+The client metadata endpoint provides metadata about [=RP=]s.
+
+The client medata endpoint is fetched
+(a) **without** cookies,
+(b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`,
+(c) **with** the [=RP=]'s origin in the <a http-header>Origin</a> header, and
+(d) **without** following [[RFC9110#field.location|HTTP redirects]].
+
+The user agent also passes the **client_id**.
+
+For example:
+
+<div class=example>
+```http
+GET /client_medata?client_id=1234 HTTP/1.1
+Host: idp.example
+Origin: https://rp.example/
+Accept: application/json
+Sec-Fetch-Dest: webidentity
+```
+</div>
+
+The response body must be a JSON object that can be [=converted to an IDL value|converted=] to an {{IdentityProviderClientMetadata}} without an exception.
+
+<xmp class="idl">
+dictionary IdentityProviderClientMetadata {
+  USVString privacy_policy_url;
+  USVString terms_of_service_url;
+};
+</xmp>
+
+The {{IdentityProviderClientMetadata}} object's members have the following semantics:
+
+<dl dfn-type="dict-member" dfn-for="IdentityProviderClientMetadata">
+    :   <dfn>privacy_policy_url</dfn>
+    ::  A link to the [=RP=]'s Privacy Policy.
+    :   <dfn>terms_of_service_url</dfn>
+    ::  A link to the [=RP=]'s Terms of Service.
+</dl>
+
+For example:
+
+<div class=example>
+```json
+{
+  "privacy_policy_url": "https://rp.example/clientmetadata/privacy_policy.html",
+  "terms_of_service_url": "https://rp.example/clientmetadata/terms_of_service.html"
+}
+```
+</div>
+
+<!-- ============================================================ -->
+## Identity Assertions ## {#idp-api-id-assertion-endpoint}
+<!-- ============================================================ -->
+
+The identity assertion endpoint is responsible for minting a new token that contains signed assertions about the user.
+
+The identity assertion endpoint is fetched
+
+(a) as a **POST** request,
+(b) **with** [=IDP=] cookies,
+(c) **with** the [=RP=]'s origin in the <a http-header>Origin</a> header, and
+(d) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`,
+(e) **without** following [[RFC9110#field.location|HTTP redirects]].
+
+It will also contain the following parameters in the request body `application/x-www-form-urlencoded`:
+
+<dl dfn-type="argument" dfn-for="id_assertion_endpoint_request">
+    :   <dfn>client_id</dfn>
+    ::  The [=RP=]'s unique identifier from the [=IDP=]
+    :   <dfn>nonce</dfn>
+    ::  The request nonce
+    :   <dfn>account_id</dfn>
+    ::  The account identifier that was selected.
+    :   <dfn>disclosure_text_shown</dfn>
+    ::  Whether the user agent has explicitly shown to the user what specific information the
+        [=IDP=] intends to share with the [=RP=] (e.g. "idp.example will share your name, email...
+        with rp.example"), used by the [=request permission to sign-up=] algorithm for new users but
+        not by the [=sign-in=] algorithm for returning users.
+</dl>
+
+For example:
+
+<div class=example>
+```http
+POST /fedcm_assertion_endpoint HTTP/1.1
+Host: idp.example
+Origin: https://rp.example/
+Content-Type: application/x-www-form-urlencoded
+Cookie: 0x23223
+Sec-Fetch-Dest: webidentity
+account_id=123&client_id=client1234&nonce=Ct60bD&disclosure_text_shown=true
+```
+</div>
+
+<div class=idp-normative-text>
+An [=IDP=] MUST check the <a http-header>Origin</a> header to ensure that a malicious [=RP=] does
+not receive an ID token corresponding to another [=RP=]. In other words, the [=IDP=] MUST check that
+the <a http-header>Origin</a> header value is represented by the
+{{IdentityProviderConfig/clientId}}. As the {{IdentityProviderConfig/clientId}} are
+[=IDP=]-specific, the [=user agent=] cannot perform this check.
+</div>
+
+The response body must be a JSON object that can be [=converted to an IDL value|converted=] to an {{IdentityProviderToken}} without an exception.
+
+<xmp class="idl">
+dictionary IdentityProviderToken {
+  required USVString token;
+};
+</xmp>
+
+Every {{IdentityProviderToken}} is expected to have members with the following semantics:
+
+<dl dfn-type="dict-member" dfn-for="IdentityProviderToken">
+    :   <dfn>token</dfn>
+    ::  The resulting token.
+</dl>
+
+The content of the {{IdentityProviderToken/token}} is opaque to the user agent and can contain
+anything that the [=IDP=] would like to pass to the
+[=RP=] to facilitate the login. For this reason the [=RP=]
+is expected to be the party responsible for validating the {{IdentityProviderToken/token}} passed
+along from the [=IDP=] using the appropriate token validation
+algorithms defined. One example of how this might be done is defined 
+in [[OIDC-Connect-Core#IDTokenValidation]].
+
+NOTE: For [=IDPs=], it is worth considering how
+[portable](https://github.com/fedidcg/FedCM/issues/314) accounts are.
+Portability is left entirely up to [=IDPs=], who can choose
+between a variety of different mechanisms to accomplish it
+(e.g. [OIDC's Account Porting](https://openid.net/specs/openid-connect-account-porting-1_0.html)).
+
+For example:
+
+<div class=example>
+```json
+{
+  "token" : "eyJC...J9.eyJzdWTE2...MjM5MDIyfQ.SflV_adQssw....5c"
+}
+```
 </div>
 
 <!-- ============================================================ -->
