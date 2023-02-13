@@ -906,19 +906,11 @@ To <dfn>select an account</dfn> given an |accountsList|, run the following steps
 The [=IDP=] proactively and cooperatively exposes itself as a comformant agent
 by exposing a series of HTTP endpoints:
 
+1. [[#idp-api-well-known]] that points to a Manifest
 1. A [[#idp-api-manifest]] endpoint in an agreed upon location that points to
 1. An [[#idp-api-accounts-endpoint]] endpoint
 1. A [[#idp-api-client-id-metadata-endpoint]] endpoint
 1. An [[#idp-api-id-assertion-endpoint]] endpoint
-
-
-The [=IDP=] must also host a file at the ".well-known/web-identity" path of its [=registrable domain=] that has JSON contents that are convertable to an {{IdentityProviderWellKnown}} object.
-
-<xmp class="idl">
-dictionary IdentityProviderWellKnown {
-  required sequence<USVString> provider_urls;
-};
-</xmp>
 
 The FedCM API introduces the ability for a site to ask the browser to execute a few different
 network requests. It is important for the browser
@@ -966,11 +958,17 @@ Sec-Fetch-Dest: webidentity
 ```
 </div>
 
-The file is parsed expecting a [=Well-Known=] JSON object.
+<xmp class="idl">
+dictionary IdentityProviderWellKnown {
+  required sequence<USVString> provider_urls;
+};
+</xmp>
 
-The <dfn>Well-Known</dfn> JSON object has the following properties:
+The file is parsed expecting a {{IdentityProviderWellKnown}} JSON object.
 
-<dl dfn-type="argument" dfn-for="Well-Known">
+The {{IdentityProviderWellKnown}} JSON object has the following semantics:
+
+<dl dfn-type="dict-member" dfn-for="IdentityProviderWellKnown">
     :   <dfn>provider_urls</dfn> (required)
     ::  A list of URLs that points to valid [[#idp-api-manifest]]s.
 </dl>
