@@ -358,13 +358,18 @@ This specification introduces a new type of {{Credential}}, called an {{Identity
   [Exposed=Window, SecureContext]
   interface IdentityCredential : Credential {
     readonly attribute USVString? token;
+    readonly attribute USVString providerConfigURL;
   };
+  IdentityCredential includes CredentialUserData;
 </pre>
 
 <dl>
     :   <b>{{IdentityCredential/token}}</b>
     ::  The {{IdentityCredential/token}}'s attribute getter returns the value it is set to.
         It represents the minted {{IdentityProviderToken/token}} provided by the [=IDP=].
+    :   <b>{{IdentityCredential/providerConfigURL}}</b>
+    ::  The {{IdentityCredential/providerConfigURL}}'s attribute getter returns the value it is set to.
+        It holds the value of the chosen [=IDP=]'s {{IdentityProviderConfig/configURL}}.
 </dl>
 
 The main entrypoint in this specification is through the entrypoints exposed
@@ -819,6 +824,9 @@ To <dfn>fetch an identity assertion</dfn> given an [=AccountState=] |accountStat
         1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderToken}}, |token|.
         1. Let |credential| be a new {{IdentityCredential}} given |globalObject|'s
             <a for="global object">realm</a>.
+        1. Set |credential|'s {{CredentialUserData/iconURL}} to a [=implementation-defined=] value.
+        1. Set |credential|'s {{CredentialUserData/name}} to a [=implementation-defined=] value.
+        1. Set |credential|'s {{IdentityCredential/providerConfigURL}} to |provider|'s {{IdentityProviderConfig/configURL}}.
         1. Set |credential|'s {{IdentityCredential/token}} to |token|.
     1. Wait for |credential| to be set.
     1. Return |credential|.
@@ -947,6 +955,92 @@ To <dfn>select an account</dfn> given an |accountsList|, run the following steps
         manually selects from the accounts chooser, or failure if no account is selected.
     1. Return |account|.
 </div>
+
+<!-- ============================================================ -->
+### The <code>\[[CollectFromCredentialStore]](origin, options, sameOriginWithAncestors)</code> internal method ### {#browser-api-collect-credential}
+<!-- ============================================================ -->
+
+
+  <dfn for="IdentityCredential" method>\[[CollectFromCredentialStore]](origin, options, sameOriginWithAncestors)</dfn>
+  is called with an [[origin]] (|origin|), a {{CredentialRequestOptions}} (|options|),
+  and a boolean which is `true` iff the calling context is [=same-origin with its ancestors=]
+  (|sameOriginWithAncestors|).
+  The algorithm returns a set of {{Credential}} objects from
+  the [=credential store=]. If no matching {{Credential}} objects are available, the returned set
+  will be empty.
+
+  The algorithm will throw a `NotAllowedError` if |sameOriginWithAncestors| is not `true`.
+
+  <ol class="algorithm">
+    1.  Assert: |options|["{{CredentialRequestOptions/identity}}"] [=map/exists=].
+
+    2.  If |sameOriginWithAncestors| is `false`, throw a "{{NotAllowedError}}" {{DOMException}}.
+
+    3.  Return the empty set if |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"] is empty.
+
+    4.  Return the result of <a abstract-op lt="Retrieve a list of credentials">retrieving</a>
+        credentials from the [=credential store=] that match the following filter:
+
+        1.  The credential is an {{IdentityCredential}}
+        2.  The credential's {{Credential/[[origin]]}} is the [=same origin=] as |origin|.
+        3.  The credential's {{IdentityCredential/providerConfigURL}} is equal to the {{IdentityProviderConfig/configURL}} of one of the entries in |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"].
+  </ol>
+
+<!-- ============================================================ -->
+### The <code>\[[Store]](credential, sameOriginWithAncestors)</code> internal method ### {#browser-api-store-credential}
+<!-- ============================================================ -->
+
+
+  <dfn for="IdentityCredential" method>\[[Store]](credential, sameOriginWithAncestors)</dfn> is
+  called with a {{IdentityCredential}} (|credential|), and a boolean which is `true` iff the calling
+  context is [=same-origin with its ancestors=] (|sameOriginWithAncestors|). The algorithm returns
+  `undefined` once |credential| is persisted to the [=credential store=].
+
+  The algorithm will return a `NotAllowedError` if |sameOriginWithAncestors| is not `true`.
+
+  <ol class="algorithm">
+    1.  Throw a "{{NotAllowedError}}" {{DOMException}} without altering the user agent's
+        [=credential store=] if |sameOriginWithAncestors| is `false`.
+
+    2.  If the user agent's [=credential store=] contains a {{IdentityCredential}} (|stored|)
+        whose {{Credential/id}} attribute is |credential|'s {{Credential/id}} and whose
+        {{[[origin]]}} slot is the [=same origin=] as |credential|'s {{Credential/[[origin]]}},
+        then:
+
+        1.  If the user grants permission to update credentials (as discussed when defining
+            [=user mediation=]), then:
+
+            1.  Set |stored|'s <a attribute for="IdentityCredential">`token`</a> to |credential|'s
+                <a attribute for="IdentityCredential">`token`</a>.
+
+            2.  Set |stored|'s {{CredentialUserData/name}} to |credential|'s
+                {{CredentialUserData/name}}.
+
+            3.  Set |stored|'s {{CredentialUserData/iconURL}} to |credential|'s
+                {{CredentialUserData/iconURL}}.
+
+        Otherwise, if the user grants permission to store credentials (as discussed when
+        defining [=user mediation=], then: 
+
+        1.  Store a {{IdentityCredential}} in the [=credential store=] with the following
+            properties:
+            
+            :   {{Credential/id}}
+            ::  |credential|'s {{Credential/id}}
+            :   {{CredentialUserData/name}},
+            ::  |credential|'s {{CredentialUserData/name}}
+            :   {{CredentialUserData/iconURL}}
+            ::  |credential|'s {{CredentialUserData/iconURL}}
+            :   {{Credential/[[origin]]}}
+            ::  |credential|'s {{Credential/[[origin]]}}
+            :   <a attribute for="IdentityCredential">`token`</a>
+            ::  |credential|'s <a attribute for="IdentityCredential">`token`</a>
+            :   <a attribute for="IdentityCredential">`providerConfigURL`</a>
+            ::  |credential|'s <a attribute for="IdentityCredential">`providerConfigURL`</a>
+
+    3.  Return `undefined`.
+
+  </ol>
 
 <!-- ============================================================ -->
 # Identity Provider HTTP API # {#idp-api}
