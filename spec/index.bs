@@ -334,6 +334,28 @@ the following properties:
         on this account after the last successful {{IdentityCredential}} creation with this account.
 </dl>
 
+<div algorithm>
+To <dfn>compute account state</dfn> given an {{IdentityProviderConfig}} |provider|, an
+{{IdentityProviderAccount}} |account|, and a |globalObject|, run the following steps. This returns
+an [=AccountState=].
+    1. Let |configUrl| be the result of running [=parse url=] with |provider|'s
+        {{IdentityProviderConfig/configURL}} and |globalObject|.
+    1. Let |idpOrigin| be the [=/origin=] corresponding to |configUrl|.
+    1. Let |rpOrigin| be |globalObject|'s [=associated Document=]'s [=Document/origin=].
+    1. Let |accountId| be |account|'s {{IdentityProviderAccount/id}}.
+    1. Let |triple| be (|rpOrigin|, |idpOrigin|, |accountId|).
+    1. If [=state machine map=][|triple|] does not exist, set [=state machine map=][|triple|] to a
+        new [=AccountState=].
+    1. Let |accountState| be [=state machine map=][|triple|].
+    1. Return |accountState|.
+</div>
+
+<div algorithm>
+To <dfn>sign-in</dfn> the user with a given an [=AccountState=] |accountState|:
+    1. Assert that |accountState|'s {{AccountState/registration state}} is {{registered}}
+    1. Change |accountState|'s {{AccountState/allows logout}} from false to true.
+</div>
+
 TODO: add an ASCII image to explain how the states fit into the algorithms.
 
 <!-- ============================================================ -->
@@ -775,22 +797,6 @@ To <dfn>fetch an identity assertion</dfn> given an [=AccountState=] |accountStat
 </div>
 
 <div algorithm>
-To <dfn>compute account state</dfn> given an {{IdentityProviderConfig}} |provider|, an
-{{IdentityProviderAccount}} |account|, and a |globalObject|, run the following steps. This returns
-an [=AccountState=].
-    1. Let |configUrl| be the result of running [=parse url=] with |provider|'s
-        {{IdentityProviderConfig/configURL}} and |globalObject|.
-    1. Let |idpOrigin| be the [=/origin=] corresponding to |configUrl|.
-    1. Let |rpOrigin| be |globalObject|'s [=associated Document=]'s [=Document/origin=].
-    1. Let |accountId| be |account|'s {{IdentityProviderAccount/id}}.
-    1. Let |triple| be (|rpOrigin|, |idpOrigin|, |accountId|).
-    1. If [=state machine map=][|triple|] does not exist, set [=state machine map=][|triple|] to a
-        new [=AccountState=].
-    1. Let |accountState| be [=state machine map=][|triple|].
-    1. Return |accountState|.
-</div>
-
-<div algorithm>
 When <dfn>computing the manifest URL</dfn> given an {{IdentityProviderConfig}} |provider|, a
 [=string=] |manifestString|, and |globalObject|, perform the following steps. This returns a
 <a spec=url for=/>URL</a> or failure.
@@ -899,12 +905,6 @@ To <dfn>select an account</dfn> given an |accountsList|, run the following steps
     1. Let |account| be the {{IdentityProviderAccount}} of the account that the user
         manually selects from the accounts chooser, or failure if no account is selected.
     1. Return |account|.
-</div>
-
-<div algorithm>
-To <dfn>sign-in</dfn> the user with a given an [=AccountState=] |accountState|:
-    1. Assert that |accountState|'s {{AccountState/registration state}} is {{registered}}
-    1. Change |accountState|'s {{AccountState/allows logout}} from false to true.
 </div>
 
 <!-- ============================================================ -->
