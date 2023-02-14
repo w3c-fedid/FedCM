@@ -302,6 +302,30 @@ for an [=IDP=] to adopt the FedCM API without introducing security issues on the
 [=RP=] cannot inspect the results from the fetches in any way.
 
 <!-- ============================================================ -->
+## IDP sign-in status ## {#browser-api-idp-sign-in-status}
+<!-- ============================================================ -->
+
+Each [=user agent=] keeps a global, persistent <dfn>IDP sign-in status
+map</dfn>, an initially empty [=map=]. The [=map/keys=] in this map are
+[=/origin=] (of IDPs), and the [=map/values=] are enums that can be one of
+"unknown", "signed-in", and "signed-out".
+
+The user agent checks all page and subresource loads for an HTTP response
+header named `IdP-SignIn-Status` containing [[RFC9110#parameter|Parameter]]s.
+If that header exists and the first parameter has a name of `action`,
+the user agent must process it as follows:
+
+* If this is a subresource request, and the subresource does not have the
+    same [=/origin] as the toplevel page, ignore the header.
+* Otherwise:
+    * If the parameter value is `signin`, add (or replace) an entry in the
+        [=IDP sign-in status map=] with the key being the origin of the resource
+        and the value being "signed-in"
+    * If the parameter value is `signout-all`, add (or replace) an entry in the
+        [=IDP sign-in status map=] with the key being the origin of the resource
+        and the value being "signed-out"
+
+<!-- ============================================================ -->
 ## The State Machine ## {#browser-api-state-machine}
 <!-- ============================================================ -->
 
@@ -490,11 +514,28 @@ To <dfn>create an IdentityCredential</dfn> given an {{IdentityProviderConfig}}
 |provider| and a |globalObject|, run the following steps. This returns an {{IdentityCredential}} or
 failure.
     1. Assert: These steps are running [=in parallel=].
+    1. Let |signinStatus| be the value of the entry in [=IDP sign-in status map=]
+        with the key being the origin of |provider|'s configURL. If there is
+        no such entry, set it to a user-agent specific default (either "unknown" or
+        "signed-out").
+    1. If |signinStatus| is "signed-out", return failure.
     1. Let |config| be the result of running [=fetch the config file=] with |provider| and
         |globalObject|.
     1. If |config| is failure, return failure.
     1. Let |accountsList| be the result of [=fetch the accounts list=] with |config|, |provider|,
         and |globalObject|.
+    1. If the fetch failed, or the size of |accountsList| is 0:
+        1. Add (or replace) an entry in the [=IDP sign-in status map=] with the
+            key being the origin of the configURL and the value being "signed-out".
+        1. If |signinStatus| is "signed-in", show a dialog to the user and return
+            failure.
+
+            Note: It is recommended that this dialog provides a "sign in" button
+                allowing the user to sign in to the IDP using
+                {{IdentityProviderAPIConfig/signin_url}}.
+    1. If |signinStatus| is "unknown", add (or replace) an entry in the [=IDP
+        sign-in status map=] with the key being the origin of the configURL and
+        the value being "signed-out".
     1. For each |account| in |accountsList|:
         1. If |account|["{{IdentityProviderAccount/picture}}"] is present,
             [=fetch the account picture=] with |account| and |globalObject|.
@@ -675,6 +716,7 @@ dictionary IdentityProviderAPIConfig {
   required USVString accounts_endpoint;
   required USVString client_metadata_endpoint;
   required USVString id_assertion_endpoint;
+  USVString signin_url;
   IdentityProviderBranding branding;
 };
 </xmp>
