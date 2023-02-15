@@ -453,10 +453,10 @@ NOTE: The {{CredentialRequestOptions/mediation}} flag is currently not used.
 The {{CredentialRequestOptions/signal}} is used as an abort signal for the
 requests.
 
-Each {{Document}} has an associated <dfn>pending fedID requests</dfn>, an initially empty [=list=].
+Each {{Document}} has an associated <dfn>pending fedID request list</dfn>, an initially empty [=list=].
 
 Each {{Document}} has an associated <dfn>fedID task status</dfn>, which is initially set to
-"no task". Its possible values are "no task", "pending", or "running".
+"<code>[=no task=]</code>". Its possible values are "<code><dfn>no task</dfn></code>", "<code><dfn>pending</dfn></code>", or "<code><dfn>running</dfn></code>".
 
 <div algorithm>
 When the {{IdentityCredential}}'s
@@ -472,16 +472,16 @@ algorithm is invoked, the user agent MUST execute the following steps. This retu
         {{Credential/[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)}}
         algorithm. See <a href="https://github.com/w3c/webappsec-credential-management/issues/210">issue</a>.
 
-    1. Let |credentialPromise| be a variable set to null.
-    1. If |document|'s [=fedID task status=] is "running":
+    1. Let |credentialOrError| be a variable set to null.
+    1. If |document|'s [=fedID task status=] is "<code>[=running=]</code>":
         1. [=Queue a global task=] with |globalObject| on the [=DOM manipulation task source=] to
-            set |credentialPromise| to a new "{{NotAllowedError}}" {{DOMException}}.
-        1. Wait until |credentialPromise| is set, and return it.
-    1. If |document|'s [=fedID task status=] is "no task":
+            set |credentialOrError| to a new "{{NotAllowedError}}" {{DOMException}}.
+        1. Wait until |credentialOrError| is set, and return it.
+    1. If |document|'s [=fedID task status=] is "<code>[=no task=]</code>":
         1. If |document|'s {{Document/readyState}} is "complete":
             1. [=queue a global task=] with |globalObject| on the [=DOM manipulation task source=] to
                 [=run pending fedID requests=] with |document|.
-            1. Set |document|'s [=fedID task status=] to "pending".
+            1. Set |document|'s [=fedID task status=] to "<code>[=pending=]</code>".
         1. Otherwise:
             1. Let |fedCMListener| be an [=event listener=] set as follows:
 
@@ -494,27 +494,27 @@ algorithm is invoked, the user agent MUST execute the following steps. This retu
                 :: true
             1. [=Add an event listener=] passing |document| and |fedCMListener|.
 
-                Issue: determine if this is the best way to spec the fact that we need to invoke the
-                method after the {{Document}} has loaded.
+                Issue: [better](https://github.com/fedidcg/FedCM/issues/440) invoke the method after
+                the {{Document}} has loaded.
 
-            1. Set |document|'s [=fedID task status=] to "pending".
+            1. Set |document|'s [=fedID task status=] to "<code>[=pending=]</code>".
     1. Let |providers| be |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"].
     1. Let |allConfigURLs| be an [=ordered set=].
-    1. For each (|provs|, <var ignore="">cred</var>) in |document|'s [=pending fedID requests=]:
-        1. For each |prov| in |provs|:
-            1. [=set/Append=] |prov|'s {{IdentityProviderConfig/configURL}} to
+    1. For each (|providerList|, <var ignore="">cred</var>) in |document|'s [=pending fedID request list=]:
+        1. For each |provider| in |providerList|:
+            1. [=set/Append=] |provider|'s {{IdentityProviderConfig/configURL}} to
                 |allConfigURLs|.
     1. For each |provider| in |providers|:
         1. If |allConfigURLs| [=list/contains=] |provider|'s {{IdentityProviderConfig/configURL}}:
             1. [=Queue a global task=] with |globalObject| on the [=DOM manipulation task source=] to
-                set |credentialPromise| to a new "{{NotAllowedError}}" {{DOMException}}.
-            1. Wait until |credentialPromise| is set, and return it.
+                set |credentialOrError| to a new "{{NotAllowedError}}" {{DOMException}}.
+            1. Wait until |credentialOrError| is set, and return it.
         1. [=set/Append=] |provider|'s {{IdentityProviderConfig/configURL}} to
             |allConfigURLs|.
-    1. [=list/Append=] (|providers|, |credentialPromise|) to |document|'s [=pending fedID requests=].
-    1. Wait until |credentialPromise| becomes set, either as an {{IdentityCredential}} or as an
+    1. [=list/Append=] (|providers|, |credentialOrError|) to |document|'s [=pending fedID request list=].
+    1. Wait until |credentialOrError| becomes set, either as an {{IdentityCredential}} or as an
         exception.
-    1. Return |credentialPromise|.
+    1. Return |credentialOrError|.
 </div>
 
 <div algorithm>
@@ -523,9 +523,9 @@ following steps [=in parallel=]:
     1. The [=user agent=] MAY wait some time before proceeding with the following steps. This
         provides the [=user agent=] with flexibility on how to bundle together multiple federated
         identity requests from a site.
-    1. Set |document|'s [=fedID task status=] to "running".
+    1. Set |document|'s [=fedID task status=] to "<code>[=running=]</code>".
     1. Let |allProviders| be an initially empty [=list=].
-    1. For each (|providers|, |credentialPromise|) in |document|'s [=pending fedID requests=]:
+    1. For each (|providers|, |credentialOrError|) in |document|'s [=pending fedID request list=]:
         1. [=Extend=] |allProviders| with |providers|.
     1. Run {{WindowOrWorkerGlobalScope/setTimeout()}} passing a [=task=] which throws a
         {{NetworkError}}, after a timeout of 60 seconds.
@@ -539,13 +539,13 @@ following steps [=in parallel=]:
     1. Let |globalObject| be |document|'s [=relevant global object=]
     1. Let (|credential|, |selectedProvider|) be the result of running [=create an IdentityCredential=]
         with |allProviders| and |globalObject|.
-    1. For each (|providers|, |credentialPromise|) in |document|'s [=pending fedID requests=]:
+    1. For each (|providers|, |credentialOrError|) in |document|'s [=pending fedID request list=]:
         1. If |credential| is failure or if |providers| does not [=list/contain=] |selectedProvider|,
             [=queue a global task=] on the [=DOM manipulation task source=] to set
-            |credentialPromise| to a new "{{NetworkError}}" {{DOMException}}.
-        1. Otherwise, set |credentialPromise| to |credential|.
-    1. Set |document|'s [=fedID task status=] to "no task".
-    1. [=list/Empty=] |document|'s [=pending fedID requests=].
+            |credentialOrError| to a new "{{NetworkError}}" {{DOMException}}.
+        1. Otherwise, set |credentialOrError| to |credential|.
+    1. Set |document|'s [=fedID task status=] to "<code>[=no task=]</code>".
+    1. [=list/Empty=] |document|'s [=pending fedID request list=].
 </div>
 
 <div algorithm>
@@ -553,11 +553,17 @@ To <dfn>create an IdentityCredential</dfn> given a [=list=] of {{IdentityProvide
 |providers| and a |globalObject|, run the following steps. This returns an ({{IdentityCredential}},
 {{IdentityProviderConfig}}) [=tuple=] or the [=tuple=] (failure, failure).
     1. Assert: These steps are running [=in parallel=].
-    1. Let |allAccountsAndProviders| be an initially empty [=list=].
+    1. Let |configMap| be an initially empty [=map=].
     1. For each {{IdentityProviderConfig}} |provider| in |providers|:
         1. Let |config| be the result of running [=fetch the config file=] with |provider| and
             |globalObject|.
-        1. If |config| is failure, [=continue=].
+        1. Set |configMap|[|provider|] to |config|.
+    1. Let |allAccountsAndProviders| be an initially empty [=list=].
+    1. The user agent MAY show an [=IDP=] chooser to the user, and if it does so then it should set
+        |providers| to a list including only the selected [=IDP=].
+    1. For each |provider| over |providers|:
+        1. Let |config| be |configMap|[|provider|].
+        1. If |config| is failure, continue.
         1. Let |accountsList| be the result of [=fetch the accounts list=] with |config|, |provider|,
             and |globalObject|.
         1. For each |account| in |accountsList|:
@@ -576,7 +582,7 @@ To <dfn>create an IdentityCredential</dfn> given a [=list=] of {{IdentityProvide
             given |provider|, |account|, and |globalObject|.
         1. If |accountState|'s {{AccountState/registration state}} is {{unregistered}},
             let |permission| be the result of running [=request permission to sign-up=] algorithm
-            with |account|, |accountState|, |config|, |provider|, and |globalObject|.
+            with |account|, |accountState|, |configMap|[|provider|], |provider|, and |globalObject|.
         1. Otherwise, show a dialog to request user permission to sign in via |account|, and set the
             result in |permission|.
         1. If |permission|, [=sign-in=] with |accountState|.
@@ -588,7 +594,8 @@ To <dfn>create an IdentityCredential</dfn> given a [=list=] of {{IdentityProvide
             given |provider| and |account|.
         1. If |accountState|'s {{AccountState/registration state}} is {{unregistered}}:
             1. Let |permission| be the result of running the [=request permission to sign-up=]
-                algorithm with |account|, |accountState|, |config|, |provider|, and |globalObject|.
+                algorithm with |account|, |accountState|, |configMap|[|provider|], |provider|, and
+                |globalObject|.
             1. If |permission|, [=sign-in=] with |accountState|.
         1. Otherwise, [=sign-in=] with |accountState|.
     1. Wait until the [=user agent=]'s dialog is closed.
@@ -596,8 +603,8 @@ To <dfn>create an IdentityCredential</dfn> given a [=list=] of {{IdentityProvide
         failure.
     1. Assert: |account| and |provider| are not null or failure.
     1. Let |credential| be the result of running the [=fetch an identity assertion=] algorithm with
-        |accountState|, |account|'s {{IdentityProviderAccount/id}}, |provider|, |config|, and
-        |globalObject|.
+        |accountState|, |account|'s {{IdentityProviderAccount/id}}, |provider|,
+        |configMap|[|provider|], and |globalObject|.
     1. Return (|credential|, |provider|).
 </div>
 
@@ -1016,7 +1023,7 @@ returns an ({{IdentityProviderAccount}}, {{IdentityProviderAPIConfig}}) [=tuple=
     1. Let (|account|, |provider|) be the {{IdentityProviderAccount}} and associated
         {{IdentityProviderConfig}} of the account that the user manually selects from the accounts
         chooser, or (failure, failure) if no account is selected.
-    1. Return (|account|, |provider|.
+    1. Return (|account|, |provider|).
 </div>
 
 <!-- ============================================================ -->
