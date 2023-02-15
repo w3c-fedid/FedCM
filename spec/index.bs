@@ -546,6 +546,9 @@ failure.
         no such entry, set it to a user-agent specific default (either [=unknown=] or
         [=signed-out=]).
     1. If |signinStatus| is [=signed-out=], return failure.
+        Issue: Should the user agent instead show UI to let the user sign
+            in to the IDP? This could be especially useful in the multi-IDP
+            case.
     1. Let |config| be the result of running [=fetch the config file=] with |provider| and
         |globalObject|.
     1. If |config| is failure, return failure.
@@ -564,8 +567,10 @@ failure.
         1. If |signinStatus| is [=signed-in=], show a dialog to the user and return
             failure.
 
-            Note: It is recommended that this dialog provides a "sign in" button
-                allowing the user to sign in to the IDP using
+            Note: Since this situation happens when the browser expects the user
+                to be signed in, but the accounts fetch indicated that the user
+                is signed out, it is recommended that this dialog provides a
+                "sign in" button allowing the user to sign in to the IDP using
                 {{IdentityProviderAPIConfig/signin_url}}.
 
             Note: This dialog ensures that silent tracking of the user is
