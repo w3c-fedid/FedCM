@@ -312,8 +312,9 @@ map</dfn>, an initially empty [=map=]. The [=map/keys=] in this map are
 and "<dfn><code>signed-out</code></dfn>"
 
 The user agent checks all page and subresource loads for an HTTP response
-[[RFC9110#header.fields|header]] named `IdP-SignIn-Status`, whose value
-is parsed at HTTP [[RFC9110#parameter|Parameter]]s.
+[[RFC9110#header.fields|header]] named
+<dfn><code>IdP-SignIn-Status</code></dfn>, whose value is parsed at HTTP
+[[RFC9110#parameter|Parameter]]s.
 If that header exists and the first parameter has a name of `action`,
 the user agent must process it as follows:
 
@@ -330,8 +331,26 @@ the user agent must process it as follows:
 Issue: Should the header checking be integrated into the fetch spec instead,
     since it affects all resources?
 
-User agents must also clear the [=IDP Sign-in Status map=] when the user clears
-cookies or stored site data.
+User agents must also clear the [=IDP Sign-in Status map=] data when:
+    :   the user clears all cookies or site settings data
+    ::  The user agent must clear the entire map
+    :   the user clears cookies or site data for a specific origin
+    ::  The user agent must remote all entries that would be affected
+            by the deleted cookies.
+
+            Note: For example, domain cookies may affect subdomains of
+                the deleted origin.
+    :   if the user agent allows deleting individual cookies
+    ::  the behavior is user agent-defined.
+
+            Note: The user agent may want to reset the state to undefined,
+                since is impossible to know whether this cookie affects
+                authorization state.
+
+Note: Website-initiated cookie changes should not affect this map. When
+    IDP sign-in state changes, it should send an explicit
+    [=IDP-SignIn-Status=].
+    RP state should not affect this map since it only reflects IDP state.
 
 IDPs can also use a JavaScript API to update the stored sign-in status:
 
