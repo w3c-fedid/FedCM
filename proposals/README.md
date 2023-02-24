@@ -43,7 +43,7 @@ This is a directory with the proposals to extend FedCM that we are actively work
     - Stage: draft
     - Champions: @yi-gu
     - Description: allows an RP to indicate to the IdP that the user is interested in unregistering
-1. **[Front-channel Logout](idp-sign-out.md.md)**
+1. **[Front-channel Logout](idp-sign-out.md)**
     - Stage: prototype
     - Champions: @goto
     - Description: an IdP to log the user out of all of the RPs
