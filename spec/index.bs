@@ -165,13 +165,9 @@ that they can use.
 |           |   |              |           |     +------------->*-+ Assertion |
 |           |   |              |           |     |                |           |
 |           |   |              |           |     |                |           |
-| +-------+ |   |              | +-------+ |     |                | +-------+ |
-| | JS    +-+---+     +--------+-+ HTTP  +-+-----+       +------+-+-+   JS  | |
-| +-------+ |         |        | +-------+ |             |        | +-------+ |
-|           |         |        |           |             |        |           |
-|           |         |        |           |             |        |           |
-|           |         |        |           |             |        |           |
-|    logout +-*<------+        | logoutRPs +-*<----------+        |           |
+| +-------+ |   |              | +-------+ |     |                |           |
+| | JS    +-+---+              | + HTTP  +-+-----+                |           |
+| +-------+ |                  | +-------+ |                      |           |
 |           |                  |           |                      |           |
 |           |                  |           |                      |           |
 +-----------+                  +-----------+                      +-----------+
@@ -316,12 +312,6 @@ the following properties:
     ::  Keeps track of whether the user agent is aware that the user has registered an account on the
         [=RP=] with the [=IDP=] or not.
          Can be <dfn>registered</dfn> or <dfn>unregistered</dfn> (by default).
-    :   <dfn>allows logout</dfn>
-    ::  Boolean which keeps track of whether the user agent would allow the |account| to be logged
-        out via {{IdentityCredential/logoutRPs()}}. It is initialized to false by default. Note that
-        this value being true does not imply that the user is logged in to the [=RP=] with the
-        account, it merely implies that {{IdentityCredential/logoutRPs()}} has not yet been called
-        on this account after the last successful {{IdentityCredential}} creation with this account.
 </dl>
 
 <div algorithm>
@@ -343,7 +333,6 @@ an [=AccountState=].
 <div algorithm>
 To <dfn>sign-in</dfn> the user with a given an [=AccountState=] |accountState|:
     1. Assert that |accountState|'s {{AccountState/registration state}} is {{registered}}
-    1. Change |accountState|'s {{AccountState/allows logout}} from false to true.
 </div>
 
 TODO: add an ASCII image to explain how the states fit into the algorithms.
@@ -480,7 +469,7 @@ algorithm is invoked, the user agent MUST execute the following steps. This retu
         Note: The |globalObject| is not currently passed onto the
         {{Credential/[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)}}
         algorithm. See <a href="https://github.com/w3c/webappsec-credential-management/issues/210">issue</a>.
-    
+
     1. If |credential| is failure, [=queue a global task=] on the [=DOM manipulation task source=]
         to throw a new "{{NetworkError}}" {{DOMException}}.
 </div>
@@ -779,7 +768,6 @@ To <dfn>fetch an identity assertion</dfn> given an [=AccountState=] |accountStat
     |accountId|, an {{IdentityProviderConfig}} |provider|, an {{IdentityProviderAPIConfig}}
     |config|, and |globalObject|, run the following steps. This returns an {{IdentityCredential}}.
     1. Assert |accountState|'s {{AccountState/registration state}} is {{registered}}.
-    1. Assert |accountState|'s {{AccountState/allows logout}} is true.
     1. Let |idTokenUrl| be the result of [=computing the manifest URL=] given |provider|,
         |config|["{{IdentityProviderAPIConfig/id_assertion_endpoint}}"], and |globalObject|.
     1. If |idTokenUrl| is failure, return failure.
@@ -888,7 +876,6 @@ To <dfn>request permission to sign-up</dfn> the user with a given an {{IdentityP
     1. If the user does not grant permission, return false.
     1. Change |accountState|'s {{AccountState/registration state}} from {{unregistered}} to
         {{registered}}.
-    1. Change |accountState|'s {{AccountState/allows logout}} from false to true.
     1. Return true.
 </div>
 
@@ -1315,7 +1302,7 @@ anything that the [=IDP=] would like to pass to the
 [=RP=] to facilitate the login. For this reason the [=RP=]
 is expected to be the party responsible for validating the {{IdentityProviderToken/token}} passed
 along from the [=IDP=] using the appropriate token validation
-algorithms defined. One example of how this might be done is defined 
+algorithms defined. One example of how this might be done is defined
 in [[OIDC-Connect-Core#IDTokenValidation]].
 
 NOTE: For [=IDPs=], it is worth considering how
