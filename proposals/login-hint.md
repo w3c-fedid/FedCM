@@ -65,7 +65,7 @@ Sample code snippet which uses the `loginHint` parameter:
           configURL: "https://idp.example/manifest.json",
           clientId: "123",
           nonce: nonce,
-	  loginHint: {email: "user@email.com"}
+	  loginHint: {email: "user@email.com", isRequired: true}
         }]
       }
     });
