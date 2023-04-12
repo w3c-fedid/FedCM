@@ -2,32 +2,34 @@
 
 ## Background
 
-The FedCM API lets a website make cross-origin credentialed requests. We want
-to limit websites’ ability to make such requests silently without causing user
-annoyance; in particular, we do not want FedCM calls to show a "Sign in with
-IDPX" dialog every time a user visits a website if the user is not logged in to
-IDPX.
+The FedCM API lets a website make cross-origin credentialed requests. FedCM is
+designed to enable the browser to get user consent before sending any
+information to IDPs or RPs which could enable cross-site tracking of the user.
+Because similar consent dialogs can lead to permission blindness and user
+frustration, browsers rely on various implementation-defined heuristics to
+balance user consent fatigue with privacy risk (eg. in the implementation of
+requestStorageAccess). We expect these heurstics to evolve over time with each
+browser's privacy threat model and the changing privacy landscape.
 
-The problem with allowing such requests silently is a privacy issue as follows.
-In a world without third-party cookies, it is generally impossible to make
-cross-site credentialed requests because they would allow tracking users. FedCM
-introduces a credentialed request to the accounts endpoint. This request does
-not send data identifying the requestor and also does not allow passing through
-data provided by the RP, however if the RP (perhaps through an SDK of some kind
-provided by the tracker) makes an uncredentialed request providing its URL or
-other data, then the server can correlate the uncredentialed request with the
-credentialed request (stochastically) using the IP address and timing, or other
-fingerprinting data. See [these
-slides](https://github.com/fedidcg/FedCM/blob/main/meetings/2022/FedCM_%20Options%20for%20the%20Timing%20Attack%20Problem%202022-08-31.pdf)
-for more details. 
+One common class of such heuristics is to replace explicit user confirmation
+with passive user notification in some contexts. For example, when navigating to
+a cross-origin URL that passes some information in a query parameter, browsers
+generally rely on the fact that the navigation is visibile to the user, rather
+than requesting consent to share information with the target origin. FedCM aims
+to enable such optimizations without specifying the precise behavior which
+browsers are likely to evolve independently over time. Such notification in
+FedCM contexts presents a problem when the user is currently not signed into a
+given IDP as resulting UI is likely to be of low value to the user, eg. "You are
+not signed into IDP X and so no sign-in UI can be shown".
 
 To solve this problem (and to slightly optimize network traffic), we propose
 this API to let identity providers (IDPs) tell the browser when the user signs
-in to and out of the IDP. The IDP Sign-in Status API does not grant the
-identity provider any permissions. Using the IDP sign-in status API is not a
-way for a site to prove that it is an identity provider. The purpose of the
+in to and out of the IDP. The IDP Sign-in Status API does not grant the identity
+provider any permissions. Using the IDP sign-in status API is not a way for a
+site to prove that it is an identity provider. The purpose of the
 Idp-Signin-Status API is to enable identity providers to disable the FedCM API
-for their IDP in order to deliver a better user experience.
+for their IDP in order to suppress the need to show UI to the user which is of
+low-value to them.
 
 In addition, with the browser gaining knowledge about IDPs, this may allow
 finer-grained user control over which IDPs are available to websites, e.g. a
