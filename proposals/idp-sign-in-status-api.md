@@ -8,7 +8,7 @@ information to IDPs or RPs which could enable cross-site tracking of the user.
 Because similar consent dialogs can lead to permission blindness and user
 frustration, browsers rely on various implementation-defined heuristics to
 balance user consent fatigue with privacy risk (eg. in the implementation of
-requestStorageAccess). We expect these heurstics to evolve over time with each
+requestStorageAccess). We expect these heuristics to evolve over time with each
 browser's privacy threat model and the changing privacy landscape.
 
 One common class of such heuristics is to replace explicit user confirmation
