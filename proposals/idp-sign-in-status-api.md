@@ -29,7 +29,7 @@ provider any permissions. Using the IDP sign-in status API is not a way for a
 site to prove that it is an identity provider. The purpose of the
 Idp-Signin-Status API is to enable identity providers to disable the FedCM API
 for their IDP in order to suppress the need to show UI to the user which is of
-low-value to them.
+low value to them.
 
 In addition, with the browser gaining knowledge about IDPs, this may allow
 finer-grained user control over which IDPs are available to websites, e.g. a
