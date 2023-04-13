@@ -14,7 +14,7 @@ browser's privacy threat model and the changing privacy landscape.
 One common class of such heuristics is to replace explicit user confirmation
 with passive user notification in some contexts. For example, when navigating to
 a cross-origin URL that passes some information in a query parameter, browsers
-generally rely on the fact that the navigation is visibile to the user, rather
+generally rely on the fact that the navigation is visible to the user, rather
 than requesting consent to share information with the target origin. FedCM aims
 to enable such optimizations without specifying the precise behavior which
 browsers are likely to evolve independently over time. Such notification in
