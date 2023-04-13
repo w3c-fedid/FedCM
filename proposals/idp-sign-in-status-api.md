@@ -22,7 +22,7 @@ FedCM contexts presents a problem when the user is currently not signed into a
 given IDP as resulting UI is likely to be of low value to the user, eg. "You are
 not signed into IDP X and so no sign-in UI can be shown".
 
-To solve this problem (and to slightly optimize network traffic), we propose
+To add more signals that user agents could use to address this problem, we propose
 this API to let identity providers (IDPs) tell the browser when the user signs
 in to and out of the IDP. The IDP Sign-in Status API does not grant the identity
 provider any permissions. Using the IDP sign-in status API is not a way for a
