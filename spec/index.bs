@@ -484,6 +484,7 @@ failure.
     1. If |config| is failure, return failure.
     1. Let |accountsList| be the result of [=fetch the accounts list=] with |config|, |provider|,
         and |globalObject|.
+    1. If |accountsList| is failure, return failure.
     1. For each |account| in |accountsList|:
         1. If |account|["{{IdentityProviderAccount/picture}}"] is present,
             [=fetch the account picture=] with |account| and |globalObject|.
@@ -592,8 +593,9 @@ To <dfn>fetch the config file</dfn> given an {{IdentityProviderConfig}} |provide
             |responseBody|.
         1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderWellKnown}},
             |discovery|.
-        1. If the [=list/size=] of |discovery|["{{IdentityProviderWellKnown/provider_urls}}"]
-            is greater than 1, set |config| to failure.
+        1. If one of the previous two steps threw an exception, or if the
+            [=list/size=] of |discovery|["{{IdentityProviderWellKnown/provider_urls}}"] is
+            greater than 1, set |config| to failure.
 
             Issue: [relax](https://github.com/fedidcg/FedCM/issues/333) the size of the
             provider_urls array.
@@ -628,10 +630,12 @@ To <dfn>fetch the config file</dfn> given an {{IdentityProviderConfig}} |provide
 
     1. [=Fetch request=] with |configRequest|, |globalObject|, and <var ignore=>processResponseConsumeBody</var>
         set to the following steps given a <a spec=fetch for=/>response</a> |response| and |responseBody|:
+        1. If |config| has been set to failure, return.
         1. Let |json| be the result of [=extract the JSON fetch response=] from |response| and
             |responseBody|.
         1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderAPIConfig}} stored
-            in |config|, unless |config| has been set to failure.
+            in |config|.
+        1. If one of the previous two steps threw an exception, set |config| to failure.
     1. Wait for both fetch responses to be completed.
     1. Return |config|.
 </div>
@@ -711,6 +715,7 @@ To <dfn>fetch the accounts list</dfn> given an {{IdentityProviderAPIConfig}} |co
             |responseBody|.
         1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderAccountList}}, and
             store the result in |accountsList|.
+        1. If one of the previous two steps threw an exception, set |accountsList| to failure.
 
         Issue: We should validate the accounts list returned here for repeated ids, as described
         [here](https://github.com/fedidcg/FedCM/issues/336).
@@ -806,6 +811,8 @@ To <dfn>fetch an identity assertion</dfn> given an [=AccountState=] |accountStat
         1. Let |json| be the result of [=extract the JSON fetch response=] from |response| and
             |responseBody|.
         1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderToken}}, |token|.
+        1. If one of the previous two steps threw an exception, set |credential| to failure
+            and return.
         1. Let |credential| be a new {{IdentityCredential}} given |globalObject|'s
             <a for="global object">realm</a>.
         1. Set |credential|'s {{IdentityCredential/token}} to |token|.
@@ -915,6 +922,7 @@ an {{IdentityProviderConfig}} |provider|, run the following steps. This returns 
             |responseBody|.
         1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderClientMetadata}},
             and store the result in |metadata|.
+        1. If one of the previous two steps threw an exception, set |metadata| to null.
     1. Wait until |metadata| is set.
     1. Return |metadata|.
 </div>
