@@ -484,6 +484,7 @@ failure.
     1. If |config| is failure, return failure.
     1. Let |accountsList| be the result of [=fetch the accounts list=] with |config|, |provider|,
         and |globalObject|.
+    1. If |accountsList| is failure, return failure.
     1. For each |account| in |accountsList|:
         1. If |account|["{{IdentityProviderAccount/picture}}"] is present,
             [=fetch the account picture=] with |account| and |globalObject|.
@@ -547,7 +548,8 @@ To <dfn>fetch request</dfn> given a [=/request=] |request|, |globalObject|, and 
 
 <div algorithm>
 To <dfn>fetch the config file</dfn> given an {{IdentityProviderConfig}} |provider| and
-|globalObject|, run the following steps. This returns an {{IdentityProviderAPIConfig}}.
+|globalObject|, run the following steps. This returns an {{IdentityProviderAPIConfig}}
+or failure.
     1. Let |configUrl| be the result of running [=parse url=] with |provider|'s
         {{IdentityProviderConfig/configURL}} and |globalObject|.
     1. If |configUrl| is failure, return failure.
@@ -592,13 +594,14 @@ To <dfn>fetch the config file</dfn> given an {{IdentityProviderConfig}} |provide
             |responseBody|.
         1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderWellKnown}},
             |discovery|.
-        1. If the [=list/size=] of |discovery|["{{IdentityProviderWellKnown/provider_urls}}"]
-            is greater than 1, set |config| to failure.
+        1. If one of the previous two steps threw an exception, or if the
+            [=list/size=] of |discovery|["{{IdentityProviderWellKnown/provider_urls}}"] is
+            greater than 1, set |config| to failure.
 
             Issue: [relax](https://github.com/fedidcg/FedCM/issues/333) the size of the
             provider_urls array.
 
-        1. If |discovery|["{{IdentityProviderWellKnown/provider_urls}}"][0]
+        1. Otherwise, if |discovery|["{{IdentityProviderWellKnown/provider_urls}}"][0]
             [=string/is=] NOT equal to |provider|'s {{IdentityProviderConfig/configURL}}, set
             |config| to failure.
 
@@ -628,10 +631,12 @@ To <dfn>fetch the config file</dfn> given an {{IdentityProviderConfig}} |provide
 
     1. [=Fetch request=] with |configRequest|, |globalObject|, and <var ignore=>processResponseConsumeBody</var>
         set to the following steps given a <a spec=fetch for=/>response</a> |response| and |responseBody|:
+        1. If |config| has been set to failure, return.
         1. Let |json| be the result of [=extract the JSON fetch response=] from |response| and
             |responseBody|.
         1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderAPIConfig}} stored
-            in |config|, unless |config| has been set to failure.
+            in |config|.
+        1. If one of the previous two steps threw an exception, set |config| to failure.
     1. Wait for both fetch responses to be completed.
     1. Return |config|.
 </div>
@@ -711,6 +716,7 @@ To <dfn>fetch the accounts list</dfn> given an {{IdentityProviderAPIConfig}} |co
             |responseBody|.
         1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderAccountList}}, and
             store the result in |accountsList|.
+        1. If one of the previous two steps threw an exception, set |accountsList| to failure.
 
         Issue: We should validate the accounts list returned here for repeated ids, as described
         [here](https://github.com/fedidcg/FedCM/issues/336).
@@ -766,7 +772,8 @@ To <dfn>fetch the account picture</dfn> given an {{IdentityProviderAccount}} |ac
 <div algorithm>
 To <dfn>fetch an identity assertion</dfn> given an [=AccountState=] |accountState|, a {{USVString}}
     |accountId|, an {{IdentityProviderConfig}} |provider|, an {{IdentityProviderAPIConfig}}
-    |config|, and |globalObject|, run the following steps. This returns an {{IdentityCredential}}.
+    |config|, and |globalObject|, run the following steps. This returns an {{IdentityCredential}}
+    or failure.
     1. Assert |accountState|'s {{AccountState/registration state}} is {{registered}}.
     1. Let |idTokenUrl| be the result of [=computing the manifest URL=] given |provider|,
         |config|["{{IdentityProviderAPIConfig/id_assertion_endpoint}}"], and |globalObject|.
@@ -806,6 +813,8 @@ To <dfn>fetch an identity assertion</dfn> given an [=AccountState=] |accountStat
         1. Let |json| be the result of [=extract the JSON fetch response=] from |response| and
             |responseBody|.
         1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderToken}}, |token|.
+        1. If one of the previous two steps threw an exception, set |credential| to failure
+            and return.
         1. Let |credential| be a new {{IdentityCredential}} given |globalObject|'s
             <a for="global object">realm</a>.
         1. Set |credential|'s {{IdentityCredential/token}} to |token|.
@@ -863,11 +872,11 @@ To <dfn>request permission to sign-up</dfn> the user with a given an {{IdentityP
     1. Assert: These steps are running [=in parallel=].
     1. Let |metadata| be the result of running [=fetch the client metadata=] with |config|,
         |provider|, and |globalObject|.
-    1. If |metadata| is not null, |metadata|["{{IdentityProviderClientMetadata/privacy_policy_url}}"]
+    1. If |metadata| is not failure, |metadata|["{{IdentityProviderClientMetadata/privacy_policy_url}}"]
         is defined and the |provider|'s {{IdentityProviderConfig/clientId}} is not in the list of
         |account|["{{IdentityProviderAccount/approved_clients}}"], then display the
         |metadata|["{{IdentityProviderClientMetadata/privacy_policy_url}}"] link.
-    1. If |metadata| is not null, |metadata|["{{IdentityProviderClientMetadata/terms_of_service_url}}"]
+    1. If |metadata| is not failure, |metadata|["{{IdentityProviderClientMetadata/terms_of_service_url}}"]
         is defined, and the |provider|'s {{IdentityProviderConfig/clientId}} is not in the list of
         |account|["{{IdentityProviderAccount/approved_clients}}"], then display the
         |metadata|["{{IdentityProviderClientMetadata/terms_of_service_url}}"] link.
@@ -882,10 +891,10 @@ To <dfn>request permission to sign-up</dfn> the user with a given an {{IdentityP
 <div algorithm>
 To <dfn noexport>fetch the client metadata</dfn> given an {{IdentityProviderAPIConfig}} |config| and
 an {{IdentityProviderConfig}} |provider|, run the following steps. This returns an
-{{IdentityProviderClientMetadata}} or null.
+{{IdentityProviderClientMetadata}} or failure.
     1. Let |clientMetadataUrl| be the result of [=computing the manifest URL=] given |provider|,
         |config|["{{IdentityProviderAPIConfig/client_metadata_endpoint}}"], and |globalObject|.
-    1. If |clientMetadataUrl| is failure, return null.
+    1. If |clientMetadataUrl| is failure, return failure.
     1. Let |request| be a new <a spec=fetch for=/>request</a> as follows:
 
         :  [=request/url=]
@@ -915,6 +924,7 @@ an {{IdentityProviderConfig}} |provider|, run the following steps. This returns 
             |responseBody|.
         1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderClientMetadata}},
             and store the result in |metadata|.
+        1. If one of the previous two steps threw an exception, set |metadata| to failure.
     1. Wait until |metadata| is set.
     1. Return |metadata|.
 </div>
