@@ -461,22 +461,25 @@ algorithm is invoked, the user agent MUST execute the following steps. This retu
         {{Credential/[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)}}
         algorithm. See <a href="https://github.com/w3c/webappsec-credential-management/issues/210">issue</a>.
 
-    1. If |credential| is failure, [=queue a global task=] on the [=DOM manipulation task source=]
-        to throw a new "{{NetworkError}}" {{DOMException}}. If |throwImmediately| is true, this
-        MUST happen after a random delay between 0 and 60 seconds.
+    1. If |credential| is a pair:
+        1. Let |throwImmediately| be the value of the second element of the pair.
+        1. [=Queue a global task=] on the [=DOM manipulation task source=]
+            to throw a new "{{NetworkError}}" {{DOMException}}. If |throwImmediately| is true, this
+            MUST happen after a random delay between 0 and 60 seconds.
+    1. Otherwise, return |credential|.
 </div>
 
 <div algorithm>
 To <dfn>create an IdentityCredential</dfn> given an {{IdentityProviderConfig}}
 |provider| and a |globalObject|, run the following steps. This returns an {{IdentityCredential}} or
-failure with an optional boolean |throwImmediately|, defaulting to false.
+a pair (failure, bool), where the bool indicates whether to skip delaying the exception throw.
     1. Assert: These steps are running [=in parallel=].
     1. Let |config| be the result of running [=fetch the config file=] with |provider| and
         |globalObject|.
-    1. If |config| is failure, return failure.
+    1. If |config| is failure, return (failure, false).
     1. Let |accountsList| be the result of [=fetch the accounts list=] with |config|, |provider|,
         and |globalObject|.
-    1. If |accountsList| is failure, return failure.
+    1. If |accountsList| is failure, return (failure, false).
     1. For each |account| in |accountsList|:
         1. If |account|["{{IdentityProviderAccount/picture}}"] is present,
             [=fetch the account picture=] with |account| and |globalObject|.
@@ -493,23 +496,21 @@ failure with an optional boolean |throwImmediately|, defaulting to false.
             with |account|, |accountState|, |config|, |provider|, and |globalObject|.
         1. Otherwise, show a dialog to request user permission to sign in via |account|, and set the
             result in |permission|.
-        1. If |permission|, [=sign-in=] with |accountState|; otherwise, return failure with
-            |throwImmediately| set to true.
+        1. If |permission|, [=sign-in=] with |accountState|; otherwise, return (failure, true).
     1. Otherwise:
         1. Let |account| be the result of running the [=select an account=] from the
             |accountsList|.
-        1. If |account| is failure, return failure with |throwImmediately| set to true.
+        1. If |account| is failure, return (failure, true).
         1. Let |accountState| be the result of running the [=compute account state=] algorithm
             given |provider| and |account|.
         1. If |accountState|'s {{AccountState/registration state}} is {{unregistered}}:
             1. Let |permission| be the result of running the [=request permission to sign-up=]
                 algorithm with |account|, |accountState|, |config|, |provider|, and |globalObject|.
-            1. If |permission|, [=sign-in=] with |accountState|; otherwise, return failure with
-                |throwImmediately| set to true.
+            1. If |permission|, [=sign-in=] with |accountState|; otherwise, return (failure, true).
         1. Otherwise, [=sign-in=] with |accountState|.
     1. Wait until the [=user agent=]'s dialog is closed.
     1. If |accountState|'s {{AccountState/registration state}} is {{unregistered}} then return
-        failure.
+        (failure, false).
     1. Let |credential| be the result of running the [=fetch an identity assertion=] algorithm with
         |accountState|, |account|'s {{IdentityProviderAccount/id}}, |provider|, |config|, and
         |globalObject|.
