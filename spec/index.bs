@@ -463,16 +463,19 @@ algorithm is invoked, the user agent MUST execute the following steps. This retu
 
     1. If |credential| is a pair:
         1. Let |throwImmediately| be the value of the second element of the pair.
+        1. If |throwImmediately| is false, the user agent SHOULD wait a random
+            amount of time between 0 and 60 seconds before the next step, unless
+            it has implemented another way to prevent exposing to the RP whether
+            the user has an account logged in to the RP.
         1. [=Queue a global task=] on the [=DOM manipulation task source=]
-            to throw a new "{{NetworkError}}" {{DOMException}}. If |throwImmediately| is true, this
-            MUST happen after a random delay between 0 and 60 seconds.
+            to throw a new "{{NetworkError}}" {{DOMException}}.
     1. Otherwise, return |credential|.
 </div>
 
 <div algorithm>
 To <dfn>create an IdentityCredential</dfn> given an {{IdentityProviderConfig}}
 |provider| and a |globalObject|, run the following steps. This returns an {{IdentityCredential}} or
-a pair (failure, bool), where the bool indicates whether to skip delaying the exception throw.
+a pair (failure, bool), where the bool indicates whether to skip delaying the exception thrown.
     1. Assert: These steps are running [=in parallel=].
     1. Let |config| be the result of running [=fetch the config file=] with |provider| and
         |globalObject|.
@@ -509,8 +512,6 @@ a pair (failure, bool), where the bool indicates whether to skip delaying the ex
             1. If |permission|, [=sign-in=] with |accountState|; otherwise, return (failure, true).
         1. Otherwise, [=sign-in=] with |accountState|.
     1. Wait until the [=user agent=]'s dialog is closed.
-    1. If |accountState|'s {{AccountState/registration state}} is {{unregistered}} then return
-        (failure, false).
     1. Let |credential| be the result of running the [=fetch an identity assertion=] algorithm with
         |accountState|, |account|'s {{IdentityProviderAccount/id}}, |provider|, |config|, and
         |globalObject|.
