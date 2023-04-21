@@ -467,6 +467,14 @@ algorithm is invoked, the user agent MUST execute the following steps. This retu
             amount of time between 0 and 60 seconds before the next step, unless
             it has implemented another way to prevent exposing to the RP whether
             the user has an account logged in to the RP.
+
+            Note: The intention here is as follows. If we resolved the promise immediately,
+                then an RP could infer that no dialog was shown because the promise was
+                resolved quickly, after just the network delay. A shown dialog implies
+                that the user is logged in to one or more accounts of the IDP. To prevent
+                this information leakage, especially without user confirmation, we specify
+                this delay. However, UAs may have different UI approaches here and prevent
+                it in a different way.
         1. [=Queue a global task=] on the [=DOM manipulation task source=]
             to throw a new "{{NetworkError}}" {{DOMException}}.
     1. Otherwise, return |credential|.
