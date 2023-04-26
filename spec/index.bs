@@ -29,6 +29,8 @@ spec: ecma262; urlPrefix: https://tc39.github.io/ecma262/
 spec: credential-management-1; urlPrefix: https://w3c.github.io/webappsec-credential-management/
     type: dfn
         text: same-origin with its ancestors; url: same-origin-with-its-ancestors
+    type: dfn
+        text: requires user mediation; url: origin-requires-user-mediation
 </pre>
 
 <pre class=link-defaults>
@@ -508,6 +510,10 @@ To <dfn>create an IdentityCredential</dfn> given an {{IdentityProviderConfig}}
 |provider|, a {{CredentialRequestOptions/mediation}} |mediation|, and a |globalObject|, run the
 following steps. This returns an {{IdentityCredential}} or failure.
     1. Assert: These steps are running [=in parallel=].
+    1. Let |requiresUserMediation| be |provider|'s {{IdentityProviderConfig/configURL}}'s [=/origin=]'s
+        [=requires user mediation=].
+    1. If |requiresUserMediation| is true and |mediation| is
+        "{{CredentialMediationRequirement/silent}}", return failure.
     1. Let |config| be the result of running [=fetch the config file=] with |provider| and
         |globalObject|.
     1. If |config| is failure, return failure.
@@ -529,8 +535,8 @@ following steps. This returns an {{IdentityCredential}} or failure.
         1. If |accState| is {{registered}}, set |registeredAccount| to |acc| and increase
             |numRegistedAccounts| by 1.
     1. Let |permission| be false.
-    1. If |mediation| is not "{{CredentialMediationRequirement/required}}" and |numRegistedAccounts|
-        is equal to 1:
+    1. If |mediation| is not "{{CredentialMediationRequirement/required}}", |requiresUserMediation|
+        is false, and |numRegistedAccounts| is equal to 1:
         1. Set |account| to |registeredAccount| and |accountState| to the result of running
             [=compute account state=] algorithm given |provider| and |account|. When doing this,
             the user agent MAY show some UI to the user indicating that they are being
