@@ -29,6 +29,17 @@ spec: ecma262; urlPrefix: https://tc39.github.io/ecma262/
 spec: credential-management-1; urlPrefix: https://w3c.github.io/webappsec-credential-management/
     type: dfn
         text: same-origin with its ancestors; url: same-origin-with-its-ancestors
+spec: webdriver; urlPrefix: https://w3c.github.io/webdriver/
+    type: dfn
+        text: extension command; url: dfn-extension-commands
+        text: getting a property; url: dfn-getting-properties
+        text: invalid argument; url: dfn-invalid-argument
+        text: no such alert; url: dfn-no-such-alert
+        text: remote end steps; url: dfn-remote-end-steps
+        text: success; url: dfn-success
+        text: undefined; url: dfn-undefined
+        text: WebDriver error; url: dfn-error
+        text: WebDriver error code; url: dfn-error-code
 </pre>
 
 <pre class=link-defaults>
@@ -442,7 +453,7 @@ NOTE: The {{CredentialRequestOptions/mediation}} flag is currently not used.
 The {{CredentialRequestOptions/signal}} is used as an abort signal for the
 requests.
 
-<div algorithm>
+<div algorithm="[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)">
 When the {{IdentityCredential}}'s
 <dfn for="IdentityCredential" method>\[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</dfn>
 algorithm is invoked, the user agent MUST execute the following steps. This returns an
@@ -454,7 +465,8 @@ algorithm is invoked, the user agent MUST execute the following steps. This retu
 
           Issue: Support choosing accounts from multiple [=IDP=]s, as described [here](https://github.com/fedidcg/FedCM/issues/319).
     1. Run {{WindowOrWorkerGlobalScope/setTimeout()}} passing a [=task=] which throws a
-        {{NetworkError}}, after a timeout of 60 seconds.
+        {{NetworkError}}, after a timeout of 60 seconds, unless this <dfn>promise rejection
+        delay</dfn> was disabled by [=setdelayenabled|user agent automation=].
 
         Issue: Do not use {{WindowOrWorkerGlobalScope/setTimeout()}} directly, as that is not correct. See the relevant
         [issue](https://github.com/fedidcg/FedCM/issues/389).
@@ -1357,6 +1369,229 @@ permissions policy evaluation. This is because such policy evaluation needs to
 occur when there is access to the [=current settings object=]. The [=internal method=]s
 modified by this specification do not have such access since they are invoked [=in parallel=]
 by {{CredentialsContainer}}'s <a abstract-op>Request a `Credential`</a> abstract operation.
+
+<!-- ============================================================ -->
+# User Agent Automation # {#automation}
+<!-- ============================================================ -->
+
+For the purposes of user agent automation and website testing, this document
+defines the below [[WebDriver2]] [=extension commands=].
+
+## <dfn export>WebDriver extension commands</dfn> ## {#webdriver-commands}
+
+These WebDriver [=extension commands=] allow automated interactions with any
+active FedCM dialogs.
+
+<figure id="table-webdriver-canceldialog" class="table">
+    <table class="data">
+        <thead>
+            <tr>
+                <th>HTTP Method</th>
+                <th>URI Template</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>POST</td>
+                <td>`/session/{session id}/fedcm/canceldialog`</td>
+            </tr>
+        </tbody>
+    </table>
+</figure>
+
+The [=remote end steps=] are:
+
+1. If |parameters| is not a JSON [[ECMASCRIPT#sec-json-object|Object]], return a
+    [=WebDriver error=] with [=WebDriver error code=] [=invalid argument=].
+
+1. If no FedCM dialog is currently open, return a [=WebDriver error=] with
+    [=WebDriver error code=] [=no such alert=].
+
+1. Close the dialog and continue the [=create an IdentityCredential=] algorithm
+    as if the user had canceled the dialog without choosing an account.
+
+1. Return [=success=] with data `null`.
+
+<figure id="table-webdriver-selectaccount" class="table">
+    <table class="data">
+        <thead>
+            <tr>
+                <th>HTTP Method</th>
+                <th>URI Template</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>POST</td>
+                <td>`/session/{session id}/fedcm/selectaccount`</td>
+            </tr>
+        </tbody>
+    </table>
+</figure>
+
+The [=remote end steps=] are:
+
+1. If |parameters| is not a JSON [[ECMASCRIPT#sec-json-object|Object]], return a
+    [=WebDriver error=] with [=WebDriver error code=] [=invalid argument=].
+
+1. If no FedCM dialog is currently open, return a [=WebDriver error=] with
+    [=WebDriver error code=] [=no such alert=].
+
+1. Let |accountIndex| be the result of [=getting a property=] named `"accountIndex"`
+    from |parameters|.
+
+1. If |accountIndex| is [=undefined=] or is not in the range from 0 to the
+    number of accounts that the user can choose from in the current flow,
+    return a [=WebDriver error=] with [=WebDriver error code=] [=invalid
+    argument=].
+
+1. Close the dialog and continue the [=create an IdentityCredential=] algorithm
+    as if the user had selected the account indicated by |accountIndex| and
+    [=request permission to sign-up|granted permission to sign-up=], if applicable.
+
+1. Return [=success=] with data `null`.
+
+
+<figure id="table-webdriver-accountlist" class="table">
+    <table class="data">
+        <thead>
+            <tr>
+                <th>HTTP Method</th>
+                <th>URI Template</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>GET</td>
+                <td>`/session/{session id}/fedcm/accountlist`</td>
+            </tr>
+        </tbody>
+    </table>
+</figure>
+
+The [=remote end steps=] are:
+
+1. If no FedCM dialog is currently open, return a [=WebDriver error=] with
+    [=WebDriver error code=] [=no such alert=].
+
+1. Let |accounts| be the list of accounts that the user can or could choose
+    from in the current flow.
+
+1. Let |list| be an empty list.
+
+1. For each |account| in |accounts|:
+    1. Let |accountState| be the result of running the [=compute account state=]
+        algorithm given |account|
+    1. Append an object to |list| with the following properties:
+        1. `accountId` set to the account's {{IdentityProviderAccount/id}}
+        1. `email` set to the account's {{IdentityProviderAccount/email}}
+        1. `name` set to the account's {{IdentityProviderAccount/name}}
+        1. `givenName` set to the account's {{IdentityProviderAccount/given_name}},
+            if present
+        1. `pictureUrl` set to the account's {{IdentityProviderAccount/picture}},
+            if present.
+        1. `idpConfigUrl` set to the {{IdentityProviderConfig/configURL}} of the
+            IDP this account belongs to
+        1. `loginState` to `"SignUp"` if |accountState|'s {{AccountState/registration
+            state}} is {{unregistered}} and `"SignIn"` otherwise
+        1. `termsOfServiceUrl` to the {{IdentityProviderClientMetadata/terms_of_service_url}}
+            if one was provided and the `loginState` is `"SignUp"`
+        1. `privacyPolicyUrl` to the {{IdentityProviderClientMetadata/privacy_policy_url}}
+            if one was provided and the `loginState` is `"SignUp"`
+
+1. Return [=success=] with data |list|.
+
+<figure id="table-webdriver-gettitle" class="table">
+    <table class="data">
+        <thead>
+            <tr>
+                <th>HTTP Method</th>
+                <th>URI Template</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>GET</td>
+                <td>`/session/{session id}/fedcm/gettitle`</td>
+            </tr>
+        </tbody>
+    </table>
+</figure>
+
+Note: This command lets automation verify that the
+    [https://github.com/fedidcg/FedCM/blob/main/proposals/context-api.md](context API)
+    was applied properly
+
+The [=remote end steps=] are:
+
+1. If no FedCM dialog is currently open, return a [=WebDriver error=] with
+    [=WebDriver error cset asdf  sdzf aasfgode=] [=no such alert=].
+
+1. Let |data| be a dictionary with an object with properties as follows:
+    1. `title` set to the title of the open dialog
+    1. `subtitle` set to the subtitle of the open dialog, if there is one
+
+1. Return [=success=] with data |data|.
+
+
+<figure id="table-webdriver-setdelayenabled" class="table">
+    <table class="data">
+        <thead>
+            <tr>
+                <th>HTTP Method</th>
+                <th>URI Template</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>POST</td>
+                <td>`/session/{session id}/fedcm/<dfn>setdelayenabled</dfn>`</td>
+            </tr>
+        </tbody>
+    </table>
+</figure>
+
+The [=remote end steps=] are:
+
+1. If |parameters| is not a JSON [[ECMASCRIPT#sec-json-object|Object]], return a
+     [=WebDriver error=] with [=WebDriver error code=] [=invalid argument=].
+
+1. Let |enabled| be the result of [=getting a property=] named `"enabled"` from
+    |parameters|.
+
+1. If |enabled| is [=undefined=] or is not a boolean, return a [=WebDriver error=]
+    with [=WebDriver error code=] [=invalid argument=].
+
+1. If |enabled| is false, disables the [=promise rejection delay=]; otherwise,
+    re-enables it.
+
+1. Return [=success=] with data `null`.
+
+
+<figure id="table-webdriver-resetcooldown" class="table">
+    <table class="data">
+        <thead>
+            <tr>
+                <th>HTTP Method</th>
+                <th>URI Template</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>POST</td>
+                <td>`/session/{session id}/fedcm/resetcooldown`</td>
+            </tr>
+        </tbody>
+    </table>
+</figure>
+
+The [=remote end steps=] are:
+
+1. If the user agent uses a cooldown delay, which disables the API for an
+    amount of time after the user dismissed the dialog, then this command
+    resets that cooldown such that the next FedCM call can succeed again.
+
+1. Return [=success=] with data `null`.
 
 <!-- ============================================================ -->
 # Security # {#security}
