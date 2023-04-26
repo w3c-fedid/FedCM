@@ -378,7 +378,7 @@ pre-registered with (i.e. it has a `clientId`).
 
 <xmp class=idl>
 dictionary IdentityCredentialRequestOptions {
-  sequence<IdentityProviderConfig> providers;
+  required sequence<IdentityProviderConfig> providers;
 };
 </xmp>
 
@@ -448,12 +448,11 @@ When the {{IdentityCredential}}'s
 algorithm is invoked, the user agent MUST execute the following steps. This returns an
 {{IdentityCredential}} (or throws an error to the caller).
 
-    1. Assert: These steps are running [=in parallel=].
-    1. Assert: |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"] [=map/exists=].
-    1. Assert: |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"] [=list/size=] is 1.
+    1. If |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"] [=list/size=] is not 1, throw a "{{TypeError}}" {{DOMException}}.
 
           Issue: Support choosing accounts from multiple [=IDP=]s, as described [here](https://github.com/fedidcg/FedCM/issues/319).
-    1. Run {{WindowOrWorkerGlobalScope/setTimeout()}} passing a [=task=] which throws a
+    1.  Run the following steps [=in parallel=].
+    1.  Run {{WindowOrWorkerGlobalScope/setTimeout()}} passing a [=task=] which throws a
         {{NetworkError}}, after a timeout of 60 seconds.
 
         Issue: Do not use {{WindowOrWorkerGlobalScope/setTimeout()}} directly, as that is not correct. See the relevant
