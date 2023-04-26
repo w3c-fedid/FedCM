@@ -453,6 +453,11 @@ algorithm is invoked, the user agent MUST execute the following steps. This retu
     1. Assert: |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"] [=list/size=] is 1.
 
           Issue: Support choosing accounts from multiple [=IDP=]s, as described [here](https://github.com/fedidcg/FedCM/issues/319).
+    1. The user agent can decide when to continue with the next steps.
+
+        Note: For example, user agents may show an identity provider selector before making
+            network requests, or provide a button in the URL bar and wait for user input
+            before continuing.
     1. Run {{WindowOrWorkerGlobalScope/setTimeout()}} passing a [=task=] which throws a
         {{NetworkError}}, after a timeout of 60 seconds.
 
@@ -463,11 +468,6 @@ algorithm is invoked, the user agent MUST execute the following steps. This retu
         method to throw an error. If there was no such timer, the developer could easily infer
         whether the user has an account with the [=IDP=] or not, or whether the user closed the UI without granting permission to share the [=IDP=] account information with the [=RP=].
     1. Let |provider| be |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"][0].
-    1. The user agent can decide when to continue with the next steps.
-
-        Note: For example, user agents may show an identity provider selector before making
-            network requests, or provide a button in the URL bar and wait for user input
-            before continuing.
     1. Let |credential| be the result of running [=create an IdentityCredential=] with |provider| and
         |globalObject|.
 
