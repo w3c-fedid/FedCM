@@ -188,9 +188,9 @@ identity federation.
       | "navigator.credentials.get({    " | "(1) The RP invokes the API."   |
       | "  identity: {                  " |                                 |
       | "    providers: [{              " |                                 |
-      | "      configURL: "config.json"," |                                 |
-      | "      clientId: "client_id",   " |                                 |
-      | "      nonce: "nonce",          " |                                 |
+      | "      configURL: 'config.json'," |                                 |
+      | "      clientId: clientId,      " |                                 |
+      | "      nonce: nonce,            " |                                 |
       | "    }]                         " |                                 |
       | "  }                            " |                                 |
       | "})                             " |                                 |
@@ -231,7 +231,7 @@ identity federation.
       |                                   |                                 | "}"
       |                                   |                                 |
       |                                   |                                 |
-      | "(5) The browser then           " | "GET /client_metadata"           |
+      | "(5) The browser then           " | "GET /client_metadata"          |
       | "fetches metadata about the     " | "client_id"                     |
       | "Relying Party.                 " |-------------------------------->|
       |                                   |<--------------------------------| "{"
@@ -315,18 +315,20 @@ the |rp| via the |idp| |account|.
 If a user clears browsing data for an |origin| (cookies, localStorage, etc.), the user agent MUST
 [=list/remove=] all triples with an [=/origin=] matching the |origin| from <a>registered accounts set</a>.
 
-<div algorithm>
+<div algorithm="compute account state">
 To <dfn>compute account state</dfn> given an {{IdentityProviderConfig}} |provider|, an
 {{IdentityProviderAccount}} |account|, and a |globalObject|, run the following steps. This returns
-"registered" or "unregistered".
+<dfn for="compute account state">permitted</dfn> or
+<dfn for="compute account state">not permitted</dfn>.
     1. Let |configUrl| be the result of running [=parse url=] with |provider|'s
         {{IdentityProviderConfig/configURL}} and |globalObject|.
     1. Let |idpOrigin| be the [=url/origin=] corresponding to |configUrl|.
     1. Let |rpOrigin| be |globalObject|'s [=associated Document=]'s [=Document/origin=].
     1. Let |accountId| be |account|'s {{IdentityProviderAccount/id}}.
     1. Let |triple| be (|rpOrigin|, |idpOrigin|, |accountId|).
-    1. If [=registered accounts set=] [=list/contains=] |triple| , return "registered".
-    1. Otherwise, return "unregistered".
+    1. If [=registered accounts set=] [=list/contains=] |triple| , return
+        <a for="compute account state">permitted</a>.
+    1. Otherwise, return <a for="compute account state">not permitted</a>.
 </div>
 
 <div algorithm>
@@ -491,8 +493,8 @@ algorithm is invoked, the user agent MUST execute the following steps. This retu
     1. Let |provider| be |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"][0].
     1. Let |credential| be the result of running [=create an IdentityCredential=] with |provider| and
         |globalObject|.
-    1. If |credential| is failure, [=queue a global task=] on the [=DOM manipulation task source=]
-        given |globalObject| to throw a new "{{NetworkError}}" {{DOMException}}.
+    1. If |credential| is failure, throw a new "{{NetworkError}}" {{DOMException}}.
+    1. Return |credential|.
 </div>
 
 <!-- ============================================================ -->
@@ -525,9 +527,9 @@ failure.
         1. Let |account| be |accountsList|[0].
         1. Let |accountState| be the result of running the [=compute account state=] algorithm
             given |provider|, |account|, and |globalObject|.
-        1. If |accountState| is "unregistered", set |permission| to the result of running
-            [=request permission to sign-up=] algorithm with |account|, |config|, |provider|, and
-            |globalObject|.
+        1. If |accountState| is <a for="compute account state">not permitted</a>, set |permission|
+            to the result of running [=request permission to sign-up=] algorithm with |account|,
+            |config|, |provider|, and |globalObject|.
         1. Otherwise, show a dialog to request user permission to sign in via |account|, and set the
             result in |permission|.
     1. Otherwise:
@@ -536,7 +538,7 @@ failure.
         1. If |account| is failure, return failure.
         1. Let |accountState| be the result of running the [=compute account state=] algorithm
             given |provider| and |account|.
-        1. If |accountState| is "unregistered":
+        1. If |accountState| is <a for="compute account state">not permitted</a>:
             1. Let |permission| be the result of running the [=request permission to sign-up=]
                 algorithm with |account|, |config|, |provider|, and |globalObject|.
         1. Otherwise, set |permission| to true.
@@ -796,7 +798,7 @@ To <dfn>fetch the account picture</dfn> given an {{IdentityProviderAccount}} |ac
 <!-- ============================================================ -->
 
 The <a>fetch an identity assertion</a> algorithm is invoked after the user has granted permission to
-use FedCM with a specific [=IDP=] account, and it fetches the identity assertion that will be
+use FedCM with a specific [=IDP=] account. It fetches the identity assertion that will be
 provided to the [=RP=].
 
 <div algorithm>
@@ -807,7 +809,7 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
     1. Let |idTokenUrl| be the result of [=computing the manifest URL=] given |provider|,
         |config|["{{IdentityProviderAPIConfig/id_assertion_endpoint}}"], and |globalObject|.
     1. If |idTokenUrl| is failure, return failure.
-    1. Let |requestBody| be a [=string=] resulting in concatenating "client_id=",
+    1. Let |requestBody| be the [=string/concatenation=] of "client_id=",
         |provider|'s {{IdentityProviderConfig/clientId}}, "&nonce=",
         |provider|'s {{IdentityProviderConfig/nonce}}, "&account_id=", and |accountId|.
     1. Let |request| be a new <a spec=fetch for=/>request</a> as follows:
@@ -950,7 +952,7 @@ dictionary IdentityProviderClientMetadata {
 </xmp>
 
 <!-- ============================================================ -->
-## Helper algorithms ## {#helper-algorithms}
+### Helper algorithms ### {#helper-algorithms}
 <!-- ============================================================ -->
 
 The following helper algorithms are used during the FedCM flow.
@@ -1021,8 +1023,7 @@ and a |responseBody|, run the following steps. This returns an [=ordered map=].
 
 <em>This section is non-normative.</em>
 
-The [=IDP=] proactively and cooperatively exposes itself as a comformant agent
-by exposing a series of HTTP endpoints:
+The [=IDP=] exposes a series of HTTP endpoints:
 
 1. [[#idp-api-well-known]] that points to a Manifest
 1. A [[#idp-api-manifest]] endpoint in an agreed upon location that points to
