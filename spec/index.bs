@@ -318,8 +318,8 @@ If a user clears browsing data for an |origin| (cookies, localStorage, etc.), th
 <div algorithm="compute account state">
 To <dfn>compute account state</dfn> given an {{IdentityProviderConfig}} |provider|, an
 {{IdentityProviderAccount}} |account|, and a |globalObject|, run the following steps. This returns
-<dfn for="compute account state">permitted</dfn> or
-<dfn for="compute account state">not permitted</dfn>.
+<dfn for="compute account state">registered</dfn> or
+<dfn for="compute account state">unregistered</dfn>.
     1. Let |configUrl| be the result of running [=parse url=] with |provider|'s
         {{IdentityProviderConfig/configURL}} and |globalObject|.
     1. Let |idpOrigin| be the [=url/origin=] corresponding to |configUrl|.
@@ -327,8 +327,8 @@ To <dfn>compute account state</dfn> given an {{IdentityProviderConfig}} |provide
     1. Let |accountId| be |account|'s {{IdentityProviderAccount/id}}.
     1. Let |triple| be (|rpOrigin|, |idpOrigin|, |accountId|).
     1. If [=registered accounts set=] [=list/contains=] |triple| , return
-        <a for="compute account state">permitted</a>.
-    1. Otherwise, return <a for="compute account state">not permitted</a>.
+        <a for="compute account state">registered</a>.
+    1. Otherwise, return <a for="compute account state">unregistered</a>.
 </div>
 
 <div algorithm>
@@ -527,7 +527,7 @@ failure.
         1. Let |account| be |accountsList|[0].
         1. Let |accountState| be the result of running the [=compute account state=] algorithm
             given |provider|, |account|, and |globalObject|.
-        1. If |accountState| is <a for="compute account state">not permitted</a>, set |permission|
+        1. If |accountState| is <a for="compute account state">unregistered</a>, set |permission|
             to the result of running [=request permission to sign-up=] algorithm with |account|,
             |config|, |provider|, and |globalObject|.
         1. Otherwise, show a dialog to request user permission to sign in via |account|, and set the
@@ -538,7 +538,7 @@ failure.
         1. If |account| is failure, return failure.
         1. Let |accountState| be the result of running the [=compute account state=] algorithm
             given |provider| and |account|.
-        1. If |accountState| is <a for="compute account state">not permitted</a>:
+        1. If |accountState| is <a for="compute account state">unregistered</a>:
             1. Let |permission| be the result of running the [=request permission to sign-up=]
                 algorithm with |account|, |config|, |provider|, and |globalObject|.
         1. Otherwise, set |permission| to true.
