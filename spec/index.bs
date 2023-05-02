@@ -303,32 +303,32 @@ for an [=IDP=] to adopt the FedCM API. It doesn't introduce security issues on t
 [=RP=] cannot inspect the results from the fetches in any way.
 
 <!-- ============================================================ -->
-## The registered accounts set ## {#browser-registered-accounts-set}
+## The connected accounts set ## {#browser-connected-accounts-set}
 <!-- ============================================================ -->
 
-Each [=user agent=] has a global <dfn>registered accounts set</dfn>, an initially empty
+Each [=user agent=] has a global <dfn>connected accounts set</dfn>, an initially empty
 [=ordered set=]. Its [=list/items=] are triples of the form (|rp|, |idp|, |account|) where |rp| is
 the [=/origin=] of the [=RP=], |idp| is the [=/origin=] of the [=IDP=], and |account| is a string representing
 an account identifier. It represents the set of triples such that the user has used FedCM to login to
 the |rp| via the |idp| |account|.
 
 If a user clears browsing data for an |origin| (cookies, localStorage, etc.), the user agent MUST
-[=list/remove=] all triples with an [=/origin=] matching the |origin| from <a>registered accounts set</a>.
+[=list/remove=] all triples with an [=/origin=] matching the |origin| from <a>connected accounts set</a>.
 
 <div algorithm="compute account state">
 To <dfn>compute account state</dfn> given an {{IdentityProviderConfig}} |provider|, an
 {{IdentityProviderAccount}} |account|, and a |globalObject|, run the following steps. This returns
-<dfn for="compute account state">registered</dfn> or
-<dfn for="compute account state">unregistered</dfn>.
+<dfn for="compute account state">connected</dfn> or
+<dfn for="compute account state">disconnected</dfn>.
     1. Let |configUrl| be the result of running [=parse url=] with |provider|'s
         {{IdentityProviderConfig/configURL}} and |globalObject|.
     1. Let |idpOrigin| be the [=url/origin=] corresponding to |configUrl|.
     1. Let |rpOrigin| be |globalObject|'s [=associated Document=]'s [=Document/origin=].
     1. Let |accountId| be |account|'s {{IdentityProviderAccount/id}}.
     1. Let |triple| be (|rpOrigin|, |idpOrigin|, |accountId|).
-    1. If [=registered accounts set=] [=list/contains=] |triple| , return
-        <a for="compute account state">registered</a>.
-    1. Otherwise, return <a for="compute account state">unregistered</a>.
+    1. If [=connected accounts set=] [=list/contains=] |triple| , return
+        [=compute account state/connected=].
+    1. Otherwise, return [=compute account state/disconnected=].
 </div>
 
 <div algorithm>
@@ -340,7 +340,7 @@ To <dfn>register an account</dfn> given an {{IdentityProviderConfig}} |provider|
     1. Let |rpOrigin| be |globalObject|'s [=associated Document=]'s [=Document/origin=].
     1. Let |accountId| be |account|'s {{IdentityProviderAccount/id}}.
     1. Let |triple| be (|rpOrigin|, |idpOrigin|, |accountId|).
-    1. [=set/Append=] |triple| to [=registered accounts set=].
+    1. [=set/Append=] |triple| to [=connected accounts set=].
 </div>
 
 <!-- ============================================================ -->
@@ -527,7 +527,7 @@ failure.
         1. Let |account| be |accountsList|[0].
         1. Let |accountState| be the result of running the [=compute account state=] algorithm
             given |provider|, |account|, and |globalObject|.
-        1. If |accountState| is <a for="compute account state">unregistered</a>, set |permission|
+        1. If |accountState| is [=compute account state/disconnected=], set |permission|
             to the result of running [=request permission to sign-up=] algorithm with |account|,
             |config|, |provider|, and |globalObject|.
         1. Otherwise, show a dialog to request user permission to sign in via |account|, and set the
@@ -538,7 +538,7 @@ failure.
         1. If |account| is failure, return failure.
         1. Let |accountState| be the result of running the [=compute account state=] algorithm
             given |provider| and |account|.
-        1. If |accountState| is <a for="compute account state">unregistered</a>:
+        1. If |accountState| is [=compute account state/disconnected=]:
             1. Let |permission| be the result of running the [=request permission to sign-up=]
                 algorithm with |account|, |config|, |provider|, and |globalObject|.
         1. Otherwise, set |permission| to true.
