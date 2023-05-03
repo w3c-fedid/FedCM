@@ -22,6 +22,10 @@ Test Suite: https://github.com/web-platform-tests/wpt/blob/master/credential-man
 </pre>
 
 <pre class=anchors>
+spec: html; urlPrefix: https://html.spec.whatwg.org/multipage
+    type: dfn; for: window
+        text: navigable; urlPrefix: nav-history-apis.html#window-navigable
+
 spec: ecma262; urlPrefix: https://tc39.github.io/ecma262/
     type: dfn
         text: internal method; url: sec-ordinary-object-internal-methods-and-internal-slots
@@ -885,6 +889,15 @@ To <dfn>request permission to sign-up</dfn> the user with a given an {{IdentityP
 an {{IdentityProviderAPIConfig}} |config|, an {{IdentityProviderConfig}} |provider|, and a
 |globalObject|, run the following steps. This returns a boolean.
     1. Assert: These steps are running [=in parallel=].
+    1. Let |topFrameOrigin| and |topOrigin| be null.
+    1. If |globalObject|'s [=window/navigable=] is not a [=/top-level traversable=], the user agent
+        MAY perform the following substeps to compute the |topOrigin| so that it may be sent in the
+        client metadata fetch:
+        1. Let |topLevel| be |globalObject|'s [=window/navigable=]'s
+            [=navigable/top-level traversable=].
+        1. Let |topOrigin| be |topLevel|'s [=navigable/active document=]'s [=Document/origin=].
+        1. If |topOrigin| is not an [=opaque origin=], let |topFrameOrigin| be the
+            [=serialization of an origin=] given |topOrigin|.
     1. Let |metadata| be the result of running [=fetch the client metadata=] with |config|,
         |provider|, and |globalObject|.
     1. If |metadata| is not failure, |metadata|["{{IdentityProviderClientMetadata/privacy_policy_url}}"]
@@ -895,6 +908,18 @@ an {{IdentityProviderAPIConfig}} |config|, an {{IdentityProviderConfig}} |provid
         is defined, and the |provider|'s {{IdentityProviderConfig/clientId}} is not in the list of
         |account|["{{IdentityProviderAccount/approved_clients}}"], then display the
         |metadata|["{{IdentityProviderClientMetadata/terms_of_service_url}}"] link.
+    1. Let |callerOrigin| be |globalObject|'s [=associated document=]'s [=Document/origin=].
+    1. The user agent needs to choose which [=url/origins=] to present in its UI. The user agent
+        chooses how to present these: showing the full [=url/origin=], showing the
+        <a spec=url>domain</a>, etc.
+        1. If |topOrigin| is null, present only the |callerOrigin|.
+        1. Otherwise, if |callerOrigin| is [=same origin=] as |topOrigin|, the user agent MAY choose
+            to only present one of |callerOrigin| and |topFrameOrigin|.
+        1. Otherwise, if |topFrameOrigin| is not null, |metadata| is not failure, and
+            |metadata|["{{IdentityProviderClientMetadata/client_matches_top_frame_origin}}"] is
+            defined and set to true, the user agent MAY choose to only present one of
+            |topFrameOrigin| or |callerOrigin| in its UI.
+        1. Otherwise, the user agent SHOULD present both |callerOrigin| and |topOrigin| in its UI.
     1. Prompt the user to gather explicit intent to create an account. The user agent MAY use the
         {{IdentityProviderBranding}} to inform the style choices of its UI.
     1. If the user does not grant permission, return false.
@@ -905,8 +930,9 @@ an {{IdentityProviderAPIConfig}} |config|, an {{IdentityProviderConfig}} |provid
 
 <div algorithm>
 To <dfn noexport>fetch the client metadata</dfn> given an {{IdentityProviderAPIConfig}} |config| and
-an {{IdentityProviderConfig}} |provider|, run the following steps. This returns an
-{{IdentityProviderClientMetadata}} or failure.
+an {{IdentityProviderConfig}} |provider|, a string or null |topFrameOrigin|, and a |globalObject|, run the
+following steps. This returns an {{IdentityProviderClientMetadata}} or failure.
+
     1. Let |clientMetadataUrl| be the result of [=computing the manifest URL=] given |provider|,
         |config|["{{IdentityProviderAPIConfig/client_metadata_endpoint}}"], and |globalObject|.
     1. If |clientMetadataUrl| is failure, return failure.
@@ -950,6 +976,7 @@ an {{IdentityProviderConfig}} |provider|, run the following steps. This returns 
 dictionary IdentityProviderClientMetadata {
   USVString privacy_policy_url;
   USVString terms_of_service_url;
+  boolean client_matches_top_frame_origin;
 };
 </xmp>
 
@@ -1297,6 +1324,8 @@ The {{IdentityProviderClientMetadata}} object's members have the following seman
     ::  A link to the [=RP=]'s Privacy Policy.
     :   <dfn>terms_of_service_url</dfn>
     ::  A link to the [=RP=]'s Terms of Service.
+    :   <dfn>client_matches_top_frame_origin</dfn>
+    ::  Whether the FedCM iframe client matches the top-level embedder's origin.
 </dl>
 
 For example:
