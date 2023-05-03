@@ -315,11 +315,11 @@ the |rp| via the |idp| |account|.
 If a user clears browsing data for an |origin| (cookies, localStorage, etc.), the user agent MUST
 [=list/remove=] all triples with an [=/origin=] matching the |origin| from <a>connected accounts set</a>.
 
-<div algorithm="compute account state">
-To <dfn>compute account state</dfn> given an {{IdentityProviderConfig}} |provider|, an
+<div algorithm="compute the connection status">
+To <dfn>compute the connection status</dfn> given an {{IdentityProviderConfig}} |provider|, an
 {{IdentityProviderAccount}} |account|, and a |globalObject|, run the following steps. This returns
-<dfn for="compute account state">connected</dfn> or
-<dfn for="compute account state">disconnected</dfn>.
+<dfn for="compute the connection status">connected</dfn> or
+<dfn for="compute the connection status">disconnected</dfn>.
     1. Let |configUrl| be the result of running [=parse url=] with |provider|'s
         {{IdentityProviderConfig/configURL}} and |globalObject|.
     1. Let |idpOrigin| be the [=url/origin=] corresponding to |configUrl|.
@@ -327,13 +327,14 @@ To <dfn>compute account state</dfn> given an {{IdentityProviderConfig}} |provide
     1. Let |accountId| be |account|'s {{IdentityProviderAccount/id}}.
     1. Let |triple| be (|rpOrigin|, |idpOrigin|, |accountId|).
     1. If [=connected accounts set=] [=list/contains=] |triple| , return
-        [=compute account state/connected=].
-    1. Otherwise, return [=compute account state/disconnected=].
+        [=compute the connection status/connected=].
+    1. Otherwise, return [=compute the connection status/disconnected=].
 </div>
 
 <div algorithm>
-To <dfn>register an account</dfn> given an {{IdentityProviderConfig}} |provider|, an
-{{IdentityProviderAccount}} |account|, and a |globalObject|, run the following steps:
+To <dfn>create a connection between the RP and the IdP account</dfn> given an
+{{IdentityProviderConfig}} |provider|, an {{IdentityProviderAccount}} |account|, and a
+|globalObject| (the [=RP=]'s), run the following steps:
     1. Let |configUrl| be the result of running [=parse url=] with |provider|'s
         {{IdentityProviderConfig/configURL}} and |globalObject|.
     1. Let |idpOrigin| be the [=url/origin=] corresponding to |configUrl|.
@@ -525,9 +526,9 @@ failure.
     1. Let |permission| be false.
     1. If |accountsList|'s size is 1:
         1. Let |account| be |accountsList|[0].
-        1. Let |accountState| be the result of running the [=compute account state=] algorithm
+        1. Let |accountState| be the result of running the [=compute the connection status=] algorithm
             given |provider|, |account|, and |globalObject|.
-        1. If |accountState| is [=compute account state/disconnected=], set |permission|
+        1. If |accountState| is [=compute the connection status/disconnected=], set |permission|
             to the result of running [=request permission to sign-up=] algorithm with |account|,
             |config|, |provider|, and |globalObject|.
         1. Otherwise, show a dialog to request user permission to sign in via |account|, and set the
@@ -536,9 +537,9 @@ failure.
         1. Let |account| be the result of running the [=select an account=] from the
             |accountsList|.
         1. If |account| is failure, return failure.
-        1. Let |accountState| be the result of running the [=compute account state=] algorithm
+        1. Let |accountState| be the result of running the [=compute the connection status=] algorithm
             given |provider| and |account|.
-        1. If |accountState| is [=compute account state/disconnected=]:
+        1. If |accountState| is [=compute the connection status/disconnected=]:
             1. Let |permission| be the result of running the [=request permission to sign-up=]
                 algorithm with |account|, |config|, |provider|, and |globalObject|.
         1. Otherwise, set |permission| to true.
@@ -897,7 +898,8 @@ an {{IdentityProviderAPIConfig}} |config|, an {{IdentityProviderConfig}} |provid
     1. Prompt the user to gather explicit intent to create an account. The user agent MAY use the
         {{IdentityProviderBranding}} to inform the style choices of its UI.
     1. If the user does not grant permission, return false.
-    1. Invoke [=register an account=] with |provider|, |account|, and |globalObject|.
+    1. [=Create a connection between the RP and the IdP account=] with |provider|, |account|, and
+        |globalObject|.
     1. Return true.
 </div>
 
