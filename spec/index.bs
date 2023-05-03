@@ -899,7 +899,7 @@ an {{IdentityProviderAPIConfig}} |config|, an {{IdentityProviderConfig}} |provid
         1. If |topOrigin| is not an [=opaque origin=], let |topFrameOrigin| be the
             [=serialization of an origin=] given |topOrigin|.
     1. Let |metadata| be the result of running [=fetch the client metadata=] with |config|,
-        |provider|, and |globalObject|.
+        |provider|, |topFrameOrigin|, and |globalObject|.
     1. If |metadata| is not failure, |metadata|["{{IdentityProviderClientMetadata/privacy_policy_url}}"]
         is defined and the |provider|'s {{IdentityProviderConfig/clientId}} is not in the list of
         |account|["{{IdentityProviderAccount/approved_clients}}"], then display the
@@ -936,6 +936,10 @@ following steps. This returns an {{IdentityProviderClientMetadata}} or failure.
     1. Let |clientMetadataUrl| be the result of [=computing the manifest URL=] given |provider|,
         |config|["{{IdentityProviderAPIConfig/client_metadata_endpoint}}"], and |globalObject|.
     1. If |clientMetadataUrl| is failure, return failure.
+    1. Set |clientMetadataUrl|'s [=url/query=] to the concatenation of "client_id=" with
+        |provider|'s {{IdentityProviderConfig/clientId}}.
+    1. If |topFrameOrigin| is not null, append the concatenation of "&top_frame_origin=" with
+        |topFrameOrigin| to |clientMetadataUrl|'s [=url/query=].
     1. Let |request| be a new <a spec=fetch for=/>request</a> as follows:
 
         :  [=request/url=]
