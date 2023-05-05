@@ -360,9 +360,18 @@ This specification introduces a new type of {{Credential}}, called an {{Identity
 </pre>
 
 <dl>
+    :   <b>{{Credential/id}}</b>
+    ::  The {{Credential/id}}'s attribute getter returns the empty string.
+    :   <b>{{Credential/type}}</b>
+    ::  The {{Credential/type}}'s attribute getter is defined by the {{Credential}} interface.
     :   <b>{{IdentityCredential/token}}</b>
     ::  The {{IdentityCredential/token}}'s attribute getter returns the value it is set to.
         It represents the minted {{IdentityProviderToken/token}} provided by the [=IDP=].
+    :   <b>{{Credential/[[type]]}}</b>
+    ::  The {{IdentityCredential}}'s {{Credential/[[type]]}}'s value is "<b>identity</b>".
+    :   <b>{{Credential/[[discovery]]}}</b>
+    ::  The {{IdentityCredential}}'s {{Credential/[[discovery]]}}'s value is
+        {{Credential/[[discovery]]/remote}}.
 </dl>
 
 The main entrypoint in this specification is through the entrypoints exposed
@@ -588,8 +597,8 @@ the exception thrown.
 ### Fetch the config file ### {#fetch-config-file}
 <!-- ============================================================ -->
 
-The <a>fetch the config file</a> algorithm fetches both the well-known file and the config file from
-the [=IDP=], checks that the config file is mentioned in the well-known file, and returns the config.
+The <a>fetch the config file</a> algorithm fetches both the [=well-known file=] and the config file from
+the [=IDP=], checks that the config file is mentioned in the [=well-known file=], and returns the config.
 
 <div algorithm>
 To <dfn>fetch the config file</dfn> given an {{IdentityProviderConfig}} |provider| and
@@ -677,6 +686,10 @@ or failure.
         :  [=request/mode=]
         :: "no-cors"
 
+        <p class=issue>The spec is yet to be updated so that all <a spec=fetch for=/>requests</a> are created
+        with [=request/mode=] set to "user-agent-no-cors". See the relevant
+        [pull request](https://github.com/whatwg/fetch/pull/1533) for details.</p>
+
     1. [=Fetch request=] with |configRequest| and |globalObject|, and with <var ignore=>processResponseConsumeBody</var>
         set to the following steps given a <a spec=fetch for=/>response</a> |response| and |responseBody|:
         1. Let |json| be the result of [=extract the JSON fetch response=] from |response| and
@@ -690,8 +703,8 @@ or failure.
 
 NOTE: We use a two-tier file system in order to prevent the [=IDP=] from easily determining the [=RP=]
 that a user is visiting by encoding the information in the config file path. We solve this issue by
-requiring a well-known file to be on the root of the [=IDP=]. The config file itself can be anywhere, but
-it will not be used if the user agent does not find it in the well-known file. This allows the [=IDP=]
+requiring a [=well-known file=] to be on the root of the [=IDP=]. The config file itself can be anywhere, but
+it will not be used if the user agent does not find it in the [=well-known file=]. This allows the [=IDP=]
 to keep their actual config files on an arbitary path while allowing the user agent to prevent config file
 path manipulation to fingerprint (for instance, by including the RP in the path). See
 [[#manifest-fingerprinting]].
@@ -725,8 +738,9 @@ dictionary IdentityProviderAPIConfig {
 ### Fetch the accounts list ### {#fetch-accounts-list}
 <!-- ============================================================ -->
 
-The <a>fetch the accounts list</a> algorithm fetches the list of [=IDP=] accounts that the user is
-signed in to, so that the user agent can later show the FedCM UI to the user.
+The <a>fetch the accounts list</a> algorithm fetches the [=accounts list endpoint=] to determine the
+list of [=IDP=] accounts that the user is signed in to, so that the user agent can later show the
+FedCM UI to the user.
 
 <div algorithm>
 To <dfn>fetch the accounts list</dfn> given an {{IdentityProviderAPIConfig}} |config|, an
@@ -761,9 +775,13 @@ To <dfn>fetch the accounts list</dfn> given an {{IdentityProviderAPIConfig}} |co
         :  [=request/mode=]
         :: "no-cors"
 
-        Issue: The credentialed fetch in this algorithm can lead to a timing attack that leaks the
+        <p class=issue>: The credentialed fetch in this algorithm can lead to a timing attack that leaks the
         user's identities before the user grants permission. This is an active area of investigation
-        that is being explored [here](https://github.com/fedidcg/FedCM/issues/230#issuecomment-1089040953).
+        that is being explored [here](https://github.com/fedidcg/FedCM/issues/230#issuecomment-1089040953).</p>
+
+        <p class=issue>The spec is yet to be updated so that all <a spec=fetch for=/>requests</a> are created
+        with [=request/mode=] set to "user-agent-no-cors". See the relevant
+        [pull request](https://github.com/whatwg/fetch/pull/1533) for details.</p>
 
     1. Let |accountsList| be null.
     1. [=Fetch request=] with |request| and |globalObject|, and with <var ignore=>processResponseConsumeBody</var>
@@ -798,10 +816,13 @@ dictionary IdentityProviderAccountList {
 <div algorithm>
 To <dfn>fetch the account picture</dfn> given an {{IdentityProviderAccount}} |account| and a
 |globalObject|, run the following steps:
+    1. Let |pictureUrl| be the result of running [=parse url=] with
+        |account|["{{IdentityProviderAccount/picture}}"] and |globalObject|.
+    1. If |pictureUrl| is failure, abort these steps. The user agent may use a placeholder image.
     1. Let |pictureRequest| be a new <a spec=fetch for=/>request</a> as follows:
 
         :  [=request/url=]
-        :: |account|["{{IdentityProviderAccount/picture}}"]
+        :: |pictureUrl|
         :  [=request/client=]
         :: null
         :  [=request/window=]
@@ -819,6 +840,10 @@ To <dfn>fetch the account picture</dfn> given an {{IdentityProviderAccount}} |ac
         :  [=request/mode=]
         :: "no-cors"
 
+        <p class=issue>The spec is yet to be updated so that all <a spec=fetch for=/>requests</a> are created
+        with [=request/mode=] set to "user-agent-no-cors". See the relevant
+        [pull request](https://github.com/whatwg/fetch/pull/1533) for details.</p>
+
     1. [=Fetch request=] with |pictureRequest| and |globalObject|, and with <var ignore=>processResponseConsumeBody</var>
         set to the following steps given a <var ignore=''>response</var> and a |responseBody|:
         1. If |responseBody| is null or failure, the user agent may choose an arbitrary placeholder image
@@ -832,8 +857,8 @@ To <dfn>fetch the account picture</dfn> given an {{IdentityProviderAccount}} |ac
 <!-- ============================================================ -->
 
 The <a>fetch an identity assertion</a> algorithm is invoked after the user has granted permission to
-use FedCM with a specific [=IDP=] account. It fetches the identity assertion that will be
-provided to the [=RP=].
+use FedCM with a specific [=IDP=] account. It fetches the [=identity assertion endpoint=] to obtain
+the token that will be provided to the [=RP=].
 
 <div algorithm>
 To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
@@ -843,9 +868,10 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
     1. Let |tokenUrl| be the result of [=computing the manifest URL=] given |provider|,
         |config|["{{IdentityProviderAPIConfig/id_assertion_endpoint}}"], and |globalObject|.
     1. If |tokenUrl| is failure, return failure.
-    1. Let |requestBody| be the [=string/concatenation=] of "client_id=",
-        |provider|'s {{IdentityProviderConfig/clientId}}, "&nonce=",
-        |provider|'s {{IdentityProviderConfig/nonce}}, "&account_id=", and |accountId|.
+    1. Let |requestBody| be the result of running [=urlencoded serializer=] with a list containing:
+        1. ("client_id", |provider|'s {{IdentityProviderConfig/clientId}})
+        1. ("nonce", |provider|'s {{IdentityProviderConfig/nonce}})
+        1. ("account_id",  |accountId|)
     1. Let |request| be a new <a spec=fetch for=/>request</a> as follows:
 
         :  [=request/url=]
@@ -865,7 +891,7 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
         :  [=request/destination=]
         :: "webidentity"
         :  [=request/origin=]
-        :: [=RP=]'s [=/origin=] (TODO)
+        :: |globalObject|'s [=associated document=]'s [=Document/origin=]
         :  [=request/header list=]
         :: a [=list=] containing a single [=header=] with [=header/name=] set to `Accept` and
             [=header/value=] set to `application/x-www-form-urlencoded`
@@ -873,6 +899,10 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
         :: "include"
         :  [=request/mode=]
         :: "no-cors"
+
+        <p class=issue>The spec is yet to be updated so that all <a spec=fetch for=/>requests</a> are created
+        with [=request/mode=] set to "user-agent-no-cors". See the relevant
+        [pull request](https://github.com/whatwg/fetch/pull/1533) for details.</p>
 
     1. Let |credential| be null.
     1. [=Fetch request=] with |request| and |globalObject|, and with <var ignore=>processResponseConsumeBody</var>
@@ -909,7 +939,7 @@ To <dfn>select an account</dfn> given an |accountsList|, run the following steps
     1. Return |account|.
 </div>
 
-The <a>request permission to sign-up</a> algorithm fetches the client metadata of the [=RP=],
+The <a>request permission to sign-up</a> algorithm fetches the [=client metadata endpoint=] of the [=RP=],
 waits for the user to grant permission to use the given account, and returns whether the user
 granted permission or not.
 
@@ -958,7 +988,7 @@ an {{IdentityProviderConfig}} |provider|, run the following steps. This returns 
         :  [=request/destination=]
         :: "webidentity"
         :  [=request/origin=]
-        :: [=RP=]'s [=/origin=] (TODO)
+        :: |globalObject|'s [=associated document=]'s [=Document/origin=]
         :  [=request/header list=]
         :: a [=list=] containing a single [=header=] with [=header/name=] set to `Accept` and
             [=header/value=] set to `application/json`
@@ -966,6 +996,10 @@ an {{IdentityProviderConfig}} |provider|, run the following steps. This returns 
         :: "omit"
         :  [=request/mode=]
         :: "no-cors"
+
+        <p class=issue>The spec is yet to be updated so that all <a spec=fetch for=/>requests</a> are created
+        with [=request/mode=] set to "user-agent-no-cors". See the relevant
+        [pull request](https://github.com/whatwg/fetch/pull/1533) for details.</p>
 
     1. Let |metadata| be null.
     1. [=Fetch request=] with |request| and |globalObject|, and with <var ignore=>processResponseConsumeBody</var>
@@ -1022,11 +1056,9 @@ When <dfn>computing the manifest URL</dfn> given an {{IdentityProviderConfig}} |
 <a spec=url for=/>URL</a> or failure.
     1. Let |configUrl| be the result of running [=parse url=] with |provider|'s
         {{IdentityProviderConfig/configURL}} and |globalObject|.
-    1. Let |manifestUrl| be the result of running [=parse url=] given |manifestString| and
-        |globalObject|.
-    1. If |manifestUrl| is failure, let |manifestUrl| be the result of running [=parse url=]
-        given |manifestString| (the relative URL), |globalObject|, and |configUrl| (the base URL).
-        Wait until |manifestUrl| is set again.
+    1. Let |manifestUrl| be the result of running [=parse url=] given |manifestString| (the relative
+        URL), |globalObject|, and |configUrl| (the base URL).
+    1. Wait until |manifestUrl| is set.
 
         Note: This means the we allow passing the manifest string as either an absolute or relative
         URL.
@@ -1061,7 +1093,7 @@ and a |responseBody|, run the following steps. This returns an [=ordered map=].
 The [=IDP=] exposes a series of HTTP endpoints:
 
 1. [[#idp-api-well-known]] that points to a Manifest
-1. A [[#idp-api-manifest]] endpoint in an agreed upon location that points to
+1. A [[#idp-api-config-file]] in an agreed upon location that points to
 1. An [[#idp-api-accounts-endpoint]] endpoint
 1. A [[#idp-api-client-id-metadata-endpoint]] endpoint
 1. An [[#idp-api-id-assertion-endpoint]] endpoint
@@ -1084,11 +1116,11 @@ network requests performed:
 ## The Well-Known File ## {#idp-api-well-known}
 <!-- ============================================================ -->
 
-NOTE: The browser uses the well-known file to prevent the following attack described [here](https://github.com/fedidcg/FedCM/issues/230#issuecomment-1067029200).
+NOTE: The browser uses the [=well-known file=] to prevent the following attack described [here](https://github.com/fedidcg/FedCM/issues/230#issuecomment-1067029200).
 
-The [=IDP=] exposes a well-known file in a pre-defined location, specifically at the "web-identity" file at the [=IDPs=]'s path ".well-known".
+The [=IDP=] exposes a <dfn>well-known file</dfn> in a pre-defined location, specifically at the "web-identity" file at the [=IDPs=]'s path ".well-known".
 
-The well-known file is fetched:
+The [=well-known file=] is fetched:
 
 (a) **without** cookies,
 (b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`, and
@@ -1112,18 +1144,17 @@ The {{IdentityProviderWellKnown}} JSON object has the following semantics:
 
 <dl dfn-type="dict-member" dfn-for="IdentityProviderWellKnown">
     :   <dfn>provider_urls</dfn> (required)
-    ::  A list of URLs that points to valid [[#idp-api-manifest]]s.
+    ::  A list of URLs that points to valid [[#idp-api-config-file]]s.
 </dl>
 
 <!-- ============================================================ -->
-## Manifest ## {#idp-api-manifest}
+## The config file ## {#idp-api-config-file}
 <!-- ============================================================ -->
 
-The config endpoint is an endpoint
-which serves as a discovery device to other endpoints provided by the
+The <dfn>config file</dfn> serves as a discovery device to other endpoints provided by the
 [=IDP=].
 
-The config endpoint is fetched:
+The [=config file=] is fetched:
 
 (a) **without** cookies,
 (b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`,
@@ -1224,12 +1255,12 @@ For example:
 </div>
 
 <!-- ============================================================ -->
-## Accounts List ## {#idp-api-accounts-endpoint}
+## Accounts list endpoint ## {#idp-api-accounts-endpoint}
 <!-- ============================================================ -->
 
-The accounts list endpoint provides the list of accounts the user has at the [=IDP=].
+The <dfn>accounts list endpoint</dfn> provides the list of accounts the user has at the [=IDP=].
 
-The accounts list endpoint is fetched
+The [=accounts list endpoint=] is fetched
 (a) **with** [=IDP=] cookies,
 (b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`,
 (c) **without** revealing the [=RP=] in the <a http-header>Origin</a> or
@@ -1299,9 +1330,9 @@ Issue: [Clarify](https://github.com/fedidcg/FedCM/issues/218) the IDP API respon
 ## Client Metadata ## {#idp-api-client-id-metadata-endpoint}
 <!-- ============================================================ -->
 
-The client metadata endpoint provides metadata about [=RP=]s.
+The <dfn>client metadata endpoint</dfn> provides metadata about [=RP=]s.
 
-The client medata endpoint is fetched
+The [=client metadata endpoint=] is fetched
 (a) **without** cookies,
 (b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`,
 (c) **with** the [=RP=]'s origin in the <a http-header>Origin</a> header, and
@@ -1344,12 +1375,12 @@ For example:
 </div>
 
 <!-- ============================================================ -->
-## Identity Assertions ## {#idp-api-id-assertion-endpoint}
+## Identity assertion endpoint ## {#idp-api-id-assertion-endpoint}
 <!-- ============================================================ -->
 
-The identity assertion endpoint is responsible for minting a new token that contains signed assertions about the user.
+The <dfn>identity assertion endpoint</dfn> is responsible for minting a new token that contains signed assertions about the user.
 
-The identity assertion endpoint is fetched
+The [=identity assertion endpoint=] is fetched
 
 (a) as a **POST** request,
 (b) **with** [=IDP=] cookies,
@@ -1430,12 +1461,6 @@ For example:
 </div>
 
 <!-- ============================================================ -->
-## Backwards Compatibility ## {#browser-api-backwards-compatibility}
-<!-- ============================================================ -->
-
-Note: go over how we are planning to deal with backwards compatibility.
-
-<!-- ============================================================ -->
 # Permissions Policy Integration # {#permissions-policy-integration}
 <!-- ============================================================ -->
 
@@ -1468,15 +1493,15 @@ separate section for [[#privacy]] considerations.
 <!-- ============================================================ -->
 
 The first fetches triggered by the FedCM API are the manifest list, which is public, and the
-config file. Imagine a malicious script included by (and running as) the [=RP=] attempting to
+[=config file=]. Imagine a malicious script included by (and running as) the [=RP=] attempting to
 execute the FedCM API calls to a malicious [=IDP=], one which is not trusted by the [=RP=]. If the
 call is successful, this would introduce browser UI on the [=RP=] with sign in options into a
 malicious [=IDP=]. This malicious[=IDP=] could then attempt to trick the user. The protection
 against this attack is the [[!CSP]] check, which would fail because the origin of the manifest of
 the malicious [=IDP=] would not be an origin included in the allowlist specified by the [[!CSP]] of
 the [=RP=], hence preventing the undesired FedCM UI from being shown. Since any subsequent fetches
-are same origin with respect to the config file or at least dependent on the contents of the
-config file, they do not require additional checks.
+are same origin with respect to the [=config file=] or at least dependent on the contents of the
+[=config file=], they do not require additional checks.
 
 The non-same-origin fetches include, for example, the brand icon. The user agent does not perform a
 [[!CSP]] check on these because they are directly specified from the manifest. In addition, the
@@ -1584,11 +1609,11 @@ issues with regards to which cookies are shared and with whom within the FedCM f
 to ensure that all of these fetches remain same-origin is by disabling redirects and checking the
 origin of the fetched URLs.
 
-* The manifest fetch can't be used to track users because it is performed without cookies, {{id_assertion_endpoint_request/client_id}},
+* The [=config file=] fetch can't be used to track users because it is performed without cookies, {{id_assertion_endpoint_request/client_id}},
     or referrer. Thus, anyone could perform this fetch, and the information contained therein
     is considered public.
 
-* The accounts fetch can't be used to track users because it is performed with cookies from the
+* The [=accounts list endpoint=] fetch can't be used to track users because it is performed with cookies from the
     [=IDP=] but, importantly, without the {{id_assertion_endpoint_request/client_id}} or referrer. This in theory is a new power
     that the [=RP=] gains that it would not have otherwise. Preventing too many of these fetches may
     be important, but [=IDP=]s are already expected to protect against DoS attacks. In addition, the
@@ -1597,7 +1622,7 @@ origin of the fetched URLs.
     interacts or after a long timer, the number of fetches performed is not a concern. The [=IDP=]
     does learn a lot about the user from this fetch, but this is discussed in detail below.
 
-* The client metadata fetch can't be used to track users too because it is performed without cookies
+* The [=client metadata endpoint=] fetch can't be used to track users too because it is performed without cookies
     from the [=IDP=], albeit with a {{id_assertion_endpoint_request/client_id}} and a referrer. This allows the [=IDP=] to
     communicate the relevant Privacy Policy and Terms of Service to the user agent, in case
     they need to be displayed. Again, besides possible timing attacks described here, the [=RP=]
