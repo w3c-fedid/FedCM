@@ -31,15 +31,9 @@ spec: credential-management-1; urlPrefix: https://w3c.github.io/webappsec-creden
         text: same-origin with its ancestors; url: same-origin-with-its-ancestors
 spec: webdriver; urlPrefix: https://w3c.github.io/webdriver/
     type: dfn
-        text: extension command; url: dfn-extension-commands
         text: getting a property; url: dfn-getting-properties
-        text: invalid argument; url: dfn-invalid-argument
         text: no such alert; url: dfn-no-such-alert
-        text: remote end steps; url: dfn-remote-end-steps
-        text: success; url: dfn-success
-        text: undefined; url: dfn-undefined
-        text: WebDriver error; url: dfn-error
-        text: WebDriver error code; url: dfn-error-code
+        text: error code; url: dfn-error-code
 </pre>
 
 <pre class=link-defaults>
@@ -48,6 +42,7 @@ spec:infra; type:dfn; text:user agent
 spec:html; type:dfn; for:environment settings object; text:global object
 spec:html; type:dfn; for:html-origin-def; text:origin
 spec:webidl; type:dfn; text:resolve
+spec:webdriver2; type:dfn; text:error
 </pre>
 
 <style>
@@ -1399,8 +1394,8 @@ active FedCM dialogs.
 
 The [=remote end steps=] are:
 
-1. If no FedCM dialog is currently open, return a [=WebDriver error=] with
-    [=WebDriver error code=] [=no such alert=].
+1. If no FedCM dialog is currently open, return a [=error|WebDriver error=] with
+    [=error code=] [=no such alert=].
 
 1. Close the dialog and continue the [=create an IdentityCredential=] algorithm
     as if the user had canceled the dialog without choosing an account.
@@ -1429,18 +1424,18 @@ The [=remote end steps=] are:
 The [=remote end steps=] are:
 
 1. If |parameters| is not a JSON [[ECMASCRIPT#sec-json-object|Object]], return a
-    [=WebDriver error=] with [=WebDriver error code=] [=invalid argument=].
+    [=error|WebDriver error=] with [=error code=] [=invalid argument=].
 
-1. If no FedCM dialog is currently open, return a [=WebDriver error=] with
-    [=WebDriver error code=] [=no such alert=].
+1. If no FedCM dialog is currently open, return a [=error|WebDriver error=] with
+    [=error code=] [=no such alert=].
 
 1. Let |accountIndex| be the result of [=getting a property=] named `"accountIndex"`
     from |parameters|.
 
-1. If |accountIndex| is [=undefined=] or is not in the range from 0 to the
-    number of accounts that the user can choose from in the current flow,
-    return a [=WebDriver error=] with [=WebDriver error code=] [=invalid
-    argument=].
+1. If |accountIndex| is {{undefined}} or is less than 0 or greater than or
+    equal to the number of accounts that the user can choose from in the
+    current flow, return a [=error|WebDriver error=] with [=error code=]
+    [=invalid argument=].
 
 1. Close the dialog and continue the [=create an IdentityCredential=] algorithm
     as if the user had selected the account indicated by |accountIndex| and
@@ -1469,8 +1464,8 @@ The [=remote end steps=] are:
 
 The [=remote end steps=] are:
 
-1. If no FedCM dialog is currently open, return a [=WebDriver error=] with
-    [=WebDriver error code=] [=no such alert=].
+1. If no FedCM dialog is currently open, return a [=error|WebDriver error=] with
+    [=error code=] [=no such alert=].
 
 1. Let |accounts| be the list of accounts that the user can or could choose
     from in the current flow.
@@ -1480,7 +1475,7 @@ The [=remote end steps=] are:
 1. For each |account| in |accounts|:
     1. Let |accountState| be the result of running the [=compute account state=]
         algorithm given |account|
-    1. Append an object to |list| with the following properties:
+    1. [=list/Append=] a [=dictionary=] to |list| with the following properties:
         1. `accountId` set to the account's {{IdentityProviderAccount/id}}
         1. `email` set to the account's {{IdentityProviderAccount/email}}
         1. `name` set to the account's {{IdentityProviderAccount/name}}
@@ -1493,9 +1488,9 @@ The [=remote end steps=] are:
         1. `loginState` to `"SignUp"` if |accountState|'s {{AccountState/registration
             state}} is {{unregistered}} and `"SignIn"` otherwise
         1. `termsOfServiceUrl` to the {{IdentityProviderClientMetadata/terms_of_service_url}}
-            if one was provided and the `loginState` is `"SignUp"`
+            if one was provided and the `loginState` is `"SignUp"`, otherwise {{undefined}}
         1. `privacyPolicyUrl` to the {{IdentityProviderClientMetadata/privacy_policy_url}}
-            if one was provided and the `loginState` is `"SignUp"`
+            if one was provided and the `loginState` is `"SignUp"`, otherwise {{undefined}}
 
 1. Return [=success=] with data |list|.
 
@@ -1519,13 +1514,13 @@ The [=remote end steps=] are:
 </figure>
 
 Note: This command lets automation verify that the
-    [https://github.com/fedidcg/FedCM/blob/main/proposals/context-api.md](context API)
+    <a href="https://github.com/fedidcg/FedCM/blob/main/proposals/context-api.md">context API</a>
     was applied properly
 
 The [=remote end steps=] are:
 
-1. If no FedCM dialog is currently open, return a [=WebDriver error=] with
-    [=WebDriver error=] [=no such alert=].
+1. If no FedCM dialog is currently open, return a [=error|WebDriver error=] with
+    [=error code=] [=no such alert=].
 
 1. Let |data| be a dictionary with an object with properties as follows:
     1. `title` set to the title of the open dialog
@@ -1555,13 +1550,13 @@ The [=remote end steps=] are:
 The [=remote end steps=] are:
 
 1. If |parameters| is not a JSON [[ECMASCRIPT#sec-json-object|Object]], return a
-     [=WebDriver error=] with [=WebDriver error code=] [=invalid argument=].
+     [=error|WebDriver error=] with [=error code=] [=invalid argument=].
 
 1. Let |enabled| be the result of [=getting a property=] named `"enabled"` from
     |parameters|.
 
-1. If |enabled| is [=undefined=] or is not a boolean, return a [=WebDriver error=]
-    with [=WebDriver error code=] [=invalid argument=].
+1. If |enabled| is {{undefined}} or is not a boolean, return a [=error|WebDriver error=]
+    with [=error code=] [=invalid argument=].
 
 1. If |enabled| is false, disables the [=promise rejection delay=]; otherwise,
     re-enables it.
