@@ -36,7 +36,7 @@ In order to test experimental functionality:
 
 The list of experimental features can be found [here](/proposals/README.md).
 
-### Logout API
+### Logout
 
 We have been experimenting with methods for helping session management
 features continue to work that currently rely on third-party cookies. So far the
@@ -64,3 +64,85 @@ IdentityCredential.logoutRPs([{
 
 For security reasons, the IDP does not learn whether any of the network requests
 succeeded or failed.
+
+### LoginHint
+
+In order to use the LoginHint API:
+
+* Enable the experimental feature `FedCmLoginHint` in `chrome://flags`.
+* Add an array of `hints` to the accounts described in the accounts endpoint:
+
+```
+{
+  accounts: [{
+    id: "accountId",
+    email: "account@email.com",
+    hints: ["hint", "otherHint"],
+    ...
+  }, ...]
+}
+```
+
+* Invoke the API with the `loginHint` parameter like so:
+
+```js
+  return await navigator.credentials.get({
+      identity: {
+        providers: [{
+          configURL: "https://idp.example/config.json",
+          clientId: "123",
+          nonce: nonce,
+          loginHint : "hint"
+        }]
+      }
+  });
+```
+
+Now, only accounts with the "hint" provided will show in the chooser.
+
+### UserInfo
+
+In order to use the UserInfo API:
+
+* Enable the experimental feature `FedCmLoginHint` in `chrome://flags`.
+* The RP must embed an IDP iframe, which will perform the query.
+* The embedded iframe must receive permissions to invoke FedCM (via Permissions Policy).
+* The user first needs to go through the FedCM flow once before invoking UserInfo.
+* In a subsequent site visit, the IDP iframe may invoke UserInfo:
+
+```js
+const user_info = await IdentityProvider.getUserInfo({
+    configUrl: "https://idp.example/config.json",
+    clientId: "client1234"
+});
+
+user_info.forEach( info => {
+  // It's up to the IDP regarding how to display the returned accounts.
+  // Accounts are sorted based on RP registration status.
+  const name = info.name;
+  const given_name = info.given_name;
+  const picture = info.picture;
+  const email = info.email;
+}
+```
+
+### RP Context
+
+In order to use the RP Context API:
+
+* Enable the experimental feature `FedCmRpContext` in `chrome://flags`.
+* Provide the `context` value in JS, like so:
+
+```js
+const {token} = await navigator.credentials.get({
+  identity: {
+    context: "signup", 
+    providers: [{
+          configURL: "https://idp.example/fedcm.json",
+          clientId: "1234",
+    }],
+  }
+});
+```
+
+Now, the browser UI will be different based on the value provided.
