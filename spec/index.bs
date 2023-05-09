@@ -561,7 +561,7 @@ the exception thrown.
         1. Set |account| to |registeredAccount| and |accountState| to the result of running
             [=compute account state=] algorithm given |provider| and |account|. When doing this,
             the user agent MAY show some UI to the user indicating that they are being
-            auto-reauthenticated.
+            <dfn>auto-reauthenticated</dfn>.
     1. Otherwise, if |mediation| is "{{CredentialMediationRequirement/silent}}", return failure.
     1. Otherwise, if |accountsList|'s size is 1:
         1. Set |account| to |accountsList|[0].
@@ -1626,6 +1626,35 @@ The [=remote end steps=] are:
     1. `subtitle` set to the subtitle of the open dialog, if there is one
 
 1. Return [=success=] with data |data|.
+
+## Get dialog type ## {#webdriver-getdialogtype}
+
+<figure id="table-webdriver-getdialogtype" class="table">
+    <table class="data">
+        <thead>
+            <tr>
+                <th>HTTP Method</th>
+                <th>URI Template</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>GET</td>
+                <td>`/session/{session id}/fedcm/getdialogtype`</td>
+            </tr>
+        </tbody>
+    </table>
+</figure>
+
+The [=remote end steps=] are:
+
+1. If no FedCM dialog is currently open, return a [=error|WebDriver error=] with
+    [=error code=] [=no such alert=].
+
+1. Let |type| be a string that is "`AutoReauthn`" if the user is being [=auto-reauthenticated=],
+    or "`AccountChooser`" otherwise.
+
+1. Return [=success=] with data |type|.
 
 ## Set delay enabled ## {#webdriver-setdelayenabled}
 
