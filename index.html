@@ -6,7 +6,7 @@
   <link href="https://www.w3.org/StyleSheets/TR/2021/cg-draft" rel="stylesheet">
   <meta content="Bikeshed version 3383f409d, updated Fri Apr 28 15:49:22 2023 -0700" name="generator">
   <link href="https://fedidcg.github.io/FedCM/" rel="canonical">
-  <meta content="c2277e6768a4243728615add232db8a70e083fed" name="document-revision">
+  <meta content="6ca279e502c9d647020034ade175ebceb58f22f4" name="document-revision">
 <style>
 dl.domintro dt {
     font-family: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
@@ -842,7 +842,7 @@ var.selected6 { background-color: #FFBCF2; box-shadow: 0 0 0 2px #FFBCF2; }
   <div class="head">
    <p data-fill-with="logo"><a class="logo" href="https://www.w3.org/"> <img alt="W3C" height="48" src="https://www.w3.org/StyleSheets/TR/2021/logos/W3C" width="72"> </a> </p>
    <h1 class="p-name no-ref" id="title">Federated Credential Management API</h1>
-   <p id="w3c-state"><a href="https://www.w3.org/standards/types#CG-DRAFT">Draft Community Group Report</a>, <time class="dt-updated" datetime="2023-05-03">3 May 2023</time></p>
+   <p id="w3c-state"><a href="https://www.w3.org/standards/types#CG-DRAFT">Draft Community Group Report</a>, <time class="dt-updated" datetime="2023-05-09">9 May 2023</time></p>
    <div data-fill-with="spec-metadata">
     <dl>
      <dt>This version:
@@ -1285,7 +1285,6 @@ credentials and returns an <code class="idl"><a data-link-type="idl" href="#iden
      <p class="note" role="note"><span class="marker">Note:</span> Invocation of this <a data-link-type="dfn" href="https://tc39.github.io/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots" id="ref-for-sec-ordinary-object-internal-methods-and-internal-slots①">internal method</a> indicates that it was allowed by <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/dom.html#concept-document-permissions-policy" id="ref-for-concept-document-permissions-policy">permissions policy</a>, which is evaluated at the <a data-link-type="biblio" href="https://w3c.github.io/webappsec-credential-management/"><cite>Credential Management Level 1</cite></a> level.
 See <a href="#permissions-policy-integration">§ 4 Permissions Policy Integration</a>. As such, <var>sameOriginWithAncestors</var> is unused.</p>
    </dl>
-   <p class="note" role="note"><span class="marker">NOTE:</span> The <var>options</var>.<code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dom-credentialrequestoptions-mediation" id="ref-for-dom-credentialrequestoptions-mediation">mediation</a></code> flag is currently not used.</p>
    <p>The <var>options</var>.<code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dom-credentialrequestoptions-signal" id="ref-for-dom-credentialrequestoptions-signal">signal</a></code> is used as an abort signal for the
 requests.</p>
    <div class="algorithm" data-algorithm="[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)" data-algorithm-for="IdentityCredential">
@@ -1308,7 +1307,7 @@ whether the user has an account with the <a data-link-type="dfn" href="#idp" id=
      <li data-md>
       <p>Let <var>provider</var> be <var>options</var>["<code class="idl"><a data-link-type="idl" href="#dom-credentialrequestoptions-identity" id="ref-for-dom-credentialrequestoptions-identity③">identity</a></code>"]["<code class="idl"><a data-link-type="idl" href="#dom-identitycredentialrequestoptions-providers" id="ref-for-dom-identitycredentialrequestoptions-providers②">providers</a></code>"][0].</p>
      <li data-md>
-      <p>Let <var>credential</var> be the result of running <a data-link-type="dfn" href="#create-an-identitycredential" id="ref-for-create-an-identitycredential">create an IdentityCredential</a> with <var>provider</var> and <var>globalObject</var>.</p>
+      <p>Let <var>credential</var> be the result of running <a data-link-type="dfn" href="#create-an-identitycredential" id="ref-for-create-an-identitycredential">create an IdentityCredential</a> with <var>provider</var>, <var>options</var>["<code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dom-credentialrequestoptions-mediation" id="ref-for-dom-credentialrequestoptions-mediation">mediation</a></code>"], and <var>globalObject</var>.</p>
      <li data-md>
       <p>If <var>credential</var> is failure, throw a new "<code class="idl"><a data-link-type="idl" href="https://webidl.spec.whatwg.org/#networkerror" id="ref-for-networkerror②">NetworkError</a></code>" <code class="idl"><a data-link-type="idl" href="https://webidl.spec.whatwg.org/#idl-DOMException" id="ref-for-idl-DOMException①">DOMException</a></code>.</p>
      <li data-md>
@@ -1319,11 +1318,16 @@ whether the user has an account with the <a data-link-type="dfn" href="#idp" id=
    <p>The <a data-link-type="dfn" href="#create-an-identitycredential" id="ref-for-create-an-identitycredential①">create an IdentityCredential</a> algorithm invokes the various FedCM fetches, shows the user
 agent UI, and creates the <code class="idl"><a data-link-type="idl" href="#identitycredential" id="ref-for-identitycredential⑤">IdentityCredential</a></code> that is then returned to the <a data-link-type="dfn" href="#rp" id="ref-for-rp①⑤">RP</a>.</p>
    <div class="algorithm" data-algorithm="create an IdentityCredential">
-     To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="create-an-identitycredential">create an IdentityCredential</dfn> given an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderconfig" id="ref-for-dictdef-identityproviderconfig⑤">IdentityProviderConfig</a></code> <var>provider</var> and a <var>globalObject</var>, run the following steps. This returns an <code class="idl"><a data-link-type="idl" href="#identitycredential" id="ref-for-identitycredential⑥">IdentityCredential</a></code> or
-failure. 
+     To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="create-an-identitycredential">create an IdentityCredential</dfn> given an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderconfig" id="ref-for-dictdef-identityproviderconfig⑤">IdentityProviderConfig</a></code> <var>provider</var>, a <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dom-credentialrequestoptions-mediation" id="ref-for-dom-credentialrequestoptions-mediation①">mediation</a></code> <var>mediation</var>, and a <var>globalObject</var>, run the
+following steps. This returns an <code class="idl"><a data-link-type="idl" href="#identitycredential" id="ref-for-identitycredential⑥">IdentityCredential</a></code> or failure. 
     <ol>
      <li data-md>
       <p class="assertion">Assert: These steps are running <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/infrastructure.html#in-parallel" id="ref-for-in-parallel①">in parallel</a>.</p>
+     <li data-md>
+      <p>Let <var>requiresUserMediation</var> be <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-configurl" id="ref-for-dom-identityproviderconfig-configurl③">configURL</a></code>'s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#concept-origin" id="ref-for-concept-origin③">origin</a>'s <a data-link-type="dfn" href="https://w3c.github.io/webappsec-credential-management/#origin-requires-user-mediation" id="ref-for-origin-requires-user-mediation">requires user mediation</a>.</p>
+     <li data-md>
+      <p>If <var>requiresUserMediation</var> is true and <var>mediation</var> is
+"<code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dom-credentialmediationrequirement-silent" id="ref-for-dom-credentialmediationrequirement-silent">silent</a></code>", return failure.</p>
      <li data-md>
       <p>Let <var>config</var> be the result of running <a data-link-type="dfn" href="#fetch-the-config-file" id="ref-for-fetch-the-config-file">fetch the config file</a> with <var>provider</var> and <var>globalObject</var>.</p>
      <li data-md>
@@ -1334,26 +1338,50 @@ and <var>globalObject</var>.</p>
      <li data-md>
       <p>If <var>accountsList</var> is failure, return failure.</p>
      <li data-md>
-      <p>For each <var>account</var> in <var>accountsList</var>:</p>
+      <p>For each <var>acc</var> in <var>accountsList</var>:</p>
       <ol>
        <li data-md>
-        <p>If <var>account</var>["<code class="idl"><a data-link-type="idl" href="#dom-identityprovideraccount-picture" id="ref-for-dom-identityprovideraccount-picture">picture</a></code>"] is present, <a data-link-type="dfn" href="#fetch-the-account-picture" id="ref-for-fetch-the-account-picture">fetch the account picture</a> with <var>account</var> and <var>globalObject</var>.</p>
+        <p>If <var>acc</var>["<code class="idl"><a data-link-type="idl" href="#dom-identityprovideraccount-picture" id="ref-for-dom-identityprovideraccount-picture">picture</a></code>"] is present, <a data-link-type="dfn" href="#fetch-the-account-picture" id="ref-for-fetch-the-account-picture">fetch the account picture</a> with <var>acc</var> and <var>globalObject</var>.</p>
       </ol>
       <p class="note" role="note"><span class="marker">Note:</span> The <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent③">user agent</a> may choose to show UI which does not initially require fetching the
 account pictures. In these cases, the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent④">user agent</a> may delay these fetches until they are
 needed. Because errors from these fetches are ignored, they can happen in any order.</p>
      <li data-md>
-      <p>Let <var>permission</var> be false.</p>
+      <p>Let <var>registeredAccount</var>, <var>numRegisteredAccounts</var> be null and 0, respectively.</p>
      <li data-md>
-      <p>If <var>accountsList</var>’s size is 1:</p>
+      <p>Let <var>account</var> be null.</p>
+     <li data-md>
+      <p>For each <var>acc</var> in <var>accountsList</var>:</p>
       <ol>
        <li data-md>
-        <p>Let <var>account</var> be <var>accountsList</var>[0].</p>
+        <p>Let <var>accState</var> be the result of running the <a data-link-type="dfn">compute account state</a> algorithm given <var>provider</var> and <var>acc</var>.</p>
        <li data-md>
-        <p>Let <var>accountState</var> be the result of running the <a data-link-type="dfn" href="#compute-the-connection-status" id="ref-for-compute-the-connection-status">compute the connection status</a> algorithm
+        <p>If <var>accState</var> is <code class="idl"><a data-link-type="idl">registered</a></code>, set <var>registeredAccount</var> to <var>acc</var> and increase <var>numRegisteredAccounts</var> by 1.</p>
+      </ol>
+     <li data-md>
+      <p>Let <var>permission</var> be false.</p>
+     <li data-md>
+      <p>If <var>mediation</var> is not "<code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dom-credentialmediationrequirement-required" id="ref-for-dom-credentialmediationrequirement-required">required</a></code>", <var>requiresUserMediation</var> is false, and <var>numRegisteredAccounts</var> is equal to 1:</p>
+      <ol>
+       <li data-md>
+        <p>Set <var>account</var> to <var>registeredAccount</var> and <var>accountState</var> to the result of running <a data-link-type="dfn">compute account state</a> algorithm given <var>provider</var> and <var>account</var>. When doing this,
+the user agent MAY show some UI to the user indicating that they are being
+auto-reauthenticated.</p>
+      </ol>
+     <li data-md>
+      <p>Otherwise, if <var>mediation</var> is "<code class="idl"><a data-link-type="idl" href="https://w3c.github.io/webappsec-credential-management/#dom-credentialmediationrequirement-silent" id="ref-for-dom-credentialmediationrequirement-silent①">silent</a></code>", return failure.</p>
+     <li data-md>
+      <p>Otherwise, if <var>accountsList</var>’s size is 1:</p>
+      <ol>
+       <li data-md>
+        <p>Set <var>account</var> to <var>accountsList</var>[0].</p>
+       <li data-md>
+        <p>Set <var>accountState</var> to the result of running the <a data-link-type="dfn" href="#compute-the-connection-status" id="ref-for-compute-the-connection-status">compute the connection status</a> algorithm
 given <var>provider</var>, <var>account</var>, and <var>globalObject</var>.</p>
        <li data-md>
-        <p>If <var>accountState</var> is <a data-link-type="dfn" href="#compute-the-connection-status-disconnected" id="ref-for-compute-the-connection-status-disconnected①">disconnected</a>, set <var>permission</var> to the result of running <a data-link-type="dfn" href="#request-permission-to-sign-up" id="ref-for-request-permission-to-sign-up">request permission to sign-up</a> algorithm with <var>account</var>, <var>config</var>, <var>provider</var>, and <var>globalObject</var>.</p>
+        <p>If <var>accountState</var> is <a data-link-type="dfn" href="#compute-the-connection-status-disconnected" id="ref-for-compute-the-connection-status-disconnected①">disconnected</a>,
+let <var>permission</var> be the result of running <a data-link-type="dfn" href="#request-permission-to-sign-up" id="ref-for-request-permission-to-sign-up">request permission to sign-up</a> algorithm
+with <var>account</var>, <var>accountState</var>, <var>config</var>, <var>provider</var>, and <var>globalObject</var>.</p>
        <li data-md>
         <p>Otherwise, show a dialog to request user permission to sign in via <var>account</var>, and set the
 result in <var>permission</var>.</p>
@@ -1362,11 +1390,11 @@ result in <var>permission</var>.</p>
       <p>Otherwise:</p>
       <ol>
        <li data-md>
-        <p>Let <var>account</var> be the result of running the <a data-link-type="dfn" href="#select-an-account" id="ref-for-select-an-account">select an account</a> from the <var>accountsList</var>.</p>
+        <p>Set <var>account</var> to the result of running the <a data-link-type="dfn" href="#select-an-account" id="ref-for-select-an-account">select an account</a> from the <var>accountsList</var>.</p>
        <li data-md>
         <p>If <var>account</var> is failure, return failure.</p>
        <li data-md>
-        <p>Let <var>accountState</var> be the result of running the <a data-link-type="dfn" href="#compute-the-connection-status" id="ref-for-compute-the-connection-status①">compute the connection status</a> algorithm
+        <p>Set <var>accountState</var> to the result of running the <a data-link-type="dfn" href="#compute-the-connection-status" id="ref-for-compute-the-connection-status①">compute the connection status</a> algorithm
 given <var>provider</var> and <var>account</var>.</p>
        <li data-md>
         <p>If <var>accountState</var> is <a data-link-type="dfn" href="#compute-the-connection-status-disconnected" id="ref-for-compute-the-connection-status-disconnected②">disconnected</a>:</p>
@@ -1378,9 +1406,12 @@ given <var>provider</var> and <var>account</var>.</p>
         <p>Otherwise, set <var>permission</var> to true.</p>
       </ol>
      <li data-md>
-      <p>Wait until the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent⑤">user agent</a>'s dialog is closed.</p>
+      <p>Wait until the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent⑤">user agent</a>'s dialogs requesting for user choice or permission to be
+closed, if any are created in the previous steps.</p>
      <li data-md>
-      <p>If <var>permission</var> is false, return failure.</p>
+      <p class="assertion">Assert: <var>account</var> is not null.</p>
+     <li data-md>
+      <p>If <var>permission</var> is false, then return failure.</p>
      <li data-md>
       <p>Let <var>credential</var> be the result of running the <a data-link-type="dfn" href="#fetch-an-identity-assertion" id="ref-for-fetch-an-identity-assertion">fetch an identity assertion</a> algorithm with <var>account</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityprovideraccount-id" id="ref-for-dom-identityprovideraccount-id②">id</a></code>, <var>provider</var>, <var>config</var>, and <var>globalObject</var>.</p>
      <li data-md>
@@ -1394,7 +1425,7 @@ the <a data-link-type="dfn" href="#idp" id="ref-for-idp①⑤">IDP</a>, checks t
      To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="fetch-the-config-file">fetch the config file</dfn> given an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderconfig" id="ref-for-dictdef-identityproviderconfig⑥">IdentityProviderConfig</a></code> <var>provider</var> and <var>globalObject</var>, run the following steps. This returns an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderapiconfig" id="ref-for-dictdef-identityproviderapiconfig">IdentityProviderAPIConfig</a></code> or failure. 
     <ol>
      <li data-md>
-      <p>Let <var>configUrl</var> be the result of running <a data-link-type="dfn" href="#parse-url" id="ref-for-parse-url②">parse url</a> with <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-configurl" id="ref-for-dom-identityproviderconfig-configurl③">configURL</a></code> and <var>globalObject</var>.</p>
+      <p>Let <var>configUrl</var> be the result of running <a data-link-type="dfn" href="#parse-url" id="ref-for-parse-url②">parse url</a> with <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-configurl" id="ref-for-dom-identityproviderconfig-configurl④">configURL</a></code> and <var>globalObject</var>.</p>
      <li data-md>
       <p>If <var>configUrl</var> is failure, return failure.</p>
      <li data-md>
@@ -1461,7 +1492,7 @@ greater than 1, set <var>configInWellKnown</var> to false.</p>
         <p class="issue" id="issue-80d5b61c"><a class="self-link" href="#issue-80d5b61c"></a> <a href="https://github.com/fedidcg/FedCM/issues/333">relax</a> the size of the
 provider_urls array.</p>
        <li data-md>
-        <p>Otherwise, set to <var>configInWellKnown</var> to true if <var>discovery</var>["<code class="idl"><a data-link-type="idl" href="#dom-identityproviderwellknown-provider_urls" id="ref-for-dom-identityproviderwellknown-provider_urls①">provider_urls</a></code>"][0] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string-is" id="ref-for-string-is">is</a> equal to <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-configurl" id="ref-for-dom-identityproviderconfig-configurl④">configURL</a></code>, and to false otherwise.</p>
+        <p>Otherwise, set to <var>configInWellKnown</var> to true if <var>discovery</var>["<code class="idl"><a data-link-type="idl" href="#dom-identityproviderwellknown-provider_urls" id="ref-for-dom-identityproviderwellknown-provider_urls①">provider_urls</a></code>"][0] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string-is" id="ref-for-string-is">is</a> equal to <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-configurl" id="ref-for-dom-identityproviderconfig-configurl⑤">configURL</a></code>, and to false otherwise.</p>
       </ol>
      <li data-md>
       <p>Let <var>configRequest</var> be a new <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-request" id="ref-for-concept-request②">request</a> as follows:</p>
@@ -1714,7 +1745,7 @@ provided to the <a data-link-type="dfn" href="#rp" id="ref-for-rp①⑦">RP</a>.
         <p>"webidentity"</p>
        <dt data-md><a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-request-origin" id="ref-for-concept-request-origin④">origin</a>
        <dd data-md>
-        <p><a data-link-type="dfn" href="#rp" id="ref-for-rp①⑧">RP</a>'s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#concept-origin" id="ref-for-concept-origin③">origin</a> (TODO)</p>
+        <p><a data-link-type="dfn" href="#rp" id="ref-for-rp①⑧">RP</a>'s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#concept-origin" id="ref-for-concept-origin④">origin</a> (TODO)</p>
        <dt data-md><a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-request-header-list" id="ref-for-concept-request-header-list③">header list</a>
        <dd data-md>
         <p>a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list" id="ref-for-list④">list</a> containing a single <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-header" id="ref-for-concept-header③">header</a> with <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-header-name" id="ref-for-concept-header-name③">name</a> set to <code>Accept</code> and <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-header-value" id="ref-for-concept-header-value③">value</a> set to <code>application/x-www-form-urlencoded</code></p>
@@ -1825,7 +1856,7 @@ an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderconf
         <p>"webidentity"</p>
        <dt data-md><a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-request-origin" id="ref-for-concept-request-origin⑤">origin</a>
        <dd data-md>
-        <p><a data-link-type="dfn" href="#rp" id="ref-for-rp②⓪">RP</a>'s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#concept-origin" id="ref-for-concept-origin④">origin</a> (TODO)</p>
+        <p><a data-link-type="dfn" href="#rp" id="ref-for-rp②⓪">RP</a>'s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#concept-origin" id="ref-for-concept-origin⑤">origin</a> (TODO)</p>
        <dt data-md><a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-request-header-list" id="ref-for-concept-request-header-list④">header list</a>
        <dd data-md>
         <p>a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list" id="ref-for-list⑤">list</a> containing a single <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-header" id="ref-for-concept-header④">header</a> with <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-header-name" id="ref-for-concept-header-name④">name</a> set to <code>Accept</code> and <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-header-value" id="ref-for-concept-header-value④">value</a> set to <code>application/json</code></p>
@@ -1892,7 +1923,7 @@ and store the result in <var>metadata</var>.</p>
      When <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="computing-the-manifest-url">computing the manifest URL</dfn> given an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderconfig" id="ref-for-dictdef-identityproviderconfig①①">IdentityProviderConfig</a></code> <var>provider</var>, a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string">string</a> <var>manifestString</var>, and <var>globalObject</var>, perform the following steps. This returns a <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url" id="ref-for-concept-url②">URL</a> or failure. 
     <ol>
      <li data-md>
-      <p>Let <var>configUrl</var> be the result of running <a data-link-type="dfn" href="#parse-url" id="ref-for-parse-url③">parse url</a> with <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-configurl" id="ref-for-dom-identityproviderconfig-configurl⑤">configURL</a></code> and <var>globalObject</var>.</p>
+      <p>Let <var>configUrl</var> be the result of running <a data-link-type="dfn" href="#parse-url" id="ref-for-parse-url③">parse url</a> with <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-configurl" id="ref-for-dom-identityproviderconfig-configurl⑥">configURL</a></code> and <var>globalObject</var>.</p>
      <li data-md>
       <p>Let <var>manifestUrl</var> be the result of running <a data-link-type="dfn" href="#parse-url" id="ref-for-parse-url④">parse url</a> given <var>manifestString</var> and <var>globalObject</var>.</p>
      <li data-md>
@@ -3417,8 +3448,11 @@ preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identit
      <li><span class="dfn-paneled" id="abcb119a">[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)</span>
      <li><span class="dfn-paneled" id="99134679">get()</span>
      <li><span class="dfn-paneled" id="546b09a7">mediation</span>
+     <li><span class="dfn-paneled" id="550fb78a">required</span>
+     <li><span class="dfn-paneled" id="c1eab6d6">requires user mediation</span>
      <li><span class="dfn-paneled" id="6f944459">same-origin with its ancestors</span>
      <li><span class="dfn-paneled" id="ea9cb8e8">signal</span>
+     <li><span class="dfn-paneled" id="5b840e7e">silent</span>
     </ul>
    <li>
     <a data-link-type="biblio">[CSS-COLOR-4]</a> defines the following terms:
@@ -3952,9 +3986,12 @@ window.dfnpanelData['59825b02'] = {"dfnID": "59825b02", "url": "https://w3c.gith
 window.dfnpanelData['696a29e8'] = {"dfnID": "696a29e8", "url": "https://w3c.github.io/webappsec-credential-management/#abstract-opdef-request-a-credential", "dfnText": "Request a Credential", "refSections": [{"refs": [{"id": "ref-for-abstract-opdef-request-a-credential"}], "title": "2.2.2. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method"}, {"refs": [{"id": "ref-for-abstract-opdef-request-a-credential\u2460"}], "title": "4. Permissions Policy Integration"}], "external": true};
 window.dfnpanelData['abcb119a'] = {"dfnID": "abcb119a", "url": "https://w3c.github.io/webappsec-credential-management/#dom-credential-discoverfromexternalsource-slot", "dfnText": "[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)", "refSections": [{"refs": [{"id": "ref-for-dom-credential-discoverfromexternalsource-slot"}, {"id": "ref-for-dom-credential-discoverfromexternalsource-slot\u2460"}], "title": "2.2.2. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method"}], "external": true};
 window.dfnpanelData['99134679'] = {"dfnID": "99134679", "url": "https://w3c.github.io/webappsec-credential-management/#dom-credentialscontainer-get", "dfnText": "get()", "refSections": [{"refs": [{"id": "ref-for-dom-credentialscontainer-get"}], "title": "2.2.2. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method"}, {"refs": [{"id": "ref-for-dom-credentialscontainer-get\u2460"}], "title": "4. Permissions Policy Integration"}], "external": true};
-window.dfnpanelData['546b09a7'] = {"dfnID": "546b09a7", "url": "https://w3c.github.io/webappsec-credential-management/#dom-credentialrequestoptions-mediation", "dfnText": "mediation", "refSections": [{"refs": [{"id": "ref-for-dom-credentialrequestoptions-mediation"}], "title": "2.2.2. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method"}], "external": true};
+window.dfnpanelData['546b09a7'] = {"dfnID": "546b09a7", "url": "https://w3c.github.io/webappsec-credential-management/#dom-credentialrequestoptions-mediation", "dfnText": "mediation", "refSections": [{"refs": [{"id": "ref-for-dom-credentialrequestoptions-mediation"}], "title": "2.2.2. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method"}, {"refs": [{"id": "ref-for-dom-credentialrequestoptions-mediation\u2460"}], "title": "2.2.3. Create an IdentityCredential"}], "external": true};
+window.dfnpanelData['550fb78a'] = {"dfnID": "550fb78a", "url": "https://w3c.github.io/webappsec-credential-management/#dom-credentialmediationrequirement-required", "dfnText": "required", "refSections": [{"refs": [{"id": "ref-for-dom-credentialmediationrequirement-required"}], "title": "2.2.3. Create an IdentityCredential"}], "external": true};
+window.dfnpanelData['c1eab6d6'] = {"dfnID": "c1eab6d6", "url": "https://w3c.github.io/webappsec-credential-management/#origin-requires-user-mediation", "dfnText": "requires user mediation", "refSections": [{"refs": [{"id": "ref-for-origin-requires-user-mediation"}], "title": "2.2.3. Create an IdentityCredential"}], "external": true};
 window.dfnpanelData['6f944459'] = {"dfnID": "6f944459", "url": "https://w3c.github.io/webappsec-credential-management/#same-origin-with-its-ancestors", "dfnText": "same-origin with its ancestors", "refSections": [{"refs": [{"id": "ref-for-same-origin-with-its-ancestors"}], "title": "2.2.2. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method"}], "external": true};
 window.dfnpanelData['ea9cb8e8'] = {"dfnID": "ea9cb8e8", "url": "https://w3c.github.io/webappsec-credential-management/#dom-credentialrequestoptions-signal", "dfnText": "signal", "refSections": [{"refs": [{"id": "ref-for-dom-credentialrequestoptions-signal"}], "title": "2.2.2. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method"}], "external": true};
+window.dfnpanelData['5b840e7e'] = {"dfnID": "5b840e7e", "url": "https://w3c.github.io/webappsec-credential-management/#dom-credentialmediationrequirement-silent", "dfnText": "silent", "refSections": [{"refs": [{"id": "ref-for-dom-credentialmediationrequirement-silent"}, {"id": "ref-for-dom-credentialmediationrequirement-silent\u2460"}], "title": "2.2.3. Create an IdentityCredential"}], "external": true};
 window.dfnpanelData['7a29153c'] = {"dfnID": "7a29153c", "url": "https://drafts.csswg.org/css-color-4/#typedef-hex-color", "dfnText": "<hex-color>", "refSections": [{"refs": [{"id": "ref-for-typedef-hex-color"}], "title": "3.2. Manifest"}], "external": true};
 window.dfnpanelData['efa5c464'] = {"dfnID": "efa5c464", "url": "https://drafts.csswg.org/css-color-4/#typedef-named-color", "dfnText": "<named-color>", "refSections": [{"refs": [{"id": "ref-for-typedef-named-color"}], "title": "3.2. Manifest"}], "external": true};
 window.dfnpanelData['218f0f24'] = {"dfnID": "218f0f24", "url": "https://drafts.csswg.org/css-color-4/#funcdef-hsl", "dfnText": "hsl()", "refSections": [{"refs": [{"id": "ref-for-funcdef-hsl"}], "title": "3.2. Manifest"}], "external": true};
@@ -4000,7 +4037,7 @@ window.dfnpanelData['3e12e042'] = {"dfnID": "3e12e042", "url": "https://html.spe
 window.dfnpanelData['a72449dd'] = {"dfnID": "a72449dd", "url": "https://html.spec.whatwg.org/multipage/infrastructure.html#in-parallel", "dfnText": "in parallel", "refSections": [{"refs": [{"id": "ref-for-in-parallel"}], "title": "2.2.2. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method"}, {"refs": [{"id": "ref-for-in-parallel\u2460"}], "title": "2.2.3. Create an IdentityCredential"}, {"refs": [{"id": "ref-for-in-parallel\u2461"}], "title": "2.2.7. Request permission to sign-up"}, {"refs": [{"id": "ref-for-in-parallel\u2462"}, {"id": "ref-for-in-parallel\u2463"}], "title": "2.2.8. Helper algorithms"}, {"refs": [{"id": "ref-for-in-parallel\u2464"}], "title": "4. Permissions Policy Integration"}], "external": true};
 window.dfnpanelData['b6ae4501'] = {"dfnID": "b6ae4501", "url": "https://html.spec.whatwg.org/multipage/webappapis.html#networking-task-source", "dfnText": "networking task source", "refSections": [{"refs": [{"id": "ref-for-networking-task-source"}, {"id": "ref-for-networking-task-source\u2460"}], "title": "2.2.8. Helper algorithms"}], "external": true};
 window.dfnpanelData['b01b1359'] = {"dfnID": "b01b1359", "url": "https://html.spec.whatwg.org/multipage/browsers.html#concept-origin-opaque", "dfnText": "opaque origin", "refSections": [{"refs": [{"id": "ref-for-concept-origin-opaque"}, {"id": "ref-for-concept-origin-opaque\u2460"}], "title": "2.2.4. Fetch the config file"}, {"refs": [{"id": "ref-for-concept-origin-opaque\u2461"}, {"id": "ref-for-concept-origin-opaque\u2462"}], "title": "2.2.5. Fetch the accounts list"}], "external": true};
-window.dfnpanelData['086e3aff'] = {"dfnID": "086e3aff", "url": "https://html.spec.whatwg.org/multipage/browsers.html#concept-origin", "dfnText": "origin", "refSections": [{"refs": [{"id": "ref-for-concept-origin"}, {"id": "ref-for-concept-origin\u2460"}, {"id": "ref-for-concept-origin\u2461"}], "title": "2.1. The connected accounts set"}, {"refs": [{"id": "ref-for-concept-origin\u2462"}], "title": "2.2.6. Fetch an identity assertion"}, {"refs": [{"id": "ref-for-concept-origin\u2463"}], "title": "2.2.7. Request permission to sign-up"}], "external": true};
+window.dfnpanelData['086e3aff'] = {"dfnID": "086e3aff", "url": "https://html.spec.whatwg.org/multipage/browsers.html#concept-origin", "dfnText": "origin", "refSections": [{"refs": [{"id": "ref-for-concept-origin"}, {"id": "ref-for-concept-origin\u2460"}, {"id": "ref-for-concept-origin\u2461"}], "title": "2.1. The connected accounts set"}, {"refs": [{"id": "ref-for-concept-origin\u2462"}], "title": "2.2.3. Create an IdentityCredential"}, {"refs": [{"id": "ref-for-concept-origin\u2463"}], "title": "2.2.6. Fetch an identity assertion"}, {"refs": [{"id": "ref-for-concept-origin\u2464"}], "title": "2.2.7. Request permission to sign-up"}], "external": true};
 window.dfnpanelData['43ac8374'] = {"dfnID": "43ac8374", "url": "https://html.spec.whatwg.org/multipage/webappapis.html#concept-settings-object-origin", "dfnText": "origin (for environment settings object)", "refSections": [{"refs": [{"id": "ref-for-concept-settings-object-origin"}], "title": "2.2.2. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method"}], "external": true};
 window.dfnpanelData['a41102eb'] = {"dfnID": "a41102eb", "url": "https://html.spec.whatwg.org/multipage/dom.html#concept-document-permissions-policy", "dfnText": "permissions policy", "refSections": [{"refs": [{"id": "ref-for-concept-document-permissions-policy"}], "title": "2.2.2. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method"}, {"refs": [{"id": "ref-for-concept-document-permissions-policy\u2460"}], "title": "4. Permissions Policy Integration"}], "external": true};
 window.dfnpanelData['48438eb3'] = {"dfnID": "48438eb3", "url": "https://html.spec.whatwg.org/multipage/webappapis.html#queue-a-global-task", "dfnText": "queue a global task", "refSections": [{"refs": [{"id": "ref-for-queue-a-global-task"}], "title": "2.2.2. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method"}, {"refs": [{"id": "ref-for-queue-a-global-task\u2460"}, {"id": "ref-for-queue-a-global-task\u2461"}], "title": "2.2.8. Helper algorithms"}], "external": true};
@@ -4057,7 +4094,7 @@ window.dfnpanelData['dom-credentialrequestoptions-identity'] = {"dfnID": "dom-cr
 window.dfnpanelData['dictdef-identitycredentialrequestoptions'] = {"dfnID": "dictdef-identitycredentialrequestoptions", "url": "#dictdef-identitycredentialrequestoptions", "dfnText": "IdentityCredentialRequestOptions", "refSections": [{"refs": [{"id": "ref-for-dictdef-identitycredentialrequestoptions"}, {"id": "ref-for-dictdef-identitycredentialrequestoptions\u2460"}], "title": "2.2.1. The CredentialRequestOptions"}], "external": false};
 window.dfnpanelData['dom-identitycredentialrequestoptions-providers'] = {"dfnID": "dom-identitycredentialrequestoptions-providers", "url": "#dom-identitycredentialrequestoptions-providers", "dfnText": "providers", "refSections": [{"refs": [{"id": "ref-for-dom-identitycredentialrequestoptions-providers"}, {"id": "ref-for-dom-identitycredentialrequestoptions-providers\u2460"}, {"id": "ref-for-dom-identitycredentialrequestoptions-providers\u2461"}], "title": "2.2.2. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method"}], "external": false};
 window.dfnpanelData['dictdef-identityproviderconfig'] = {"dfnID": "dictdef-identityproviderconfig", "url": "#dictdef-identityproviderconfig", "dfnText": "IdentityProviderConfig", "refSections": [{"refs": [{"id": "ref-for-dictdef-identityproviderconfig"}, {"id": "ref-for-dictdef-identityproviderconfig\u2460"}], "title": "2.1. The connected accounts set"}, {"refs": [{"id": "ref-for-dictdef-identityproviderconfig\u2461"}, {"id": "ref-for-dictdef-identityproviderconfig\u2462"}, {"id": "ref-for-dictdef-identityproviderconfig\u2463"}], "title": "2.2.1. The CredentialRequestOptions"}, {"refs": [{"id": "ref-for-dictdef-identityproviderconfig\u2464"}], "title": "2.2.3. Create an IdentityCredential"}, {"refs": [{"id": "ref-for-dictdef-identityproviderconfig\u2465"}], "title": "2.2.4. Fetch the config file"}, {"refs": [{"id": "ref-for-dictdef-identityproviderconfig\u2466"}], "title": "2.2.5. Fetch the accounts list"}, {"refs": [{"id": "ref-for-dictdef-identityproviderconfig\u2467"}], "title": "2.2.6. Fetch an identity assertion"}, {"refs": [{"id": "ref-for-dictdef-identityproviderconfig\u2468"}, {"id": "ref-for-dictdef-identityproviderconfig\u2460\u24ea"}], "title": "2.2.7. Request permission to sign-up"}, {"refs": [{"id": "ref-for-dictdef-identityproviderconfig\u2460\u2460"}], "title": "2.2.8. Helper algorithms"}], "external": false};
-window.dfnpanelData['dom-identityproviderconfig-configurl'] = {"dfnID": "dom-identityproviderconfig-configurl", "url": "#dom-identityproviderconfig-configurl", "dfnText": "configURL", "refSections": [{"refs": [{"id": "ref-for-dom-identityproviderconfig-configurl"}, {"id": "ref-for-dom-identityproviderconfig-configurl\u2460"}], "title": "2.1. The connected accounts set"}, {"refs": [{"id": "ref-for-dom-identityproviderconfig-configurl\u2461"}], "title": "2.2.1. The CredentialRequestOptions"}, {"refs": [{"id": "ref-for-dom-identityproviderconfig-configurl\u2462"}, {"id": "ref-for-dom-identityproviderconfig-configurl\u2463"}], "title": "2.2.4. Fetch the config file"}, {"refs": [{"id": "ref-for-dom-identityproviderconfig-configurl\u2464"}], "title": "2.2.8. Helper algorithms"}], "external": false};
+window.dfnpanelData['dom-identityproviderconfig-configurl'] = {"dfnID": "dom-identityproviderconfig-configurl", "url": "#dom-identityproviderconfig-configurl", "dfnText": "configURL", "refSections": [{"refs": [{"id": "ref-for-dom-identityproviderconfig-configurl"}, {"id": "ref-for-dom-identityproviderconfig-configurl\u2460"}], "title": "2.1. The connected accounts set"}, {"refs": [{"id": "ref-for-dom-identityproviderconfig-configurl\u2461"}], "title": "2.2.1. The CredentialRequestOptions"}, {"refs": [{"id": "ref-for-dom-identityproviderconfig-configurl\u2462"}], "title": "2.2.3. Create an IdentityCredential"}, {"refs": [{"id": "ref-for-dom-identityproviderconfig-configurl\u2463"}, {"id": "ref-for-dom-identityproviderconfig-configurl\u2464"}], "title": "2.2.4. Fetch the config file"}, {"refs": [{"id": "ref-for-dom-identityproviderconfig-configurl\u2465"}], "title": "2.2.8. Helper algorithms"}], "external": false};
 window.dfnpanelData['dom-identityproviderconfig-clientid'] = {"dfnID": "dom-identityproviderconfig-clientid", "url": "#dom-identityproviderconfig-clientid", "dfnText": "clientId", "refSections": [{"refs": [{"id": "ref-for-dom-identityproviderconfig-clientid"}], "title": "2.2.1. The CredentialRequestOptions"}, {"refs": [{"id": "ref-for-dom-identityproviderconfig-clientid\u2460"}], "title": "2.2.6. Fetch an identity assertion"}, {"refs": [{"id": "ref-for-dom-identityproviderconfig-clientid\u2461"}, {"id": "ref-for-dom-identityproviderconfig-clientid\u2462"}], "title": "2.2.7. Request permission to sign-up"}, {"refs": [{"id": "ref-for-dom-identityproviderconfig-clientid\u2463"}], "title": "3.3. Accounts List"}, {"refs": [{"id": "ref-for-dom-identityproviderconfig-clientid\u2464"}, {"id": "ref-for-dom-identityproviderconfig-clientid\u2465"}], "title": "3.5. Identity Assertions"}], "external": false};
 window.dfnpanelData['dom-identityproviderconfig-nonce'] = {"dfnID": "dom-identityproviderconfig-nonce", "url": "#dom-identityproviderconfig-nonce", "dfnText": "nonce", "refSections": [{"refs": [{"id": "ref-for-dom-identityproviderconfig-nonce"}], "title": "2.2.1. The CredentialRequestOptions"}, {"refs": [{"id": "ref-for-dom-identityproviderconfig-nonce\u2460"}], "title": "2.2.6. Fetch an identity assertion"}], "external": false};
 window.dfnpanelData['create-an-identitycredential'] = {"dfnID": "create-an-identitycredential", "url": "#create-an-identitycredential", "dfnText": "create an IdentityCredential", "refSections": [{"refs": [{"id": "ref-for-create-an-identitycredential"}], "title": "2.2.2. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method"}, {"refs": [{"id": "ref-for-create-an-identitycredential\u2460"}], "title": "2.2.3. Create an IdentityCredential"}, {"refs": [{"id": "ref-for-create-an-identitycredential\u2461"}], "title": "6.3.1. Manifest Fingerprinting"}], "external": false};
