@@ -29,6 +29,8 @@ spec: ecma262; urlPrefix: https://tc39.github.io/ecma262/
 spec: credential-management-1; urlPrefix: https://w3c.github.io/webappsec-credential-management/
     type: dfn
         text: same-origin with its ancestors; url: same-origin-with-its-ancestors
+    type: dfn
+        text: requires user mediation; url: origin-requires-user-mediation
 spec: webdriver; urlPrefix: https://w3c.github.io/webdriver/
     type: dfn
         text: getting a property; url: dfn-getting-properties
@@ -464,8 +466,6 @@ This [=internal method=] accepts three arguments:
 
 </dl>
 
-NOTE: The |options|.{{CredentialRequestOptions/mediation}} flag is currently not used.
-
 The |options|.{{CredentialRequestOptions/signal}} is used as an abort signal for the
 requests.
 
@@ -488,21 +488,33 @@ algorithm is invoked, the user agent MUST execute the following steps. This retu
 
 
         Issue: Support choosing accounts from multiple [=IDP=]s, as described [here](https://github.com/fedidcg/FedCM/issues/319).
-    1. Run {{WindowOrWorkerGlobalScope/setTimeout()}} passing a [=task=] which throws a
-        {{NetworkError}}, after a timeout of 60 seconds, unless this <dfn>promise rejection
-        delay</dfn> was disabled by [=setdelayenabled|user agent automation=].
+    1. The user agent can decide when to continue with the next steps.
 
-        Issue: Do not use {{WindowOrWorkerGlobalScope/setTimeout()}} directly, as that is not correct. See the relevant
-        [issue](https://github.com/fedidcg/FedCM/issues/389).
-
-        Note: the purpose of having a timer here is to avoid leaking the reason causing this
-        method to throw an error. If there was no such timer, the developer could easily infer
-        whether the user has an account with the [=IDP=] or not, or whether the user closed the UI without granting permission to share the [=IDP=] account information with the [=RP=].
+        Note: For example, user agents may show an identity provider selector before making
+            network requests, or provide a button in the URL bar and wait for user input
+            before continuing.
     1. Let |provider| be |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"][0].
-    1. Let |credential| be the result of running [=create an IdentityCredential=] with |provider| and
-        |globalObject|.
-    1. If |credential| is failure, throw a new "{{NetworkError}}" {{DOMException}}.
-    1. Return |credential|.
+    1. Let |credential| be the result of running [=create an IdentityCredential=] with |provider|,
+        |options|["{{CredentialRequestOptions/mediation}}"], and |globalObject|.
+    1. If |credential| is a pair:
+        1. Let |throwImmediately| be the value of the second element of the pair.
+        1. If |throwImmediately| is false, and this <dfn>promise rejection
+            delay</dfn> was not disabled by [=setdelayenabled|user agent
+            automation=], the user agent SHOULD wait a random amount of time
+            before the next step, unless it has implemented another way to
+            prevent exposing to the RP whether the user has an account logged
+            in to the RP.
+
+            Note: The intention here is as follows. If we resolved the promise immediately,
+                then an RP could infer that no dialog was shown because the promise was
+                resolved quickly, after just the network delay. A shown dialog implies
+                that the user is logged in to one or more accounts of the IDP. To prevent
+                this information leakage, especially without user confirmation, we specify
+                this delay. However, UAs may have different UI approaches here and prevent
+                it in a different way.
+        1. [=Queue a global task=] on the [=DOM manipulation task source=]
+            to throw a new "{{NetworkError}}" {{DOMException}}.
+    1. Otherwise, return |credential|.
 </div>
 
 <!-- ============================================================ -->
@@ -514,44 +526,66 @@ agent UI, and creates the {{IdentityCredential}} that is then returned to the [=
 
 <div algorithm>
 To <dfn>create an IdentityCredential</dfn> given an {{IdentityProviderConfig}}
-|provider| and a |globalObject|, run the following steps. This returns an {{IdentityCredential}} or
-failure.
+|provider|, a {{CredentialRequestOptions/mediation}} |mediation|, and a
+|globalObject|, run the following steps. This returns an {{IdentityCredential}}
+or a pair (failure, bool), where the bool indicates whether to skip delaying
+the exception thrown.
     1. Assert: These steps are running [=in parallel=].
+    1. Let |requiresUserMediation| be |provider|'s {{IdentityProviderConfig/configURL}}'s [=/origin=]'s
+        [=requires user mediation=].
+    1. If |requiresUserMediation| is true and |mediation| is
+        "{{CredentialMediationRequirement/silent}}", return failure.
     1. Let |config| be the result of running [=fetch the config file=] with |provider| and
         |globalObject|.
-    1. If |config| is failure, return failure.
+    1. If |config| is failure, return (failure, false).
     1. Let |accountsList| be the result of [=fetch the accounts list=] with |config|, |provider|,
         and |globalObject|.
-    1. If |accountsList| is failure, return failure.
-    1. For each |account| in |accountsList|:
-        1. If |account|["{{IdentityProviderAccount/picture}}"] is present,
-            [=fetch the account picture=] with |account| and |globalObject|.
+    1. If |accountsList| is failure, return (failure, false).
+    1. For each |acc| in |accountsList|:
+        1. If |acc|["{{IdentityProviderAccount/picture}}"] is present, [=fetch the account picture=]
+            with |acc| and |globalObject|.
 
         Note: The [=user agent=] may choose to show UI which does not initially require fetching the
         account pictures. In these cases, the [=user agent=] may delay these fetches until they are
         needed. Because errors from these fetches are ignored, they can happen in any order.
+    1. Let |registeredAccount|, |numRegisteredAccounts| be null and 0, respectively.
+    1. Let |account| be null.
+    1. For each |acc| in |accountsList|:
+        1. Let |accState| be the result of running the [=compute account state=] algorithm given
+            |provider| and |acc|.
+        1. If |accState| is {{registered}}, set |registeredAccount| to |acc| and increase
+            |numRegisteredAccounts| by 1.
     1. Let |permission| be false.
-    1. If |accountsList|'s size is 1:
-        1. Let |account| be |accountsList|[0].
-        1. Let |accountState| be the result of running the [=compute the connection status=] algorithm
+    1. If |mediation| is not "{{CredentialMediationRequirement/required}}", |requiresUserMediation|
+        is false, and |numRegisteredAccounts| is equal to 1:
+        1. Set |account| to |registeredAccount| and |accountState| to the result of running
+            [=compute account state=] algorithm given |provider| and |account|. When doing this,
+            the user agent MAY show some UI to the user indicating that they are being
+            auto-reauthenticated.
+    1. Otherwise, if |mediation| is "{{CredentialMediationRequirement/silent}}", return failure.
+    1. Otherwise, if |accountsList|'s size is 1:
+        1. Set |account| to |accountsList|[0].
+        1. Set |accountState| to the result of running the [=compute the connection status=] algorithm
             given |provider|, |account|, and |globalObject|.
-        1. If |accountState| is [=compute the connection status/disconnected=], set |permission|
-            to the result of running [=request permission to sign-up=] algorithm with |account|,
-            |config|, |provider|, and |globalObject|.
+        1. If |accountState| is [=compute the connection status/disconnected=],
+            let |permission| be the result of running [=request permission to sign-up=] algorithm
+            with |account|, |accountState|, |config|, |provider|, and |globalObject|.
         1. Otherwise, show a dialog to request user permission to sign in via |account|, and set the
             result in |permission|.
     1. Otherwise:
-        1. Let |account| be the result of running the [=select an account=] from the
+        1. Set |account| to the result of running the [=select an account=] from the
             |accountsList|.
-        1. If |account| is failure, return failure.
-        1. Let |accountState| be the result of running the [=compute the connection status=] algorithm
+        1. If |account| is failure, return (failure, true).
+        1. Set |accountState| to the result of running the [=compute the connection status=] algorithm
             given |provider| and |account|.
         1. If |accountState| is [=compute the connection status/disconnected=]:
             1. Let |permission| be the result of running the [=request permission to sign-up=]
                 algorithm with |account|, |config|, |provider|, and |globalObject|.
         1. Otherwise, set |permission| to true.
-    1. Wait until the [=user agent=]'s dialog is closed.
-    1. If |permission| is false, return failure.
+    1. Wait until the [=user agent=]'s dialogs requesting for user choice or permission to be
+        closed, if any are created in the previous steps.
+    1. Assert: |account| is not null.
+    1. If |permission| is false, then return (failure, true).
     1. Let |credential| be the result of running the [=fetch an identity assertion=] algorithm with
         |account|'s {{IdentityProviderAccount/id}}, |provider|, |config|, and
         |globalObject|.
