@@ -498,12 +498,14 @@ algorithm is invoked, the user agent MUST execute the following steps. This retu
         |options|["{{CredentialRequestOptions/mediation}}"], and |globalObject|.
     1. If |credential| is a pair:
         1. Let |throwImmediately| be the value of the second element of the pair.
-        1. If |throwImmediately| is false, and this <dfn>promise rejection
-            delay</dfn> was not disabled by [=setdelayenabled|user agent
-            automation=], the user agent SHOULD wait a random amount of time
-            before the next step, unless it has implemented another way to
-            prevent exposing to the RP whether the user has an account logged
-            in to the RP.
+        1. The user agent SHOULD wait a random amount of time
+            before the next step if all of the following conditions hold:
+            * |throwImmediately| is false
+            * The <dfn>promise rejection delay</dfn> was not disabled by
+                [=setdelayenabled|user agent automation=]
+            * The user agent has not implemented another way to prevent
+                exposing to the RP whether the user has an account logged
+                in to the RP
 
             Note: The intention here is as follows. If we resolved the promise immediately,
                 then an RP could infer that no dialog was shown because the promise was
@@ -524,7 +526,7 @@ algorithm is invoked, the user agent MUST execute the following steps. This retu
 The <a>create an IdentityCredential</a> algorithm invokes the various FedCM fetches, shows the user
 agent UI, and creates the {{IdentityCredential}} that is then returned to the [=RP=].
 
-<div algorithm>
+<div algorithm="create an IdentityCredential">
 To <dfn>create an IdentityCredential</dfn> given an {{IdentityProviderConfig}}
 |provider|, a {{CredentialRequestOptions/mediation}} |mediation|, and a
 |globalObject|, run the following steps. This returns an {{IdentityCredential}}
@@ -1572,8 +1574,9 @@ The [=remote end steps=] are:
 1. Let |list| be an empty list.
 
 1. For each |account| in |accounts|:
-    1. Let |accountState| be the result of running the [=compute account state=]
-        algorithm given |account|
+    1. Let |accountState| be the result of running the [=compute the connection status=]
+        algorithm given |account| and the {{IdentityProviderConfig}} of the IDP
+        |account| belongs to
     1. [=list/Append=] a [=dictionary=] to |list| with the following properties:
         1. `accountId` set to the account's {{IdentityProviderAccount/id}}
         1. `email` set to the account's {{IdentityProviderAccount/email}}
@@ -1581,11 +1584,11 @@ The [=remote end steps=] are:
         1. `givenName` set to the account's {{IdentityProviderAccount/given_name}},
             if present
         1. `pictureUrl` set to the account's {{IdentityProviderAccount/picture}},
-            if present.
+            if present
         1. `idpConfigUrl` set to the {{IdentityProviderConfig/configURL}} of the
             IDP this account belongs to
-        1. `loginState` to `"SignUp"` if |accountState|'s {{AccountState/registration
-            state}} is {{unregistered}} and `"SignIn"` otherwise
+        1. `loginState` to `"SignUp"` if |accountState| is [=compute the connection status/disconnected=]
+            and `"SignIn"` otherwise
         1. `termsOfServiceUrl` to the {{IdentityProviderClientMetadata/terms_of_service_url}}
             if one was provided and the `loginState` is `"SignUp"`, otherwise {{undefined}}
         1. `privacyPolicyUrl` to the {{IdentityProviderClientMetadata/privacy_policy_url}}
