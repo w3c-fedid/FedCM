@@ -453,7 +453,8 @@ dictionary IdentityProviderConfig {
     :   <b>{{IdentityProviderConfig/loginHint}}</b>
     ::  A string representing the login hint corresponding to an account which the RP wants the user
         agent to show to the user. If provided, the user agent will not show accounts which do not
-        match this login hint value.
+        match this login hint value. It generally matches some attribute from the desired
+        {{IdentityProviderAccount}}.
 </dl>
 
 <!-- ============================================================ -->
@@ -1129,7 +1130,7 @@ This specification introduces the {{IdentityUserInfo}} dictionary as well as the
   [Exposed=Window, SecureContext] dictionary IdentityUserInfo {
     USVString email;
     USVString name;
-    USVString given_name;
+    USVString givenName;
     USVString picture;
   };
 
@@ -1139,10 +1140,31 @@ This specification introduces the {{IdentityUserInfo}} dictionary as well as the
 </pre>
 
 An {{IdentityUserInfo}} represents user account information from a user. This information is exposed
-to the [=IDP=] once the user has already used the FedCM API to login in the [=RP=]. The information
-matches what is received from the <a>accounts list endpoint</a>. The [=IDP=] can obtain this
-information by invoking the {{IdentityProvider/getUserInfo()}} static method from an iframe matching
-the [=/origin=] of its {{IdentityProviderConfig/configURL}}.
+to the [=IDP=] once the user has already used the FedCM API to login in the [=RP=]. That is, it is
+exposed when there exists an account |account| such that the the [=connected accounts set=] [=list/contains=]
+the triple ([=RP=], [=IDP=], |account|). The information matches what is received from the
+<a>accounts list endpoint</a>. The [=IDP=] can obtain this information by invoking the
+{{IdentityProvider/getUserInfo()}} static method from an iframe matching the [=/origin=] of its
+{{IdentityProviderConfig/configURL}}.
+
+<div class="example">
+```js
+const user_info = await IdentityProvider.getUserInfo({
+    configUrl: "https://idp.example/fedcm.json",
+    clientId: "client1234"
+});
+
+if (user_info.length > 0) {
+  // It's up to the IDP regarding how to display the returned accounts.
+  // Accounts are sorted based on RP registration status.
+  const name = user_info[0].name;
+  const given_name = user_info[0].given_name;
+  const display_name = given_name ? given_name : name;
+  const picture = user_info[0].picture;
+  const email = user_info[0].email;
+}
+```
+</div>
 
 <div algorithm="getUserInfo">
 When invoking the {{IdentityProvider/getUserInfo()}} method given an {{IdentityProviderConfig}}
@@ -1152,6 +1174,11 @@ When invoking the {{IdentityProvider/getUserInfo()}} method given an {{IdentityP
     1. Let |document| be |globalObject|'s [=associated Document=].
     1. If |document| is not [=allowed to use=] the [=identity-credentials-get=]
         [=policy-controlled feature=], throw a "{{NotAllowedError}}" {{DOMException}}.
+    1. If there does not exist an account |account| such that [=compute the connection status=] of
+        |provider|, |account|, and |globalObject| returns
+        [=compute the connection status/connected=], then throw a new "{{NetworkError}}"
+        {{DOMException}}. This check can be performed by iterating over the
+        [=connected accounts set=] or by keeping a separate data structure to make this lookup fast.
     1. Let |configUrl| be the result of running [=parse url=] with |provider|'s
         {{IdentityProviderConfig/configURL}} and |globalObject|.
     1. If |configUrl| is failure, throw an "{{InvalidStateError}}" {{DOMException}}.
@@ -1194,7 +1221,7 @@ When invoking the {{IdentityProvider/getUserInfo()}} method given an {{IdentityP
                 :: |account|["{{IdentityProviderAccount/email}}"]   
                 :  {{IdentityUserInfo/name}}
                 :: |account|["{{IdentityProviderAccount/name}}"]   
-                :  {{IdentityUserInfo/given_name}}
+                :  {{IdentityUserInfo/givenName}}
                 :: |account|["{{IdentityProviderAccount/given_name}}"]   
                 :  {{IdentityUserInfo/picture}}
                 :: |account|["{{IdentityProviderAccount/picture}}"]
