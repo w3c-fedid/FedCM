@@ -567,7 +567,7 @@ the exception thrown.
         and |globalObject|.
     1. If |provider|'s {{IdentityProviderConfig/loginHint}} is not empty:
         1. For every |account| in |accountList|, remove |account| from |accountList| if |account|'s
-            {{IdentityProviderAccount/hints}} does not [=list/contain=] |provider|'s
+            {{IdentityProviderAccount/login_hints}} does not [=list/contain=] |provider|'s
             {{IdentityProviderConfig/loginHint}}.
     1. If |accountsList| is failure, return (failure, false).
     1. For each |acc| in |accountsList|:
@@ -838,7 +838,7 @@ dictionary IdentityProviderAccount {
   USVString given_name;
   USVString picture;
   sequence<USVString> approved_clients;
-  sequence<DOMString> hints;
+  sequence<DOMString> login_hints;
 };
 dictionary IdentityProviderAccountList {
   sequence<IdentityProviderAccount> accounts;
@@ -1127,7 +1127,7 @@ This specification introduces the {{IdentityUserInfo}} dictionary as well as the
 {{IdentityProvider}} interface:
 
 <pre class="idl">
-  [Exposed=Window, SecureContext] dictionary IdentityUserInfo {
+  dictionary IdentityUserInfo {
     USVString email;
     USVString name;
     USVString givenName;
@@ -1141,7 +1141,7 @@ This specification introduces the {{IdentityUserInfo}} dictionary as well as the
 
 An {{IdentityUserInfo}} represents user account information from a user. This information is exposed
 to the [=IDP=] once the user has already used the FedCM API to login in the [=RP=]. That is, it is
-exposed when there exists an account |account| such that the the [=connected accounts set=] [=list/contains=]
+exposed when there exists an account |account| such that the [=connected accounts set=] [=list/contains=]
 the triple ([=RP=], [=IDP=], |account|). The information matches what is received from the
 <a>accounts list endpoint</a>. The [=IDP=] can obtain this information by invoking the
 {{IdentityProvider/getUserInfo()}} static method from an iframe matching the [=/origin=] of its
@@ -1149,19 +1149,18 @@ the triple ([=RP=], [=IDP=], |account|). The information matches what is receive
 
 <div class="example">
 ```js
-const user_info = await IdentityProvider.getUserInfo({
+const userInfo = await IdentityProvider.getUserInfo({
     configUrl: "https://idp.example/fedcm.json",
     clientId: "client1234"
 });
 
-if (user_info.length > 0) {
+if (userInfo.length > 0) {
   // It's up to the IDP regarding how to display the returned accounts.
-  // Accounts are sorted based on RP registration status.
-  const name = user_info[0].name;
-  const given_name = user_info[0].given_name;
-  const display_name = given_name ? given_name : name;
-  const picture = user_info[0].picture;
-  const email = user_info[0].email;
+  const name = userInfo[0].name;
+  const givenName = userInfo[0].givenName;
+  const displayName = givenName ? givenName : name;
+  const picture = userInfo[0].picture;
+  const email = userInfo[0].email;
 }
 ```
 </div>
@@ -1186,8 +1185,6 @@ When invoking the {{IdentityProvider/getUserInfo()}} method given an {{IdentityP
         throw an "{{InvalidStateError}}" {{DOMException}}.
     1. Run a [[!CSP]] check with a [[CSP#directive-connect-src|connect-src]] directive on the URL
         passed as |configUrl|. If it fails, throw a new "{{NetworkError}}" {{DOMException}}.
-    1. If there exists a pending {{IdentityProvider/getUserInfo()}} call for this |document|, throw
-        a new "{{AbortError}}" {{DOMException}}.
     1. If |globalObject|'s [=Window/navigable=] is a [=/top-level traversable=], throw a new
         "{{NetworkError}}" {{DOMException}}.
     1. If the user has disabled the FedCM API on the |globalObject|'s [=Window/navigable=]'s
@@ -1206,7 +1203,8 @@ When invoking the {{IdentityProvider/getUserInfo()}} method given an {{IdentityP
                 [=list/contain=] |provider|'s {{IdentityProviderConfig/clientId}}, continue.
             
                 Note: this allows the [=IDP=] to override whether an account is a returning account.
-                This could be useful for instance in cases where the user revokes the account.
+                This could be useful for instance in cases where the user has revoked the account
+                out of band.
             
             1. [=Compute the connection status=] of |provider|, |account|, and |globalObject|. If the
                 result is [=compute the connection status/connected=], set |hasReturningAccount| to
@@ -1443,7 +1441,7 @@ Every {{IdentityProviderAccount}} is expected to have members with the following
     ::  A list of [=RP=]s (that gets matched against the requesting {{IdentityProviderConfig/clientId}}) this account is already registered with.
         Used in the [=request permission to sign-up=] to allow the [=IDP=] to control whether to show
         the Privacy Policy and the Terms of Service.
-    :   <dfn>hints</dfn>
+    :   <dfn>login_hints</dfn>
     ::  A list of strings which correspond to all of the login hints which match with this account.
         An [=RP=] can use the {{IdentityProviderConfig/loginHint}} to request that only an account
         matching a given value is shown to the user.
@@ -1461,7 +1459,7 @@ For example:
    "email": "john_doe@idp.example",
    "picture": "https://idp.example/profile/123",
    "approved_clients": ["123", "456", "789"],
-   "hints": ["john_doe"]
+   "login_hints": ["john_doe"]
   }, {
    "id": "5678",
    "given_name": "Johnny",
@@ -1469,7 +1467,7 @@ For example:
    "email": "johnny@idp.example",
    "picture": "https://idp.example/profile/456",
    "approved_clients": ["abc", "def", "ghi"],
-   "hints": ["email=johhny@idp.example", "id=5678"]
+   "login_hints": ["email=johhny@idp.example", "id=5678"]
   }]
 }
 ```
@@ -2251,8 +2249,7 @@ path: img/mock5.svg
 
 Secondary use is the use of collected information about an individual without the individual's
 perimssion for a purpose different from that for which the information was collected. This attack
-happens when [=IDP=]s misuse the the information collected to enable sign-in for other
-purposes.
+happens when [=IDP=]s misuse the information collected to enable sign-in for other purposes.
 
 Existing federation protocols require that the [=IDP=] know which service is requesting a token
 in order to allow identity federation. Identity providers can use this fact to build profiles of
