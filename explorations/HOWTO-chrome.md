@@ -146,3 +146,15 @@ const {token} = await navigator.credentials.get({
 ```
 
 Now, the browser UI will be different based on the value provided.
+
+### IdP Sign-in Status API
+
+In order to use the IdP Sign-in Status API:
+
+1. Enable the experimental feature `FedCM with FedCM IDP sign-in status` in `chrome://flags`.
+2. When the user logs-in to the IdP, use the following HTTP header `IdP-SignIn-Status: action=signin`.
+3. When the user logs-out of all of their accounts in the IdP, use the following HTTP header `IdP-SignIn-Status: action=signed-out`.
+4. Add a `signin_url": "/idp_login.html` property to the `configURL` configuration. 
+5. The browser is going load the `signin_url` when the user is signed-out of the IdP.
+6. Call `IdentityProvider.close()` when the user is done logging-in to the IdP.
+
