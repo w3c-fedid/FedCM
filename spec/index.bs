@@ -124,7 +124,7 @@ could be implemented.
   let nonce;
   async function login() {
     try {
-      // Assume we have a method returning a random number. Store the value in a variable which can
+      // Assume there is a method returning a random number. Store the value in a variable which can
       // later be used to check against the value in the token returned.
       nonce = random();
       // Prompt the user to select an account from the IDP to use for
@@ -302,7 +302,7 @@ const credential = await navigator.credentials.get({
 ```
 </div>
 
-For fetches that are sent with cookies we include unpartitioned cookies,
+For fetches that are sent with cookies, unpartitioned cookies are included,
 as if the resource was loaded as a same-origin request, e.g.
 regardless of the
 [SameSite](https://httpwg.org/http-extensions/draft-ietf-httpbis-rfc6265bis.html#name-the-samesite-attribute-2)
@@ -514,13 +514,12 @@ algorithm is invoked, the user agent MUST execute the following steps. This retu
                 exposing to the RP whether the user has an account logged
                 in to the RP
 
-            Note: The intention here is as follows. If we resolved the promise immediately,
+            Note: The intention here is as follows. If the the promise was resolved immediately,
                 then an RP could infer that no dialog was shown because the promise was
                 resolved quickly, after just the network delay. A shown dialog implies
                 that the user is logged in to one or more accounts of the IDP. To prevent
-                this information leakage, especially without user confirmation, we specify
-                this delay. However, UAs may have different UI approaches here and prevent
-                it in a different way.
+                this information leakage, especially without user confirmation, this delay is specified.
+                However, UAs may have different UI approaches here and prevent it in a different way.
         1. [=Queue a global task=] on the [=DOM manipulation task source=]
             to throw a new "{{NetworkError}}" {{DOMException}}.
     1. Otherwise, return |credential|.
@@ -562,8 +561,8 @@ the exception thrown.
     1. For each |acc| in |accountsList|:
         1. Let |accState| be the result of running the [=compute the connection status=] algorithm given
             |provider| and |acc|.
-        1. If |accState| is {{registered}}, set |registeredAccount| to |acc| and increase
-            |numRegisteredAccounts| by 1.
+        1. If |accState| is [=compute the connection status/connected=], set |registeredAccount| to
+            |acc| and increase |numRegisteredAccounts| by 1.
     1. Let |permission| be false.
     1. If |mediation| is not "{{CredentialMediationRequirement/required}}", |requiresUserMediation|
         is false, and |numRegisteredAccounts| is equal to 1:
@@ -709,8 +708,8 @@ or failure.
     1. If |configInWellKnown| is true, return |config|. Otherwise, return failure.
 </div>
 
-NOTE: We use a two-tier file system in order to prevent the [=IDP=] from easily determining the [=RP=]
-that a user is visiting by encoding the information in the config file path. We solve this issue by
+NOTE: a two-tier file system is used in order to prevent the [=IDP=] from easily determining the [=RP=]
+that a user is visiting by encoding the information in the config file path. This issue is solved by
 requiring a [=well-known file=] to be on the root of the [=IDP=]. The config file itself can be anywhere, but
 it will not be used if the user agent does not find it in the [=well-known file=]. This allows the [=IDP=]
 to keep their actual config files on an arbitary path while allowing the user agent to prevent config file
@@ -800,7 +799,7 @@ To <dfn>fetch the accounts list</dfn> given an {{IdentityProviderAPIConfig}} |co
             store the result in |accountsList|.
         1. If one of the previous two steps threw an exception, set |accountsList| to failure.
 
-        Issue: We should validate the accounts list returned here for repeated ids, as described
+        Issue: the accounts list returned here should be validated for repeated ids, as described
         [here](https://github.com/fedidcg/FedCM/issues/336).
 
     1. Wait for |accountsList| to be set.
@@ -958,16 +957,16 @@ an {{IdentityProviderAPIConfig}} |config|, an {{IdentityProviderConfig}} |provid
     1. Assert: These steps are running [=in parallel=].
     1. Let |metadata| be the result of running [=fetch the client metadata=] with |config|,
         |provider|, and |globalObject|.
-    1. If |metadata| is not failure, |metadata|["{{IdentityProviderClientMetadata/privacy_policy_url}}"]
-        is defined and the |provider|'s {{IdentityProviderConfig/clientId}} is not in the list of
-        |account|["{{IdentityProviderAccount/approved_clients}}"], then display the
-        |metadata|["{{IdentityProviderClientMetadata/privacy_policy_url}}"] link.
-    1. If |metadata| is not failure, |metadata|["{{IdentityProviderClientMetadata/terms_of_service_url}}"]
-        is defined, and the |provider|'s {{IdentityProviderConfig/clientId}} is not in the list of
-        |account|["{{IdentityProviderAccount/approved_clients}}"], then display the
-        |metadata|["{{IdentityProviderClientMetadata/terms_of_service_url}}"] link.
     1. Prompt the user to gather explicit intent to create an account. The user agent MAY use the
-        {{IdentityProviderBranding}} to inform the style choices of its UI.
+        {{IdentityProviderBranding}} to inform the style choices of its UI. Additionally:
+        1. If |metadata| is not failure, |metadata|["{{IdentityProviderClientMetadata/privacy_policy_url}}"]
+            is defined and the |provider|'s {{IdentityProviderConfig/clientId}} is not in the list of
+            |account|["{{IdentityProviderAccount/approved_clients}}"], then the user agent MUST display
+            the |metadata|["{{IdentityProviderClientMetadata/privacy_policy_url}}"] link.
+        1. If |metadata| is not failure, |metadata|["{{IdentityProviderClientMetadata/terms_of_service_url}}"]
+            is defined, and the |provider|'s {{IdentityProviderConfig/clientId}} is not in the list of
+            |account|["{{IdentityProviderAccount/approved_clients}}"], then the user agent MUST display
+            the |metadata|["{{IdentityProviderClientMetadata/terms_of_service_url}}"] link.
     1. If the user does not grant permission, return false.
     1. [=Create a connection between the RP and the IdP account=] with |provider|, |account|, and
         |globalObject|.
@@ -1041,7 +1040,7 @@ To <dfn>parse url</dfn> given a {{USVString}} |stringUrl|, a |globalObject|, and
     1. [=Queue a global task=] on the [=DOM manipulation task source=] given |globalObject| to set
         |configUrl| to the result of running [=url parser=] with |stringUrl| and |baseUrl|.
 
-        Note: We queue a task since the [=url parser=] needs to be run within a task, not
+        Note: a task is queued since the [=url parser=] needs to be run within a task, not
         [=in parallel=].
 
     1. Wait for |configUrl| to be set.
@@ -1055,7 +1054,7 @@ To <dfn>fetch request</dfn> given a [=/request=] |request|, |globalObject|, and 
       1. [=Fetch=] |request| with <a spec=fetch>processResponseConsumeBody</a> set to
           |processResponseConsumeBody|.
 
-  Note: We queue a task since the [=fetch=] needs to be run within a task, not [=in parallel=].
+  Note: a task is queued since the [=fetch=] needs to be run within a task, not [=in parallel=].
 </div>
 
 <div algorithm>
@@ -1068,8 +1067,8 @@ When <dfn>computing the manifest URL</dfn> given an {{IdentityProviderConfig}} |
         URL), |globalObject|, and |configUrl| (the base URL).
     1. Wait until |manifestUrl| is set.
 
-        Note: This means the we allow passing the manifest string as either an absolute or relative
-        URL.
+        Note: This means that passing the manifest string as either an absolute or relative URL is
+        allowed.
 
     1. If |manifestUrl| is failure, return failure.
     1. If |manifestUrl| is not [=same origin=] with |configUrl|, return failure.
@@ -1124,11 +1123,11 @@ network requests performed:
 ## The Well-Known File ## {#idp-api-well-known}
 <!-- ============================================================ -->
 
-NOTE: The browser uses the [=well-known file=] to prevent the following attack described [here](https://github.com/fedidcg/FedCM/issues/230#issuecomment-1067029200).
+NOTE: The browser uses the [=well-known file=] to prevent [[#manifest-fingerprinting]].
 
 The [=IDP=] exposes a <dfn>well-known file</dfn> in a pre-defined location, specifically at the "web-identity" file at the [=IDPs=]'s path ".well-known".
 
-The [=well-known file=] is fetched:
+The [=well-known file=] is fetched in the [=fetch the config file=] algorithm:
 
 (a) **without** cookies,
 (b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`, and
@@ -1162,7 +1161,7 @@ The {{IdentityProviderWellKnown}} JSON object has the following semantics:
 The <dfn>config file</dfn> serves as a discovery device to other endpoints provided by the
 [=IDP=].
 
-The [=config file=] is fetched:
+The [=config file=] is fetched in the [=fetch the config file=] algorithm:
 
 (a) **without** cookies,
 (b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`,
@@ -1268,7 +1267,8 @@ For example:
 
 The <dfn>accounts list endpoint</dfn> provides the list of accounts the user has at the [=IDP=].
 
-The [=accounts list endpoint=] is fetched
+The [=accounts list endpoint=] is fetched in the [=fetch the accounts list=] algorithm:
+
 (a) **with** [=IDP=] cookies,
 (b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`,
 (c) **without** revealing the [=RP=] in the <a http-header>Origin</a> or
@@ -1340,7 +1340,8 @@ Issue: [Clarify](https://github.com/fedidcg/FedCM/issues/218) the IDP API respon
 
 The <dfn>client metadata endpoint</dfn> provides metadata about [=RP=]s.
 
-The [=client metadata endpoint=] is fetched
+The [=client metadata endpoint=] is fetched in the [=fetch the client metadata=] algorithm:
+
 (a) **without** cookies,
 (b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`,
 (c) **with** the [=RP=]'s origin in the <a http-header>Origin</a> header, and
@@ -1388,7 +1389,7 @@ For example:
 
 The <dfn>identity assertion endpoint</dfn> is responsible for minting a new token that contains signed assertions about the user.
 
-The [=identity assertion endpoint=] is fetched
+The [=identity assertion endpoint=] is fetched in the [=fetch an identity assertion=] algorithm:
 
 (a) as a **POST** request,
 (b) **with** [=IDP=] cookies,
@@ -1775,14 +1776,12 @@ rendering of this image is performed by the user agent, and as such this image c
 ## Sec-Fetch-Dest Header ## {#sec-fetch-dest-header}
 <!-- ============================================================ -->
 
-*This section is non-normative.*
-
 The FedCM API introduces several non-static endpoints on the [=IDP=], so these need to be protected
 from XSS attacks. In order to do so, the FedCM API introduces a new value for the
 <a http-header>Sec-Fetch-Dest</a> header, a [=forbidden request-header=]. The requests initiated by the FedCM API
 have a `webidentity` value for this header. The value cannot be set by random websites, so the
 [=IDP=] can be confident that the request was originated by the FedCM browser rather than sent by a
-websites trying to run an XSS attack. An [=IDP=] must to check for this header's value in the
+websites trying to run an XSS attack. An [=IDP=] needs to check for this header's value in the
 credentialed requests it receives, which ensures that the request was initiated by the user agent,
 based on the FedCM API. A malicious actor cannot spam FedCM API calls, so this is sufficient
 protection for the new [=IDP=] endpoints.
@@ -1865,7 +1864,7 @@ Based on the above, the privacy discussion makes the following assumptions:
 ## Network requests ## {#network-requests}
 <!-- ============================================================ -->
 
-We want to ensure that the FedCM fetches are all same-origin with respect to the provider specified
+This specification ensures that the FedCM fetches are all same-origin with respect to the provider specified
 by the [=RP=]. The reason for this is because fetches with cookies would use the cookies from the
 origin specified, so allowing arbitrary origins would introduce confusion and potential privacy
 issues with regards to which cookies are shared and with whom within the FedCM flow. The easiest way
@@ -1949,12 +1948,12 @@ NOTE: You can read more about the attack described
 Here, the [=RP=] includes identifies itself when fetching the manifest from the [=IDP=]. This
 coupled with the credentialed fetches that the FedCM API performs would enable the [=IDP=] to easily
 track the website that the user is visiting, without requiring any permission from the user. Our
-mitigation to this problem is to use the [[#idp-api-well-known]] file. We enforce a specifically named
-file at the root of the [=IDP=]'s domain to ensure that the file name does not introduce
+mitigation to this problem is to use the [[#idp-api-well-known]] file. The existence of a file at
+the root of the [=IDP=]'s domain is enforced to ensure that the file name does not introduce
 fingerprints about the [=RP=] being visited.
 
-The whole manifest could be in this location, but we instead choose to only point to the real
-manifest from there. This allows us to have flexibility in the future to allow a small constant
+The whole manifest could be in this location, but instead it only points to the real
+manifest from there. This allows the flexibility in the future to allow a small constant
 number of manifests, should an [=IDP=] require this in the future, instead of just a single one. It
 also helps the [=IDP=]'s implementation because they any changes to the manifest are more likely to
 be performed on a file located anywhere, as opposed to the root of the domain, which may have more
@@ -1968,7 +1967,7 @@ In the timing attack, the [=RP=] and [=IDP=] collude to allow the [=IDP=] to com
 origin, [=IDP=]'s user identity) pair without the user's permission. This attack is not deterministic:
 there is room for statistical error because it requires stitching together two separate pieces of
 information to track the user. However, it is important to mitigate this attack and ensure that
-it's economically impractical to perform. In this attack, we assume that network requests do not
+it's economically impractical to perform. In this attack, it is assumed that network requests do not
 have large fingerprinting vectors (e.g. IP addresses). These vary by [=user agent=] and are hard to
 eliminate entirely, but in general [=user agents=] are expected to address these over time. These
 bits of information tied to the network requests make the timing attack easier, making it more
@@ -2138,9 +2137,10 @@ information (for instance, if it is not a _bona fide_ IDP), because FedCM reques
 </div>
 
 Preventing tracking of users by the [=IDP=] is difficult: the [=RP=] has to be coded into the
-identity token for security reasons, such as token reuse and fraud and abuse prevention. That said,
-there have been cryptographic schemes developed to blind the [=IDP=] to the [=RP=] while still
+identity token for security reasons, such as token reuse and fraud and abuse prevention. There have
+been cryptographic schemes developed to blind the [=IDP=] to the [=RP=] while still
 preventing token reuse(see Mozilla’s [personas](https://wiki.mozilla.org/Identity/Persona_AAR)).
+These schemes have not been adopted by this specification.
 
 <div class="image">
   <pre class=include-raw>
