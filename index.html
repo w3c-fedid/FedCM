@@ -4,10 +4,9 @@
   <title>Federated Credential Management API</title>
   <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport">
   <link href="https://www.w3.org/StyleSheets/TR/2021/cg-draft" rel="stylesheet">
-  <link href="https://www.w3.org/StyleSheets/TR/2016/dark.css" media="(prefers-color-scheme: dark)" rel="stylesheet">
   <meta content="Bikeshed version 3383f409d, updated Fri Apr 28 15:49:22 2023 -0700" name="generator">
   <link href="https://fedidcg.github.io/FedCM/" rel="canonical">
-  <meta content="8a023e29e7dc6548b4e4aa33da7d74b1a84a5514" name="document-revision">
+  <meta content="03a49d1211c6c261f38d77da920c5f71ee68ca9e" name="document-revision">
 <style>
 dl.domintro dt {
     font-family: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
@@ -843,7 +842,7 @@ var.selected6 { background-color: #FFBCF2; box-shadow: 0 0 0 2px #FFBCF2; }
   <div class="head">
    <p data-fill-with="logo"><a class="logo" href="https://www.w3.org/"> <img alt="W3C" height="48" src="https://www.w3.org/StyleSheets/TR/2021/logos/W3C" width="72"> </a> </p>
    <h1 class="p-name no-ref" id="title">Federated Credential Management API</h1>
-   <p id="w3c-state"><a href="https://www.w3.org/standards/types#CG-DRAFT">Draft Community Group Report</a>, <time class="dt-updated" datetime="2023-05-24">24 May 2023</time></p>
+   <p id="w3c-state"><a href="https://www.w3.org/standards/types#CG-DRAFT">Draft Community Group Report</a>, <time class="dt-updated" datetime="2023-05-30">30 May 2023</time></p>
    <div data-fill-with="spec-metadata">
     <dl>
      <dt>This version:
@@ -994,8 +993,8 @@ permission before allowing the <a data-link-type="dfn" href="#rp" id="ref-for-rp
 connection to the user.</p>
    <p>The specification leans heavily on changes in the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent①">user agent</a> and <a data-link-type="dfn" href="#idp" id="ref-for-idp①">IDP</a> and minimally on the <a data-link-type="dfn" href="#rp" id="ref-for-rp①">RP</a>. The FedCM API provides a way to authenticate and
 fetch tokens.</p>
-   <div class="example" id="example-34e6c830">
-    <a class="self-link" href="#example-34e6c830"></a> Example showing how a website allowing for a single logged in account
+   <div class="example" id="example-67accee8">
+    <a class="self-link" href="#example-67accee8"></a> Example showing how a website allowing for a single logged in account
 could be implemented. 
 <pre class="language-html highlight"><c- p>&lt;</c-><c- f>html</c-><c- p>></c->
 <c- p>&lt;</c-><c- f>head</c-><c- p>></c->
@@ -1008,7 +1007,7 @@ could be implemented.
   <c- a>let</c-> nonce<c- p>;</c->
   <c- k>async</c-> <c- a>function</c-> login<c- p>()</c-> <c- p>{</c->
     <c- k>try</c-> <c- p>{</c->
-      <c- c1>// Assume we have a method returning a random number. Store the value in a variable which can</c->
+      <c- c1>// Assume there is a method returning a random number. Store the value in a variable which can</c->
       <c- c1>// later be used to check against the value in the token returned.</c->
       nonce <c- o>=</c-> random<c- p>();</c->
       <c- c1>// Prompt the user to select an account from the IDP to use for</c->
@@ -1169,7 +1168,7 @@ rather calls the same API indistinguishably.</p>
 <c- p>});</c->
 </pre>
    </div>
-   <p>For fetches that are sent with cookies we include unpartitioned cookies,
+   <p>For fetches that are sent with cookies, unpartitioned cookies are included,
 as if the resource was loaded as a same-origin request, e.g.
 regardless of the <a href="https://httpwg.org/http-extensions/draft-ietf-httpbis-rfc6265bis.html#name-the-samesite-attribute-2">SameSite</a> value (which is used when a resource loaded as a third-party, not first-party). This makes it easy
 for an <a data-link-type="dfn" href="#idp" id="ref-for-idp⑥">IDP</a> to adopt the FedCM API. It doesn’t introduce security issues on the API because the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑥">RP</a> cannot inspect the results from the fetches in any way.</p>
@@ -1345,13 +1344,12 @@ before the next step if all of the following conditions hold:</p>
 exposing to the RP whether the user has an account logged
 in to the RP</p>
         </ul>
-        <p class="note" role="note"><span class="marker">Note:</span> The intention here is as follows. If we resolved the promise immediately,
+        <p class="note" role="note"><span class="marker">Note:</span> The intention here is as follows. If the the promise was resolved immediately,
     then an RP could infer that no dialog was shown because the promise was
     resolved quickly, after just the network delay. A shown dialog implies
     that the user is logged in to one or more accounts of the IDP. To prevent
-    this information leakage, especially without user confirmation, we specify
-    this delay. However, UAs may have different UI approaches here and prevent
-    it in a different way.</p>
+    this information leakage, especially without user confirmation, this delay is specified.
+    However, UAs may have different UI approaches here and prevent it in a different way.</p>
        <li data-md>
         <p><a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/webappapis.html#queue-a-global-task" id="ref-for-queue-a-global-task①">Queue a global task</a> on the <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/webappapis.html#dom-manipulation-task-source" id="ref-for-dom-manipulation-task-source①">DOM manipulation task source</a> to throw a new "<code class="idl"><a data-link-type="idl" href="https://webidl.spec.whatwg.org/#networkerror" id="ref-for-networkerror①">NetworkError</a></code>" <code class="idl"><a data-link-type="idl" href="https://webidl.spec.whatwg.org/#idl-DOMException" id="ref-for-idl-DOMException①">DOMException</a></code>.</p>
       </ol>
@@ -1401,7 +1399,7 @@ needed. Because errors from these fetches are ignored, they can happen in any or
        <li data-md>
         <p>Let <var>accState</var> be the result of running the <a data-link-type="dfn" href="#compute-the-connection-status" id="ref-for-compute-the-connection-status">compute the connection status</a> algorithm given <var>provider</var> and <var>acc</var>.</p>
        <li data-md>
-        <p>If <var>accState</var> is <code class="idl"><a data-link-type="idl">registered</a></code>, set <var>registeredAccount</var> to <var>acc</var> and increase <var>numRegisteredAccounts</var> by 1.</p>
+        <p>If <var>accState</var> is <a data-link-type="dfn" href="#compute-the-connection-status-connected" id="ref-for-compute-the-connection-status-connected①">connected</a>, set <var>registeredAccount</var> to <var>acc</var> and increase <var>numRegisteredAccounts</var> by 1.</p>
       </ol>
      <li data-md>
       <p>Let <var>permission</var> be false.</p>
@@ -1594,7 +1592,7 @@ in <var>config</var>.</p>
       <p>If <var>configInWellKnown</var> is true, return <var>config</var>. Otherwise, return failure.</p>
     </ol>
    </div>
-   <p class="note" role="note"><span class="marker">NOTE:</span> We use a two-tier file system in order to prevent the <a data-link-type="dfn" href="#idp" id="ref-for-idp①④">IDP</a> from easily determining the <a data-link-type="dfn" href="#rp" id="ref-for-rp①⑤">RP</a> that a user is visiting by encoding the information in the config file path. We solve this issue by
+   <p class="note" role="note"><span class="marker">NOTE:</span> a two-tier file system is used in order to prevent the <a data-link-type="dfn" href="#idp" id="ref-for-idp①④">IDP</a> from easily determining the <a data-link-type="dfn" href="#rp" id="ref-for-rp①⑤">RP</a> that a user is visiting by encoding the information in the config file path. This issue is solved by
 requiring a <a data-link-type="dfn" href="#well-known-file" id="ref-for-well-known-file②">well-known file</a> to be on the root of the <a data-link-type="dfn" href="#idp" id="ref-for-idp①⑤">IDP</a>. The config file itself can be anywhere, but
 it will not be used if the user agent does not find it in the <a data-link-type="dfn" href="#well-known-file" id="ref-for-well-known-file③">well-known file</a>. This allows the <a data-link-type="dfn" href="#idp" id="ref-for-idp①⑥">IDP</a> to keep their actual config files on an arbitary path while allowing the user agent to prevent config file
 path manipulation to fingerprint (for instance, by including the RP in the path). See <a href="#manifest-fingerprinting">§ 7.3.1 Manifest Fingerprinting</a>.</p>
@@ -1687,7 +1685,7 @@ store the result in <var>accountsList</var>.</p>
        <li data-md>
         <p>If one of the previous two steps threw an exception, set <var>accountsList</var> to failure.</p>
       </ol>
-      <p class="issue" id="issue-db10ab61"><a class="self-link" href="#issue-db10ab61"></a> We should validate the accounts list returned here for repeated ids, as described <a href="https://github.com/fedidcg/FedCM/issues/336">here</a>.</p>
+      <p class="issue" id="issue-82c62b7c"><a class="self-link" href="#issue-82c62b7c"></a> the accounts list returned here should be validated for repeated ids, as described <a href="https://github.com/fedidcg/FedCM/issues/336">here</a>.</p>
      <li data-md>
       <p>Wait for <var>accountsList</var> to be set.</p>
      <li data-md>
@@ -1875,13 +1873,17 @@ an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderapic
      <li data-md>
       <p>Let <var>metadata</var> be the result of running <a data-link-type="dfn" href="#fetch-the-client-metadata" id="ref-for-fetch-the-client-metadata">fetch the client metadata</a> with <var>config</var>, <var>provider</var>, and <var>globalObject</var>.</p>
      <li data-md>
-      <p>If <var>metadata</var> is not failure, <var>metadata</var>["<code class="idl"><a data-link-type="idl" href="#dom-identityproviderclientmetadata-privacy_policy_url" id="ref-for-dom-identityproviderclientmetadata-privacy_policy_url">privacy_policy_url</a></code>"]
-is defined and the <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-clientid" id="ref-for-dom-identityproviderconfig-clientid②">clientId</a></code> is not in the list of <var>account</var>["<code class="idl"><a data-link-type="idl" href="#dom-identityprovideraccount-approved_clients" id="ref-for-dom-identityprovideraccount-approved_clients①">approved_clients</a></code>"], then display the <var>metadata</var>["<code class="idl"><a data-link-type="idl" href="#dom-identityproviderclientmetadata-privacy_policy_url" id="ref-for-dom-identityproviderclientmetadata-privacy_policy_url①">privacy_policy_url</a></code>"] link.</p>
-     <li data-md>
-      <p>If <var>metadata</var> is not failure, <var>metadata</var>["<code class="idl"><a data-link-type="idl" href="#dom-identityproviderclientmetadata-terms_of_service_url" id="ref-for-dom-identityproviderclientmetadata-terms_of_service_url">terms_of_service_url</a></code>"]
-is defined, and the <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-clientid" id="ref-for-dom-identityproviderconfig-clientid③">clientId</a></code> is not in the list of <var>account</var>["<code class="idl"><a data-link-type="idl" href="#dom-identityprovideraccount-approved_clients" id="ref-for-dom-identityprovideraccount-approved_clients②">approved_clients</a></code>"], then display the <var>metadata</var>["<code class="idl"><a data-link-type="idl" href="#dom-identityproviderclientmetadata-terms_of_service_url" id="ref-for-dom-identityproviderclientmetadata-terms_of_service_url①">terms_of_service_url</a></code>"] link.</p>
-     <li data-md>
-      <p>Prompt the user to gather explicit intent to create an account. The user agent MAY use the <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderbranding" id="ref-for-dictdef-identityproviderbranding①">IdentityProviderBranding</a></code> to inform the style choices of its UI.</p>
+      <p>Prompt the user to gather explicit intent to create an account. The user agent MAY use the <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderbranding" id="ref-for-dictdef-identityproviderbranding①">IdentityProviderBranding</a></code> to inform the style choices of its UI. Additionally:</p>
+      <ol>
+       <li data-md>
+        <p>If <var>metadata</var> is not failure, <var>metadata</var>["<code class="idl"><a data-link-type="idl" href="#dom-identityproviderclientmetadata-privacy_policy_url" id="ref-for-dom-identityproviderclientmetadata-privacy_policy_url">privacy_policy_url</a></code>"]
+is defined and the <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-clientid" id="ref-for-dom-identityproviderconfig-clientid②">clientId</a></code> is not in the list of <var>account</var>["<code class="idl"><a data-link-type="idl" href="#dom-identityprovideraccount-approved_clients" id="ref-for-dom-identityprovideraccount-approved_clients①">approved_clients</a></code>"], then the user agent MUST display
+the <var>metadata</var>["<code class="idl"><a data-link-type="idl" href="#dom-identityproviderclientmetadata-privacy_policy_url" id="ref-for-dom-identityproviderclientmetadata-privacy_policy_url①">privacy_policy_url</a></code>"] link.</p>
+       <li data-md>
+        <p>If <var>metadata</var> is not failure, <var>metadata</var>["<code class="idl"><a data-link-type="idl" href="#dom-identityproviderclientmetadata-terms_of_service_url" id="ref-for-dom-identityproviderclientmetadata-terms_of_service_url">terms_of_service_url</a></code>"]
+is defined, and the <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-clientid" id="ref-for-dom-identityproviderconfig-clientid③">clientId</a></code> is not in the list of <var>account</var>["<code class="idl"><a data-link-type="idl" href="#dom-identityprovideraccount-approved_clients" id="ref-for-dom-identityprovideraccount-approved_clients②">approved_clients</a></code>"], then the user agent MUST display
+the <var>metadata</var>["<code class="idl"><a data-link-type="idl" href="#dom-identityproviderclientmetadata-terms_of_service_url" id="ref-for-dom-identityproviderclientmetadata-terms_of_service_url①">terms_of_service_url</a></code>"] link.</p>
+      </ol>
      <li data-md>
       <p>If the user does not grant permission, return false.</p>
      <li data-md>
@@ -1967,7 +1969,7 @@ and store the result in <var>metadata</var>.</p>
       <p>Let <var>configUrl</var> be null.</p>
      <li data-md>
       <p><a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/webappapis.html#queue-a-global-task" id="ref-for-queue-a-global-task②">Queue a global task</a> on the <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/webappapis.html#dom-manipulation-task-source" id="ref-for-dom-manipulation-task-source②">DOM manipulation task source</a> given <var>globalObject</var> to set <var>configUrl</var> to the result of running <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-parser" id="ref-for-concept-url-parser">url parser</a> with <var>stringUrl</var> and <var>baseUrl</var>.</p>
-      <p class="note" role="note"><span class="marker">Note:</span> We queue a task since the <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-parser" id="ref-for-concept-url-parser①">url parser</a> needs to be run within a task, not <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/infrastructure.html#in-parallel" id="ref-for-in-parallel③">in parallel</a>.</p>
+      <p class="note" role="note"><span class="marker">Note:</span> a task is queued since the <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-parser" id="ref-for-concept-url-parser①">url parser</a> needs to be run within a task, not <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/infrastructure.html#in-parallel" id="ref-for-in-parallel③">in parallel</a>.</p>
      <li data-md>
       <p>Wait for <var>configUrl</var> to be set.</p>
      <li data-md>
@@ -1984,7 +1986,7 @@ and store the result in <var>metadata</var>.</p>
         <p><a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-fetch" id="ref-for-concept-fetch">Fetch</a> <var>request</var> with <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#process-response-end-of-body" id="ref-for-process-response-end-of-body">processResponseConsumeBody</a> set to <var>processResponseConsumeBody</var>.</p>
       </ol>
     </ol>
-    <p class="note" role="note"><span class="marker">Note:</span> We queue a task since the <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-fetch" id="ref-for-concept-fetch①">fetch</a> needs to be run within a task, not <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/infrastructure.html#in-parallel" id="ref-for-in-parallel④">in parallel</a>.</p>
+    <p class="note" role="note"><span class="marker">Note:</span> a task is queued since the <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-fetch" id="ref-for-concept-fetch①">fetch</a> needs to be run within a task, not <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/infrastructure.html#in-parallel" id="ref-for-in-parallel④">in parallel</a>.</p>
    </div>
    <div class="algorithm" data-algorithm="computing the manifest URL">
      When <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="computing-the-manifest-url">computing the manifest URL</dfn> given an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderconfig" id="ref-for-dictdef-identityproviderconfig①①">IdentityProviderConfig</a></code> <var>provider</var>, a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string">string</a> <var>manifestString</var>, and <var>globalObject</var>, perform the following steps. This returns a <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url" id="ref-for-concept-url②">URL</a> or failure. 
@@ -1996,8 +1998,8 @@ and store the result in <var>metadata</var>.</p>
 URL), <var>globalObject</var>, and <var>configUrl</var> (the base URL).</p>
      <li data-md>
       <p>Wait until <var>manifestUrl</var> is set.</p>
-      <p class="note" role="note"><span class="marker">Note:</span> This means the we allow passing the manifest string as either an absolute or relative
-URL.</p>
+      <p class="note" role="note"><span class="marker">Note:</span> This means that passing the manifest string as either an absolute or relative URL is
+allowed.</p>
      <li data-md>
       <p>If <var>manifestUrl</var> is failure, return failure.</p>
      <li data-md>
@@ -2077,9 +2079,9 @@ network requests performed:</p>
       <td>yes
    </table>
    <h3 class="heading settled" data-level="3.1" id="idp-api-well-known"><span class="secno">3.1. </span><span class="content">The Well-Known File</span><a class="self-link" href="#idp-api-well-known"></a></h3>
-   <p class="note" role="note"><span class="marker">NOTE:</span> The browser uses the <a data-link-type="dfn" href="#well-known-file" id="ref-for-well-known-file④">well-known file</a> to prevent the following attack described <a href="https://github.com/fedidcg/FedCM/issues/230#issuecomment-1067029200">here</a>.</p>
+   <p class="note" role="note"><span class="marker">NOTE:</span> The browser uses the <a data-link-type="dfn" href="#well-known-file" id="ref-for-well-known-file④">well-known file</a> to prevent <a href="#manifest-fingerprinting">§ 7.3.1 Manifest Fingerprinting</a>.</p>
    <p>The <a data-link-type="dfn" href="#idp" id="ref-for-idp②①">IDP</a> exposes a <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="well-known-file">well-known file</dfn> in a pre-defined location, specifically at the "web-identity" file at the <a data-link-type="dfn" href="#idp" id="ref-for-idp②②">IDPs</a>'s path ".well-known".</p>
-   <p>The <a data-link-type="dfn" href="#well-known-file" id="ref-for-well-known-file⑤">well-known file</a> is fetched:</p>
+   <p>The <a data-link-type="dfn" href="#well-known-file" id="ref-for-well-known-file⑤">well-known file</a> is fetched in the <a data-link-type="dfn" href="#fetch-the-config-file" id="ref-for-fetch-the-config-file②">fetch the config file</a> algorithm:</p>
    <p>(a) <strong>without</strong> cookies,
 (b) <strong>with</strong> the <a data-link-type="http-header" href="https://w3c.github.io/webappsec-fetch-metadata/#http-headerdef-sec-fetch-dest" id="ref-for-http-headerdef-sec-fetch-dest">Sec-Fetch-Dest</a> header set to <code>webidentity</code>, and
 (c) <strong>without</strong> revealing the <a data-link-type="dfn" href="#rp" id="ref-for-rp①⑧">RP</a> in the <a data-link-type="http-header" href="https://fetch.spec.whatwg.org/#http-origin" id="ref-for-http-origin">Origin</a> or <a href="https://www.rfc-editor.org/rfc/rfc9110#section-10.1.3">Referer</a> headers.</p>
@@ -2101,7 +2103,7 @@ network requests performed:</p>
    </dl>
    <h3 class="heading settled" data-level="3.2" id="idp-api-config-file"><span class="secno">3.2. </span><span class="content">The config file</span><a class="self-link" href="#idp-api-config-file"></a></h3>
    <p>The <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="config-file">config file</dfn> serves as a discovery device to other endpoints provided by the <a data-link-type="dfn" href="#idp" id="ref-for-idp②③">IDP</a>.</p>
-   <p>The <a data-link-type="dfn" href="#config-file" id="ref-for-config-file">config file</a> is fetched:</p>
+   <p>The <a data-link-type="dfn" href="#config-file" id="ref-for-config-file">config file</a> is fetched in the <a data-link-type="dfn" href="#fetch-the-config-file" id="ref-for-fetch-the-config-file③">fetch the config file</a> algorithm:</p>
    <p>(a) <strong>without</strong> cookies,
 (b) <strong>with</strong> the <a data-link-type="http-header" href="https://w3c.github.io/webappsec-fetch-metadata/#http-headerdef-sec-fetch-dest" id="ref-for-http-headerdef-sec-fetch-dest①">Sec-Fetch-Dest</a> header set to <code>webidentity</code>,
 (c) <strong>without</strong> revealing the <a data-link-type="dfn" href="#rp" id="ref-for-rp①⑨">RP</a> in the <a data-link-type="http-header" href="https://fetch.spec.whatwg.org/#http-origin" id="ref-for-http-origin①">Origin</a> or <a href="https://www.rfc-editor.org/rfc/rfc9110#section-10.1.3">Referer</a> headers, and
@@ -2193,8 +2195,8 @@ that.</p>
    </div>
    <h3 class="heading settled" data-level="3.3" id="idp-api-accounts-endpoint"><span class="secno">3.3. </span><span class="content">Accounts list endpoint</span><a class="self-link" href="#idp-api-accounts-endpoint"></a></h3>
    <p>The <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="accounts-list-endpoint">accounts list endpoint</dfn> provides the list of accounts the user has at the <a data-link-type="dfn" href="#idp" id="ref-for-idp②⑧">IDP</a>.</p>
-   <p>The <a data-link-type="dfn" href="#accounts-list-endpoint" id="ref-for-accounts-list-endpoint①">accounts list endpoint</a> is fetched
-(a) <strong>with</strong> <a data-link-type="dfn" href="#idp" id="ref-for-idp②⑨">IDP</a> cookies,
+   <p>The <a data-link-type="dfn" href="#accounts-list-endpoint" id="ref-for-accounts-list-endpoint①">accounts list endpoint</a> is fetched in the <a data-link-type="dfn" href="#fetch-the-accounts-list" id="ref-for-fetch-the-accounts-list②">fetch the accounts list</a> algorithm:</p>
+   <p>(a) <strong>with</strong> <a data-link-type="dfn" href="#idp" id="ref-for-idp②⑨">IDP</a> cookies,
 (b) <strong>with</strong> the <a data-link-type="http-header" href="https://w3c.github.io/webappsec-fetch-metadata/#http-headerdef-sec-fetch-dest" id="ref-for-http-headerdef-sec-fetch-dest②">Sec-Fetch-Dest</a> header set to <code>webidentity</code>,
 (c) <strong>without</strong> revealing the <a data-link-type="dfn" href="#rp" id="ref-for-rp②⓪">RP</a> in the <a data-link-type="http-header" href="https://fetch.spec.whatwg.org/#http-origin" id="ref-for-http-origin②">Origin</a> or <a href="https://www.rfc-editor.org/rfc/rfc9110#section-10.1.3">Referer</a> headers, and
 (d) <strong>without</strong> following <a href="https://www.rfc-editor.org/rfc/rfc9110#section-10.2.2">HTTP redirects</a>.</p>
@@ -2257,8 +2259,8 @@ the Privacy Policy and the Terms of Service.</p>
    <p class="issue" id="issue-ef9f6ef5"><a class="self-link" href="#issue-ef9f6ef5"></a> <a href="https://github.com/fedidcg/FedCM/issues/218">Clarify</a> the IDP API response when the user is not signed in.</p>
    <h3 class="heading settled" data-level="3.4" id="idp-api-client-id-metadata-endpoint"><span class="secno">3.4. </span><span class="content">Client Metadata</span><a class="self-link" href="#idp-api-client-id-metadata-endpoint"></a></h3>
    <p>The <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="client-metadata-endpoint">client metadata endpoint</dfn> provides metadata about <a data-link-type="dfn" href="#rp" id="ref-for-rp②②">RP</a>s.</p>
-   <p>The <a data-link-type="dfn" href="#client-metadata-endpoint" id="ref-for-client-metadata-endpoint①">client metadata endpoint</a> is fetched
-(a) <strong>without</strong> cookies,
+   <p>The <a data-link-type="dfn" href="#client-metadata-endpoint" id="ref-for-client-metadata-endpoint①">client metadata endpoint</a> is fetched in the <a data-link-type="dfn" href="#fetch-the-client-metadata" id="ref-for-fetch-the-client-metadata①">fetch the client metadata</a> algorithm:</p>
+   <p>(a) <strong>without</strong> cookies,
 (b) <strong>with</strong> the <a data-link-type="http-header" href="https://w3c.github.io/webappsec-fetch-metadata/#http-headerdef-sec-fetch-dest" id="ref-for-http-headerdef-sec-fetch-dest③">Sec-Fetch-Dest</a> header set to <code>webidentity</code>,
 (c) <strong>with</strong> the <a data-link-type="dfn" href="#rp" id="ref-for-rp②③">RP</a>'s origin in the <a data-link-type="http-header" href="https://fetch.spec.whatwg.org/#http-origin" id="ref-for-http-origin③">Origin</a> header, and
 (d) <strong>without</strong> following <a href="https://www.rfc-editor.org/rfc/rfc9110#section-10.2.2">HTTP redirects</a>.</p>
@@ -2294,7 +2296,7 @@ the Privacy Policy and the Terms of Service.</p>
    </div>
    <h3 class="heading settled" data-level="3.5" id="idp-api-id-assertion-endpoint"><span class="secno">3.5. </span><span class="content">Identity assertion endpoint</span><a class="self-link" href="#idp-api-id-assertion-endpoint"></a></h3>
    <p>The <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="identity-assertion-endpoint">identity assertion endpoint</dfn> is responsible for minting a new token that contains signed assertions about the user.</p>
-   <p>The <a data-link-type="dfn" href="#identity-assertion-endpoint" id="ref-for-identity-assertion-endpoint①">identity assertion endpoint</a> is fetched</p>
+   <p>The <a data-link-type="dfn" href="#identity-assertion-endpoint" id="ref-for-identity-assertion-endpoint①">identity assertion endpoint</a> is fetched in the <a data-link-type="dfn" href="#fetch-an-identity-assertion" id="ref-for-fetch-an-identity-assertion②">fetch an identity assertion</a> algorithm:</p>
    <p>(a) as a <strong>POST</strong> request,
 (b) <strong>with</strong> <a data-link-type="dfn" href="#idp" id="ref-for-idp③①">IDP</a> cookies,
 (c) <strong>with</strong> the <a data-link-type="dfn" href="#rp" id="ref-for-rp②⑥">RP</a>'s origin in the <a data-link-type="http-header" href="https://fetch.spec.whatwg.org/#http-origin" id="ref-for-http-origin④">Origin</a> header, and
@@ -2598,11 +2600,10 @@ are same origin with respect to the <a data-link-type="dfn" href="#config-file" 
    <p>The non-same-origin fetches include, for example, the brand icon. The user agent does not perform a <a data-link-type="biblio" href="https://w3c.github.io/webappsec-csp/"><cite>Content Security Policy Level 3</cite></a> check on these because they are directly specified from the manifest. In addition, the
 rendering of this image is performed by the user agent, and as such this image cannot affect the <a data-link-type="dfn" href="#rp" id="ref-for-rp③⑦">RP</a> site nor can they be inspected by the <a data-link-type="dfn" href="#rp" id="ref-for-rp③⑧">RP</a> in any way.</p>
    <h3 class="heading settled" data-level="6.2" id="sec-fetch-dest-header"><span class="secno">6.2. </span><span class="content">Sec-Fetch-Dest Header</span><a class="self-link" href="#sec-fetch-dest-header"></a></h3>
-   <p><em>This section is non-normative.</em></p>
    <p>The FedCM API introduces several non-static endpoints on the <a data-link-type="dfn" href="#idp" id="ref-for-idp④⑥">IDP</a>, so these need to be protected
 from XSS attacks. In order to do so, the FedCM API introduces a new value for the <a data-link-type="http-header" href="https://w3c.github.io/webappsec-fetch-metadata/#http-headerdef-sec-fetch-dest" id="ref-for-http-headerdef-sec-fetch-dest⑤">Sec-Fetch-Dest</a> header, a <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#forbidden-request-header" id="ref-for-forbidden-request-header">forbidden request-header</a>. The requests initiated by the FedCM API
 have a <code>webidentity</code> value for this header. The value cannot be set by random websites, so the <a data-link-type="dfn" href="#idp" id="ref-for-idp④⑦">IDP</a> can be confident that the request was originated by the FedCM browser rather than sent by a
-websites trying to run an XSS attack. An <a data-link-type="dfn" href="#idp" id="ref-for-idp④⑧">IDP</a> must to check for this header’s value in the
+websites trying to run an XSS attack. An <a data-link-type="dfn" href="#idp" id="ref-for-idp④⑧">IDP</a> needs to check for this header’s value in the
 credentialed requests it receives, which ensures that the request was initiated by the user agent,
 based on the FedCM API. A malicious actor cannot spam FedCM API calls, so this is sufficient
 protection for the new <a data-link-type="dfn" href="#idp" id="ref-for-idp④⑨">IDP</a> endpoints.</p>
@@ -2670,7 +2671,7 @@ account information to the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑤�
 information about that specific user’s account, as required to provide identification. The <a data-link-type="dfn" href="#rp" id="ref-for-rp⑤③">RP</a> should not learn about about any other user accounts.</p>
    </ol>
    <h3 class="heading settled" data-level="7.2" id="network-requests"><span class="secno">7.2. </span><span class="content">Network requests</span><a class="self-link" href="#network-requests"></a></h3>
-   <p>We want to ensure that the FedCM fetches are all same-origin with respect to the provider specified
+   <p>This specification ensures that the FedCM fetches are all same-origin with respect to the provider specified
 by the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑤④">RP</a>. The reason for this is because fetches with cookies would use the cookies from the
 origin specified, so allowing arbitrary origins would introduce confusion and potential privacy
 issues with regards to which cookies are shared and with whom within the FedCM flow. The easiest way
@@ -2740,11 +2741,11 @@ fingerprinting attack:</p>
    <p>Here, the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑥③">RP</a> includes identifies itself when fetching the manifest from the <a data-link-type="dfn" href="#idp" id="ref-for-idp⑦⑧">IDP</a>. This
 coupled with the credentialed fetches that the FedCM API performs would enable the <a data-link-type="dfn" href="#idp" id="ref-for-idp⑦⑨">IDP</a> to easily
 track the website that the user is visiting, without requiring any permission from the user. Our
-mitigation to this problem is to use the <a href="#idp-api-well-known">§ 3.1 The Well-Known File</a> file. We enforce a specifically named
-file at the root of the <a data-link-type="dfn" href="#idp" id="ref-for-idp⑧⓪">IDP</a>'s domain to ensure that the file name does not introduce
+mitigation to this problem is to use the <a href="#idp-api-well-known">§ 3.1 The Well-Known File</a> file. The existence of a file at
+the root of the <a data-link-type="dfn" href="#idp" id="ref-for-idp⑧⓪">IDP</a>'s domain is enforced to ensure that the file name does not introduce
 fingerprints about the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑥④">RP</a> being visited.</p>
-   <p>The whole manifest could be in this location, but we instead choose to only point to the real
-manifest from there. This allows us to have flexibility in the future to allow a small constant
+   <p>The whole manifest could be in this location, but instead it only points to the real
+manifest from there. This allows the flexibility in the future to allow a small constant
 number of manifests, should an <a data-link-type="dfn" href="#idp" id="ref-for-idp⑧①">IDP</a> require this in the future, instead of just a single one. It
 also helps the <a data-link-type="dfn" href="#idp" id="ref-for-idp⑧②">IDP</a>'s implementation because they any changes to the manifest are more likely to
 be performed on a file located anywhere, as opposed to the root of the domain, which may have more
@@ -2754,7 +2755,7 @@ constraints in terms of ease of update.</p>
 origin, <a data-link-type="dfn" href="#idp" id="ref-for-idp⑧⑤">IDP</a>'s user identity) pair without the user’s permission. This attack is not deterministic:
 there is room for statistical error because it requires stitching together two separate pieces of
 information to track the user. However, it is important to mitigate this attack and ensure that
-it’s economically impractical to perform. In this attack, we assume that network requests do not
+it’s economically impractical to perform. In this attack, it is assumed that network requests do not
 have large fingerprinting vectors (e.g. IP addresses). These vary by <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent①⑦">user agent</a> and are hard to
 eliminate entirely, but in general <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent①⑧">user agents</a> are expected to address these over time. These
 bits of information tied to the network requests make the timing attack easier, making it more
@@ -3499,9 +3500,10 @@ married.</p>
     </ol>
    </div>
    <p>Preventing tracking of users by the <a data-link-type="dfn" href="#idp" id="ref-for-idp①⓪⑨">IDP</a> is difficult: the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑧④">RP</a> has to be coded into the
-identity token for security reasons, such as token reuse and fraud and abuse prevention. That said,
-there have been cryptographic schemes developed to blind the <a data-link-type="dfn" href="#idp" id="ref-for-idp①①⓪">IDP</a> to the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑧⑤">RP</a> while still
-preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identity/Persona_AAR">personas</a>).</p>
+identity token for security reasons, such as token reuse and fraud and abuse prevention. There have
+been cryptographic schemes developed to blind the <a data-link-type="dfn" href="#idp" id="ref-for-idp①①⓪">IDP</a> to the <a data-link-type="dfn" href="#rp" id="ref-for-rp⑧⑤">RP</a> while still
+preventing token reuse(see Mozilla’s <a href="https://wiki.mozilla.org/Identity/Persona_AAR">personas</a>).
+These schemes have not been adopted by this specification.</p>
    <div class="image">
     <svg height="100%" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:10;" version="1.1" viewBox="0 0 7112 5334" width="100%" xmlnsU0003Aserif="http://www.serif.com/" xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" space="preserve">
      <g transform="matrix(5.55556,0,0,5.55556,0,0)">
@@ -4046,7 +4048,7 @@ user’s identities before the user grants permission. This is an active area of
 that is being explored <a href="https://github.com/fedidcg/FedCM/issues/230#issuecomment-1089040953">here</a>. <a class="issue-return" href="#issue-77971f6b" title="Jump to section">↵</a></div>
    <div class="issue"> The spec is yet to be updated so that all <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-request">requests</a> are created
 with <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-request-mode">mode</a> set to "user-agent-no-cors". See the relevant <a href="https://github.com/whatwg/fetch/pull/1533">pull request</a> for details. <a class="issue-return" href="#issue-8da66a63②" title="Jump to section">↵</a></div>
-   <div class="issue"> We should validate the accounts list returned here for repeated ids, as described <a href="https://github.com/fedidcg/FedCM/issues/336">here</a>. <a class="issue-return" href="#issue-db10ab61" title="Jump to section">↵</a></div>
+   <div class="issue"> the accounts list returned here should be validated for repeated ids, as described <a href="https://github.com/fedidcg/FedCM/issues/336">here</a>. <a class="issue-return" href="#issue-82c62b7c" title="Jump to section">↵</a></div>
    <div class="issue"> The spec is yet to be updated so that all <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-request">requests</a> are created
 with <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-request-mode">mode</a> set to "user-agent-no-cors". See the relevant <a href="https://github.com/whatwg/fetch/pull/1533">pull request</a> for details. <a class="issue-return" href="#issue-8da66a63③" title="Jump to section">↵</a></div>
    <div class="issue"> The spec is yet to be updated so that all <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-request">requests</a> are created
@@ -4419,7 +4421,7 @@ window.dfnpanelData['rp'] = {"dfnID": "rp", "url": "#rp", "dfnText": "RP", "refS
 window.dfnpanelData['idp'] = {"dfnID": "idp", "url": "#idp", "dfnText": "IDP", "refSections": [{"refs": [{"id": "ref-for-idp"}, {"id": "ref-for-idp\u2460"}, {"id": "ref-for-idp\u2461"}, {"id": "ref-for-idp\u2462"}], "title": "1. Introduction"}, {"refs": [{"id": "ref-for-idp\u2463"}, {"id": "ref-for-idp\u2464"}, {"id": "ref-for-idp\u2465"}], "title": "2. The Browser API"}, {"refs": [{"id": "ref-for-idp\u2466"}], "title": "2.1. The connected accounts set"}, {"refs": [{"id": "ref-for-idp\u2467"}], "title": "2.2. The IdentityCredential Interface"}, {"refs": [{"id": "ref-for-idp\u2468"}, {"id": "ref-for-idp\u2460\u24ea"}, {"id": "ref-for-idp\u2460\u2460"}], "title": "2.2.1. The CredentialRequestOptions"}, {"refs": [{"id": "ref-for-idp\u2460\u2461"}], "title": "2.2.2. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method"}, {"refs": [{"id": "ref-for-idp\u2460\u2462"}, {"id": "ref-for-idp\u2460\u2463"}, {"id": "ref-for-idp\u2460\u2464"}, {"id": "ref-for-idp\u2460\u2465"}], "title": "2.2.4. Fetch the config file"}, {"refs": [{"id": "ref-for-idp\u2460\u2466"}], "title": "2.2.5. Fetch the accounts list"}, {"refs": [{"id": "ref-for-idp\u2460\u2467"}], "title": "2.2.6. Fetch an identity assertion"}, {"refs": [{"id": "ref-for-idp\u2460\u2468"}, {"id": "ref-for-idp\u2461\u24ea"}], "title": "3. Identity Provider HTTP API"}, {"refs": [{"id": "ref-for-idp\u2461\u2460"}, {"id": "ref-for-idp\u2461\u2461"}], "title": "3.1. The Well-Known File"}, {"refs": [{"id": "ref-for-idp\u2461\u2462"}, {"id": "ref-for-idp\u2461\u2463"}, {"id": "ref-for-idp\u2461\u2464"}, {"id": "ref-for-idp\u2461\u2465"}, {"id": "ref-for-idp\u2461\u2466"}], "title": "3.2. The config file"}, {"refs": [{"id": "ref-for-idp\u2461\u2467"}, {"id": "ref-for-idp\u2461\u2468"}, {"id": "ref-for-idp\u2462\u24ea"}], "title": "3.3. Accounts list endpoint"}, {"refs": [{"id": "ref-for-idp\u2462\u2460"}, {"id": "ref-for-idp\u2462\u2461"}, {"id": "ref-for-idp\u2462\u2462"}, {"id": "ref-for-idp\u2462\u2463"}, {"id": "ref-for-idp\u2462\u2464"}, {"id": "ref-for-idp\u2462\u2465"}, {"id": "ref-for-idp\u2462\u2466"}, {"id": "ref-for-idp\u2462\u2467"}, {"id": "ref-for-idp\u2462\u2468"}, {"id": "ref-for-idp\u2463\u24ea"}, {"id": "ref-for-idp\u2463\u2460"}], "title": "3.5. Identity assertion endpoint"}, {"refs": [{"id": "ref-for-idp\u2463\u2461"}, {"id": "ref-for-idp\u2463\u2462"}, {"id": "ref-for-idp\u2463\u2463"}, {"id": "ref-for-idp\u2463\u2464"}], "title": "6.1. Content Security Policy"}, {"refs": [{"id": "ref-for-idp\u2463\u2465"}, {"id": "ref-for-idp\u2463\u2466"}, {"id": "ref-for-idp\u2463\u2467"}, {"id": "ref-for-idp\u2463\u2468"}], "title": "6.2. Sec-Fetch-Dest Header"}, {"refs": [{"id": "ref-for-idp\u2464\u24ea"}], "title": "6.3. Browser Surface Impersonation"}, {"refs": [{"id": "ref-for-idp\u2464\u2460"}, {"id": "ref-for-idp\u2464\u2461"}, {"id": "ref-for-idp\u2464\u2462"}, {"id": "ref-for-idp\u2464\u2463"}, {"id": "ref-for-idp\u2464\u2464"}, {"id": "ref-for-idp\u2464\u2465"}, {"id": "ref-for-idp\u2464\u2466"}, {"id": "ref-for-idp\u2464\u2467"}, {"id": "ref-for-idp\u2464\u2468"}, {"id": "ref-for-idp\u2465\u24ea"}, {"id": "ref-for-idp\u2465\u2460"}, {"id": "ref-for-idp\u2465\u2461"}, {"id": "ref-for-idp\u2465\u2462"}, {"id": "ref-for-idp\u2465\u2463"}], "title": "7.1. Principals"}, {"refs": [{"id": "ref-for-idp\u2465\u2464"}, {"id": "ref-for-idp\u2465\u2465"}, {"id": "ref-for-idp\u2465\u2466"}, {"id": "ref-for-idp\u2465\u2467"}, {"id": "ref-for-idp\u2465\u2468"}, {"id": "ref-for-idp\u2466\u24ea"}, {"id": "ref-for-idp\u2466\u2460"}, {"id": "ref-for-idp\u2466\u2461"}, {"id": "ref-for-idp\u2466\u2462"}], "title": "7.2. Network requests"}, {"refs": [{"id": "ref-for-idp\u2466\u2463"}, {"id": "ref-for-idp\u2466\u2464"}, {"id": "ref-for-idp\u2466\u2465"}, {"id": "ref-for-idp\u2466\u2466"}], "title": "7.3. Attack Scenarios"}, {"refs": [{"id": "ref-for-idp\u2466\u2467"}, {"id": "ref-for-idp\u2466\u2468"}, {"id": "ref-for-idp\u2467\u24ea"}, {"id": "ref-for-idp\u2467\u2460"}, {"id": "ref-for-idp\u2467\u2461"}], "title": "7.3.1. Manifest Fingerprinting"}, {"refs": [{"id": "ref-for-idp\u2467\u2462"}, {"id": "ref-for-idp\u2467\u2463"}, {"id": "ref-for-idp\u2467\u2464"}, {"id": "ref-for-idp\u2467\u2465"}, {"id": "ref-for-idp\u2467\u2466"}, {"id": "ref-for-idp\u2467\u2467"}, {"id": "ref-for-idp\u2467\u2468"}, {"id": "ref-for-idp\u2468\u24ea"}], "title": "7.3.2. Timing Attacks"}, {"refs": [{"id": "ref-for-idp\u2468\u2460"}, {"id": "ref-for-idp\u2468\u2461"}], "title": "7.3.3. IDP Intrusion"}, {"refs": [{"id": "ref-for-idp\u2468\u2462"}, {"id": "ref-for-idp\u2468\u2463"}, {"id": "ref-for-idp\u2468\u2464"}], "title": "7.3.4. Cross-Site Correlation"}, {"refs": [{"id": "ref-for-idp\u2468\u2465"}, {"id": "ref-for-idp\u2468\u2466"}], "title": "7.3.5. Unauthorized Data Usage"}, {"refs": [{"id": "ref-for-idp\u2468\u2467"}, {"id": "ref-for-idp\u2468\u2468"}, {"id": "ref-for-idp\u2460\u24ea\u24ea"}, {"id": "ref-for-idp\u2460\u24ea\u2460"}, {"id": "ref-for-idp\u2460\u24ea\u2461"}, {"id": "ref-for-idp\u2460\u24ea\u2462"}, {"id": "ref-for-idp\u2460\u24ea\u2463"}, {"id": "ref-for-idp\u2460\u24ea\u2464"}, {"id": "ref-for-idp\u2460\u24ea\u2465"}, {"id": "ref-for-idp\u2460\u24ea\u2466"}, {"id": "ref-for-idp\u2460\u24ea\u2467"}, {"id": "ref-for-idp\u2460\u24ea\u2468"}, {"id": "ref-for-idp\u2460\u2460\u24ea"}], "title": "7.3.7. Secondary Use"}], "external": false};
 window.dfnpanelData['connected-accounts-set'] = {"dfnID": "connected-accounts-set", "url": "#connected-accounts-set", "dfnText": "connected accounts set", "refSections": [{"refs": [{"id": "ref-for-connected-accounts-set"}, {"id": "ref-for-connected-accounts-set\u2460"}, {"id": "ref-for-connected-accounts-set\u2461"}], "title": "2.1. The connected accounts set"}], "external": false};
 window.dfnpanelData['compute-the-connection-status'] = {"dfnID": "compute-the-connection-status", "url": "#compute-the-connection-status", "dfnText": "compute the connection status", "refSections": [{"refs": [{"id": "ref-for-compute-the-connection-status"}, {"id": "ref-for-compute-the-connection-status\u2460"}, {"id": "ref-for-compute-the-connection-status\u2461"}, {"id": "ref-for-compute-the-connection-status\u2462"}], "title": "2.2.3. Create an IdentityCredential"}, {"refs": [{"id": "ref-for-compute-the-connection-status\u2463"}], "title": "5.3. Account list"}], "external": false};
-window.dfnpanelData['compute-the-connection-status-connected'] = {"dfnID": "compute-the-connection-status-connected", "url": "#compute-the-connection-status-connected", "dfnText": "connected", "refSections": [{"refs": [{"id": "ref-for-compute-the-connection-status-connected"}], "title": "2.1. The connected accounts set"}], "external": false};
+window.dfnpanelData['compute-the-connection-status-connected'] = {"dfnID": "compute-the-connection-status-connected", "url": "#compute-the-connection-status-connected", "dfnText": "connected", "refSections": [{"refs": [{"id": "ref-for-compute-the-connection-status-connected"}], "title": "2.1. The connected accounts set"}, {"refs": [{"id": "ref-for-compute-the-connection-status-connected\u2460"}], "title": "2.2.3. Create an IdentityCredential"}], "external": false};
 window.dfnpanelData['compute-the-connection-status-disconnected'] = {"dfnID": "compute-the-connection-status-disconnected", "url": "#compute-the-connection-status-disconnected", "dfnText": "disconnected", "refSections": [{"refs": [{"id": "ref-for-compute-the-connection-status-disconnected"}], "title": "2.1. The connected accounts set"}, {"refs": [{"id": "ref-for-compute-the-connection-status-disconnected\u2460"}, {"id": "ref-for-compute-the-connection-status-disconnected\u2461"}], "title": "2.2.3. Create an IdentityCredential"}, {"refs": [{"id": "ref-for-compute-the-connection-status-disconnected\u2462"}], "title": "5.3. Account list"}], "external": false};
 window.dfnpanelData['create-a-connection-between-the-rp-and-the-idp-account'] = {"dfnID": "create-a-connection-between-the-rp-and-the-idp-account", "url": "#create-a-connection-between-the-rp-and-the-idp-account", "dfnText": "create a connection between the RP and the IdP account", "refSections": [{"refs": [{"id": "ref-for-create-a-connection-between-the-rp-and-the-idp-account"}], "title": "2.2.7. Request permission to sign-up"}], "external": false};
 window.dfnpanelData['identitycredential'] = {"dfnID": "identitycredential", "url": "#identitycredential", "dfnText": "IdentityCredential", "refSections": [{"refs": [{"id": "ref-for-identitycredential"}], "title": "2. The Browser API"}, {"refs": [{"id": "ref-for-identitycredential\u2460"}, {"id": "ref-for-identitycredential\u2461"}, {"id": "ref-for-identitycredential\u2462"}], "title": "2.2. The IdentityCredential Interface"}, {"refs": [{"id": "ref-for-identitycredential\u2463"}, {"id": "ref-for-identitycredential\u2464"}, {"id": "ref-for-identitycredential\u2465"}], "title": "2.2.2. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method"}, {"refs": [{"id": "ref-for-identitycredential\u2466"}, {"id": "ref-for-identitycredential\u2467"}], "title": "2.2.3. Create an IdentityCredential"}, {"refs": [{"id": "ref-for-identitycredential\u2468"}, {"id": "ref-for-identitycredential\u2460\u24ea"}], "title": "2.2.6. Fetch an identity assertion"}], "external": false};
@@ -4434,20 +4436,20 @@ window.dfnpanelData['dom-identityproviderconfig-nonce'] = {"dfnID": "dom-identit
 window.dfnpanelData['promise-rejection-delay'] = {"dfnID": "promise-rejection-delay", "url": "#promise-rejection-delay", "dfnText": "promise rejection delay", "refSections": [{"refs": [{"id": "ref-for-promise-rejection-delay"}], "title": "5.6. Set delay enabled"}], "external": false};
 window.dfnpanelData['create-an-identitycredential'] = {"dfnID": "create-an-identitycredential", "url": "#create-an-identitycredential", "dfnText": "create an IdentityCredential", "refSections": [{"refs": [{"id": "ref-for-create-an-identitycredential"}], "title": "2.2.2. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method"}, {"refs": [{"id": "ref-for-create-an-identitycredential\u2460"}], "title": "2.2.3. Create an IdentityCredential"}, {"refs": [{"id": "ref-for-create-an-identitycredential\u2461"}], "title": "5.1. Cancel dialog"}, {"refs": [{"id": "ref-for-create-an-identitycredential\u2462"}], "title": "5.2. Select account"}, {"refs": [{"id": "ref-for-create-an-identitycredential\u2463"}], "title": "7.3.1. Manifest Fingerprinting"}], "external": false};
 window.dfnpanelData['auto-reauthenticated'] = {"dfnID": "auto-reauthenticated", "url": "#auto-reauthenticated", "dfnText": "auto-reauthenticated", "refSections": [{"refs": [{"id": "ref-for-auto-reauthenticated"}], "title": "5.5. Get dialog type"}], "external": false};
-window.dfnpanelData['fetch-the-config-file'] = {"dfnID": "fetch-the-config-file", "url": "#fetch-the-config-file", "dfnText": "fetch the config file", "refSections": [{"refs": [{"id": "ref-for-fetch-the-config-file"}], "title": "2.2.3. Create an IdentityCredential"}, {"refs": [{"id": "ref-for-fetch-the-config-file\u2460"}], "title": "2.2.4. Fetch the config file"}], "external": false};
+window.dfnpanelData['fetch-the-config-file'] = {"dfnID": "fetch-the-config-file", "url": "#fetch-the-config-file", "dfnText": "fetch the config file", "refSections": [{"refs": [{"id": "ref-for-fetch-the-config-file"}], "title": "2.2.3. Create an IdentityCredential"}, {"refs": [{"id": "ref-for-fetch-the-config-file\u2460"}], "title": "2.2.4. Fetch the config file"}, {"refs": [{"id": "ref-for-fetch-the-config-file\u2461"}], "title": "3.1. The Well-Known File"}, {"refs": [{"id": "ref-for-fetch-the-config-file\u2462"}], "title": "3.2. The config file"}], "external": false};
 window.dfnpanelData['dictdef-identityproviderwellknown'] = {"dfnID": "dictdef-identityproviderwellknown", "url": "#dictdef-identityproviderwellknown", "dfnText": "IdentityProviderWellKnown", "refSections": [{"refs": [{"id": "ref-for-dictdef-identityproviderwellknown"}], "title": "2.2.4. Fetch the config file"}, {"refs": [{"id": "ref-for-dictdef-identityproviderwellknown\u2460"}, {"id": "ref-for-dictdef-identityproviderwellknown\u2461"}], "title": "3.1. The Well-Known File"}], "external": false};
 window.dfnpanelData['dictdef-identityprovidericon'] = {"dfnID": "dictdef-identityprovidericon", "url": "#dictdef-identityprovidericon", "dfnText": "IdentityProviderIcon", "refSections": [{"refs": [{"id": "ref-for-dictdef-identityprovidericon"}], "title": "2.2.4. Fetch the config file"}, {"refs": [{"id": "ref-for-dictdef-identityprovidericon\u2460"}, {"id": "ref-for-dictdef-identityprovidericon\u2461"}, {"id": "ref-for-dictdef-identityprovidericon\u2462"}], "title": "3.2. The config file"}], "external": false};
 window.dfnpanelData['dictdef-identityproviderbranding'] = {"dfnID": "dictdef-identityproviderbranding", "url": "#dictdef-identityproviderbranding", "dfnText": "IdentityProviderBranding", "refSections": [{"refs": [{"id": "ref-for-dictdef-identityproviderbranding"}], "title": "2.2.4. Fetch the config file"}, {"refs": [{"id": "ref-for-dictdef-identityproviderbranding\u2460"}], "title": "2.2.7. Request permission to sign-up"}, {"refs": [{"id": "ref-for-dictdef-identityproviderbranding\u2461"}, {"id": "ref-for-dictdef-identityproviderbranding\u2462"}, {"id": "ref-for-dictdef-identityproviderbranding\u2463"}], "title": "3.2. The config file"}], "external": false};
 window.dfnpanelData['dictdef-identityproviderapiconfig'] = {"dfnID": "dictdef-identityproviderapiconfig", "url": "#dictdef-identityproviderapiconfig", "dfnText": "IdentityProviderAPIConfig", "refSections": [{"refs": [{"id": "ref-for-dictdef-identityproviderapiconfig"}, {"id": "ref-for-dictdef-identityproviderapiconfig\u2460"}], "title": "2.2.4. Fetch the config file"}, {"refs": [{"id": "ref-for-dictdef-identityproviderapiconfig\u2461"}], "title": "2.2.5. Fetch the accounts list"}, {"refs": [{"id": "ref-for-dictdef-identityproviderapiconfig\u2462"}], "title": "2.2.6. Fetch an identity assertion"}, {"refs": [{"id": "ref-for-dictdef-identityproviderapiconfig\u2463"}, {"id": "ref-for-dictdef-identityproviderapiconfig\u2464"}], "title": "2.2.7. Request permission to sign-up"}, {"refs": [{"id": "ref-for-dictdef-identityproviderapiconfig\u2465"}, {"id": "ref-for-dictdef-identityproviderapiconfig\u2466"}], "title": "3.2. The config file"}], "external": false};
-window.dfnpanelData['fetch-the-accounts-list'] = {"dfnID": "fetch-the-accounts-list", "url": "#fetch-the-accounts-list", "dfnText": "fetch the accounts list", "refSections": [{"refs": [{"id": "ref-for-fetch-the-accounts-list"}], "title": "2.2.3. Create an IdentityCredential"}, {"refs": [{"id": "ref-for-fetch-the-accounts-list\u2460"}], "title": "2.2.5. Fetch the accounts list"}], "external": false};
+window.dfnpanelData['fetch-the-accounts-list'] = {"dfnID": "fetch-the-accounts-list", "url": "#fetch-the-accounts-list", "dfnText": "fetch the accounts list", "refSections": [{"refs": [{"id": "ref-for-fetch-the-accounts-list"}], "title": "2.2.3. Create an IdentityCredential"}, {"refs": [{"id": "ref-for-fetch-the-accounts-list\u2460"}], "title": "2.2.5. Fetch the accounts list"}, {"refs": [{"id": "ref-for-fetch-the-accounts-list\u2461"}], "title": "3.3. Accounts list endpoint"}], "external": false};
 window.dfnpanelData['dictdef-identityprovideraccount'] = {"dfnID": "dictdef-identityprovideraccount", "url": "#dictdef-identityprovideraccount", "dfnText": "IdentityProviderAccount", "refSections": [{"refs": [{"id": "ref-for-dictdef-identityprovideraccount"}, {"id": "ref-for-dictdef-identityprovideraccount\u2460"}], "title": "2.1. The connected accounts set"}, {"refs": [{"id": "ref-for-dictdef-identityprovideraccount\u2461"}, {"id": "ref-for-dictdef-identityprovideraccount\u2462"}], "title": "2.2.5. Fetch the accounts list"}, {"refs": [{"id": "ref-for-dictdef-identityprovideraccount\u2463"}, {"id": "ref-for-dictdef-identityprovideraccount\u2464"}, {"id": "ref-for-dictdef-identityprovideraccount\u2465"}], "title": "2.2.7. Request permission to sign-up"}, {"refs": [{"id": "ref-for-dictdef-identityprovideraccount\u2466"}], "title": "3.3. Accounts list endpoint"}], "external": false};
 window.dfnpanelData['dictdef-identityprovideraccountlist'] = {"dfnID": "dictdef-identityprovideraccountlist", "url": "#dictdef-identityprovideraccountlist", "dfnText": "IdentityProviderAccountList", "refSections": [{"refs": [{"id": "ref-for-dictdef-identityprovideraccountlist"}, {"id": "ref-for-dictdef-identityprovideraccountlist\u2460"}], "title": "2.2.5. Fetch the accounts list"}, {"refs": [{"id": "ref-for-dictdef-identityprovideraccountlist\u2461"}], "title": "3.3. Accounts list endpoint"}], "external": false};
 window.dfnpanelData['fetch-the-account-picture'] = {"dfnID": "fetch-the-account-picture", "url": "#fetch-the-account-picture", "dfnText": "fetch the account picture", "refSections": [{"refs": [{"id": "ref-for-fetch-the-account-picture"}], "title": "2.2.3. Create an IdentityCredential"}], "external": false};
-window.dfnpanelData['fetch-an-identity-assertion'] = {"dfnID": "fetch-an-identity-assertion", "url": "#fetch-an-identity-assertion", "dfnText": "fetch an identity assertion", "refSections": [{"refs": [{"id": "ref-for-fetch-an-identity-assertion"}], "title": "2.2.3. Create an IdentityCredential"}, {"refs": [{"id": "ref-for-fetch-an-identity-assertion\u2460"}], "title": "2.2.6. Fetch an identity assertion"}], "external": false};
+window.dfnpanelData['fetch-an-identity-assertion'] = {"dfnID": "fetch-an-identity-assertion", "url": "#fetch-an-identity-assertion", "dfnText": "fetch an identity assertion", "refSections": [{"refs": [{"id": "ref-for-fetch-an-identity-assertion"}], "title": "2.2.3. Create an IdentityCredential"}, {"refs": [{"id": "ref-for-fetch-an-identity-assertion\u2460"}], "title": "2.2.6. Fetch an identity assertion"}, {"refs": [{"id": "ref-for-fetch-an-identity-assertion\u2461"}], "title": "3.5. Identity assertion endpoint"}], "external": false};
 window.dfnpanelData['dictdef-identityprovidertoken'] = {"dfnID": "dictdef-identityprovidertoken", "url": "#dictdef-identityprovidertoken", "dfnText": "IdentityProviderToken", "refSections": [{"refs": [{"id": "ref-for-dictdef-identityprovidertoken"}], "title": "2.2.6. Fetch an identity assertion"}, {"refs": [{"id": "ref-for-dictdef-identityprovidertoken\u2460"}, {"id": "ref-for-dictdef-identityprovidertoken\u2461"}], "title": "3.5. Identity assertion endpoint"}], "external": false};
 window.dfnpanelData['select-an-account'] = {"dfnID": "select-an-account", "url": "#select-an-account", "dfnText": "select an account", "refSections": [{"refs": [{"id": "ref-for-select-an-account"}], "title": "2.2.3. Create an IdentityCredential"}], "external": false};
 window.dfnpanelData['request-permission-to-sign-up'] = {"dfnID": "request-permission-to-sign-up", "url": "#request-permission-to-sign-up", "dfnText": "request permission to sign-up", "refSections": [{"refs": [{"id": "ref-for-request-permission-to-sign-up"}, {"id": "ref-for-request-permission-to-sign-up\u2460"}], "title": "2.2.3. Create an IdentityCredential"}, {"refs": [{"id": "ref-for-request-permission-to-sign-up\u2461"}], "title": "2.2.7. Request permission to sign-up"}, {"refs": [{"id": "ref-for-request-permission-to-sign-up\u2462"}], "title": "3.3. Accounts list endpoint"}, {"refs": [{"id": "ref-for-request-permission-to-sign-up\u2463"}], "title": "3.5. Identity assertion endpoint"}, {"refs": [{"id": "ref-for-request-permission-to-sign-up\u2464"}], "title": "5.2. Select account"}], "external": false};
-window.dfnpanelData['fetch-the-client-metadata'] = {"dfnID": "fetch-the-client-metadata", "url": "#fetch-the-client-metadata", "dfnText": "fetch the client metadata", "refSections": [{"refs": [{"id": "ref-for-fetch-the-client-metadata"}], "title": "2.2.7. Request permission to sign-up"}], "external": false};
+window.dfnpanelData['fetch-the-client-metadata'] = {"dfnID": "fetch-the-client-metadata", "url": "#fetch-the-client-metadata", "dfnText": "fetch the client metadata", "refSections": [{"refs": [{"id": "ref-for-fetch-the-client-metadata"}], "title": "2.2.7. Request permission to sign-up"}, {"refs": [{"id": "ref-for-fetch-the-client-metadata\u2460"}], "title": "3.4. Client Metadata"}], "external": false};
 window.dfnpanelData['dictdef-identityproviderclientmetadata'] = {"dfnID": "dictdef-identityproviderclientmetadata", "url": "#dictdef-identityproviderclientmetadata", "dfnText": "IdentityProviderClientMetadata", "refSections": [{"refs": [{"id": "ref-for-dictdef-identityproviderclientmetadata"}, {"id": "ref-for-dictdef-identityproviderclientmetadata\u2460"}], "title": "2.2.7. Request permission to sign-up"}, {"refs": [{"id": "ref-for-dictdef-identityproviderclientmetadata\u2461"}, {"id": "ref-for-dictdef-identityproviderclientmetadata\u2462"}], "title": "3.4. Client Metadata"}], "external": false};
 window.dfnpanelData['parse-url'] = {"dfnID": "parse-url", "url": "#parse-url", "dfnText": "parse url", "refSections": [{"refs": [{"id": "ref-for-parse-url"}, {"id": "ref-for-parse-url\u2460"}], "title": "2.1. The connected accounts set"}, {"refs": [{"id": "ref-for-parse-url\u2461"}], "title": "2.2.4. Fetch the config file"}, {"refs": [{"id": "ref-for-parse-url\u2462"}], "title": "2.2.5. Fetch the accounts list"}, {"refs": [{"id": "ref-for-parse-url\u2463"}, {"id": "ref-for-parse-url\u2464"}], "title": "2.2.8. Helper algorithms"}], "external": false};
 window.dfnpanelData['fetch-request'] = {"dfnID": "fetch-request", "url": "#fetch-request", "dfnText": "fetch request", "refSections": [{"refs": [{"id": "ref-for-fetch-request"}, {"id": "ref-for-fetch-request\u2460"}], "title": "2.2.4. Fetch the config file"}, {"refs": [{"id": "ref-for-fetch-request\u2461"}, {"id": "ref-for-fetch-request\u2462"}], "title": "2.2.5. Fetch the accounts list"}, {"refs": [{"id": "ref-for-fetch-request\u2463"}], "title": "2.2.6. Fetch an identity assertion"}, {"refs": [{"id": "ref-for-fetch-request\u2464"}], "title": "2.2.7. Request permission to sign-up"}], "external": false};
