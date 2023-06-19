@@ -33,9 +33,13 @@ spec: credential-management-1; urlPrefix: https://w3c.github.io/webappsec-creden
         text: requires user mediation; url: origin-requires-user-mediation
 spec: webdriver; urlPrefix: https://w3c.github.io/webdriver/
     type: dfn
+        text: endpoint node; url: dfn-endpoint-node
+        text: extension capability; url: dfn-extension-capability
         text: getting a property; url: dfn-getting-properties
+        text: matching capabilities; url: dfn-matching-capabilities
         text: no such alert; url: dfn-no-such-alert
         text: error code; url: dfn-error-code
+        text: validating capabilities; url: dfn-validate-capabilities
 </pre>
 
 <pre class=link-defaults>
@@ -1643,6 +1647,42 @@ by {{CredentialsContainer}}'s <a abstract-op>Request a `Credential`</a> abstract
 For the purposes of user agent automation and website testing, this document
 defines the below [[WebDriver2]] [=extension commands=] to interact with any
 active FedCM dialogs.
+
+## Extension capability ## {#webdriver-capability}
+
+In order to advertise the availability of the [=extension commands=] defined below, a new [=extension capability=] is defined.
+
+<figure id="table-fedcmWebdriverCapability" class="table">
+    <table class="data">
+        <thead>
+            <tr>
+                <th>Capability</th>
+                <th>Key</th>
+                <th>Value Type</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Federated Credential Management Support</td>
+                <td>`"fedcm:accounts"`</td>
+                <td>boolean</td>
+                <td>Indicates whether the [=endpoint node=] supports all Federated Credential Management commands.</td>
+            </tr>
+        </tbody>
+    </table>
+</figure>
+
+When [=validating capabilities=], the extension-specific substeps to validate `"fedcm:accounts"` with `value` are the following:
+
+    1. If `value` is not a [=boolean=] return a [=error|WebDriver Error=] with [=error code=] [=invalid argument=].
+    2. Otherwise, let `deserialized` be set to `value`.
+
+When [=matching capabilities=], the extension-specific steps to match `"fedcm:accounts"` with `value` are the following:
+
+    1. If `value` is [TRUE] and the [=endpoint node=] does not support any of the Federated Credential Management commands,
+        the match is unsuccessful.
+    2. Otherwise, the match is successful.
 
 ## Cancel dialog ## {#webdriver-canceldialog}
 
