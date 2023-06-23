@@ -1208,15 +1208,14 @@ When invoking the {{IdentityProvider/getUserInfo()}} method given an {{IdentityP
             values initially set to false.
         1. For each |i| from 0 to the length of |accountsList| minus 1:
             1. Let |account| be |accountsList|[|i|].
-            1. If |account|["{{IdentityProviderAccount/approved_clients}}"] is not empty:
-                1. If |account|["{{IdentityProviderAccount/approved_clients}}"] [=list/contain=]
-                    |provider|'s {{IdentityProviderConfig/clientId}}, set |isReturningAccount|[|i|] to true.
-            
+            1. If |account|["{{IdentityProviderAccount/approved_clients}}"] is not empty and it does not
+                [=list/contain=] |provider|'s {{IdentityProviderConfig/clientId}}, continue.
+
                 Note: this allows the [=IDP=] to override whether an account is a returning account.
                 This could be useful for instance in cases where the user has revoked the account
                 out of band.
-            
-            1. Otherwise, [=compute the connection status=] of |provider|, |account|, and |globalObject|. If the
+
+            1. [=Compute the connection status=] of |provider|, |account|, and |globalObject|. If the
                 result is [=compute the connection status/connected=], set |isReturningAccount|[|i|] to
                 true.
         1. If |isReturningAccount| does not [=list/contain=] true, [=reject=] |promise| with a new
