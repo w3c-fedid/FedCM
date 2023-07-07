@@ -53,7 +53,10 @@ was the last/only account getting signed out.
 
 ### JS API
 
-And IdP can alternatively call the IdP Sign-in Status API via JS calls through the static functions `IdentityProvider.login()` and `IdentityProvider.logout()`.
+An IdP can alternatively call the IdP Sign-in Status API via JS calls through
+the static functions `IdentityProvider.login()` and
+`IdentityProvider.logout()`. These are to be called from the IDP's origin, and
+marks the current origin as signed in or signed out.
 
 ```
 [Exposed=Window]
@@ -65,7 +68,6 @@ interface IdentityProvider {
 }
 ```
 
-To be called from the IDP's origin, and marks the current origin as signed in or signed out.
 
 In addition, a `close()` function is provided to signal to the browser that the
 signin flow is finished. The reason for this function in addition to the header
