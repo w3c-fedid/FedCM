@@ -51,19 +51,30 @@ The signout-all header should only be sent when no accounts remain signed in
 to the IDP, i.e. when this action has signed out all accounts or if this
 was the last/only account getting signed out.
 
-### JS API (future)
+### JS API
 
-Tentatively:
+An IdP can alternatively call the IdP Sign-in Status API via JS calls through
+the static functions `IdentityProvider.login()` and
+`IdentityProvider.logout()`. These are to be called from the IDP's origin, and
+marks the current origin as signed in or signed out.
 
 ```
 [Exposed=Window]
 interface IdentityProvider {
   static void login();
   static void logout();
+
+  static void close();
 }
 ```
 
-To be called from the IDP's origin, and marks the current origin as signed in or signed out.
+
+In addition, a `close()` function is provided to signal to the browser that the
+signin flow is finished. The reason for this function in addition to the header
+is that even when the user is already logged in, the signin flow may not be
+finished yet; for example, an IDP may want to prompt the user to verify their
+phone number. To allow for such flows, the IDP must call
+`IdentityProvider.close()` when the flow is fully done.
 
 ### Config file addition
 
@@ -161,3 +172,9 @@ specific account IDs are signed in, so that it can tell when there no
 more signed in accounts for this IDP. This introduces extra complexity,
 whereas the IDP already knows how many accounts are signed in and thus
 whether no accounts remain after this signout action.
+
+### The Login Status API
+
+We are also considering with Safari and Firefox how this API relates to the Login Status API [here](https://github.com/privacycg/is-logged-in/issues/53).
+
+
