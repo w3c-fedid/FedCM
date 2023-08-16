@@ -65,10 +65,10 @@ partial interface Navigator {
 };
 ```
 
-An IdP can alternatively call the IdP Sign-in Status API via JS calls through
+Alternatively, an IdP can call the IdP Sign-in Status API via JS calls through
 the static functions `navigator.recordSignedIn({idp: true})` and
 `navigator.recordSignedOut({idp: true})`. These are to be called from the IDP's
-origin, and marks the current origin as signed in or signed out.
+origin, and mark the current origin as signed in or signed out.
 
 ```idl
 [Exposed=Window]
@@ -77,7 +77,7 @@ interface IdentityProvider {
 }
 ```
 
-In addition, a `IdentityProvider.close()` function is provided to signal to the browser that the
+In addition, an `IdentityProvider.close()` function is provided to signal to the browser that the
 signin flow is finished. The reason for this function in addition to the header
 is that even when the user is already logged in, the signin flow may not be
 finished yet; for example, an IDP may want to prompt the user to verify their
@@ -186,6 +186,6 @@ whether no accounts remain after this signout action.
 We are also considering with Safari and Firefox how this API relates to the Login Status API [here](https://github.com/privacycg/is-logged-in/issues/53).
 
 In this proposal, we are using generic header and JS function names so that the same API and
-headers can be used also for is-logged-in while recording the optional type (i.e. is this
+headers can be used for is-logged-in while also recording the optional type (i.e. is this
 an IDP or not).
 
