@@ -315,35 +315,39 @@ for an [=IDP=] to adopt the FedCM API. It doesn't introduce security issues on t
 [=RP=] cannot inspect the results from the fetches in any way.
 
 <!-- ============================================================ -->
-## IDP Sign-in Status ## {#browser-api-idp-sign-in-status}
+## The Sign-in Status API ## {#browser-api-sign-in-status}
 <!-- ============================================================ -->
 
-Each [=user agent=] keeps a global, persistent <dfn>IDP Sign-in Status
+Each [=user agent=] keeps a global, persistent <dfn>Sign-in Status
 map</dfn>, an initially empty [=map=]. The [=map/keys=] in this map are
 [=/origin=] (of IDPs), and the [=map/values=] are enums that can be one of
 "<dfn><code>unknown</code></dfn>", "<dfn><code>signed-in</code></dfn>",
 and "<dfn><code>signed-out</code></dfn>"
 
 The user agent checks all page and subresource loads for an HTTP response
-[=header=] named <dfn><code>IdP-SignIn-Status</code></dfn>, whose value is
+[=header=] named <dfn><code>SignIn-Status</code></dfn>, whose value is
 parsed as HTTP [[RFC9110#section-5.6.6|Parameter]]s.
-If that header exists and any parameter has a name of `action`,
-the user agent must process it as follows:
+If that header exists, there is a parameter with name `type` and value `idp`,
+and any parameter has a name of `action`, the user agent must process it as
+follows:
 
+<div algorithm="process the signin status header">
 * If this is a subresource request, and the response does not have the
     same [=/origin] as the toplevel page, ignore the header.
 * Otherwise:
     * If the parameter value is `signin`, [=map/set=] an entry in the
-        [=IDP Sign-in Status map=] with the key being the origin of the resource
+        [=Sign-in Status map=] with the key being the origin of the resource
         and the value being [=signed-in=]
     * If the parameter value is `signout-all`, [=map/set=] an entry in the
-        [=IDP Sign-in Status map=] with the key being the origin of the resource
+        [=Sign-in Status map=] with the key being the origin of the resource
         and the value being [=signed-out=]
+
+</div>
 
 Issue: Should the header checking be integrated into the fetch spec instead,
     since it affects all resources?
 
-User agents must also clear the [=IDP Sign-in Status map=] data when:
+User agents must also clear the [=Sign-in Status map=] data when:
     :   the user clears all cookies or site settings data
     ::  The user agent must clear the entire map.
     :   the user clears cookies or site data for a specific origin
@@ -362,17 +366,38 @@ User agents must also clear the [=IDP Sign-in Status map=] data when:
 
 Note: Website-initiated cookie changes should not affect this map. When
     IDP sign-in state changes, it should send an explicit
-    [=IDP-SignIn-Status=].
+    [=SignIn-Status=].
     RP state should not affect this map since it only reflects IDP state.
 
-IDPs can also use a JavaScript API to update the stored sign-in status, see
-{{IdentityProvider}}.
+IDPs can also use a JavaScript API to update the stored sign-in status:
 
-### Interaction with `Clear-Site-Data`
+
+<pre class="idl">
+  dictionary SignInStatusOptions {
+    boolean idp;
+  };
+
+  partial interface Navigator {
+    static Promise&lt;undefined&gt; recordSignIn(optional SignInStatusOptions options);
+    static Promise&lt;undefined&gt; recordSignOut(optional SignInStatusOptions options);
+  };
+</pre>
+
+When {{Navigator/recordSignIn}} or {{Navigator/recordSignOut}} is
+called:
+  * If no |options| dictionary is provided, or there is no |idp| member in the
+    dictionary, or the |idp| member is false, then the promise is rejected with
+    a {{TypeError}}.
+  * Otherwise, the user agent [=map/set|sets=] the entry in the [=Sign-in Status
+    Map=] with the [=map/key=] being  [=/this=]'s [=/relevant settings object=]'s
+    [=environment settings object/origin=] and the value being [=signed-in=] (for
+    `recordSignIn`) or [=signed-out=] (for `recordSignOut`).
+
+### Interaction with `Clear-Site-Data` ### {#browser-clear-site-data}
 
 When the user agent receives a <a http-header>Clear-Site-Data</a> header with a
 value of `"cookies"`, while [$clear cookies for origin|clearing cookies for
-origin$] it must remove any entries in the [=IDP Sign-in Status Map=] where the
+origin$] it must remove any entries in the [=Sign-in Status Map=] where the
 [=map/key=] is the input origin.
 
 <!-- ============================================================ -->
@@ -620,7 +645,7 @@ To <dfn>create an IdentityCredential</dfn> given an {{IdentityProviderConfig}}
 or a pair (failure, bool), where the bool indicates whether to skip delaying
 the exception thrown.
     1. Assert: These steps are running [=in parallel=].
-    1. Let |signinStatus| be the value of the entry in [=IDP Sign-in Status map=]
+    1. Let |signinStatus| be the value of the entry in [=Sign-in Status map=]
         with the key being the origin of |provider|'s configURL. If there is
         no such entry, set it to a user-agent specific default (either [=unknown=] or
         [=signed-out=]).
@@ -639,7 +664,7 @@ the exception thrown.
     1. Let |accountsList| be the result of [=fetch the accounts list=] with |config|, |provider|,
         and |globalObject|.
     1. If the fetch failed, or the size of |accountsList| is 0:
-        1. [=map/set|Set=] an entry in the [=IDP Sign-in Status map=] with the
+        1. [=map/set|Set=] an entry in the [=Sign-in Status map=] with the
             key being the origin of the configURL and the value being [=signed-out=].
             A user agent may decide to skip this step if no credentials were sent to
             server.
@@ -660,9 +685,9 @@ the exception thrown.
             Note: This dialog ensures that silent tracking of the user is
                 impossible by always showing UI of some kind when credentials
                 were sent to the server.
-    1. If |signinStatus| is [=unknown=], [=map/set=] an entry in the [=IDP
-        sign-in status map=] with the key being the origin of the configURL and
-        the value being [=signed-in=].
+    1. If |signinStatus| is [=unknown=], [=map/set=] an entry in the [=sign-in
+        status map=] with the key being the origin of the configURL and the value being
+        [=signed-in=].
     1. If |provider|'s {{IdentityProviderConfig/loginHint}} is not empty:
         1. For every |account| in |accountList|, remove |account| from |accountList| if |account|'s
             {{IdentityProviderAccount/login_hints}} does not [=list/contain=] |provider|'s
@@ -1234,26 +1259,12 @@ This specification introduces the {{IdentityUserInfo}} dictionary as well as the
   };
 
   [Exposed=Window, SecureContext] interface IdentityProvider {
-      static undefined recordSignIn();
-      static undefined recordSignOut();
       static Promise&lt;sequence&lt;IdentityUserInfo&gt;&gt; getUserInfo(IdentityProviderConfig config);
   };
 </pre>
 
 Issue: [Decide](https://github.com/fedidcg/FedCM/issues/476) whether {{IdentityProvider}} is the
 correct location for the {{IdentityProvider/getUserInfo()}} method.
-
-Issue: Should the recordSign{In,Out} functions return `Promise<undefined>`, so the caller can know
-    when the call is finished?
-
-Issue: [Reconcile](https://github.com/speced/bikeshed/issues/2636) how these
-    record* functions relate to the isLoggedIn API.
-
-When {{IdentityProvider/recordSignIn}} or {{IdentityProvider/recordSignOut}} is
-called, the user agent [=map/set|sets=] the entry in the [=IDP Sign-in Status
-Map=] with the [=map/key=] being  [=/this=]'s [=/relevant settings object=]'s
-[=environment settings object/origin=] and the value being [=signed-in=] (for
-`recordSignIn`) or [=signed-out=] (for `recordSignOut`).
 
 An {{IdentityUserInfo}} represents user account information from a user. This information is exposed
 to the [=IDP=] once the user has already used the FedCM API to login in the [=RP=]. That is, it is
