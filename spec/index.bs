@@ -678,8 +678,9 @@ the exception thrown.
 
             Note: Since this situation happens when the browser expects the user
                 to be signed in, but the accounts fetch indicated that the user
-                is signed out, it is recommended that this dialog provides a
-                "sign in" button allowing the user to sign in to the IDP using
+                is signed out, it is recommended that this dialog is a <dfn>confirm
+                IDP signin dialog</dfn> and provides a "sign in" button allowing
+                the user to sign in to the IDP using
                 {{IdentityProviderAPIConfig/signin_url}}.
 
             Note: This dialog ensures that silent tracking of the user is
@@ -1874,6 +1875,36 @@ The [=remote end steps=] are:
 
 1. Return [=success=] with data `null`.
 
+## Confirm IDP signin ## {#webdriver-confirmidpsignin}
+
+<figure id="table-webdriver-canceldialog" class="table">
+    <table class="data">
+        <thead>
+            <tr>
+                <th>HTTP Method</th>
+                <th>URI Template</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>POST</td>
+                <td>`/session/{session id}/fedcm/confirm_idp_signin`</td>
+            </tr>
+        </tbody>
+    </table>
+</figure>
+
+The [=remote end steps=] are:
+
+1. If no FedCM dialog is currently open, or the dialog is not a [=confirm IDP
+    signin dialog=] return a [=error|WebDriver error=] with [=error code=]
+    [=no such alert=].
+
+1. Act as if the user had clicked the "continue" button in the dialog and
+    initiate the signin flow.
+
+1. Return [=success=] with data `null`.
+
 ## Account list ## {#webdriver-accountlist}
 
 <figure id="table-webdriver-accountlist" class="table">
@@ -1985,7 +2016,8 @@ The [=remote end steps=] are:
     [=error code=] [=no such alert=].
 
 1. Let |type| be a string that is "`AutoReauthn`" if the user is being [=auto-reauthenticated=],
-    or "`AccountChooser`" otherwise.
+    or "`AccountChooser`" is the dialog is an account chooser, or "`ConfirmIdpSignin`" if the
+    dialog is a [=confirm IDP signin dialog=].
 
 1. Return [=success=] with data |type|.
 
