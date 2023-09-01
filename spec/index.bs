@@ -615,8 +615,8 @@ dictionary DisconnectedAccount {
 <!-- ============================================================ -->
 
 This specification introduces a new type of {{DOMException}}, the {{IdentityCredentialError}}. It
-is used when the [=IDP=] cannot create an {{IdentityCredential}} after the user has requested to use
-a federated account.
+is used when the [=user agent=] does not receive an identity assertion after the user has requested
+to use a federated account.
 
 <pre class="idl">
   [Exposed=Window, SecureContext]
@@ -631,8 +631,10 @@ a federated account.
 The {{IdentityCredentialError/constructor()}}, given a |realm|, a {{DOMString}} |message| and a
     {{IdentityCredentialErrorInit}} |options| must run the following steps:
     1. Invoke the {{DOMException}}'s {{DOMException/constructor()}}, passing |realm| and |message|.
-    1. Set <a>this</a>.{{IdentityCredentialError/code}} to |options|.{{IdentityCredentialError/code}}.
-    1. Set <a>this</a>.{{IdentityCredentialError/url}} to |options.{{IdentityCredentialError/url}}.
+    1. Set <a>this</a>.{{IdentityCredentialError/code}} to |options|.{{IdentityCredentialError/code}}
+        if it is present in |options|, or to "" otherwise.
+    1. Set <a>this</a>.{{IdentityCredentialError/url}} to |options|.{{IdentityCredentialError/url}}
+        if it is present in |options|, or to "" otherwise.
 </div>
 
 <dl>
@@ -1072,7 +1074,7 @@ throwing the exception.
         1. Wait until the UI is acknowledged or dismissed by the user.
         
         Note: this wait means the [=user agent=] rejects the call only after the UI has been
-            dismissed by the user.
+            closed by the user.
     1. Return |credential|.
 </div>
 
