@@ -323,6 +323,8 @@ Issue: Reconcile this section with the
     [Login Status API](https://github.com/privacycg/is-logged-in).
     See also [this PR](https://github.com/privacycg/is-logged-in/pull/54).
 
+### HTTP header API ### {#signin-status-http}
+
 Issue: The HTTP header checking should move into the Fetch spec, since it
     affects all resource loads.
 
@@ -353,6 +355,34 @@ follows:
 
 </div>
 
+### JavaScript API ### {#signin-status-javascript}
+
+IDPs can also use a JavaScript API to update the stored sign-in status:
+
+
+<pre class="idl">
+  dictionary SignInStatusOptions {
+    boolean idp;
+  };
+
+  partial interface Navigator {
+    static Promise&lt;undefined&gt; recordSignIn(optional SignInStatusOptions options = {});
+    static Promise&lt;undefined&gt; recordSignOut(optional SignInStatusOptions options = {});
+  };
+</pre>
+
+When {{Navigator/recordSignIn}} or {{Navigator/recordSignOut}} is
+called:
+  * If no |options| dictionary is provided, or there is no |idp| member in the
+    |options|, or the |idp| member is false, then the promise is rejected with
+    a {{TypeError}}.
+  * Otherwise, the user agent [=map/set|sets=] the entry in the [=Sign-in Status
+    Map=] with the [=map/key=] being [=/this=]'s [=/relevant settings object=]'s
+    [=environment settings object/origin=] and the value being [=signed-in=] (for
+    `recordSignIn`) or [=signed-out=] (for `recordSignOut`).
+
+### Clearing map data ### {#signin-status-clear-data}
+
 User agents must also clear the [=Sign-in Status map=] data when:
     :   the user clears all cookies or site settings data
     ::  The user agent must clear the entire map.
@@ -379,30 +409,6 @@ Note: Other website-initiated cookie changes should not affect this map. When
     IDP sign-in state changes, it should send an explicit
     [=SignIn-Status=].
     RP state should not affect this map since it only reflects IDP state.
-
-IDPs can also use a JavaScript API to update the stored sign-in status:
-
-
-<pre class="idl">
-  dictionary SignInStatusOptions {
-    boolean idp;
-  };
-
-  partial interface Navigator {
-    static Promise&lt;undefined&gt; recordSignIn(optional SignInStatusOptions options = {});
-    static Promise&lt;undefined&gt; recordSignOut(optional SignInStatusOptions options = {});
-  };
-</pre>
-
-When {{Navigator/recordSignIn}} or {{Navigator/recordSignOut}} is
-called:
-  * If no |options| dictionary is provided, or there is no |idp| member in the
-    |options|, or the |idp| member is false, then the promise is rejected with
-    a {{TypeError}}.
-  * Otherwise, the user agent [=map/set|sets=] the entry in the [=Sign-in Status
-    Map=] with the [=map/key=] being [=/this=]'s [=/relevant settings object=]'s
-    [=environment settings object/origin=] and the value being [=signed-in=] (for
-    `recordSignIn`) or [=signed-out=] (for `recordSignOut`).
 
 <!-- ============================================================ -->
 ## The connected accounts set ## {#browser-connected-accounts-set}
