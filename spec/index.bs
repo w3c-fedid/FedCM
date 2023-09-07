@@ -49,6 +49,7 @@ spec:html; type:dfn; for:environment settings object; text:global object
 spec:html; type:dfn; for:html-origin-def; text:origin
 spec:webidl; type:dfn; text:resolve
 spec:webdriver2; type:dfn; text:error
+spec:fetch; type:dfn; for:/; text:response
 </pre>
 
 <style>
@@ -318,15 +319,23 @@ for an [=IDP=] to adopt the FedCM API. It doesn't introduce security issues on t
 ## The Sign-in Status API ## {#browser-api-sign-in-status}
 <!-- ============================================================ -->
 
+Issue: Reconcile this section with the
+    [Login Status API](https://github.com/privacycg/is-logged-in).
+    See also [this PR](https://github.com/privacycg/is-logged-in/pull/54).
+
+Issue: The HTTP header checking should move into the Fetch spec, since it
+    affects all resource loads.
+
 Each [=user agent=] keeps a global, persistent <dfn>Sign-in Status
 map</dfn>, an initially empty [=map=]. The [=map/keys=] in this map are
 [=/origin=] (of IDPs), and the [=map/values=] are enums that can be one of
 "<dfn><code>unknown</code></dfn>", "<dfn><code>signed-in</code></dfn>",
 and "<dfn><code>signed-out</code></dfn>"
 
-The user agent checks all page and subresource loads for an HTTP response
-[=header=] named <dfn><code>SignIn-Status</code></dfn>, whose value is
-parsed as HTTP [[RFC9110#section-5.6.6|Parameter]]s.
+The user agent checks each [=http-redirect fetch=] and [=http fetch=]'s
+[=response=] for an HTTP response [=header=] named
+<dfn><code>SignIn-Status</code></dfn>, whose value is parsed as HTTP
+[[RFC9110#section-5.6.6|Parameter]]s.
 If that header exists, there is a parameter with name `type` and value `idp`,
 and any parameter has a name of `action`, the user agent must process it as
 follows:
@@ -344,9 +353,6 @@ follows:
 
 </div>
 
-Issue: Should the header checking be integrated into the fetch spec instead,
-    since it affects all resources?
-
 User agents must also clear the [=Sign-in Status map=] data when:
     :   the user clears all cookies or site settings data
     ::  The user agent must clear the entire map.
@@ -357,14 +363,19 @@ User agents must also clear the [=Sign-in Status map=] data when:
 
             Note: For example, domain cookies may affect subdomains of
                 the deleted origin.
-    :   if the user agent allows deleting individual cookies
+    :   the user deletes individual cookies (if allowed by the user agent)
     ::  the behavior is user agent-defined.
 
             Note: The user agent may want to reset the state to [=unknown=],
                 since is impossible to know whether this cookie affects
                 authorization state.
+    : the user agent receives a <a http-header>Clear-Site-Data</a> header with a
+        value of `"cookies"`
+    :: while [$clear cookies for origin|clearing cookies for
+        origin$] it must remove any entries in the [=Sign-in Status Map=] where
+        the [=map/key=] is the input origin.
 
-Note: Website-initiated cookie changes should not affect this map. When
+Note: Other website-initiated cookie changes should not affect this map. When
     IDP sign-in state changes, it should send an explicit
     [=SignIn-Status=].
     RP state should not affect this map since it only reflects IDP state.
@@ -392,13 +403,6 @@ called:
     Map=] with the [=map/key=] being [=/this=]'s [=/relevant settings object=]'s
     [=environment settings object/origin=] and the value being [=signed-in=] (for
     `recordSignIn`) or [=signed-out=] (for `recordSignOut`).
-
-### Interaction with `Clear-Site-Data` ### {#browser-clear-site-data}
-
-When the user agent receives a <a http-header>Clear-Site-Data</a> header with a
-value of `"cookies"`, while [$clear cookies for origin|clearing cookies for
-origin$] it must remove any entries in the [=Sign-in Status Map=] where the
-[=map/key=] is the input origin.
 
 <!-- ============================================================ -->
 ## The connected accounts set ## {#browser-connected-accounts-set}
@@ -1878,7 +1882,7 @@ The [=remote end steps=] are:
 
 ## Confirm IDP signin ## {#webdriver-confirmidpsignin}
 
-<figure id="table-webdriver-canceldialog" class="table">
+<figure id="table-webdriver-confirmidpsignin" class="table">
     <table class="data">
         <thead>
             <tr>
@@ -1889,7 +1893,7 @@ The [=remote end steps=] are:
         <tbody>
             <tr>
                 <td>POST</td>
-                <td>`/session/{session id}/fedcm/confirm_idp_signin`</td>
+                <td>`/session/{session id}/fedcm/confirmidpsignin`</td>
             </tr>
         </tbody>
     </table>
