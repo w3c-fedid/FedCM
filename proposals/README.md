@@ -39,7 +39,7 @@ This is a directory with the proposals to extend FedCM that we are actively work
     - Stage: draft
     - Champions: @yi-gu
     - Description: allows IdPs to monitor the performance of IdP in a privacy-preserving manner
-1. **The Revocation API**
+1. **[The Revocation API](https://github.com/fedidcg/FedCM/issues/496)**
     - Stage: draft
     - Champions: @yi-gu
     - Description: allows an RP to indicate to the IdP that the user is interested in unregistering
