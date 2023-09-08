@@ -659,21 +659,26 @@ the exception thrown.
         with the key being the origin of |provider|'s configURL. If there is
         no such entry, set it to a user-agent specific default (either [=unknown=] or
         [=signed-out=]).
-    1. If |signinStatus| is [=signed-out=], return failure.
+    1. If |signinStatus| is [=signed-out=], the user agent must either:
 
-        Issue: Should the user agent instead show UI to let the user sign
-            in to the IDP? This could be especially useful in the multi-IDP
-            case. See https://github.com/fedidcg/FedCM/issues/442 for discussion.
+        1. Return failure.
+        1. Prompt the user whether to continue. This MAY include an affordance
+            to [=show an IDP sign-in dialog=]. If the user cancels or that
+            algorithm returns failure, return failure.
+
+        Issue: We should perhaps provide a way to let the RP request that
+            the second option is provided, possibly gated on a user gesture.
+            See https://github.com/fedidcg/FedCM/issues/442 for discussion.
     1. Let |requiresUserMediation| be |provider|'s {{IdentityProviderConfig/configURL}}'s [=/origin=]'s
         [=requires user mediation=].
     1. Let |mediation| be |options|'s {{CredentialRequestOptions/mediation}}.
     1. If |requiresUserMediation| is true and |mediation| is
         "{{CredentialMediationRequirement/silent}}", return failure.
     1. Let |config| be the result of running [=fetch the config file=] with |provider| and
-        |globalObject|.
+        |globalObject| (this is the <dfn>fetch config step</dfn>).
     1. If |config| is failure, return (failure, false).
     1. Let |accountsList| be the result of [=fetch the accounts list=] with |config|, |provider|,
-        and |globalObject|.
+        and |globalObject| (this is the <dfn>fetch accounts list step</dfn>).
     1. If |accountsList| is failure, or the size of |accountsList| is 0:
         1. [=map/set|Set=] an entry in the [=Sign-in Status map=] with the
             key being the [=/origin=] of the {{IdentityProviderConfig/configURL}}
@@ -684,19 +689,32 @@ the exception thrown.
                 credentials were sent. In this situation, we do not know whether
                 the user is signed in or not and so we may not want to reset
                 the status.
-        1. If |signinStatus| is [=signed-in=], show a dialog to the user and return
-            failure.
+        1. If |signinStatus| is [=signed-in=], show a dialog to the user. The
+            contents of this dialog are defined by the user agent. This dialog
+            SHOULD provide an affordance for the user to trigger the [=show an
+            IDP sign-in dialog=] algorithm; this dialog is then the <dfn>confirm
+            IDP sign-in dialog</dfn>.
 
-            Note: Since this situation happens when the browser expects the user
+            Note: This situation happens when the browser expects the user
                 to be signed in, but the accounts fetch indicated that the user
-                is signed out, it is recommended that this dialog is a <dfn>confirm
-                IDP signin dialog</dfn> and provides a "sign in" button allowing
-                the user to sign in to the IDP using
-                {{IdentityProviderAPIConfig/signin_url}}.
+                is signed out.
 
             Note: This dialog ensures that silent tracking of the user is
                 impossible by always showing UI of some kind when credentials
                 were sent to the server.
+
+            If the user closes the dialog, return failure.
+
+            If the [=show an IDP sign-in dialog=] algorithm was triggered:
+
+                1. Let |result| be the result of that algorithm.
+                1. If |result| is failure, return failure. The user agent MAY
+                    show a dialog to the user before or after returning failure
+                    indicating this failure.
+                1. Otherwise, go back to the [=fetch config step=]. As an
+                    optimization, the user agent MAY instead go to the
+                    [=fetch accounts list step=].
+
     1. If |signinStatus| is [=unknown=], [=map/set=] an entry in the [=sign-in
         status map=] with the key being the origin of the configURL and the value being
         [=signed-in=].
@@ -1255,6 +1273,28 @@ and a |responseBody|, run the following steps. This returns an [=ordered map=].
     1. Return |json|.
 </div>
 
+<div algorithm>
+To <dfn>show an IDP sign-in dialog</dfn> given an {{IdentityProviderAPIConfig}} |config|, run
+the following steps. This returns success or failure.
+    1. Open a new [=/browsing context=].
+    1. Load |config|.{{IdentityProviderAPIConfig/signin_url}} in this new browsing context.
+    1. Let |status_changed| be false.
+    1. Listen for changes to the [=sign-in status map=] where the key is the
+        the [=/origin=] of the {{IdentityProviderAPIConfig/signin_url}} and
+        the value is [=signed-in=]. If such a change happens, set
+        |status_changed| to true.
+
+        Note: The IDP sign-in flow may trigger this change using either
+            the [[#signin-status-javascript|JavaScript]] or
+            [[#signin-status-http|HTTP header]] API.
+    1. Wait for one of the following conditions:
+        1. The user closes the browsing context: return failure.
+        1. {{IdentityProvider}}.{{IdentityProvider/close}} is called:
+            1. Close the browsing context.
+            1. If |status_changed| is true, return success.
+            1. Otherwise, return failure.
+</div>
+
 <!-- ============================================================ -->
 ## The IdentityProvider Interface ## {#browser-api-identity-provider-interface}
 <!-- ============================================================ -->
@@ -1271,12 +1311,22 @@ This specification introduces the {{IdentityUserInfo}} dictionary as well as the
   };
 
   [Exposed=Window, SecureContext] interface IdentityProvider {
+      static undefined close();
       static Promise&lt;sequence&lt;IdentityUserInfo&gt;&gt; getUserInfo(IdentityProviderConfig config);
   };
 </pre>
 
 Issue: [Decide](https://github.com/fedidcg/FedCM/issues/476) whether {{IdentityProvider}} is the
 correct location for the {{IdentityProvider/getUserInfo()}} method.
+
+A {{IdentityProvider/close}} function is provided to signal to the browser that
+the signin flow is finished. The reason for this function in addition to the
+header is that even when the user is already logged in, the signin flow may not
+be finished yet; for example, an IDP may want to prompt the user to verify
+their phone number. To allow for such flows, the IDP must call
+{{IdentityProvider/close}} when the flow is fully done.
+
+See the [=show an IDP sign-in dialog=] algorithm for more details.
 
 An {{IdentityUserInfo}} represents user account information from a user. This information is exposed
 to the [=IDP=] once the user has already used the FedCM API to login in the [=RP=]. That is, it is
@@ -1908,7 +1958,7 @@ The [=remote end steps=] are:
 The [=remote end steps=] are:
 
 1. If no FedCM dialog is currently open, or the dialog is not a [=confirm IDP
-    signin dialog=] return a [=error|WebDriver error=] with [=error code=]
+    sign-in dialog=] return a [=error|WebDriver error=] with [=error code=]
     [=no such alert=].
 
 1. Act as if the user had clicked the "continue" button in the dialog and
@@ -2028,7 +2078,7 @@ The [=remote end steps=] are:
 
 1. Let |type| be a string that is "`AutoReauthn`" if the user is being [=auto-reauthenticated=],
     or "`AccountChooser`" is the dialog is an account chooser, or "`ConfirmIdpSignin`" if the
-    dialog is a [=confirm IDP signin dialog=].
+    dialog is a [=confirm IDP sign-in dialog=].
 
 1. Return [=success=] with data |type|.
 
