@@ -618,9 +618,16 @@ This specification introduces a new type of {{DOMException}}, the {{IdentityCred
 is used when the [=user agent=] does not receive an identity assertion after the user has requested
 to use a federated account.
 
+<xmp class="idl">
+dictionary IdentityCredentialErrorInit {
+  DOMString code;
+  DOMString url;
+};
+</xmp>
+
 <pre class="idl">
   [Exposed=Window, SecureContext]
-  interface IdentityCredentialError: DOMException {
+  interface IdentityCredentialError : DOMException {
     constructor(optional DOMString message = "", optional IdentityCredentialErrorInit options = {});
     readonly attribute DOMString code;
     readonly attribute DOMString url;
@@ -1433,7 +1440,7 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
     1. If |tokenUrl| is failure:
         1. [=Queue a global task=] on the [=DOM manipulation task source=] given |globalObject| to
             let |error| be a new {{IdentityCredentialError}} given |globalObject|'s
-            <a for="global object">realm</a>.
+            [=global object/realm=].
         1. Wait for |error| to be set, and return it.
     1. Let |requestBody| be the result of running [=urlencoded serializer=] with a list containing:
         1. ("client_id", |provider|'s {{IdentityProviderConfig/clientId}})
@@ -1479,23 +1486,25 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
             |responseBody|.
         1. If |json|[|token|] and |json|[|error|] both [=map/exist=] or both do not [=map/exist=],
             set |credential| to a new {{IdentityCredentialError}} given |globalObject|'s
-            <a for="global object">realm</a> and "IdentityCredentialError", and return.
+            [=global object/realm=] and "IdentityCredentialError", and return.
         1. If |json|[|token|] [=map/exists=]:
             1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderToken}}, |token|.
             1. If one of the previous steps threw an exception, set |credential| to a new
-                {{IdentityCredentialError}} given |globalObject|'s <a for="global object">realm</a>
+                {{IdentityCredentialError}} given |globalObject|'s [=global object/realm=]
                 and "IdentityCredentialError", and return.
             1. Let |credential| be a new {{IdentityCredential}} given |globalObject|'s
-                <a for="global object">realm</a>.
+                [=global object/realm=].
             1. Set |credential|'s {{IdentityCredential/token}} to |token|.
             1. Set |credential|'s {{IdentityCredential/isAutoSelected}} to
                 |isAutoSelected|.
         1. Otherwise, i.e. if |json|[|error|] [=map/exists=]:
-            1. If |json|[|error|] is not an [=ordered map=], set |credential| to failure and return.
+            1. If |json|[|error|] is not an [=ordered map=], set |credential| to a new
+                {{IdentityCredentialError}} given |globalObject|'s [=global object/realm=] and
+                "IdentityCredentialError" and return.
             1. [=converted to an IDL value|Convert=] |json| to an {{IdentityCredentialErrorInit}},
                 |errorInit|.
             1. Let |credential| be a new {{IdentityCredentialError}} given |globalObject|'s
-                <a for="global object">realm</a>, "IdentityCredentialError", and |errorInit|. 
+                [=global object/realm=], "IdentityCredentialError", and |errorInit|. 
     1. Wait for |credential| to be set.
     1. Return |credential|.
 </div>
@@ -1533,13 +1542,6 @@ An extension may add the following steps after the [=fetch identity assertion/cr
 dictionary IdentityAssertionResponse {
   USVString token;
   USVString continue_on;
-};
-</xmp>
-
-<xmp class="idl">
-dictionary IdentityCredentialErrorInit {
-  DOMString code;
-  DOMString url;
 };
 </xmp>
 
