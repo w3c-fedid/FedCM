@@ -68,7 +68,7 @@ interface NavigatorLogin {
 };
 
 partial interface Navigator {
-  readonly NavigatorLogin login;
+  [SecureContext] readonly NavigatorLogin login;
 };
 ```
 
