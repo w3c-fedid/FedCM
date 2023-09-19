@@ -39,9 +39,9 @@ settings page allowing the user to disable certain IDPs for use with FedCM.
 
 ### Headers
 
-```
-SignIn-Status: action=signin; type=idp
-SignIn-Status: action=signout-all; type=idp
+```http
+Set-Login: logged-in
+Set-Login: logged-out
 ```
 
 These headers can be sent on the toplevel load as well as subresources such as
@@ -51,23 +51,30 @@ The signout-all header should only be sent when no accounts remain signed in
 to the IDP, i.e. when this action has signed out all accounts or if this
 was the last/only account getting signed out.
 
+We envision this to be a semicolon-separated list of tokens or key/value pairs
+so that this can be expanded in the future.
+
 ### JS API
 
 ```idl
 
-dictionary SigninStatusOptions {
-  boolean idp = false;
+enum LoginStatus {
+  "logged-in",
+  "logged-out",
+};
+
+interface NavigatorLogin {
+  Promise<void> setStatus(LoginStatus status);
 };
 
 partial interface Navigator {
-  Promise<void> recordSignedIn(optional SigninStatusOptions options);
-  Promise<void> recordSignedOut(optional SigninStatusOptions options);
+  readonly NavigatorLogin login;
 };
 ```
 
 Alternatively, an IdP can call the IdP Sign-in Status API via JS calls through
-the static functions `navigator.recordSignedIn({idp: true})` and
-`navigator.recordSignedOut({idp: true})`. These are to be called from the IDP's
+the static functions `navigator.login.setStatus("logged-in")` and
+`navigator.login.setStatus("logged-out")`. These are to be called from the IDP's
 origin, and mark the current origin as signed in or signed out.
 
 ```idl
