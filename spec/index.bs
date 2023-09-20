@@ -334,24 +334,23 @@ map</dfn>, an initially empty [=map=]. The [=map/keys=] in this map are
 "<dfn><code>unknown</code></dfn>", "<dfn><code>signed-in</code></dfn>",
 and "<dfn><code>signed-out</code></dfn>"
 
-The user agent checks each [=http-redirect fetch=] and [=http fetch=]'s
-[=response=] for an HTTP response [=header=] named
-<dfn><code>SignIn-Status</code></dfn>, whose value is parsed as HTTP
-[[RFC9110#section-5.6.6|Parameter]]s.
-If that header exists, there is a parameter with name `type` and value `idp`,
-and any parameter has a name of `action`, the user agent must process it as
-follows:
+For each [=http-redirect fetch=] and [=http fetch=]'s [=response=], let |value|
+be the result of [=get a structured field value=] from the response's header
+list with name "`Set-Login`" and type "`item`". If |value| is not null,
+process this header as follows:
 
 <div algorithm="process the signin status header">
 * If this is a subresource request, and the response does not have the
     same [=/origin=] as the toplevel page, ignore the header.
 * Otherwise:
-    * If the parameter value is `signin`, [=map/set=] an entry in the
+    * Assert that |value| is a tuple.
+    * Let |token| be the first entry of |value|.
+    * If |token| is "`login`", [=map/set=] an entry in the
         [=Sign-in Status map=] with the key being the origin of the resource
-        and the value being [=signed-in=]
-    * If the parameter value is `signout-all`, [=map/set=] an entry in the
+        and the value being [=signed-in=].
+    * If |token| is "`logout`", [=map/set=] an entry in the
         [=Sign-in Status map=] with the key being the origin of the resource
-        and the value being [=signed-out=]
+        and the value being [=signed-out=].
 
 </div>
 
