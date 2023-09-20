@@ -360,25 +360,27 @@ IDPs can also use a JavaScript API to update the stored sign-in status:
 
 
 <pre class="idl">
-  dictionary SignInStatusOptions {
-    boolean idp;
-  };
+enum LoginStatus {
+  "logged-in",
+  "logged-out",
+};
 
-  partial interface Navigator {
-    static Promise&lt;undefined&gt; recordSignIn(optional SignInStatusOptions options = {});
-    static Promise&lt;undefined&gt; recordSignOut(optional SignInStatusOptions options = {});
-  };
+[Exposed=Window, SecureContext] 
+interface NavigatorLogin {
+  Promise&lt;undefined&gt; setStatus(LoginStatus status);
+};
+
+partial interface Navigator {
+  [SecureContext] readonly attribute NavigatorLogin login;
+};
 </pre>
 
-When {{Navigator/recordSignIn}} or {{Navigator/recordSignOut}} is
-called:
-  * If no |options| dictionary is provided, or there is no |idp| member in the
-    |options|, or the |idp| member is false, then the promise is rejected with
-    a {{TypeError}}.
-  * Otherwise, the user agent [=map/set|sets=] the entry in the [=Sign-in Status
+When {{NavigatorLogin/setStatus()}} is called with argument |status|:
+* Let |value| be [=signed-in=] if |status| is `"logged-in"` or [=signed-out=]
+    if |status| is `"logged-out"`.
+* Otherwise, the user agent [=map/set|sets=] the entry in the [=Sign-in Status
     Map=] with the [=map/key=] being [=/this=]'s [=/relevant settings object=]'s
-    [=environment settings object/origin=] and the value being [=signed-in=] (for
-    `recordSignIn`) or [=signed-out=] (for `recordSignOut`).
+    [=environment settings object/origin=] and the value being |value|.
 
 ### Clearing map data ### {#signin-status-clear-data}
 
