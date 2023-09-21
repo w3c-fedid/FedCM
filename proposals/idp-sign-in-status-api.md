@@ -47,9 +47,9 @@ Set-Login: logged-out
 These headers can be sent on the toplevel load as well as subresources such as
 XMLHttpRequest (this is necessary for at least one IDP).
 
-The signout-all header should only be sent when no accounts remain signed in
-to the IDP, i.e. when this action has signed out all accounts or if this
-was the last/only account getting signed out.
+The signout header should only be sent when no accounts remain logged in
+to the IDP, i.e. when this action has logged out all accounts or if this
+was the last/only account getting logged out.
 
 We envision this to be a semicolon-separated list of tokens or key/value pairs
 so that this can be expanded in the future.
@@ -75,7 +75,7 @@ partial interface Navigator {
 Alternatively, an IdP can call the IdP Sign-in Status API via JS calls through
 the static functions `navigator.login.setStatus("logged-in")` and
 `navigator.login.setStatus("logged-out")`. These are to be called from the IDP's
-origin, and mark the current origin as signed in or signed out.
+origin, and mark the current origin as logged in or logged out.
 
 ```idl
 [Exposed=Window]
@@ -108,16 +108,16 @@ See further below for a description of the semantics.
 ### Semantics
 
 For each IDP (identified by its config URL) the browser keeps a tri-state
-variable representing the sign-in state with possible values “signed-in”,
-“signed-out”, and “unknown”, defaulting to “unknown”.
+variable representing the sign-in state with possible values “logged-in”,
+“logged-out”, and “unknown”, defaulting to “unknown”.
 
-When receiving the sign-in header, the state will be set to “signed in”. In
+When receiving the sign-in header, the state will be set to “logged in”. In
 case of subresources, to limit abuse, the header is only processed if the
 resource is same-origin with the document.
 
 Similar for the sign-out header.
 
-In some cases, a user can get signed out server-side while the user is not on
+In some cases, a user can get logged out server-side while the user is not on
 the IDP website. For example, the IDP may require re-authentication every N
 days, or the user may have changed their password (or deleted their account) on
 a different browser, forcing re-login. This proposal does not have special
@@ -130,7 +130,7 @@ There is [some discussion](https://crbug.com/1381505) on whether the sign-in hea
 
 When an RP calls navigator.credentials.get():
 
-* If the sign-in state on the provided config URL is “signed out”, no
+* If the sign-in state on the provided config URL is “logged out”, no
 network requests will be made and the promise is rejected (with a delay
 as usual (step 3 of
 [the algorithm](https://fedidcg.github.io/FedCM/#dom-identitycredential-discoverfromexternalsource-slot)))
@@ -138,16 +138,16 @@ as usual (step 3 of
 
 When the accounts endpoint response is successful and has at least one account:
 
-* The sign-in state is set to “signed-in” if it was previously “unknown”
+* The sign-in state is set to “logged-in” if it was previously “unknown”
 
 
 When an error is received from the accounts endpoint or no accounts are returned:
 
-* If the sign-in state was unknown, the sign-in state is set to “signed out”. No UI is displayed and the promise is rejected as usual
-    * This is used when launching this API, when the browser has no stored IDP sign-in data, and also when an IDP starts supporting FedCM, where the user can also be signed in without the sign-in status being set. This allows us to handle these cases without being required to show UI when the user is not signed in
+* If the sign-in state was unknown, the sign-in state is set to “logged out”. No UI is displayed and the promise is rejected as usual
+    * This is used when launching this API, when the browser has no stored IDP sign-in data, and also when an IDP starts supporting FedCM, where the user can also be logged in without the sign-in status being set. This allows us to handle these cases without being required to show UI when the user is not logged in
     * This does incur a one-time timing attack per IDP. Since this can only happen once per IDP/browser profile, it seems impractical for an attacker to rely on.
         * An alternative solution is to show the sign-in UI even in this case
-* If the sign-in state was “signed in”, the sign-in state is set to “signed out”. An error dialog is displayed that also allows the user to sign in to the IDP. The exact UI is TBD; the dialog may not explicitly say something like “we thought you were logged in to the IDP”.
+* If the sign-in state was “logged in”, the sign-in state is set to “logged out”. An error dialog is displayed that also allows the user to sign in to the IDP. The exact UI is TBD; the dialog may not explicitly say something like “we thought you were logged in to the IDP”.
     * The primary case where this will happen is if the session is invalidated server-side, either because of session-length settings, because the user forced logout on other devices, or other reasons.
     * We show a dialog in this situation to discourage trackers using this
     * This dialog is why there is a sign-in URL being added in this proposal, so that the user has a way to recover instead of being presented with a useless dialog. However, having this URL is also useful for other UI enhancements.
@@ -161,11 +161,8 @@ See [https://github.com/fedidcg/FedCM/blob/main/meetings/2022/FedCM_%20Options%2
 
 ### Header syntax
 
-We chose action=signout-all to make it clear that this header should only be
-sent when all accounts from this IDP are signed out.
-
 We could instead or in addition have allowed notifying the user agent of
-individual accounts being signed in/out, such as:
+individual accounts being logged in/out, such as:
 
 ```
 SignIn-Status: action=signin; count=2; type=idp
@@ -183,9 +180,9 @@ However, we decided to go with the simpler syntax because we do not currently
 have a use case that requires the extra information.
 
 Additionally, the second option would require the browser to track which
-specific account IDs are signed in, so that it can tell when there no
-more signed in accounts for this IDP. This introduces extra complexity,
-whereas the IDP already knows how many accounts are signed in and thus
+specific account IDs are logged in, so that it can tell when there no
+more logged in accounts for this IDP. This introduces extra complexity,
+whereas the IDP already knows how many accounts are logged in and thus
 whether no accounts remain after this signout action.
 
 ### The Login Status API
