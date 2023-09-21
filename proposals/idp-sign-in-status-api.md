@@ -48,7 +48,7 @@ These headers can be sent on the toplevel load as well as subresources such as
 XMLHttpRequest (this is necessary for at least one IDP).
 
 The signout header should only be sent when no accounts remain logged in
-to the IDP, i.e. when this action has logged out all accounts or if this
+to the IDP, i.e., when this action has logged out all accounts or if this
 was the last/only account getting logged out.
 
 We envision this to be a semicolon-separated list of tokens or key/value pairs
@@ -75,7 +75,7 @@ partial interface Navigator {
 Alternatively, an IdP can call the IdP Sign-in Status API via JS calls through
 the static functions `navigator.login.setStatus("logged-in")` and
 `navigator.login.setStatus("logged-out")`. These are to be called from the IDP's
-origin, and mark the current origin as logged in or logged out.
+origin, and mark the current origin as logged-in or logged-out.
 
 ```idl
 [Exposed=Window]
