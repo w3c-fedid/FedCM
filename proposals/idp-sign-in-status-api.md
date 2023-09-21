@@ -165,15 +165,15 @@ We could instead or in addition have allowed notifying the user agent of
 individual accounts being logged in/out, such as:
 
 ```
-SignIn-Status: action=signin; count=2; type=idp
-SignIn-Status: action=signout; new-count=1; type=idp
+SignIn-Status: signin; count=2; type=idp
+SignIn-Status: signout; new-count=1; type=idp
 ```
 
 Or
 
 ```
-SignIn-Status: action=signin; accountid=foo@bar.com; type=idp
-SignIn-Status: action=signout; accountid=foo@bar.com; type=idp
+SignIn-Status: signin; accountid=foo@bar.com; type=idp
+SignIn-Status: signout; accountid=foo@bar.com; type=idp
 ```
 
 However, we decided to go with the simpler syntax because we do not currently
