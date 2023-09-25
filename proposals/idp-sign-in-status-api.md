@@ -51,8 +51,9 @@ The signout header should only be sent when no accounts remain logged in
 to the IDP, i.e., when this action has logged out all accounts or if this
 was the last/only account getting logged out.
 
-We envision this to be a semicolon-separated list of tokens or key/value pairs
-so that this can be expanded in the future.
+This will be parsed as a [structured field](https://fetch.spec.whatwg.org/#concept-header-list-get-structured-header)
+with type `item`. For now we only use bare item part but this lets us extend
+the header to support parameters in the future.
 
 ### JS API
 
