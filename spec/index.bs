@@ -316,7 +316,7 @@ for an [=IDP=] to adopt the FedCM API. It doesn't introduce security issues on t
 [=RP=] cannot inspect the results from the fetches in any way.
 
 <!-- ============================================================ -->
-## The Sign-in Status API ## {#browser-api-sign-in-status}
+## The Login Status API ## {#browser-api-sign-in-status}
 <!-- ============================================================ -->
 
 Issue: Reconcile this section with the
@@ -328,11 +328,11 @@ Issue: Reconcile this section with the
 Issue: The HTTP header checking should move into the Fetch spec, since it
     affects all resource loads.
 
-Each [=user agent=] keeps a global, persistent <dfn>Sign-in Status
+Each [=user agent=] keeps a global, persistent <dfn>Login Status
 map</dfn>, an initially empty [=map=]. The [=map/keys=] in this map are
 [=/origin=] (of IDPs), and the [=map/values=] are enums that can be one of
-"<dfn><code>unknown</code></dfn>", "<dfn><code>signed-in</code></dfn>",
-and "<dfn><code>signed-out</code></dfn>"
+"<dfn><code>unknown</code></dfn>", "<dfn><code>logged-in</code></dfn>",
+and "<dfn><code>logged-out</code></dfn>"
 
 For each [=http-redirect fetch=] and [=http fetch=]'s [=response=], let |value|
 be the result of [=get a structured field value=] from the response's header
@@ -346,11 +346,11 @@ process this header as follows:
     * Assert that |value| is a tuple.
     * Let |token| be the first entry of |value|.
     * If |token| is `login`, [=map/set=] an entry in the
-        [=Sign-in Status map=] with the key being the origin of the resource
-        and the value being [=signed-in=].
+        [=Login Status map=] with the key being the origin of the resource
+        and the value being [=logged-in=].
     * If |token| is `logout`, [=map/set=] an entry in the
-        [=Sign-in Status map=] with the key being the origin of the resource
-        and the value being [=signed-out=].
+        [=Login Status map=] with the key being the origin of the resource
+        and the value being [=logged-out=].
 
 </div>
 
@@ -376,15 +376,15 @@ partial interface Navigator {
 </pre>
 
 When {{NavigatorLogin/setStatus()}} is called with argument |status|:
-* Let |value| be [=signed-in=] if |status| is `"logged-in"` or [=signed-out=]
+* Let |value| be [=logged-in=] if |status| is `"logged-in"` or [=logged-out=]
     if |status| is `"logged-out"`.
-* [=map/set|Set=] the entry in the [=Sign-in Status Map=] with the [=map/key=]
+* [=map/set|Set=] the entry in the [=Login Status Map=] with the [=map/key=]
     being [=/this=]'s [=/relevant settings object=]'s
     [=environment settings object/origin=] and the value being |value|.
 
 ### Clearing map data ### {#signin-status-clear-data}
 
-User agents must also clear the [=Sign-in Status map=] data when:
+User agents must also clear the [=Login Status map=] data when:
     :   the user clears all cookies or site settings data
     ::  The user agent must clear the entire map.
     :   the user clears cookies or site data for a specific origin
@@ -403,7 +403,7 @@ User agents must also clear the [=Sign-in Status map=] data when:
     : the user agent receives a <a http-header>Clear-Site-Data</a> header with a
         value of `"cookies"`
     :: while [$clear cookies for origin|clearing cookies for
-        origin$] it must remove any entries in the [=Sign-in Status Map=] where
+        origin$] it must remove any entries in the [=Login Status Map=] where
         the [=map/key=] is the input origin.
 
 Note: Other website-initiated cookie changes should not affect this map. When
@@ -656,11 +656,11 @@ To <dfn>create an IdentityCredential</dfn> given an {{IdentityProviderConfig}}
 or a pair (failure, bool), where the bool indicates whether to skip delaying
 the exception thrown.
     1. Assert: These steps are running [=in parallel=].
-    1. Let |signinStatus| be the value of the entry in [=Sign-in Status map=]
+    1. Let |loginStatus| be the value of the entry in [=Login Status map=]
         with the key being the origin of |provider|'s configURL. If there is
         no such entry, set it to a user-agent specific default (either [=unknown=] or
-        [=signed-out=]).
-    1. If |signinStatus| is [=signed-out=], the user agent must do one of the following:
+        [=logged-out=]).
+    1. If |loginStatus| is [=logged-out=], the user agent must do one of the following:
 
         * Return failure.
         * Prompt the user whether to continue. This MAY include an affordance
@@ -681,16 +681,16 @@ the exception thrown.
     1. <dfn>Fetch accounts list step</dfn>: Let |accountsList| be the result of
         [=fetch the accounts list=] with |config|, |provider|, and |globalObject|.
     1. If |accountsList| is failure, or the size of |accountsList| is 0:
-        1. [=map/set|Set=] an entry in the [=Sign-in Status map=] with the
+        1. [=map/set|Set=] an entry in the [=Login Status map=] with the
             key being the [=/origin=] of the {{IdentityProviderConfig/configURL}}
-            and the value being [=signed-out=].  A user agent may decide to
+            and the value being [=logged-out=].  A user agent may decide to
             skip this step if no credentials were sent to server.
 
             Note: For example, if the fetch failed due to a DNS error, no
                 credentials were sent. In this situation, we do not know whether
                 the user is signed in or not and so we may not want to reset
                 the status.
-        1. If |signinStatus| is [=signed-in=], show a dialog to the user. The
+        1. If |loginStatus| is [=logged-in=], show a dialog to the user. The
             contents of this dialog are defined by the user agent. This dialog
             SHOULD provide an affordance for the user to trigger the [=show an
             IDP sign-in dialog=] algorithm; this dialog is the <dfn>confirm
@@ -716,9 +716,9 @@ the exception thrown.
                     optimization, the user agent MAY instead go to the
                     [=fetch accounts list step=].
 
-    1. If |signinStatus| is [=unknown=], [=map/set=] an entry in the [=sign-in
+    1. If |loginStatus| is [=unknown=], [=map/set=] an entry in the [=sign-in
         status map=] with the key being the origin of the configURL and the value being
-        [=signed-in=].
+        [=logged-in=].
     1. If |provider|'s {{IdentityProviderConfig/loginHint}} is not empty:
         1. For every |account| in |accountList|, remove |account| from |accountList| if |account|'s
             {{IdentityProviderAccount/login_hints}} does not [=list/contain=] |provider|'s
@@ -1287,15 +1287,15 @@ the following steps. This returns success or failure.
         * {{IdentityProvider}}.{{IdentityProvider/close}} is called in the
             context of this new traversable:
             1. Close the traversable.
-            1. Let |signinStatus| be the value of the entry in [=Sign-in Status map=]
+            1. Let |loginStatus| be the value of the entry in [=Login Status map=]
                 with the key being the origin of the {{IdentityProviderAPIConfig/signin_url}}.
 
-                Note: The IDP sign-in flow may set this value to signed-in using
+                Note: The IDP sign-in flow may set this value to logged-in using
                     either the [[#signin-status-javascript|JavaScript]] or
                     [[#signin-status-http|HTTP header]] API during the signin
                     flow. It is also possible that this change happened in
                     a different browsing context.
-            1. If |signinStatus| is [=signed-in=], return success.
+            1. If |loginStatus| is [=logged-in=], return success.
             1. Otherwise, return failure.
 </div>
 
