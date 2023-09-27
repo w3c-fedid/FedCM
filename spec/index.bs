@@ -330,7 +330,7 @@ Issue: The HTTP header checking should move into the Fetch spec, since it
 
 Each [=user agent=] keeps a global, persistent <dfn>Login Status
 map</dfn>, an initially empty [=map=]. The [=map/keys=] in this map are
-[=/origin=] (of IDPs), and the [=map/values=] are enums that can be one of
+[=/origin=] (of [=IDPs=]), and the [=map/values=] are enums that can be one of
 "<dfn><code>unknown</code></dfn>", "<dfn><code>logged-in</code></dfn>",
 and "<dfn><code>logged-out</code></dfn>"
 
@@ -356,7 +356,7 @@ process this header as follows:
 
 ### JavaScript API ### {#signin-status-javascript}
 
-IDPs can also use a JavaScript API to update the stored sign-in status:
+[=IDPs=] can also use a JavaScript API to update the stored sign-in status:
 
 
 <pre class="idl">
@@ -375,12 +375,17 @@ partial interface Navigator {
 };
 </pre>
 
+<div algorithm="setStatus">
 When {{NavigatorLogin/setStatus()}} is called with argument |status|:
+* If the [=/origin=] of the [=current settings object=] is not [=same origin=]
+    with the [=top-level origin=], throw a {{SecurityError}} {{DOMException}}.
 * Let |value| be [=logged-in=] if |status| is `"logged-in"` or [=logged-out=]
     if |status| is `"logged-out"`.
 * [=map/set|Set=] the entry in the [=Login Status Map=] with the [=map/key=]
     being [=/this=]'s [=/relevant settings object=]'s
     [=environment settings object/origin=] and the value being |value|.
+
+</div>
 
 ### Clearing map data ### {#signin-status-clear-data}
 
@@ -657,17 +662,19 @@ or a pair (failure, bool), where the bool indicates whether to skip delaying
 the exception thrown.
     1. Assert: These steps are running [=in parallel=].
     1. Let |loginStatus| be the value of the entry in [=Login Status map=]
-        with the key being the origin of |provider|'s configURL. If there is
-        no such entry, set it to a user-agent specific default (either [=unknown=] or
+        with the key being the [=/origin=] of |provider|'s
+        {{IdentityProviderConfig/configURL}}. If there is no such entry, set it
+        to a user-agent specific default (either [=unknown=] or
         [=logged-out=]).
     1. If |loginStatus| is [=logged-out=], the user agent must do one of the following:
 
-        * Return failure.
-        * Prompt the user whether to continue. This MAY include an affordance
-            to [=show an IDP sign-in dialog=]. If the user cancels or that
-            algorithm returns failure, return (failure, true).
+        * Return (failure, false).
+        * Prompt the user whether to continue. If the user continues, the user
+            agent SHOULD set |loginStatus| to [=unknown=]. This MAY include an
+            affordance to [=show an IDP sign-in dialog=]. If the user cancels
+            or that algorithm returns failure, return (failure, true).
 
-        Issue: We should perhaps provide a way to let the RP request that
+        Issue: We should perhaps provide a way to let the [=RP=] request that
             the second option is provided, possibly gated on a user gesture.
             See [this issue](https://github.com/fedidcg/FedCM/issues/442) for discussion.
     1. Let |requiresUserMediation| be |provider|'s {{IdentityProviderConfig/configURL}}'s [=/origin=]'s
@@ -687,7 +694,8 @@ the exception thrown.
             skip this step if no credentials were sent to server.
 
             Note: For example, if the fetch failed due to a DNS error, no
-                credentials were sent. In this situation, we do not know whether
+                credentials were sent and therefore the IDP did not learn
+                the user's identity. In this situation, we do not know whether
                 the user is signed in or not and so we may not want to reset
                 the status.
         1. If |loginStatus| is [=logged-in=], show a dialog to the user. The
@@ -704,9 +712,9 @@ the exception thrown.
                 impossible by always showing UI of some kind when credentials
                 were sent to the server.
 
-            If the user closes the dialog, return (failure, true).
+            * If the user closes the dialog, return (failure, true).
 
-            If the [=show an IDP sign-in dialog=] algorithm was triggered:
+            * If the [=show an IDP sign-in dialog=] algorithm was triggered:
 
                 1. Let |result| be the result of that algorithm.
                 1. If |result| is failure, return (failure, true). The user
@@ -716,14 +724,14 @@ the exception thrown.
                     optimization, the user agent MAY instead go to the
                     [=fetch accounts list step=].
 
-    1. If |loginStatus| is [=unknown=], [=map/set=] an entry in the [=login
-        status map=] with the key being the origin of the configURL and the value being
+    1. Assert: |accountsList| is not failure and the size of |accountsList| is not 0.
+    1. [=map/Set=] an entry in the [=login status map=] with the key being the
+        [=/origin] of the {{IdentityProviderConfig/configURL}} and the value being
         [=logged-in=].
     1. If |provider|'s {{IdentityProviderConfig/loginHint}} is not empty:
         1. For every |account| in |accountList|, remove |account| from |accountList| if |account|'s
             {{IdentityProviderAccount/login_hints}} does not [=list/contain=] |provider|'s
             {{IdentityProviderConfig/loginHint}}.
-    1. If |accountsList| is failure, return (failure, false).
     1. For each |acc| in |accountsList|:
         1. If |acc|["{{IdentityProviderAccount/picture}}"] is present, [=fetch the account picture=]
             with |acc| and |globalObject|.
@@ -1277,8 +1285,8 @@ and a |responseBody|, run the following steps. This returns an [=ordered map=].
 <div algorithm>
 To <dfn>show an IDP sign-in dialog</dfn> given an {{IdentityProviderAPIConfig}} |config|, run
 the following steps. This returns success or failure.
-    1. [=Create a fresh top-level traversable=] with URL |config|.
-        {{IdentityProviderAPIConfig/signin_url}}.
+    1. [=Create a fresh top-level traversable=] with URL
+        |config|.{{IdentityProviderAPIConfig/signin_url}}.
     1. The user agent MAY [=set up browsing context features=] or otherwise
         affect the presentation of this traversable in an implementation-defined
         way.
@@ -1326,8 +1334,8 @@ correct location for the {{IdentityProvider/getUserInfo()}} method.
 A {{IdentityProvider/close}} function is provided to signal to the browser that
 the signin flow is finished. The reason for this function in addition to the
 header is that even when the user is already logged in, the signin flow may not
-be finished yet; for example, an IDP may want to prompt the user to verify
-their phone number. To allow for such flows, the IDP must call
+be finished yet; for example, an [=IDP=] may want to prompt the user to verify
+their phone number. To allow for such flows, the [=IDP=] must call
 {{IdentityProvider/close}} when the flow is fully done.
 
 See the [=show an IDP sign-in dialog=] algorithm for more details.
