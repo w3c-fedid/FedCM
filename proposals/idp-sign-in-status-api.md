@@ -26,7 +26,7 @@ this API to let identity providers (IDPs) tell the browser when the user signs
 in to and out of the IDP. The IDP Sign-in Status API does not grant the
 identity provider any permissions. Using the IDP sign-in status API is not a
 way for a site to prove that it is an identity provider. The purpose of the
-Idp-Signin-Status API is to enable identity providers to disable the FedCM API
+IDP Sign-in Status API is to enable identity providers to disable the FedCM API
 for their IDP in order to deliver a better user experience.
 
 In addition, with the browser gaining knowledge about IDPs, this may allow
@@ -36,6 +36,9 @@ settings page allowing the user to disable certain IDPs for use with FedCM.
 
 ## Proposed API
 
+The "Headers" and "JS API" sections describe the proposed
+[Login Status API](https://github.com/fedidcg/login-status). We describe them
+in this document as well for easier readability.
 
 ### Headers
 
@@ -52,7 +55,7 @@ to the IDP, i.e., when this action has logged out all accounts or if this
 was the last/only account getting logged out.
 
 This will be parsed as a [structured field](https://fetch.spec.whatwg.org/#concept-header-list-get-structured-header)
-with type `item`. For now we only use bare item part but this lets us extend
+with type `item`. For now, we only use bare item part, but this lets us extend
 the header to support parameters in the future.
 
 ### JS API
@@ -145,7 +148,7 @@ When the accounts endpoint response is successful and has at least one account:
 When an error is received from the accounts endpoint or no accounts are returned:
 
 * If the sign-in state was unknown, the sign-in state is set to “logged out”. No UI is displayed and the promise is rejected as usual
-    * This is used when launching this API, when the browser has no stored IDP sign-in data, and also when an IDP starts supporting FedCM, where the user can also be logged in without the sign-in status being set. This allows us to handle these cases without being required to show UI when the user is not logged in
+    * This is used when launching this API, when the browser has no stored IDP sign-in data, and also when an IDP starts supporting FedCM, where the user can also be logged in without the login status being set. This allows us to handle these cases without being required to show UI when the user is not logged in
     * This does incur a one-time timing attack per IDP. Since this can only happen once per IDP/browser profile, it seems impractical for an attacker to rely on.
         * An alternative solution is to show the sign-in UI even in this case
 * If the sign-in state was “logged in”, the sign-in state is set to “logged out”. An error dialog is displayed that also allows the user to sign in to the IDP. The exact UI is TBD; the dialog may not explicitly say something like “we thought you were logged in to the IDP”.
@@ -166,15 +169,15 @@ We could instead or in addition have allowed notifying the user agent of
 individual accounts being logged in/out, such as:
 
 ```
-SignIn-Status: signin; count=2; type=idp
-SignIn-Status: signout; new-count=1; type=idp
+Set-Login: logged-in; count=2; type=idp
+Set-Login: logged-out; new-count=1; type=idp
 ```
 
 Or
 
 ```
-SignIn-Status: signin; accountid=foo@bar.com; type=idp
-SignIn-Status: signout; accountid=foo@bar.com; type=idp
+Set-Login: logged-in; accountid=foo@bar.com; type=idp
+Set-Login: logged-out; accountid=foo@bar.com; type=idp
 ```
 
 However, we decided to go with the simpler syntax because we do not currently
@@ -185,12 +188,3 @@ specific account IDs are logged in, so that it can tell when there no
 more logged in accounts for this IDP. This introduces extra complexity,
 whereas the IDP already knows how many accounts are logged in and thus
 whether no accounts remain after this signout action.
-
-### The Login Status API
-
-We are also considering with Safari and Firefox how this API relates to the Login Status API [here](https://github.com/privacycg/is-logged-in/issues/53).
-
-In this proposal, we are using generic header and JS function names so that the same API and
-headers can be used for is-logged-in while also recording the optional type (i.e. is this
-an IDP or not).
-
