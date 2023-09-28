@@ -323,7 +323,7 @@ Issue: Reconcile this section with the
     [Login Status API](https://github.com/privacycg/is-logged-in).
     See also [this PR](https://github.com/privacycg/is-logged-in/pull/54).
 
-### HTTP header API ### {#signin-status-http}
+### HTTP header API ### {#login-status-http}
 
 Issue: The HTTP header checking should move into the Fetch spec, since it
     affects all resource loads.
@@ -339,7 +339,7 @@ be the result of [=get a structured field value=] from the response's header
 list with name "<dfn><code>Set-Login</code></dfn>" and type "`item`". If |value| is not null,
 process this header as follows:
 
-<div algorithm="process the signin status header">
+<div algorithm="process the login status header">
 * If the request's [=request/current url=]'s [=/origin=] is not [=same origin=]
     with the [=environment/top-level origin=], ignore the header.
 * Otherwise:
@@ -354,7 +354,7 @@ process this header as follows:
 
 </div>
 
-### JavaScript API ### {#signin-status-javascript}
+### JavaScript API ### {#login-status-javascript}
 
 [=IDPs=] can also use a JavaScript API to update the stored sign-in status:
 
@@ -377,17 +377,17 @@ partial interface Navigator {
 
 <div algorithm="setStatus">
 When {{NavigatorLogin/setStatus()}} is called with argument |status|:
-* If the [=/origin=] of the [=current settings object=] is not [=same origin=]
+1. If the [=/origin=] of the [=current settings object=] is not [=same origin=]
     with the [=top-level origin=], throw a {{SecurityError}} {{DOMException}}.
-* Let |value| be [=logged-in=] if |status| is `"logged-in"` or [=logged-out=]
+1. Let |value| be [=logged-in=] if |status| is `"logged-in"` or [=logged-out=]
     if |status| is `"logged-out"`.
-* [=map/set|Set=] the entry in the [=Login Status Map=] with the [=map/key=]
+1. [=map/set|Set=] the entry in the [=Login Status Map=] with the [=map/key=]
     being [=/this=]'s [=/relevant settings object=]'s
     [=environment settings object/origin=] and the value being |value|.
 
 </div>
 
-### Clearing map data ### {#signin-status-clear-data}
+### Clearing map data ### {#login-status-clear-data}
 
 User agents must also clear the [=Login Status map=] data when:
     :   the user clears all cookies or site settings data
@@ -671,7 +671,7 @@ the exception thrown.
         * Return (failure, false).
         * Prompt the user whether to continue. If the user continues, the user
             agent SHOULD set |loginStatus| to [=unknown=]. This MAY include an
-            affordance to [=show an IDP sign-in dialog=]. If the user cancels
+            affordance to [=show an IDP login dialog=]. If the user cancels
             or that algorithm returns failure, return (failure, true).
 
         Issue: We should perhaps provide a way to let the [=RP=] request that
@@ -694,15 +694,15 @@ the exception thrown.
             skip this step if no credentials were sent to server.
 
             Note: For example, if the fetch failed due to a DNS error, no
-                credentials were sent and therefore the IDP did not learn
+                credentials were sent and therefore the [=IDP=] did not learn
                 the user's identity. In this situation, we do not know whether
                 the user is signed in or not and so we may not want to reset
                 the status.
-        1. If |loginStatus| is [=logged-in=], show a dialog to the user. The
-            contents of this dialog are defined by the user agent. This dialog
-            SHOULD provide an affordance for the user to trigger the [=show an
-            IDP sign-in dialog=] algorithm; this dialog is the <dfn>confirm
-            IDP sign-in dialog</dfn>.
+        1. <dfn>Mismatch dialog step</dfn>: If |loginStatus| is [=logged-in=], show a
+            dialog to the user. The contents of this dialog are defined by the user
+            agent. This dialog SHOULD provide an affordance for the user to trigger
+            the [=show an IDP login dialog=] algorithm; this dialog is the
+            <dfn>confirm IDP login dialog</dfn>.
 
             Note: This situation happens when the browser expects the user
                 to be signed in, but the accounts fetch indicated that the user
@@ -712,17 +712,19 @@ the exception thrown.
                 impossible by always showing UI of some kind when credentials
                 were sent to the server.
 
-            * If the user closes the dialog, return (failure, true).
+            1. Wait until one of the following occurs:
 
-            * If the [=show an IDP sign-in dialog=] algorithm was triggered:
+                * If the user closes the dialog, return (failure, true).
 
-                1. Let |result| be the result of that algorithm.
-                1. If |result| is failure, return (failure, true). The user
-                    agent MAY show a dialog to the user before or after
-                    returning failure indicating this failure.
-                1. Otherwise, go back to the [=fetch config step=]. As an
-                    optimization, the user agent MAY instead go to the
-                    [=fetch accounts list step=].
+                * If the [=show an IDP login dialog=] algorithm was triggered:
+
+                    1. Let |result| be the result of that algorithm.
+                    1. If |result| is failure, return (failure, true). The user
+                        agent MAY show a dialog to the user before or after
+                        returning failure indicating this failure.
+                    1. Otherwise, go back to the [=fetch config step=]. As an
+                        optimization, the user agent MAY instead go to the
+                        [=fetch accounts list step=].
 
     1. Assert: |accountsList| is not failure and the size of |accountsList| is not 0.
     1. [=map/Set=] an entry in the [=login status map=] with the key being the
@@ -732,6 +734,7 @@ the exception thrown.
         1. For every |account| in |accountList|, remove |account| from |accountList| if |account|'s
             {{IdentityProviderAccount/login_hints}} does not [=list/contain=] |provider|'s
             {{IdentityProviderConfig/loginHint}}.
+        1. If |accountList| is now empty, go to the [=mismatch dialog step=].
     1. For each |acc| in |accountsList|:
         1. If |acc|["{{IdentityProviderAccount/picture}}"] is present, [=fetch the account picture=]
             with |acc| and |globalObject|.
@@ -1283,7 +1286,7 @@ and a |responseBody|, run the following steps. This returns an [=ordered map=].
 </div>
 
 <div algorithm>
-To <dfn>show an IDP sign-in dialog</dfn> given an {{IdentityProviderAPIConfig}} |config|, run
+To <dfn>show an IDP login dialog</dfn> given an {{IdentityProviderAPIConfig}} |config|, run
 the following steps. This returns success or failure.
     1. [=Create a fresh top-level traversable=] with URL
         |config|.{{IdentityProviderAPIConfig/signin_url}}.
@@ -1299,8 +1302,8 @@ the following steps. This returns success or failure.
                 with the key being the origin of the {{IdentityProviderAPIConfig/signin_url}}.
 
                 Note: The IDP sign-in flow may set this value to logged-in using
-                    either the [[#signin-status-javascript|JavaScript]] or
-                    [[#signin-status-http|HTTP header]] API during the signin
+                    either the [[#login-status-javascript|JavaScript]] or
+                    [[#login-status-http|HTTP header]] API during the login
                     flow. It is also possible that this change happened in
                     a different browsing context.
             1. If |loginStatus| is [=logged-in=], return success.
@@ -1332,13 +1335,13 @@ Issue: [Decide](https://github.com/fedidcg/FedCM/issues/476) whether {{IdentityP
 correct location for the {{IdentityProvider/getUserInfo()}} method.
 
 A {{IdentityProvider/close}} function is provided to signal to the browser that
-the signin flow is finished. The reason for this function in addition to the
-header is that even when the user is already logged in, the signin flow may not
+the login flow is finished. The reason for this function in addition to the
+header is that even when the user is already logged in, the login flow may not
 be finished yet; for example, an [=IDP=] may want to prompt the user to verify
 their phone number. To allow for such flows, the [=IDP=] must call
 {{IdentityProvider/close}} when the flow is fully done.
 
-See the [=show an IDP sign-in dialog=] algorithm for more details.
+See the [=show an IDP login dialog=] algorithm for more details.
 
 An {{IdentityUserInfo}} represents user account information from a user. This information is exposed
 to the [=IDP=] once the user has already used the FedCM API to login in the [=RP=]. That is, it is
@@ -1948,9 +1951,9 @@ The [=remote end steps=] are:
 
 1. Return [=success=] with data `null`.
 
-## Confirm IDP signin ## {#webdriver-confirmidpsignin}
+## Confirm IDP login ## {#webdriver-confirmidplogin}
 
-<figure id="table-webdriver-confirmidpsignin" class="table">
+<figure id="table-webdriver-confirmidplogin" class="table">
     <table class="data">
         <thead>
             <tr>
@@ -1961,7 +1964,7 @@ The [=remote end steps=] are:
         <tbody>
             <tr>
                 <td>POST</td>
-                <td>`/session/{session id}/fedcm/confirmidpsignin`</td>
+                <td>`/session/{session id}/fedcm/confirmidplogin`</td>
             </tr>
         </tbody>
     </table>
@@ -1970,11 +1973,11 @@ The [=remote end steps=] are:
 The [=remote end steps=] are:
 
 1. If no FedCM dialog is currently open, or the dialog is not a [=confirm IDP
-    sign-in dialog=] return a [=error|WebDriver error=] with [=error code=]
+    login dialog=] return a [=error|WebDriver error=] with [=error code=]
     [=no such alert=].
 
 1. Act as if the user had clicked the "continue" button in the dialog and
-    initiate the signin flow.
+    initiate the login flow.
 
 1. Return [=success=] with data `null`.
 
@@ -2089,8 +2092,8 @@ The [=remote end steps=] are:
     [=error code=] [=no such alert=].
 
 1. Let |type| be a string that is "`AutoReauthn`" if the user is being [=auto-reauthenticated=],
-    or "`AccountChooser`" is the dialog is an account chooser, or "`ConfirmIdpSignin`" if the
-    dialog is a [=confirm IDP sign-in dialog=].
+    or "`AccountChooser`" is the dialog is an account chooser, or "`ConfirmIdpLogin`" if the
+    dialog is a [=confirm IDP login dialog=].
 
 1. Return [=success=] with data |type|.
 
