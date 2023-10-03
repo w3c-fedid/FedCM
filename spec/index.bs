@@ -327,6 +327,14 @@ map</dfn>, an initially empty [=map=]. The [=map/keys=] in this map are
 "<dfn><code>unknown</code></dfn>", "<dfn><code>logged-in</code></dfn>",
 and "<dfn><code>logged-out</code></dfn>".
 
+<div algorithm>
+To <dfn>get a login status entry</dfn> for an [=/origin=] |origin|:
+1. If [=Login Status map=][|origin|] exists, return it.
+1. Otherwise, return a user-agent specific default (either [=unknown=] or
+    [=logged-out=]).
+
+</div>
+
 ### HTTP header API ### {#login-status-http}
 
 Issue: The HTTP header checking should move into the Fetch spec, since it
@@ -656,11 +664,8 @@ To <dfn>create an IdentityCredential</dfn> given an {{IdentityProviderConfig}}
 or a pair (failure, bool), where the bool indicates whether to skip delaying
 the exception thrown.
     1. Assert: These steps are running [=in parallel=].
-    1. Let |loginStatus| be the value of the entry in [=Login Status map=]
-        with the key being the [=/origin=] of |provider|'s
-        {{IdentityProviderConfig/configURL}}. If there is no such entry, set it
-        to a user-agent specific default (either [=unknown=] or
-        [=logged-out=]).
+    1. Let |loginStatus| be the result of [=get a login status entry=] with
+        the [=/origin=] of |provider|'s {{IdentityProviderConfig/configURL}}.
     1. If |loginStatus| is [=logged-out=], the user agent MUST do one of the following:
 
         * Return (failure, false).
@@ -1294,8 +1299,8 @@ the following steps. This returns success or failure.
         * {{IdentityProvider}}.{{IdentityProvider/close}} is called in the
             context of this new traversable:
             1. Close the traversable.
-            1. Let |loginStatus| be the value of the entry in [=Login Status map=]
-                with the key being the origin of the {{IdentityProviderAPIConfig/login_url}}.
+            1. Let |loginStatus| be the result of [=get a login status entry=]
+                with the [=/origin=] of the {{IdentityProviderAPIConfig/login_url}}.
 
                 Note: The IDP login flow may set this value to logged-in using
                     either the [[#login-status-javascript|JavaScript]] or
