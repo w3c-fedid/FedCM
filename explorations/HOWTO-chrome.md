@@ -24,7 +24,7 @@ includes the time when the sign-up status was set.
 
 ## Experimental functionality
 
-In order to test experimental functionality:
+To test experimental functionality:
 
 1. Download Google Chrome Canary. It is best to experiment with the latest
    build possible to get the most up-to-date implementation.
@@ -67,7 +67,7 @@ succeeded or failed.
 
 ### LoginHint
 
-In order to use the LoginHint API:
+To use the LoginHint API:
 
 * Enable the experimental feature `FedCmLoginHint` in `chrome://flags`.
 * Add an array of `hints` to the accounts described in the accounts endpoint:
@@ -102,7 +102,7 @@ Now, only accounts with the "hint" provided will show in the chooser.
 
 ### UserInfo
 
-In order to use the UserInfo API:
+To use the UserInfo API:
 
 * Enable the experimental feature `FedCmLoginHint` in `chrome://flags`.
 * The RP must embed an IDP iframe, which will perform the query.
@@ -128,7 +128,7 @@ user_info.forEach( info => {
 
 ### RP Context
 
-In order to use the RP Context API:
+To use the RP Context API:
 
 * Enable the experimental feature `FedCmRpContext` in `chrome://flags`.
 * Provide the `context` value in JS, like so:
@@ -149,7 +149,7 @@ Now, the browser UI will be different based on the value provided.
 
 ### IdP Sign-in Status API
 
-In order to use the IdP Sign-in Status API:
+To use the IdP Sign-in Status API:
 
 1. Enable the experimental feature `FedCM with FedCM IDP sign-in status` in `chrome://flags`.
 2. When the user logs-in to the IdP, use the following HTTP header `IdP-SignIn-Status: action=signin`.
@@ -160,7 +160,7 @@ In order to use the IdP Sign-in Status API:
 
 ### Error API
 
-In order to use the Error API:
+To use the Error API:
 
 * Enable the experimental feature `FedCmError` in `chrome://flags`.
 * Provide an `error` in the id assertion endpoint instead of a `token`:
@@ -172,11 +172,18 @@ In order to use the Error API:
   }
 }
 ```
-Note that the `error` field in the response including both `code` and `url` is optional. As long as the flag is enabled, the browser will render an error UI when the token request is failed. The `error` field is used to customize the flow when an error happens. The browser will show a customized UI with proper error message if the code is one of "invalid_request", "unauthorized_client", "access_denied", "server_error", and "temporarily_unavailable". If a `url` field is provided, the browser will add an affordance for users to open a new page (e.g. via pop-up window) with that URL to learn more about the error on that page.
+Note that the `error` field in the response including both `code` and `url` is
+optional. As long as the flag is enabled, Chrome will render an error UI when
+the token request fails. The `error` field is used to customize the flow when an
+error happens. Chrome will show a customized UI with proper error message if the
+code is "invalid_request", "unauthorized_client", "access_denied", "server_error",
+or "temporarily_unavailable". If a `url` field is provided, Chrome will add an
+affordance for users to open a new page (e.g., via pop-up window) with that URL
+to learn more about the error on that page.
 
-### AccountAutoSelectedFlag API
+### `AccountAutoSelectedFlag` API
 
-In order to use the AccountAutoSelectedFlag API:
+To use the AccountAutoSelectedFlag API:
 * Enable the experimental feature `FedCmAccountAutoSelectedFlag` in `chrome://flags`.
 
 The browser will send a new boolean to represent whether auto re-authentication was triggered such that the account was auto selected by the browser in the flow to both the IdP and the API caller.
@@ -190,7 +197,7 @@ Content-Type: application/x-www-form-urlencoded
 Cookie: 0x23223
 Sec-Fetch-Dest: webidentity
 
-is_account_auto_selected=true&account_id=123&client_id=client1234&nonce=Ct60bD&disclosure_text_shown=true
+account_id=123&client_id=client1234&nonce=Ct60bD&disclosure_text_shown=true&is_account_auto_selected=true
 ```
 
 For the API caller, the browser will include the boolean `isAccountAutoSelected` when resolving the promise with the token:
