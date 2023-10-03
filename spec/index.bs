@@ -319,20 +319,18 @@ for an [=IDP=] to adopt the FedCM API. It doesn't introduce security issues on t
 ## The Login Status API ## {#browser-api-login-status}
 <!-- ============================================================ -->
 
-Issue: Reconcile this section with the
-    [Login Status API](https://github.com/privacycg/is-logged-in).
-    See also [this PR](https://github.com/privacycg/is-logged-in/pull/54).
-
-### HTTP header API ### {#login-status-http}
-
-Issue: The HTTP header checking should move into the Fetch spec, since it
-    affects all resource loads.
+### Login Status Map ### {#hdr-login-status-map}
 
 Each [=user agent=] keeps a global, persistent <dfn>Login Status
 map</dfn>, an initially empty [=map=]. The [=map/keys=] in this map are
 [=/origin=] (of [=IDPs=]), and the [=map/values=] are enums that can be one of
 "<dfn><code>unknown</code></dfn>", "<dfn><code>logged-in</code></dfn>",
-and "<dfn><code>logged-out</code></dfn>"
+and "<dfn><code>logged-out</code></dfn>".
+
+### HTTP header API ### {#login-status-http}
+
+Issue: The HTTP header checking should move into the Fetch spec, since it
+    affects all resource loads.
 
 For each [=http-redirect fetch=] and [=http fetch=]'s [=response=], let |value|
 be the result of [=get a structured field value=] from the response's header
@@ -340,17 +338,15 @@ list with name "<dfn><code>Set-Login</code></dfn>" and type "`item`". If |value|
 process this header as follows:
 
 <div algorithm="process the login status header">
-* If the request's [=request/current url=]'s [=/origin=] is not [=same origin=]
-    with the [=environment/top-level origin=], ignore the header.
+* Let |origin| be the response's [=response/URL=]'s [=/origin=].
+* If |origin| is not [=same-origin with its ancestors=], ignore the header.
 * Otherwise:
     * Assert that |value| is a tuple.
     * Let |token| be the first entry of |value|.
-    * If |token| is `login`, [=map/set=] an entry in the
-        [=Login Status map=] with the key being the origin of the resource
-        and the value being [=logged-in=].
-    * If |token| is `logout`, [=map/set=] an entry in the
-        [=Login Status map=] with the key being the origin of the resource
-        and the value being [=logged-out=].
+    * If |token| is `logged-in`, [=map/set=] [=Login Status map=][|origin|]
+        to [=logged-in=].
+    * If |token| is `logged-out`, [=map/set=] [=Login Status map=][|origin|]
+        to [=logged-out=].
 
 </div>
 
@@ -377,23 +373,23 @@ partial interface Navigator {
 
 <div algorithm="setStatus">
 When {{NavigatorLogin/setStatus()}} is called with argument |status|:
-1. If the [=/origin=] of the [=current settings object=] is not [=same origin=]
-    with the [=top-level origin=], throw a {{SecurityError}} {{DOMException}}.
+1. Let |origin| be the [=current settings object=]'s
+    [=environment settings object/origin=].
+1. If |origin| is not [=same-origin with its ancestors=], throw a
+    {{SecurityError}} {{DOMException}}.
 1. Let |value| be [=logged-in=] if |status| is `"logged-in"` or [=logged-out=]
     if |status| is `"logged-out"`.
-1. [=map/set|Set=] the entry in the [=Login Status Map=] with the [=map/key=]
-    being [=/this=]'s [=/relevant settings object=]'s
-    [=environment settings object/origin=] and the value being |value|.
+1. [=map/set|Set=] [=Login Status Map=][|origin|] to |value|.
 
 </div>
 
-### Clearing map data ### {#login-status-clear-data}
+### Clearing the Login Status Map data ### {#login-status-clear-data}
 
-User agents must also clear the [=Login Status map=] data when:
+User agents MUST also clear the [=Login Status map=] data when:
     :   the user clears all cookies or site settings data
-    ::  The user agent must clear the entire map.
+    ::  The user agent MUST clear the entire map.
     :   the user clears cookies or site data for a specific origin
-    ::  The user agent must remove all entries that would be affected
+    ::  The user agent MUST remove all entries that would be affected
             by the deleted cookies, that is, any entry with an origin
             to which a deleted cookie could be sent to.
 
@@ -402,13 +398,13 @@ User agents must also clear the [=Login Status map=] data when:
     :   the user deletes individual cookies (if allowed by the user agent)
     ::  the behavior is user agent-defined.
 
-            Note: The user agent may want to reset the state to [=unknown=],
+            Note: The user agent MAY want to reset the state to [=unknown=],
                 since is impossible to know whether this cookie affects
                 authorization state.
     : the user agent receives a <a http-header>Clear-Site-Data</a> header with a
-        value of `"cookies"`
+        value of `"cookies"` or `"*"`
     :: while [$clear cookies for origin|clearing cookies for
-        origin$] it must remove any entries in the [=Login Status Map=] where
+        origin$] it MUST remove any entries in the [=Login Status Map=] where
         the [=map/key=] is the input origin.
 
 Note: Other website-initiated cookie changes should not affect this map. When
@@ -665,7 +661,7 @@ the exception thrown.
         {{IdentityProviderConfig/configURL}}. If there is no such entry, set it
         to a user-agent specific default (either [=unknown=] or
         [=logged-out=]).
-    1. If |loginStatus| is [=logged-out=], the user agent must do one of the following:
+    1. If |loginStatus| is [=logged-out=], the user agent MUST do one of the following:
 
         * Return (failure, false).
         * Prompt the user whether to continue. If the user continues, the user
@@ -681,8 +677,8 @@ the exception thrown.
     1. Let |mediation| be |options|'s {{CredentialRequestOptions/mediation}}.
     1. If |requiresUserMediation| is true and |mediation| is
         "{{CredentialMediationRequirement/silent}}", return (failure, false).
-    1. <dfn>Fetch config step</dfn>: Let |config| be the result of running
-        [=fetch the config file=] with |provider| and |globalObject|.
+    1. Let |config| be the result of running [=fetch the config file=] with
+        |provider| and |globalObject|.
     1. If |config| is failure, return (failure, false).
     1. <dfn>Fetch accounts list step</dfn>: Let |accountsList| be the result of
         [=fetch the accounts list=] with |config|, |provider|, and |globalObject|.
@@ -721,9 +717,7 @@ the exception thrown.
                     1. If |result| is failure, return (failure, true). The user
                         agent MAY show a dialog to the user before or after
                         returning failure indicating this failure.
-                    1. Otherwise, go back to the [=fetch config step=]. As an
-                        optimization, the user agent MAY instead go to the
-                        [=fetch accounts list step=].
+                    1. Otherwise, go back to the [=fetch accounts list step=].
 
     1. Assert: |accountsList| is not failure and the size of |accountsList| is not 0.
     1. [=map/Set=] an entry in the [=login status map=] with the key being the
@@ -892,6 +886,9 @@ or failure.
         1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderAPIConfig}} stored
             in |config|.
         1. If one of the previous two steps threw an exception, set |config| to failure.
+        1. Set |config|.{{IdentityProviderAPIConfig/login_url}} to the result of  [=computing
+            the manifest URL=] with |provider|, |config| and |globalObject|.
+        1. If |config|.{{IdentityProviderAPIConfig/login_url}} is null, return failure.
     1. Wait for both |config| and |configInWellKnown| to be set.
     1. If |configInWellKnown| is true, return |config|. Otherwise, return failure.
 </div>
