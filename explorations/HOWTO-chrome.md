@@ -158,3 +158,45 @@ In order to use the IdP Sign-in Status API:
 5. The browser is going load the `signin_url` when the user is signed-out of the IdP.
 6. Call `IdentityProvider.close()` when the user is done logging-in to the IdP.
 
+### Error API
+
+In order to use the Error API:
+
+* Enable the experimental feature `FedCmError` in `chrome://flags`.
+* Provide an `error` in the id assertion endpoint instead of a `token`:
+```
+{
+  "error" : {
+     "code" : "access_denied",
+     "url" : "https://idp.example/error?type=foo"
+  }
+}
+```
+Note that the `error` field in the response including both `code` and `url` is optional. As long as the flag is enabled, the browser will render an error UI when the token request is failed. The `error` field is used to customize the flow when an error happens. The browser will show a customized UI with proper error message if the code is one of "invalid_request", "unauthorized_client", "access_denied", "server_error", and "temporarily_unavailable". If a `url` field is provided, the browser will add an affordance for users to open a new page (e.g. via pop-up window) with that URL to learn more about the error on that page.
+
+### AccountAutoSelectedFlag API
+
+In order to use the AccountAutoSelectedFlag API:
+* Enable the experimental feature `FedCmAccountAutoSelectedFlag` in `chrome://flags`.
+
+The browser will send a new boolean to represent whether auto re-authentication was triggered such that the account was auto selected by the browser in the flow to both the IdP and the API caller.
+
+For IdP, the browser will include the boolean `is_account_auto_selected` in the request sent to the id assersion endpoint:
+```
+POST /fedcm_assertion_endpoint HTTP/1.1
+Host: idp.example
+Origin: https://rp.example/
+Content-Type: application/x-www-form-urlencoded
+Cookie: 0x23223
+Sec-Fetch-Dest: webidentity
+
+is_account_auto_selected=true&account_id=123&client_id=client1234&nonce=Ct60bD&disclosure_text_shown=true
+```
+
+For the API caller, the browser will include the boolean `isAccountAutoSelected` when resolving the promise with the token:
+```
+{
+  "token": "eyJC...J9.eyJzdWTE2...MjM5MDIyfQ.SflV_adQssw....5c",
+  "isAccountAutoSelected": true
+}
+```
