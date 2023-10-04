@@ -188,7 +188,7 @@ To use the AccountAutoSelectedFlag API:
 
 The browser will send a new boolean to represent whether auto re-authentication was triggered such that the account was auto selected by the browser in the flow to both the IdP and the API caller.
 
-For IdP, the browser will include the boolean `is_account_auto_selected` in the request sent to the id assersion endpoint:
+For IdP, the browser will include the boolean `is_account_auto_selected` in the request sent to the id assertion endpoint:
 ```
 POST /fedcm_assertion_endpoint HTTP/1.1
 Host: idp.example
