@@ -1306,7 +1306,7 @@ To <dfn>fetch the accounts</dfn> given an {{IdentityProviderAPIConfig}} |config|
 {{IdentityProviderRequestOptions}} |provider|, and |globalObject|, run the following steps. This
 returns an {{IdentityProviderAccountList}}.
     1. Let |accountsUrl| be the result of [=computing the manifest URL=] given |provider|,
-        |config|["{{IdentityProviderAPIConfig/accounts_endpoint}}"], and |globalObject|.
+        |config|["{{IdentityProviderAPIConfig/accounts_endpoint}}"], true, and |globalObject|.
     1. If |accountsUrl| is failure, return an empty list.
     1. Let |request| be a new <a spec=fetch for=/>request</a> as follows:
 
@@ -1436,7 +1436,7 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
     {{IdentityProviderRequestOptions}} |provider|, an {{IdentityProviderAPIConfig}} |config|,
     and |globalObject|, run the following steps. This returns an {{IdentityCredential}} or failure.
     1. Let |tokenUrl| be the result of [=computing the manifest URL=] given |provider|,
-        |config|["{{IdentityProviderAPIConfig/id_assertion_endpoint}}"], and |globalObject|.
+        |config|["{{IdentityProviderAPIConfig/id_assertion_endpoint}}"], true, and |globalObject|.
     1. If |tokenUrl| is failure:
         1. [=Queue a global task=] on the [=DOM manipulation task source=] given |globalObject| to
             let |error| be a new {{IdentityCredentialError}} given |globalObject|'s
@@ -1503,6 +1503,11 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
                 "IdentityCredentialError" and return.
             1. [=converted to an IDL value|Convert=] |json| to an {{IdentityCredentialErrorInit}},
                 |errorInit|.
+            1. If |errorInit|.{{IdentityCredentialErrorInit/url}} is present:
+                1. Let |errorUrl| be the result of [=computing the manifest URL=] given |provider|,
+                    |errorInit|.{{IdentityCredentialErrorInit/url}}, false, and |globalObject|.
+                1. If |errorUrl| is failure, set |errorInit|.{{IdentityCredentialErrorInit/url}}
+                    to "".
             1. Let |credential| be a new {{IdentityCredentialError}} given |globalObject|'s
                 [=global object/realm=], "IdentityCredentialError", and |errorInit|. 
     1. Wait for |credential| to be set.
@@ -1614,7 +1619,7 @@ an {{IdentityProviderRequestOptions}} |provider|, run the following steps. This 
     1. If |config|["{{IdentityProviderAPIConfig/client_metadata_endpoint}}"] is not present, return
         failure.
     1. Let |clientMetadataUrl| be the result of [=computing the manifest URL=] given |provider|,
-        |config|["{{IdentityProviderAPIConfig/client_metadata_endpoint}}"], and |globalObject|.
+        |config|["{{IdentityProviderAPIConfig/client_metadata_endpoint}}"], true, and |globalObject|.
     1. If |clientMetadataUrl| is failure, return failure.
     1. Let |request| be a new <a spec=fetch for=/>request</a> as follows:
 
