@@ -328,10 +328,17 @@ map</dfn>, an initially empty [=map=]. The [=map/keys=] in this map are
 and "<dfn><code>logged-out</code></dfn>".
 
 <div algorithm>
-To <dfn>get a login status entry</dfn> for an [=/origin=] |origin|:
+To <dfn>get the login status</dfn> for an [=/origin=] |origin|:
 1. If [=Login Status map=][|origin|] exists, return it.
-1. Otherwise, return a user-agent specific default (either [=unknown=] or
-    [=logged-out=]).
+1. Otherwise, return [=unknown=].
+
+</div>
+
+<div algorithm>
+To <dfn>set the login status</dfn> for an [=/origin=] |origin| to
+value |value|:
+1. Assert that |value| is one of [=logged-in=] or [=logged-out=].
+1. [=map/Set=] [=Login Status map=][|origin|] to |value|.
 
 </div>
 
@@ -351,9 +358,9 @@ process this header as follows:
 * Otherwise:
     * Assert that |value| is a tuple.
     * Let |token| be the first entry of |value|.
-    * If |token| is `logged-in`, [=map/set=] [=Login Status map=][|origin|]
+    * If |token| is `logged-in`, [=set the login status=] for |origin|
         to [=logged-in=].
-    * If |token| is `logged-out`, [=map/set=] [=Login Status map=][|origin|]
+    * If |token| is `logged-out`, [=set the login status=] for |origin|
         to [=logged-out=].
 
 </div>
@@ -387,7 +394,7 @@ When {{NavigatorLogin/setStatus()}} is called with argument |status|:
     {{SecurityError}} {{DOMException}}.
 1. Let |value| be [=logged-in=] if |status| is `"logged-in"` or [=logged-out=]
     if |status| is `"logged-out"`.
-1. [=map/set|Set=] [=Login Status Map=][|origin|] to |value|.
+1. [=Set the login status=] for |origin| to |value|.
 
 </div>
 
@@ -664,8 +671,9 @@ To <dfn>create an IdentityCredential</dfn> given an {{IdentityProviderConfig}}
 or a pair (failure, bool), where the bool indicates whether to skip delaying
 the exception thrown.
     1. Assert: These steps are running [=in parallel=].
-    1. Let |loginStatus| be the result of [=get a login status entry=] with
+    1. Let |loginStatus| be the result of [=get the login status=] with
         the [=/origin=] of |provider|'s {{IdentityProviderConfig/configURL}}.
+    1. If |loginStatus| is [=unknown=], a user agent MAY set it to [=logged-out=].
     1. If |loginStatus| is [=logged-out=], the user agent MUST do one of the following:
 
         * Return (failure, false).
@@ -688,10 +696,10 @@ the exception thrown.
     1. <dfn>Fetch accounts list step</dfn>: Let |accountsList| be the result of
         [=fetch the accounts list=] with |config|, |provider|, and |globalObject|.
     1. If |accountsList| is failure, or the size of |accountsList| is 0:
-        1. [=map/set|Set=] an entry in the [=Login Status map=] with the
-            key being the [=/origin=] of the {{IdentityProviderConfig/configURL}}
-            and the value being [=logged-out=].  A user agent may decide to
-            skip this step if no credentials were sent to server.
+        1. [=Set the login status=] for the [=/origin=] of the
+            {{IdentityProviderConfig/configURL}} to [=logged-out=].
+            A user agent may decide to skip this step if no credentials were
+            sent to server.
 
             Note: For example, if the fetch failed due to a DNS error, no
                 credentials were sent and therefore the [=IDP=] did not learn
@@ -725,9 +733,8 @@ the exception thrown.
                     1. Otherwise, go back to the [=fetch accounts list step=].
 
     1. Assert: |accountsList| is not failure and the size of |accountsList| is not 0.
-    1. [=map/Set=] an entry in the [=login status map=] with the key being the
-        [=/origin] of the {{IdentityProviderConfig/configURL}} and the value being
-        [=logged-in=].
+    1. [=Set the login status=] for the [=/origin] of the
+        {{IdentityProviderConfig/configURL}} to [=logged-in=].
     1. If |provider|'s {{IdentityProviderConfig/loginHint}} is not empty:
         1. For every |account| in |accountList|, remove |account| from |accountList| if |account|'s
             {{IdentityProviderAccount/login_hints}} does not [=list/contain=] |provider|'s
@@ -1299,7 +1306,7 @@ the following steps. This returns success or failure.
         * {{IdentityProvider}}.{{IdentityProvider/close}} is called in the
             context of this new traversable:
             1. Close the traversable.
-            1. Let |loginStatus| be the result of [=get a login status entry=]
+            1. Let |loginStatus| be the result of [=get the login status=]
                 with the [=/origin=] of the {{IdentityProviderAPIConfig/login_url}}.
 
                 Note: The IDP login flow may set this value to logged-in using
