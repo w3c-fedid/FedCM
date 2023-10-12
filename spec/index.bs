@@ -40,6 +40,9 @@ spec: webdriver; urlPrefix: https://w3c.github.io/webdriver/
         text: no such alert; url: dfn-no-such-alert
         text: error code; url: dfn-error-code
         text: validating capabilities; url: dfn-validate-capabilities
+spec: webappsec-fetch-metadata; urlPrefix: https://w3c.github.io/webappsec-fetch-metadata/
+    type: dfn
+        text: Directly User-Initiated Requests; url: directly-user-initiated
 </pre>
 
 <pre class=link-defaults>
@@ -344,6 +347,8 @@ value |value|:
 
 ### HTTP header API ### {#login-status-http}
 
+[=IDPs=] can set the login status using an HTTP [=response=] [=header=] as follows.
+
 Issue: The HTTP header checking should move into the Fetch spec, since it
     affects all resource loads.
 
@@ -353,14 +358,19 @@ list with name "<dfn><code>Set-Login</code></dfn>" and type "`item`". If |value|
 process this header as follows:
 
 <div algorithm="process the login status header">
-* Let |origin| be the response's [=response/URL=]'s [=/origin=].
-* If |origin| is not [=same-origin with its ancestors=], ignore the header.
-* Otherwise:
-    * Assert that |value| is a tuple.
-    * Let |token| be the first entry of |value|.
-    * If |token| is `logged-in`, [=set the login status=] for |origin|
+1. Let |origin| be the response's [=response/URL=]'s [=/origin=].
+1. Let |client| be the [=/request=]'s [=request/client=].
+1. If the request is not a [=directly user-initiated request=]:
+    1. If |client| is null, return.
+    1. If |origin| is not [=same origin=] with the [=/request=]'s
+        [=request/origin=], return.
+    1. If |client| is not [=same-origin with its ancestors=], return.
+1. Otherwise:
+    1. Assert that |value| is a tuple.
+    1. Let |token| be the first entry of |value|.
+    1. If |token| is `"logged-in"`, [=set the login status=] for |origin|
         to [=logged-in=].
-    * If |token| is `logged-out`, [=set the login status=] for |origin|
+    1. If |token| is `"logged-out"`, [=set the login status=] for |origin|
         to [=logged-out=].
 
 </div>
@@ -388,10 +398,10 @@ partial interface Navigator {
 
 <div algorithm="setStatus">
 When {{NavigatorLogin/setStatus()}} is called with argument |status|:
+1. If the [=current settings object=] is not [=same-origin with its ancestors=],
+    throw a {{SecurityError}} {{DOMException}}.
 1. Let |origin| be the [=current settings object=]'s
     [=environment settings object/origin=].
-1. If |origin| is not [=same-origin with its ancestors=], throw a
-    {{SecurityError}} {{DOMException}}.
 1. Let |value| be [=logged-in=] if |status| is `"logged-in"` or [=logged-out=]
     if |status| is `"logged-out"`.
 1. [=Set the login status=] for |origin| to |value|.
@@ -403,13 +413,15 @@ When {{NavigatorLogin/setStatus()}} is called with argument |status|:
 User agents MUST also clear the [=Login Status map=] data when:
     :   the user clears all cookies or site settings data
     ::  The user agent MUST clear the entire map.
-    :   the user clears cookies or site data for a specific origin
+    :   the user clears all cookies or all site data for a specific origin
     ::  The user agent MUST remove all entries that would be affected
             by the deleted cookies, that is, any entry with an origin
             to which a deleted cookie could be sent to.
 
             Note: For example, domain cookies may affect subdomains of
-                the deleted origin.
+                the deleted origin, e.g. clearing cookies for `google.com`
+                should also reset the login status for `accounts.google.com`,
+                since it may rely on a domain cookie for google.com.
     :   the user deletes individual cookies (if allowed by the user agent)
     ::  the behavior is user agent-defined.
 
@@ -417,10 +429,15 @@ User agents MUST also clear the [=Login Status map=] data when:
                 since is impossible to know whether this cookie affects
                 authorization state.
     : the user agent receives a <a http-header>Clear-Site-Data</a> header with a
-        value of `"cookies"` or `"*"`
+        value of `"cookies"` or `"*"`, and the [=/request=]'s [=request/client=] is
+        not null, and the client's [=environment settings object/origin=] is [=same
+        origin=] with the [=top-level origin=]
     :: while [$clear cookies for origin|clearing cookies for
         origin$] it MUST remove any entries in the [=Login Status Map=] where
         the [=map/key=] is the input origin.
+
+        Issue: Once Clear-Site-Data [supports partitioned cookies](https://github.com/w3c/webappsec-clear-site-data/issues/72),
+            this wording should be updated.
 
 Note: Other website-initiated cookie changes should not affect this map. When
     [=IDP=] login state changes, it should send an explicit [=Set-Login=] header.
@@ -679,8 +696,15 @@ the exception thrown.
         * Return (failure, false).
         * Prompt the user whether to continue. If the user continues, the user
             agent SHOULD set |loginStatus| to [=unknown=]. This MAY include an
-            affordance to [=show an IDP login dialog=]. If the user cancels
-            or that algorithm returns failure, return (failure, true).
+            affordance to [=show an IDP login dialog=].
+
+            * If the user cancels this dialog, return (failure, true).
+            * If the user triggers this affordance:
+                1. Let |config| be the result of running [=fetch the config file=]
+                    with |provider| and |globalObject|.
+                1. If |config| is failure, return (failure, true).
+                1. [=Show an IDP login dialog=] with |config|.
+                1. If that algorithm returns failure, return (failure, true).
 
         Issue: We should perhaps provide a way to let the [=RP=] request that
             the second option is provided, possibly gated on a user gesture.
@@ -689,7 +713,7 @@ the exception thrown.
         [=requires user mediation=].
     1. Let |mediation| be |options|'s {{CredentialRequestOptions/mediation}}.
     1. If |requiresUserMediation| is true and |mediation| is
-        "{{CredentialMediationRequirement/silent}}", return (failure, false).
+        "{{CredentialMediationRequirement/silent}}", return (failure, true).
     1. Let |config| be the result of running [=fetch the config file=] with
         |provider| and |globalObject|.
     1. If |config| is failure, return (failure, false).
@@ -709,8 +733,8 @@ the exception thrown.
         1. <dfn>Mismatch dialog step</dfn>: If |loginStatus| is [=logged-in=], show a
             dialog to the user. The contents of this dialog are defined by the user
             agent. This dialog SHOULD provide an affordance for the user to trigger
-            the [=show an IDP login dialog=] algorithm; this dialog is the
-            <dfn>confirm IDP login dialog</dfn>.
+            the [=show an IDP login dialog=] algorithm with |config|; this dialog
+            is the <dfn>confirm IDP login dialog</dfn>.
 
             Note: This situation happens when the browser expects the user
                 to be signed in, but the accounts fetch indicated that the user
@@ -733,7 +757,7 @@ the exception thrown.
                     1. Otherwise, go back to the [=fetch accounts list step=].
 
     1. Assert: |accountsList| is not failure and the size of |accountsList| is not 0.
-    1. [=Set the login status=] for the [=/origin] of the
+    1. [=Set the login status=] for the [=/origin=] of the
         {{IdentityProviderConfig/configURL}} to [=logged-in=].
     1. If |provider|'s {{IdentityProviderConfig/loginHint}} is not empty:
         1. For every |account| in |accountList|, remove |account| from |accountList| if |account|'s
@@ -761,7 +785,7 @@ the exception thrown.
             [=compute the connection status=] algorithm given |provider| and |account|. When doing this,
             the user agent MAY show some UI to the user indicating that they are being
             <dfn>auto-reauthenticated</dfn>.
-    1. Otherwise, if |mediation| is "{{CredentialMediationRequirement/silent}}", return (failure, false).
+    1. Otherwise, if |mediation| is "{{CredentialMediationRequirement/silent}}", return (failure, true).
     1. Otherwise, if |accountsList|'s size is 1:
         1. Set |account| to |accountsList|[0].
         1. Set |accountState| to the result of running the [=compute the connection status=] algorithm
@@ -934,7 +958,7 @@ dictionary IdentityProviderAPIConfig {
   required USVString accounts_endpoint;
   required USVString client_metadata_endpoint;
   required USVString id_assertion_endpoint;
-  USVString login_url;
+  required USVString login_url;
   IdentityProviderBranding branding;
 };
 </xmp>
