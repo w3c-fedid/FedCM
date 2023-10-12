@@ -177,18 +177,23 @@ optional. As long as the flag is enabled, Chrome will render an error UI when
 the token request fails. The `error` field is used to customize the flow when an
 error happens. Chrome will show a customized UI with proper error message if the
 code is "invalid_request", "unauthorized_client", "access_denied", "server_error",
-or "temporarily_unavailable". If a `url` field is provided, Chrome will add an
-affordance for users to open a new page (e.g., via pop-up window) with that URL
-to learn more about the error on that page.
+or "temporarily_unavailable". If a `url` field is provided and same-site with
+the IdP's `configURL`, Chrome will add an affordance for users to open a new
+page (e.g., via pop-up window) with that URL to learn more about the error on
+that page.
 
-### `AccountAutoSelectedFlag` API
+### `IdentityCredentialAutoSelectedFlag` API
 
-To use the AccountAutoSelectedFlag API:
-* Enable the experimental feature `FedCmAccountAutoSelectedFlag` in `chrome://flags`.
+To use the IdentityCredentialAutoSelectedFlag API:
+* Enable the experimental feature `FedCmIdentityCredentialAutoSelectedFlag` 
+in `chrome://flags`.
 
-The browser will send a new boolean to represent whether auto re-authentication was triggered such that the account was auto selected by the browser in the flow to both the IdP and the API caller.
+The browser will send a new boolean to represent whether auto re-authentication
+was triggered such that the account was auto selected by the browser in the flow
+to both the IdP and the API caller.
 
-For IdP, the browser will include the boolean `is_account_auto_selected` in the request sent to the id assertion endpoint:
+For IdP, the browser will include `is_identity_credential_auto_selected` in the
+request sent to the id assersion endpoint:
 ```
 POST /fedcm_assertion_endpoint HTTP/1.1
 Host: idp.example
@@ -197,13 +202,14 @@ Content-Type: application/x-www-form-urlencoded
 Cookie: 0x23223
 Sec-Fetch-Dest: webidentity
 
-account_id=123&client_id=client1234&nonce=Ct60bD&disclosure_text_shown=true&is_account_auto_selected=true
+account_id=123&client_id=client1234&nonce=Ct60bD&disclosure_text_shown=true&is_identity_credential_auto_selected=true
 ```
 
-For the API caller, the browser will include the boolean `isAccountAutoSelected` when resolving the promise with the token:
+For the API caller, the browser will include the boolean
+`isIdentityCredentialAutoSelected` when resolving the promise with the token:
 ```
 {
   "token": "eyJC...J9.eyJzdWTE2...MjM5MDIyfQ.SflV_adQssw....5c",
-  "isAccountAutoSelected": true
+  "isIdentityCredentialAutoSelected": true
 }
 ```
