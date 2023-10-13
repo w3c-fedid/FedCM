@@ -40,6 +40,9 @@ spec: webdriver; urlPrefix: https://w3c.github.io/webdriver/
         text: no such alert; url: dfn-no-such-alert
         text: error code; url: dfn-error-code
         text: validating capabilities; url: dfn-validate-capabilities
+spec: webappsec-fetch-metadata; urlPrefix: https://w3c.github.io/webappsec-fetch-metadata/
+    type: dfn
+        text: Directly User-Initiated Requests; url: directly-user-initiated
 </pre>
 
 <pre class=link-defaults>
@@ -49,6 +52,7 @@ spec:html; type:dfn; for:environment settings object; text:global object
 spec:html; type:dfn; for:html-origin-def; text:origin
 spec:webidl; type:dfn; text:resolve
 spec:webdriver2; type:dfn; text:error
+spec:fetch; type:dfn; for:/; text:response
 </pre>
 
 <style>
@@ -315,6 +319,130 @@ for an [=IDP=] to adopt the FedCM API. It doesn't introduce security issues on t
 [=RP=] cannot inspect the results from the fetches in any way.
 
 <!-- ============================================================ -->
+## The Login Status API ## {#browser-api-login-status}
+<!-- ============================================================ -->
+
+### Login Status Map ### {#hdr-login-status-map}
+
+Each [=user agent=] keeps a global, persistent <dfn>Login Status
+map</dfn>, an initially empty [=map=]. The [=map/keys=] in this map are
+[=/origin=] (of [=IDPs=]), and the [=map/values=] are enums that can be one of
+"<dfn><code>unknown</code></dfn>", "<dfn><code>logged-in</code></dfn>",
+and "<dfn><code>logged-out</code></dfn>".
+
+<div algorithm>
+To <dfn>get the login status</dfn> for an [=/origin=] |origin|:
+1. If [=Login Status map=][|origin|] exists, return it.
+1. Otherwise, return [=unknown=].
+
+</div>
+
+<div algorithm>
+To <dfn>set the login status</dfn> for an [=/origin=] |origin| to
+value |value|:
+1. Assert that |value| is one of [=logged-in=] or [=logged-out=].
+1. [=map/Set=] [=Login Status map=][|origin|] to |value|.
+
+</div>
+
+### HTTP header API ### {#login-status-http}
+
+[=IDPs=] can set the login status using an HTTP [=response=] [=header=] as follows.
+
+Issue: The HTTP header checking should move into the Fetch spec, since it
+    affects all resource loads.
+
+For each [=http-redirect fetch=] and [=http fetch=]'s [=response=], let |value|
+be the result of [=get a structured field value=] from the response's header
+list with name "<dfn><code>Set-Login</code></dfn>" and type "`item`". If |value| is not null,
+process this header as follows:
+
+<div algorithm="process the login status header">
+1. Let |origin| be the response's [=response/URL=]'s [=/origin=].
+1. Let |client| be the [=/request=]'s [=request/client=].
+1. If the request's [=request/destination=] is not `"document"`:
+    1. If |client| is null, return.
+    1. If |origin| is not [=same origin=] with the [=/request=]'s
+        [=request/origin=], return.
+    1. If |client| is not [=same-origin with its ancestors=], return.
+1. Assert that |value| is a tuple.
+1. Let |token| be the first entry of |value|.
+1. If |token| is `"logged-in"`, [=set the login status=] for |origin|
+    to [=logged-in=].
+1. If |token| is `"logged-out"`, [=set the login status=] for |origin|
+    to [=logged-out=].
+
+</div>
+
+### JavaScript API ### {#login-status-javascript}
+
+[=IDPs=] can also use a JavaScript API to update the stored login status:
+
+
+<pre class="idl">
+enum LoginStatus {
+  "logged-in",
+  "logged-out",
+};
+
+[Exposed=Window, SecureContext] 
+interface NavigatorLogin {
+  Promise&lt;undefined&gt; setStatus(LoginStatus status);
+};
+
+partial interface Navigator {
+  [SecureContext] readonly attribute NavigatorLogin login;
+};
+</pre>
+
+<div algorithm="setStatus">
+When {{NavigatorLogin/setStatus()}} is called with argument |status|:
+1. If the [=current settings object=] is not [=same-origin with its ancestors=],
+    throw a {{SecurityError}} {{DOMException}}.
+1. Let |origin| be the [=current settings object=]'s
+    [=environment settings object/origin=].
+1. Let |value| be [=logged-in=] if |status| is `"logged-in"` or [=logged-out=]
+    if |status| is `"logged-out"`.
+1. [=Set the login status=] for |origin| to |value|.
+
+</div>
+
+### Clearing the Login Status Map data ### {#login-status-clear-data}
+
+User agents MUST also clear the [=Login Status map=] data when:
+    :   the user clears all cookies or site settings data
+    ::  The user agent MUST clear the entire map.
+    :   the user clears all cookies or all site data for a specific origin
+    ::  The user agent MUST remove all entries that would be affected
+            by the deleted cookies, that is, any entry with an origin
+            to which a deleted cookie could be sent to.
+
+            Note: For example, domain cookies may affect subdomains of
+                the deleted origin, e.g. clearing cookies for `google.com`
+                should also reset the login status for `accounts.google.com`,
+                since it may rely on a domain cookie for google.com.
+    :   the user deletes individual cookies (if allowed by the user agent)
+    ::  the behavior is user agent-defined.
+
+            Note: The user agent MAY want to reset the state to [=unknown=],
+                since is impossible to know whether this cookie affects
+                authorization state.
+    : the user agent receives a <a http-header>Clear-Site-Data</a> header with a
+        value of `"cookies"` or `"*"`, and the [=/request=]'s [=request/client=] is
+        not null, and the client's [=environment settings object/origin=] is [=same
+        origin=] with the [=top-level origin=]
+    :: while [$clear cookies for origin|clearing cookies for
+        origin$] it MUST remove any entries in the [=Login Status Map=] where
+        the [=map/key=] is the input origin.
+
+        Issue: Once Clear-Site-Data [supports partitioned cookies](https://github.com/w3c/webappsec-clear-site-data/issues/72),
+            this wording should be updated.
+
+Note: Other website-initiated cookie changes should not affect this map. When
+    [=IDP=] login state changes, it should send an explicit [=Set-Login=] header.
+    [=RP=] state should not affect this map since it only reflects [=IDP=] state.
+
+<!-- ============================================================ -->
 ## The connected accounts set ## {#browser-connected-accounts-set}
 <!-- ============================================================ -->
 
@@ -558,21 +686,82 @@ To <dfn>create an IdentityCredential</dfn> given an {{IdentityProviderConfig}}
 or a pair (failure, bool), where the bool indicates whether to skip delaying
 the exception thrown.
     1. Assert: These steps are running [=in parallel=].
+    1. Let |loginStatus| be the result of [=get the login status=] with
+        the [=/origin=] of |provider|'s {{IdentityProviderConfig/configURL}}.
+    1. If |loginStatus| is [=unknown=], a user agent MAY set it to [=logged-out=].
+    1. If |loginStatus| is [=logged-out=], the user agent MUST do one of the following:
+
+        * Return (failure, false).
+        * Prompt the user whether to continue. If the user continues, the user
+            agent SHOULD set |loginStatus| to [=unknown=]. This MAY include an
+            affordance to [=show an IDP login dialog=].
+
+            * If the user cancels this dialog, return (failure, true).
+            * If the user triggers this affordance:
+                1. Let |config| be the result of running [=fetch the config file=]
+                    with |provider| and |globalObject|.
+                1. If |config| is failure, return (failure, true).
+                1. [=Show an IDP login dialog=] with |config|.
+                1. If that algorithm returns failure, return (failure, true).
+
+        Issue: We should perhaps provide a way to let the [=RP=] request that
+            the second option is provided, possibly gated on a user gesture.
+            See [this issue](https://github.com/fedidcg/FedCM/issues/442) for discussion.
     1. Let |requiresUserMediation| be |provider|'s {{IdentityProviderConfig/configURL}}'s [=/origin=]'s
         [=requires user mediation=].
     1. Let |mediation| be |options|'s {{CredentialRequestOptions/mediation}}.
     1. If |requiresUserMediation| is true and |mediation| is
-        "{{CredentialMediationRequirement/silent}}", return failure.
-    1. Let |config| be the result of running [=fetch the config file=] with |provider| and
-        |globalObject|.
+        "{{CredentialMediationRequirement/silent}}", return (failure, true).
+    1. Let |config| be the result of running [=fetch the config file=] with
+        |provider| and |globalObject|.
     1. If |config| is failure, return (failure, false).
-    1. Let |accountsList| be the result of [=fetch the accounts list=] with |config|, |provider|,
-        and |globalObject|.
+    1. <dfn>Fetch accounts list step</dfn>: Let |accountsList| be the result of
+        [=fetch the accounts list=] with |config|, |provider|, and |globalObject|.
+    1. If |accountsList| is failure, or the size of |accountsList| is 0:
+        1. [=Set the login status=] for the [=/origin=] of the
+            {{IdentityProviderConfig/configURL}} to [=logged-out=].
+            A user agent may decide to skip this step if no credentials were
+            sent to server.
+
+            Note: For example, if the fetch failed due to a DNS error, no
+                credentials were sent and therefore the [=IDP=] did not learn
+                the user's identity. In this situation, we do not know whether
+                the user is signed in or not and so we may not want to reset
+                the status.
+        1. <dfn>Mismatch dialog step</dfn>: If |loginStatus| is [=logged-in=], show a
+            dialog to the user. The contents of this dialog are defined by the user
+            agent. This dialog SHOULD provide an affordance for the user to trigger
+            the [=show an IDP login dialog=] algorithm with |config|; this dialog
+            is the <dfn>confirm IDP login dialog</dfn>.
+
+            Note: This situation happens when the browser expects the user
+                to be signed in, but the accounts fetch indicated that the user
+                is signed out.
+
+            Note: This dialog ensures that silent tracking of the user is
+                impossible by always showing UI of some kind when credentials
+                were sent to the server.
+
+            1. Wait until one of the following occurs:
+
+                * If the user closes the dialog, return (failure, true).
+
+                * If the [=show an IDP login dialog=] algorithm was triggered:
+
+                    1. Let |result| be the result of that algorithm.
+                    1. If |result| is failure, return (failure, true). The user
+                        agent MAY show a dialog to the user before or after
+                        returning failure indicating this failure.
+                    1. Otherwise, go back to the [=fetch accounts list step=].
+
+    1. Assert: |accountsList| is not failure and the size of |accountsList| is not 0.
+    1. [=Set the login status=] for the [=/origin=] of the
+        {{IdentityProviderConfig/configURL}} to [=logged-in=].
     1. If |provider|'s {{IdentityProviderConfig/loginHint}} is not empty:
         1. For every |account| in |accountList|, remove |account| from |accountList| if |account|'s
             {{IdentityProviderAccount/login_hints}} does not [=list/contain=] |provider|'s
             {{IdentityProviderConfig/loginHint}}.
-    1. If |accountsList| is failure, return (failure, false).
+        1. If |accountList| is now empty, go to the [=mismatch dialog step=].
     1. For each |acc| in |accountsList|:
         1. If |acc|["{{IdentityProviderAccount/picture}}"] is present, [=fetch the account picture=]
             with |acc| and |globalObject|.
@@ -594,7 +783,7 @@ the exception thrown.
             [=compute the connection status=] algorithm given |provider| and |account|. When doing this,
             the user agent MAY show some UI to the user indicating that they are being
             <dfn>auto-reauthenticated</dfn>.
-    1. Otherwise, if |mediation| is "{{CredentialMediationRequirement/silent}}", return failure.
+    1. Otherwise, if |mediation| is "{{CredentialMediationRequirement/silent}}", return (failure, true).
     1. Otherwise, if |accountsList|'s size is 1:
         1. Set |account| to |accountsList|[0].
         1. Set |accountState| to the result of running the [=compute the connection status=] algorithm
@@ -731,6 +920,9 @@ or failure.
         1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderAPIConfig}} stored
             in |config|.
         1. If one of the previous two steps threw an exception, set |config| to failure.
+        1. Set |config|.{{IdentityProviderAPIConfig/login_url}} to the result of  [=computing
+            the manifest URL=] with |provider|, |config| and |globalObject|.
+        1. If |config|.{{IdentityProviderAPIConfig/login_url}} is null, return failure.
     1. Wait for both |config| and |configInWellKnown| to be set.
     1. If |configInWellKnown| is true, return |config|. Otherwise, return failure.
 </div>
@@ -764,6 +956,7 @@ dictionary IdentityProviderAPIConfig {
   required USVString accounts_endpoint;
   required USVString client_metadata_endpoint;
   required USVString id_assertion_endpoint;
+  required USVString login_url;
   IdentityProviderBranding branding;
 };
 </xmp>
@@ -1122,6 +1315,31 @@ and a |responseBody|, run the following steps. This returns an [=ordered map=].
     1. Return |json|.
 </div>
 
+<div algorithm>
+To <dfn>show an IDP login dialog</dfn> given an {{IdentityProviderAPIConfig}} |config|, run
+the following steps. This returns success or failure.
+    1. [=Create a fresh top-level traversable=] with URL
+        |config|.{{IdentityProviderAPIConfig/login_url}}.
+    1. The user agent MAY [=set up browsing context features=] or otherwise
+        affect the presentation of this traversable in an implementation-defined
+        way.
+    1. Wait for one of the following conditions:
+        * The user closes the browsing context: return failure.
+        * {{IdentityProvider}}.{{IdentityProvider/close}} is called in the
+            context of this new traversable:
+            1. Close the traversable.
+            1. Let |loginStatus| be the result of [=get the login status=]
+                with the [=/origin=] of the {{IdentityProviderAPIConfig/login_url}}.
+
+                Note: The IDP login flow may set this value to logged-in using
+                    either the [[#login-status-javascript|JavaScript]] or
+                    [[#login-status-http|HTTP header]] API during the login
+                    flow. It is also possible that this change happened in
+                    a different browsing context.
+            1. If |loginStatus| is [=logged-in=], return success.
+            1. Otherwise, return failure.
+</div>
+
 <!-- ============================================================ -->
 ## The IdentityProvider Interface ## {#browser-api-identity-provider-interface}
 <!-- ============================================================ -->
@@ -1138,12 +1356,22 @@ This specification introduces the {{IdentityUserInfo}} dictionary as well as the
   };
 
   [Exposed=Window, SecureContext] interface IdentityProvider {
+      static undefined close();
       static Promise&lt;sequence&lt;IdentityUserInfo&gt;&gt; getUserInfo(IdentityProviderConfig config);
   };
 </pre>
 
 Issue: [Decide](https://github.com/fedidcg/FedCM/issues/476) whether {{IdentityProvider}} is the
 correct location for the {{IdentityProvider/getUserInfo()}} method.
+
+A {{IdentityProvider/close}} function is provided to signal to the browser that
+the login flow is finished. The reason for this function in addition to the
+header is that even when the user is already logged in, the login flow may not
+be finished yet; for example, an [=IDP=] may want to prompt the user to verify
+their phone number. To allow for such flows, the [=IDP=] must call
+{{IdentityProvider/close}} when the flow is fully done.
+
+See the [=show an IDP login dialog=] algorithm for more details.
 
 An {{IdentityUserInfo}} represents user account information from a user. This information is exposed
 to the [=IDP=] once the user has already used the FedCM API to login in the [=RP=]. That is, it is
@@ -1753,6 +1981,36 @@ The [=remote end steps=] are:
 
 1. Return [=success=] with data `null`.
 
+## Confirm IDP login ## {#webdriver-confirmidplogin}
+
+<figure id="table-webdriver-confirmidplogin" class="table">
+    <table class="data">
+        <thead>
+            <tr>
+                <th>HTTP Method</th>
+                <th>URI Template</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>POST</td>
+                <td>`/session/{session id}/fedcm/confirmidplogin`</td>
+            </tr>
+        </tbody>
+    </table>
+</figure>
+
+The [=remote end steps=] are:
+
+1. If no FedCM dialog is currently open, or the dialog is not a [=confirm IDP
+    login dialog=] return a [=error|WebDriver error=] with [=error code=]
+    [=no such alert=].
+
+1. Act as if the user had clicked the "continue" button in the dialog and
+    initiate the login flow.
+
+1. Return [=success=] with data `null`.
+
 ## Account list ## {#webdriver-accountlist}
 
 <figure id="table-webdriver-accountlist" class="table">
@@ -1864,7 +2122,8 @@ The [=remote end steps=] are:
     [=error code=] [=no such alert=].
 
 1. Let |type| be a string that is "`AutoReauthn`" if the user is being [=auto-reauthenticated=],
-    or "`AccountChooser`" otherwise.
+    or "`AccountChooser`" is the dialog is an account chooser, or "`ConfirmIdpLogin`" if the
+    dialog is a [=confirm IDP login dialog=].
 
 1. Return [=success=] with data |type|.
 
