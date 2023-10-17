@@ -206,7 +206,7 @@ account_id=123&client_id=client1234&nonce=Ct60bD&disclosure_text_shown=true&is_i
 ```
 
 For the API caller, the browser will include a boolean when resolving the
-promise for it to parse:
+promise:
 ```
 const cred = await navigator.credentials.get({
   identity: {
