@@ -205,11 +205,20 @@ Sec-Fetch-Dest: webidentity
 account_id=123&client_id=client1234&nonce=Ct60bD&disclosure_text_shown=true&is_identity_credential_auto_selected=true
 ```
 
-For the API caller, the browser will include the boolean
-`isIdentityCredentialAutoSelected` when resolving the promise with the token:
+For the API caller, the browser will include a boolean when resolving the
+promise for it to parse:
 ```
-{
-  "token": "eyJC...J9.eyJzdWTE2...MjM5MDIyfQ.SflV_adQssw....5c",
-  "isIdentityCredentialAutoSelected": true
+const cred = await navigator.credentials.get({
+  identity: {
+    providers: [{
+      configURL: "https://idp.example/manifest.json",
+      clientId: "1234"
+    }]
+  }
+});
+
+const token = cred.token;
+if (cred.isIdentityCredentialAutoSelected !== undefined) {
+  const isAutoSelected = cred.isIdentityCredentialAutoSelected;
 }
 ```
