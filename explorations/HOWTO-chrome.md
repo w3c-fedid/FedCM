@@ -69,7 +69,6 @@ succeeded or failed.
 
 To use the LoginHint API:
 
-* Enable the experimental feature `FedCmLoginHint` in `chrome://flags`.
 * Add an array of `hints` to the accounts described in the accounts endpoint:
 
 ```
@@ -104,7 +103,6 @@ Now, only accounts with the "hint" provided will show in the chooser.
 
 To use the UserInfo API:
 
-* Enable the experimental feature `FedCmLoginHint` in `chrome://flags`.
 * The RP must embed an IDP iframe, which will perform the query.
 * The embedded iframe must receive permissions to invoke FedCM (via Permissions Policy).
 * The user first needs to go through the FedCM flow once before invoking UserInfo.
@@ -130,7 +128,6 @@ user_info.forEach( info => {
 
 To use the RP Context API:
 
-* Enable the experimental feature `FedCmRpContext` in `chrome://flags`.
 * Provide the `context` value in JS, like so:
 
 ```js
