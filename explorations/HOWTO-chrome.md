@@ -163,7 +163,7 @@ To use the IdP Sign-in Status API:
 To use the Error API:
 
 * Enable the experimental feature `FedCmError` in `chrome://flags`.
-* Provide an `error` in the id assertion endpoint instead of a `token`:
+* Provide an `error` in the ID assertion endpoint instead of a `token`:
 ```
 {
   "error" : {
@@ -182,7 +182,7 @@ the IdP's `configURL`, Chrome will add an affordance for users to open a new
 page (e.g., via pop-up window) with that URL to learn more about the error on
 that page.
 
-### `IdentityCredentialAutoSelectedFlag` API
+### IdentityCredentialAutoSelectedFlag API
 
 To use the IdentityCredentialAutoSelectedFlag API:
 * Enable the experimental feature `FedCmIdentityCredentialAutoSelectedFlag` 
@@ -193,7 +193,7 @@ was triggered such that the account was auto selected by the browser in the flow
 to both the IdP and the API caller.
 
 For IdP, the browser will include `is_identity_credential_auto_selected` in the
-request sent to the id assersion endpoint:
+request sent to the ID assersion endpoint:
 ```
 POST /fedcm_assertion_endpoint HTTP/1.1
 Host: idp.example
