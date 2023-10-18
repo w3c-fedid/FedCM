@@ -24,7 +24,7 @@ includes the time when the sign-up status was set.
 
 ## Experimental functionality
 
-In order to test experimental functionality:
+To test experimental functionality:
 
 1. Download Google Chrome Canary. It is best to experiment with the latest
    build possible to get the most up-to-date implementation.
@@ -67,9 +67,8 @@ succeeded or failed.
 
 ### LoginHint
 
-In order to use the LoginHint API:
+To use the LoginHint API:
 
-* Enable the experimental feature `FedCmLoginHint` in `chrome://flags`.
 * Add an array of `hints` to the accounts described in the accounts endpoint:
 
 ```
@@ -102,9 +101,8 @@ Now, only accounts with the "hint" provided will show in the chooser.
 
 ### UserInfo
 
-In order to use the UserInfo API:
+To use the UserInfo API:
 
-* Enable the experimental feature `FedCmLoginHint` in `chrome://flags`.
 * The RP must embed an IDP iframe, which will perform the query.
 * The embedded iframe must receive permissions to invoke FedCM (via Permissions Policy).
 * The user first needs to go through the FedCM flow once before invoking UserInfo.
@@ -128,9 +126,8 @@ user_info.forEach( info => {
 
 ### RP Context
 
-In order to use the RP Context API:
+To use the RP Context API:
 
-* Enable the experimental feature `FedCmRpContext` in `chrome://flags`.
 * Provide the `context` value in JS, like so:
 
 ```js
@@ -149,7 +146,7 @@ Now, the browser UI will be different based on the value provided.
 
 ### IdP Sign-in Status API
 
-In order to use the IdP Sign-in Status API:
+To use the IdP Sign-in Status API:
 
 1. Enable the experimental feature `FedCM with FedCM IDP sign-in status` in `chrome://flags`.
 2. When the user logs-in to the IdP, use the following HTTP header `IdP-SignIn-Status: action=signin`.
@@ -158,3 +155,67 @@ In order to use the IdP Sign-in Status API:
 5. The browser is going load the `signin_url` when the user is signed-out of the IdP.
 6. Call `IdentityProvider.close()` when the user is done logging-in to the IdP.
 
+### Error API
+
+To use the Error API:
+
+* Enable the experimental feature `FedCmError` in `chrome://flags`.
+* Provide an `error` in the ID assertion endpoint instead of a `token`:
+```
+{
+  "error" : {
+     "code" : "access_denied",
+     "url" : "https://idp.example/error?type=foo"
+  }
+}
+```
+Note that the `error` field in the response including both `code` and `url` is
+optional. As long as the flag is enabled, Chrome will render an error UI when
+the token request fails. The `error` field is used to customize the flow when an
+error happens. Chrome will show a customized UI with proper error message if the
+code is "invalid_request", "unauthorized_client", "access_denied", "server_error",
+or "temporarily_unavailable". If a `url` field is provided and same-site with
+the IdP's `configURL`, Chrome will add an affordance for users to open a new
+page (e.g., via pop-up window) with that URL to learn more about the error on
+that page.
+
+### IdentityCredentialAutoSelectedFlag API
+
+To use the IdentityCredentialAutoSelectedFlag API:
+* Enable the experimental feature `FedCmIdentityCredentialAutoSelectedFlag` 
+in `chrome://flags`.
+
+The browser will send a new boolean to represent whether auto re-authentication
+was triggered such that the account was auto selected by the browser in the flow
+to both the IdP and the API caller.
+
+For IdP, the browser will include `is_identity_credential_auto_selected` in the
+request sent to the ID assersion endpoint:
+```
+POST /fedcm_assertion_endpoint HTTP/1.1
+Host: idp.example
+Origin: https://rp.example/
+Content-Type: application/x-www-form-urlencoded
+Cookie: 0x23223
+Sec-Fetch-Dest: webidentity
+
+account_id=123&client_id=client1234&nonce=Ct60bD&disclosure_text_shown=true&is_identity_credential_auto_selected=true
+```
+
+For the API caller, the browser will include a boolean when resolving the
+promise:
+```
+const cred = await navigator.credentials.get({
+  identity: {
+    providers: [{
+      configURL: "https://idp.example/manifest.json",
+      clientId: "1234"
+    }]
+  }
+});
+
+const token = cred.token;
+if (cred.isIdentityCredentialAutoSelected !== undefined) {
+  const isAutoSelected = cred.isIdentityCredentialAutoSelected;
+}
+```
