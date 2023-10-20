@@ -1,4 +1,4 @@
-# Explainer for IDP login status API (née IDP sign-in status API)
+# Explainer for IDP Login Status API (née IDP Sign-in Status API)
 
 ## Background
 
