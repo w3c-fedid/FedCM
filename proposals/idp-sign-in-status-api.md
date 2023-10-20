@@ -1,4 +1,4 @@
-# Explainer for IDP sign-in status API
+# Explainer for IDP Login Status API (née IDP Sign-in Status API)
 
 ## Background
 
@@ -22,9 +22,9 @@ slides](https://github.com/fedidcg/FedCM/blob/main/meetings/2022/FedCM_%20Option
 for more details. 
 
 To solve this problem (and to slightly optimize network traffic), we propose
-this API to let identity providers (IDPs) tell the browser when the user signs
+this API to let identity providers (IDPs) tell the browser when the user logs
 in to and out of the IDP. The IDP Sign-in Status API does not grant the
-identity provider any permissions. Using the IDP sign-in status API is not a
+identity provider any permissions. Using the IDP login status API is not a
 way for a site to prove that it is an identity provider. The purpose of the
 IDP Sign-in Status API is to enable identity providers to disable the FedCM API
 for their IDP in order to deliver a better user experience.
@@ -50,7 +50,7 @@ Set-Login: logged-out
 These headers can be sent on the toplevel load as well as subresources such as
 XMLHttpRequest (this is necessary for at least one IDP).
 
-The signout header should only be sent when no accounts remain logged in
+The logout header should only be sent when no accounts remain logged in
 to the IDP, i.e., when this action has logged out all accounts or if this
 was the last/only account getting logged out.
 
@@ -89,20 +89,20 @@ interface IdentityProvider {
 ```
 
 In addition, an `IdentityProvider.close()` function is provided to signal to the browser that the
-signin flow is finished. The reason for this function in addition to the header
-is that even when the user is already logged in, the signin flow may not be
+login flow is finished. The reason for this function in addition to the header
+is that even when the user is already logged in, the login flow may not be
 finished yet; for example, an IDP may want to prompt the user to verify their
 phone number. To allow for such flows, the IDP must call
 `IdentityProvider.close()` when the flow is fully done.
 
 ### Config file addition
 
-This proposal adds a new `signin_url` field to [the config file](https://fedidcg.github.io/FedCM/#dictdef-identityproviderapiconfig):
+This proposal adds a new `login_url` field to [the config file](https://fedidcg.github.io/FedCM/#dictdef-identityproviderapiconfig):
 
 
 ```
 partial dictionary IdentityProviderAPIConfig {
-	USVString signin_url;
+	USVString login_url;
 }
 ```
 
@@ -112,14 +112,14 @@ See further below for a description of the semantics.
 ### Semantics
 
 For each IDP (identified by its config URL) the browser keeps a tri-state
-variable representing the sign-in state with possible values “logged-in”,
+variable representing the login state with possible values “logged-in”,
 “logged-out”, and “unknown”, defaulting to “unknown”.
 
-When receiving the sign-in header, the state will be set to “logged in”. In
+When receiving the login header, the state will be set to “logged in”. In
 case of subresources, to limit abuse, the header is only processed if the
 resource is same-origin with the document.
 
-Similar for the sign-out header.
+Similar for the logout header.
 
 In some cases, a user can get logged out server-side while the user is not on
 the IDP website. For example, the IDP may require re-authentication every N
@@ -127,14 +127,14 @@ days, or the user may have changed their password (or deleted their account) on
 a different browser, forcing re-login. This proposal does not have special
 handling in this situation; we would show the error dialog mentioned below.
 
-There is [some discussion](https://crbug.com/1381505) on whether the sign-in header should require user activation; however, right now in Chrome it does not.
+There is [some discussion](https://crbug.com/1381505) on whether the login header should require user activation; however, right now in Chrome it does not.
 
 
 ### Effect on FedCM requests
 
 When an RP calls navigator.credentials.get():
 
-* If the sign-in state on the provided config URL is “logged out”, no
+* If the login state on the provided config URL is “logged out”, no
 network requests will be made and the promise is rejected (with a delay
 as usual (step 3 of
 [the algorithm](https://fedidcg.github.io/FedCM/#dom-identitycredential-discoverfromexternalsource-slot)))
@@ -142,19 +142,19 @@ as usual (step 3 of
 
 When the accounts endpoint response is successful and has at least one account:
 
-* The sign-in state is set to “logged-in” if it was previously “unknown”
+* The login state is set to “logged-in” if it was previously “unknown”
 
 
 When an error is received from the accounts endpoint or no accounts are returned:
 
-* If the sign-in state was unknown, the sign-in state is set to “logged out”. No UI is displayed and the promise is rejected as usual
-    * This is used when launching this API, when the browser has no stored IDP sign-in data, and also when an IDP starts supporting FedCM, where the user can also be logged in without the login status being set. This allows us to handle these cases without being required to show UI when the user is not logged in
+* If the login state was unknown, the login state is set to “logged out”. No UI is displayed and the promise is rejected as usual
+    * This is used when launching this API, when the browser has no stored IDP login data, and also when an IDP starts supporting FedCM, where the user can also be logged in without the login status being set. This allows us to handle these cases without being required to show UI when the user is not logged in
     * This does incur a one-time timing attack per IDP. Since this can only happen once per IDP/browser profile, it seems impractical for an attacker to rely on.
-        * An alternative solution is to show the sign-in UI even in this case
-* If the sign-in state was “logged in”, the sign-in state is set to “logged out”. An error dialog is displayed that also allows the user to sign in to the IDP. The exact UI is TBD; the dialog may not explicitly say something like “we thought you were logged in to the IDP”.
+        * An alternative solution is to show the login UI even in this case
+* If the login state was “logged in”, the login state is set to “logged out”. An error dialog is displayed that also allows the user to login to the IDP. The exact UI is TBD; the dialog may not explicitly say something like “we thought you were logged in to the IDP”.
     * The primary case where this will happen is if the session is invalidated server-side, either because of session-length settings, because the user forced logout on other devices, or other reasons.
     * We show a dialog in this situation to discourage trackers using this
-    * This dialog is why there is a sign-in URL being added in this proposal, so that the user has a way to recover instead of being presented with a useless dialog. However, having this URL is also useful for other UI enhancements.
+    * This dialog is why there is a login URL being added in this proposal, so that the user has a way to recover instead of being presented with a useless dialog. However, having this URL is also useful for other UI enhancements.
 
 
 ## Alternatives considered
@@ -187,4 +187,4 @@ Additionally, the second option would require the browser to track which
 specific account IDs are logged in, so that it can tell when there no
 more logged in accounts for this IDP. This introduces extra complexity,
 whereas the IDP already knows how many accounts are logged in and thus
-whether no accounts remain after this signout action.
+whether no accounts remain after this logout action.
