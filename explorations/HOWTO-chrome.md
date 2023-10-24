@@ -179,18 +179,17 @@ the IdP's `configURL`, Chrome will add an affordance for users to open a new
 page (e.g., via pop-up window) with that URL to learn more about the error on
 that page.
 
-### IdentityCredentialAutoSelectedFlag API
+### Auto-selected Flag API
 
-To use the IdentityCredentialAutoSelectedFlag API:
-* Enable the experimental feature `FedCmIdentityCredentialAutoSelectedFlag` 
-in `chrome://flags`.
+To use the Auto-selected Flag API:
+* Enable the experimental feature `FedCmAutoSelectedFlag` in `chrome://flags`.
 
 The browser will send a new boolean to represent whether auto re-authentication
 was triggered such that the account was auto selected by the browser in the flow
 to both the IdP and the API caller.
 
-For IdP, the browser will include `is_identity_credential_auto_selected` in the
-request sent to the ID assersion endpoint:
+For IdP, the browser will include `is_auto_selected` in the request sent to the
+ID assersion endpoint:
 ```
 POST /fedcm_assertion_endpoint HTTP/1.1
 Host: idp.example
@@ -199,7 +198,7 @@ Content-Type: application/x-www-form-urlencoded
 Cookie: 0x23223
 Sec-Fetch-Dest: webidentity
 
-account_id=123&client_id=client1234&nonce=Ct60bD&disclosure_text_shown=true&is_identity_credential_auto_selected=true
+account_id=123&client_id=client1234&nonce=Ct60bD&disclosure_text_shown=true&is_auto_selected=true
 ```
 
 For the API caller, the browser will include a boolean when resolving the
@@ -215,7 +214,7 @@ const cred = await navigator.credentials.get({
 });
 
 const token = cred.token;
-if (cred.isIdentityCredentialAutoSelected !== undefined) {
-  const isAutoSelected = cred.isIdentityCredentialAutoSelected;
+if (cred.isAutoSelected !== undefined) {
+  const isAutoSelected = cred.isAutoSelected;
 }
 ```
