@@ -574,6 +574,7 @@ dictionary IdentityProviderConfig {
   required USVString clientId;
   USVString nonce;
   DOMString loginHint;
+  DOMString domainHint;
 };
 </xmp>
 
@@ -591,6 +592,11 @@ dictionary IdentityProviderConfig {
         agent to show to the user. If provided, the user agent will not show accounts which do not
         match this login hint value. It generally matches some attribute from the desired
         {{IdentityProviderAccount}}.
+    :   <b>{{IdentityProviderConfig/domainHint}}</b>
+    ::  A string representing the domain hint corresponding to a domain which the [=RP=] is
+        interested in, or "*" if the [=RP=] wants any account associated with at least one domain
+        hint. If provided, the user agent will not show accounts which do not match the domain hint
+        value.
 </dl>
 
 <!-- ============================================================ -->
@@ -705,7 +711,7 @@ the exception thrown.
                 1. Let |config| be the result of running [=fetch the config file=]
                     with |provider| and |globalObject|.
                 1. If |config| is failure, return (failure, true).
-                1. [=Show an IDP login dialog=] with |config|.
+                1. [=Show an IDP login dialog=] with |config| and |provider|.
                 1. If that algorithm returns failure, return (failure, true).
 
         Issue: We should perhaps provide a way to let the [=RP=] request that
@@ -735,8 +741,8 @@ the exception thrown.
         1. <dfn>Mismatch dialog step</dfn>: If |loginStatus| is [=logged-in=], show a
             dialog to the user. The contents of this dialog are defined by the user
             agent. This dialog SHOULD provide an affordance for the user to trigger
-            the [=show an IDP login dialog=] algorithm with |config|; this dialog
-            is the <dfn>confirm IDP login dialog</dfn>.
+            the [=show an IDP login dialog=] algorithm with |config| and |provider|;
+            this dialog is the <dfn>confirm IDP login dialog</dfn>.
 
             Note: This situation happens when the browser expects the user
                 to be signed in, but the accounts fetch indicated that the user
@@ -765,6 +771,14 @@ the exception thrown.
         1. For every |account| in |accountList|, remove |account| from |accountList| if |account|'s
             {{IdentityProviderAccount/login_hints}} does not [=list/contain=] |provider|'s
             {{IdentityProviderConfig/loginHint}}.
+        1. If |accountList| is now empty, go to the [=mismatch dialog step=].
+    1. If |provider|'s {{IdentityProviderConfig/domainHint}} is not empty:
+        1. For every |account| in |accountList|:
+            1. If {{IdentityProviderConfig/domainHint}} is "*", remove |account| from |accountList|
+                if |account|'s {{IdentityProviderAccount/domain_hints}}  is not empty.
+            1. Otherwise, remove |account| from |accountList| if |account|'s
+                {{IdentityProviderAccount/domain_hints}} does not [=list/contain=] |provider|'s
+                {{IdentityProviderConfig/domainHint}}.
         1. If |accountList| is now empty, go to the [=mismatch dialog step=].
     1. For each |acc| in |accountsList|:
         1. If |acc|["{{IdentityProviderAccount/picture}}"] is present, [=fetch the account picture=]
@@ -1039,6 +1053,7 @@ dictionary IdentityProviderAccount {
   USVString picture;
   sequence<USVString> approved_clients;
   sequence<DOMString> login_hints;
+  sequence<DOMString> domain_hints;
 };
 dictionary IdentityProviderAccountList {
   sequence<IdentityProviderAccount> accounts;
@@ -1320,10 +1335,24 @@ and a |responseBody|, run the following steps. This returns an [=ordered map=].
 </div>
 
 <div algorithm>
-To <dfn>show an IDP login dialog</dfn> given an {{IdentityProviderAPIConfig}} |config|, run
-the following steps. This returns success or failure.
-    1. [=Create a fresh top-level traversable=] with URL
-        |config|.{{IdentityProviderAPIConfig/login_url}}.
+To <dfn>show an IDP login dialog</dfn> given an {{IdentityProviderAPIConfig}} |config|, an
+{{IdentityProviderConfig}} |provider|, and a |globalObject|, run the following steps. This returns
+success or failure.
+    1. Assert: these steps are running [=in parallel=].
+    1. Let |urlString| be |config|.{{IdentityProviderAPIConfig/login_url}}.
+    1. Let |queryList| be a new [=list=].
+    1. If |provider|'s {{IdentityProviderConfig/loginHint}} is not empty, [=list/append=]
+        ("login_hint", {{IdentityProviderConfig/loginHint}}) to |queryList|.
+    1. If |provider|'s {{IdentityProviderConfig/domainHint}} is not empty, [=list/append=]
+        ("domain_hint", {{IdentityProviderConfig/domainHint}}) to |queryList|.
+    1. If |queryList| is not [=list/empty=], let |queryParameters| be the result of the [=urlencoded serializer=] with |queryList|. Append |queryParameters| to |urlString|.
+    1. Let |loginUrl| be null.
+    1. [=Queue a global task=] on the [=DOM manipulation task source=] given |globalObject| to set
+        |loginUrl| to the result of running [=url parser=] with |urlString|.
+    1. Wait until |loginUrl| is not null.
+    1. Assert: |loginUrl| is not failure (the [=user agent=] has checked
+        |config|.{{IdentityProviderAPIConfig/login_url}} to be a valid URL previously).
+    1. [=Create a fresh top-level traversable=] with |loginUrl|.
     1. The user agent MAY [=set up browsing context features=] or otherwise
         affect the presentation of this traversable in an implementation-defined
         way.
@@ -1683,6 +1712,10 @@ Every {{IdentityProviderAccount}} is expected to have members with the following
     ::  A list of strings which correspond to all of the login hints which match with this account.
         An [=RP=] can use the {{IdentityProviderConfig/loginHint}} to request that only an account
         matching a given value is shown to the user.
+    :   <dfn>domain_hints</dfn>
+    ::  A list of strings which correspond to all of the domain hints which match with this account.
+        An [=RP=] can use the {{IdentityProviderConfig/domainHint}} to request that only an account
+        matching a given value or containing some domain hint is shown to the user.
 </dl>
 
 For example:
@@ -1697,7 +1730,8 @@ For example:
    "email": "john_doe@idp.example",
    "picture": "https://idp.example/profile/123",
    "approved_clients": ["123", "456", "789"],
-   "login_hints": ["john_doe"]
+   "login_hints": ["john_doe"],
+   "domain_hints": ["idp.example"],
   }, {
    "id": "5678",
    "given_name": "Johnny",
@@ -1705,7 +1739,8 @@ For example:
    "email": "johnny@idp.example",
    "picture": "https://idp.example/profile/456",
    "approved_clients": ["abc", "def", "ghi"],
-   "login_hints": ["email=johhny@idp.example", "id=5678"]
+   "login_hints": ["email=johhny@idp.example", "id=5678"],
+   "domain_hints": ["idp.example"],
   }]
 }
 ```
