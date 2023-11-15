@@ -144,7 +144,8 @@ could be implemented.
           providers: [{
             configURL: "https://idp.example/manifest.json",
             clientId: "123",
-            nonce: nonce
+            nonce: nonce,
+            domainHint: "any"
           }]
         }
       });
@@ -594,7 +595,7 @@ dictionary IdentityProviderConfig {
         {{IdentityProviderAccount}}.
     :   <b>{{IdentityProviderConfig/domainHint}}</b>
     ::  A string representing the domain hint corresponding to a domain which the [=RP=] is
-        interested in, or "*" if the [=RP=] wants any account associated with at least one domain
+        interested in, or "any" if the [=RP=] wants any account associated with at least one domain
         hint. If provided, the user agent will not show accounts which do not match the domain hint
         value.
 </dl>
@@ -774,8 +775,8 @@ the exception thrown.
         1. If |accountList| is now empty, go to the [=mismatch dialog step=].
     1. If |provider|'s {{IdentityProviderConfig/domainHint}} is not empty:
         1. For every |account| in |accountList|:
-            1. If {{IdentityProviderConfig/domainHint}} is "*", remove |account| from |accountList|
-                if |account|'s {{IdentityProviderAccount/domain_hints}}  is not empty.
+            1. If {{IdentityProviderConfig/domainHint}} is "any", remove |account| from
+                |accountList| if |account|'s {{IdentityProviderAccount/domain_hints}}  is not empty.
             1. Otherwise, remove |account| from |accountList| if |account|'s
                 {{IdentityProviderAccount/domain_hints}} does not [=list/contain=] |provider|'s
                 {{IdentityProviderConfig/domainHint}}.
@@ -1339,19 +1340,22 @@ To <dfn>show an IDP login dialog</dfn> given an {{IdentityProviderAPIConfig}} |c
 {{IdentityProviderConfig}} |provider|, and a |globalObject|, run the following steps. This returns
 success or failure.
     1. Assert: these steps are running [=in parallel=].
-    1. Let |urlString| be |config|.{{IdentityProviderAPIConfig/login_url}}.
+    1. Let |loginUrl| be null.
+    1. [=Queue a global task=] on the [=DOM manipulation task source=] given |globalObject| to set
+        |loginUrl| to the result of running [=url parser=] with
+        |config|.{{IdentityProviderAPIConfig/login_url}}.
+    1. Wait until |loginUrl| is not null.
+    1. Assert: |loginUrl| is not failure (the [=user agent=] has checked
+        |config|.{{IdentityProviderAPIConfig/login_url}} to be a valid URL previously).
     1. Let |queryList| be a new [=list=].
     1. If |provider|'s {{IdentityProviderConfig/loginHint}} is not empty, [=list/append=]
         ("login_hint", {{IdentityProviderConfig/loginHint}}) to |queryList|.
     1. If |provider|'s {{IdentityProviderConfig/domainHint}} is not empty, [=list/append=]
         ("domain_hint", {{IdentityProviderConfig/domainHint}}) to |queryList|.
-    1. If |queryList| is not [=list/empty=], let |queryParameters| be the result of the [=urlencoded serializer=] with |queryList|. Append "?" and |queryParameters| to |urlString|.
-    1. Let |loginUrl| be null.
-    1. [=Queue a global task=] on the [=DOM manipulation task source=] given |globalObject| to set
-        |loginUrl| to the result of running [=url parser=] with |urlString|.
-    1. Wait until |loginUrl| is not null.
-    1. Assert: |loginUrl| is not failure (the [=user agent=] has checked
-        |config|.{{IdentityProviderAPIConfig/login_url}} to be a valid URL previously).
+    1. If |queryList| is not [=list/empty=]:
+        1. Let |queryParameters| be the result of the [=urlencoded serializer=] with |queryList|.
+        1. If |loginUrl|'s [=url/query=] is not null or empty, prepend "&" to |queryParameters|.
+        1. Append |queryParameters| to |loginUrl|'s [=url/query=].
     1. [=Create a fresh top-level traversable=] with |loginUrl|.
     1. The user agent MAY [=set up browsing context features=] or otherwise
         affect the presentation of this traversable in an implementation-defined
