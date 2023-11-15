@@ -495,8 +495,13 @@ To <dfn>create a connection between the RP and the IdP account</dfn> given an
 This specification introduces a new type of {{Credential}}, called an {{IdentityCredential}}:
 
 <pre class="idl">
+  dictionary IdentityCredentialRevokeOptions : IdentityProviderConfig {
+    USVString accountHint;
+  };
+
   [Exposed=Window, SecureContext]
   interface IdentityCredential : Credential {
+    static Promise&lt;undefined&gt; revoke(optional IdentityCredentialRevokeOptions options = {});
     readonly attribute USVString? token;
   };
 </pre>
@@ -560,7 +565,7 @@ enum IdentityCredentialRequestOptionsContext {
 };
 
 dictionary IdentityCredentialRequestOptions {
-  required sequence<IdentityProviderConfig> providers;
+  required sequence<IdentityProviderRequestOptions> providers;
   IdentityCredentialRequestOptionsContext context = "signin";
 };
 </xmp>
@@ -572,6 +577,9 @@ the [=RP=] supports (e.g. that it has a pre-registration agreement with).
 dictionary IdentityProviderConfig {
   required USVString configURL;
   required USVString clientId;
+};
+
+dictionary IdentityProviderRequestOptions : IdentityProviderConfig {
   USVString nonce;
   DOMString loginHint;
 };
@@ -582,11 +590,11 @@ dictionary IdentityProviderConfig {
     ::  The URL of the configuration file for the identity provider.
     :   <b>{{IdentityProviderConfig/clientId}}</b>
     ::  The {{id_assertion_endpoint_request/client_id}} provided to the [=RP=] out of band by the [=IDP=]
-    :   <b>{{IdentityProviderConfig/nonce}}</b>
+    :   <b>{{IdentityProviderRequestOptions/nonce}}</b>
     ::  A random number of the choice of the [=RP=]. It is generally used to associate a client
         session with a {{IdentityProviderToken/token}} and to mitigate replay attacks. Therefore, this value should have
         sufficient entropy such that it would be hard to guess.
-    :   <b>{{IdentityProviderConfig/loginHint}}</b>
+    :   <b>{{IdentityProviderRequestOptions/loginHint}}</b>
     ::  A string representing the login hint corresponding to an account which the RP wants the user
         agent to show to the user. If provided, the user agent will not show accounts which do not
         match this login hint value. It generally matches some attribute from the desired
@@ -684,7 +692,7 @@ The <a>create an IdentityCredential</a> algorithm invokes the various FedCM fetc
 agent UI, and creates the {{IdentityCredential}} that is then returned to the [=RP=].
 
 <div algorithm="create an IdentityCredential">
-To <dfn>create an IdentityCredential</dfn> given an {{IdentityProviderConfig}}
+To <dfn>create an IdentityCredential</dfn> given an {{IdentityProviderRequestOptions}}
 |provider|, a {{CredentialRequestOptions}} |options|, and a
 |globalObject|, run the following steps. This returns an {{IdentityCredential}}
 or a pair (failure, bool), where the bool indicates whether to skip delaying
@@ -761,10 +769,10 @@ the exception thrown.
     1. Assert: |accountsList| is not failure and the size of |accountsList| is not 0.
     1. [=Set the login status=] for the [=/origin=] of the
         {{IdentityProviderConfig/configURL}} to [=logged-in=].
-    1. If |provider|'s {{IdentityProviderConfig/loginHint}} is not empty:
+    1. If |provider|'s {{IdentityProviderRequestOptions/loginHint}} is not empty:
         1. For every |account| in |accountList|, remove |account| from |accountList| if |account|'s
             {{IdentityProviderAccount/login_hints}} does not [=list/contain=] |provider|'s
-            {{IdentityProviderConfig/loginHint}}.
+            {{IdentityProviderRequestOptions/loginHint}}.
         1. If |accountList| is now empty, go to the [=mismatch dialog step=].
     1. For each |acc| in |accountsList|:
         1. If |acc|["{{IdentityProviderAccount/picture}}"] is present, [=fetch the account picture=]
@@ -828,7 +836,7 @@ The <a>fetch the config file</a> algorithm fetches both the [=well-known file=] 
 the [=IDP=], checks that the config file is mentioned in the [=well-known file=], and returns the config.
 
 <div algorithm>
-To <dfn>fetch the config file</dfn> given an {{IdentityProviderConfig}} |provider| and
+To <dfn>fetch the config file</dfn> given an {{IdentityProviderRequestOptions}} |provider| and
 |globalObject|, run the following steps. This returns an {{IdentityProviderAPIConfig}}
 or failure.
     1. Let |configUrl| be the result of running [=parse url=] with |provider|'s
@@ -975,8 +983,8 @@ FedCM UI to the user.
 
 <div algorithm>
 To <dfn>fetch the accounts list</dfn> given an {{IdentityProviderAPIConfig}} |config|, an
-{{IdentityProviderConfig}} |provider|, and |globalObject|, run the following steps. This returns an
-{{IdentityProviderAccountList}}.
+{{IdentityProviderRequestOptions}} |provider|, and |globalObject|, run the following steps. This
+returns an {{IdentityProviderAccountList}}.
     1. Let |accountsUrl| be the result of [=computing the manifest URL=] given |provider|,
         |config|["{{IdentityProviderAPIConfig/accounts_endpoint}}"], and |globalObject|.
     1. If |accountsUrl| is failure, return an empty list.
@@ -1094,15 +1102,15 @@ the token that will be provided to the [=RP=].
 
 <div algorithm>
 To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
-    |accountId|, a boolean |disclosureTextShown|, an {{IdentityProviderConfig}} |provider|, an
-    {{IdentityProviderAPIConfig}} |config|, and |globalObject|, run the following steps. This
+    |accountId|, a boolean |disclosureTextShown|, an {{IdentityProviderRequestOptions}} |provider|,
+    an {{IdentityProviderAPIConfig}} |config|, and |globalObject|, run the following steps. This
     returns an {{IdentityCredential}} or failure.
     1. Let |tokenUrl| be the result of [=computing the manifest URL=] given |provider|,
         |config|["{{IdentityProviderAPIConfig/id_assertion_endpoint}}"], and |globalObject|.
     1. If |tokenUrl| is failure, return failure.
     1. Let |requestBody| be the result of running [=urlencoded serializer=] with a list containing:
         1. ("client_id", |provider|'s {{IdentityProviderConfig/clientId}})
-        1. ("nonce", |provider|'s {{IdentityProviderConfig/nonce}})
+        1. ("nonce", |provider|'s {{IdentityProviderRequestOptions/nonce}})
         1. ("account_id",  |accountId|)
         1. ("disclosure_text_shown", |disclosureTextShown|)
     1. Let |request| be a new <a spec=fetch for=/>request</a> as follows:
@@ -1178,7 +1186,7 @@ granted permission or not.
 
 <div algorithm>
 To <dfn>request permission to sign-up</dfn> the user with a given an {{IdentityProviderAccount}} |account|,
-an {{IdentityProviderAPIConfig}} |config|, an {{IdentityProviderConfig}} |provider|, and a
+an {{IdentityProviderAPIConfig}} |config|, an {{IdentityProviderRequestOptions}} |provider|, and a
 |globalObject|, run the following steps. This returns a boolean.
     1. Assert: These steps are running [=in parallel=].
     1. Let |metadata| be the result of running [=fetch the client metadata=] with |config|,
@@ -1203,7 +1211,7 @@ an {{IdentityProviderAPIConfig}} |config|, an {{IdentityProviderConfig}} |provid
 
 <div algorithm>
 To <dfn noexport>fetch the client metadata</dfn> given an {{IdentityProviderAPIConfig}} |config| and
-an {{IdentityProviderConfig}} |provider|, run the following steps. This returns an
+an {{IdentityProviderRequestOptions}} |provider|, run the following steps. This returns an
 {{IdentityProviderClientMetadata}} or failure.
     1. Let |clientMetadataUrl| be the result of [=computing the manifest URL=] given |provider|,
         |config|["{{IdentityProviderAPIConfig/client_metadata_endpoint}}"], and |globalObject|.
@@ -1286,7 +1294,7 @@ To <dfn>fetch request</dfn> given a [=/request=] |request|, |globalObject|, and 
 </div>
 
 <div algorithm>
-When <dfn>computing the manifest URL</dfn> given an {{IdentityProviderConfig}} |provider|, a
+When <dfn>computing the manifest URL</dfn> given an {{IdentityProviderRequestOptions}} |provider|, a
 [=string=] |manifestString|, and |globalObject|, perform the following steps. This returns a
 <a spec=url for=/>URL</a> or failure.
     1. Let |configUrl| be the result of running [=parse url=] with |provider|'s
@@ -1681,7 +1689,7 @@ Every {{IdentityProviderAccount}} is expected to have members with the following
         the Privacy Policy and the Terms of Service.
     :   <dfn>login_hints</dfn>
     ::  A list of strings which correspond to all of the login hints which match with this account.
-        An [=RP=] can use the {{IdentityProviderConfig/loginHint}} to request that only an account
+        An [=RP=] can use the {{IdentityProviderRequestOptions/loginHint}} to request that only an account
         matching a given value is shown to the user.
 </dl>
 
@@ -2046,7 +2054,7 @@ The [=remote end steps=] are:
 
 1. For each |account| in |accounts|:
     1. Let |accountState| be the result of running the [=compute the connection status=]
-        algorithm given |account| and the {{IdentityProviderConfig}} of the IDP
+        algorithm given |account| and the {{IdentityProviderRequestOptions}} of the IDP
         |account| belongs to
     1. [=list/Append=] a [=dictionary=] to |list| with the following properties:
         1. `accountId` set to the account's {{IdentityProviderAccount/id}}
