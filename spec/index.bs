@@ -452,6 +452,9 @@ the [=/origin=] of the [=RP=], |idp| is the [=/origin=] of the [=IDP=], and |acc
 an account identifier. It represents the set of triples such that the user has used FedCM to login to
 the |rp| via the |idp| |account|.
 
+Issue: the [=connected accounts set=] should be double keyed in the [=RP=] (e.g. it should include
+both the requester and the embedder, or in other words the iframe and the top-level).
+
 If a user clears browsing data for an |origin| (cookies, localStorage, etc.), the user agent MUST
 [=list/remove=] all triples with an [=/origin=] matching the |origin| from <a>connected accounts set</a>.
 
@@ -495,13 +498,13 @@ To <dfn>create a connection between the RP and the IdP account</dfn> given an
 This specification introduces a new type of {{Credential}}, called an {{IdentityCredential}}:
 
 <pre class="idl">
-  dictionary IdentityCredentialRevokeOptions : IdentityProviderConfig {
+  dictionary IdentityCredentialDisconnectOptions : IdentityProviderConfig {
     USVString accountHint;
   };
 
   [Exposed=Window, SecureContext]
   interface IdentityCredential : Credential {
-    static Promise&lt;undefined&gt; revoke(optional IdentityCredentialRevokeOptions options = {});
+    static Promise&lt;undefined&gt; disconnect(optional IdentityCredentialDisconnectOptions options = {});
     readonly attribute USVString? token;
   };
 </pre>
@@ -523,6 +526,137 @@ The main entrypoint in this specification is through the entrypoints exposed
 by the [[CM]] API.
 
 <!-- ============================================================ -->
+### The disconnect method ### {#browser-api-identity-credential-disconnect}
+<!-- ============================================================ -->
+
+<div algorithm="identity-credential-disconnect">
+When the static {{IdentityCredential/disconnect}} method is invoked given an
+{{IdentityCredentialDisconnectOptions}} |options| perform the following steps:
+
+    1. Let |globalObject| be the [=current global object=].
+    1. Let |document| be |globalObject|'s [=associated Document=].
+    1. If |document| is not [=allowed to use=] the [=identity-credentials-get=]
+        [=policy-controlled feature=], throw a "{{NotAllowedError}}" {{DOMException}}.
+    1. If |options| does not [=map/contain=] all of the following, then throw a new {{TypeError}}:
+        * {{IdentityProviderConfig/configURL}}
+        * {{IdentityProviderConfig/clientId}}
+        * {{IdentityCredentialDisconnectOptions/accountHint}}
+    1. Let |promise| be a new {{Promise}}.
+    1. [=In parallel=], [=attempt to disconnect=] given |options|, |promise|, and |globalObject|.
+    1. Return |promise|.
+</div>
+
+<div algorithm>
+When asked to <dfn>attempt to disconnect</dfn> given an {{IdentityCredentialDisconnectOptions}}
+|options|, a {{Promise}} |promise|, and a |globalObject|, perform the following steps:
+
+    1. Assert: these steps are running [=in parallel=].
+    1. Let |configUrl| be the result of running [=parse url=] with |options|'s
+        {{IdentityProviderConfig/configURL}} and |globalObject|.
+    1. If |configUrl| is failure, [=reject=] |promise| with an "{{InvalidStateError}}"
+        {{DOMException}}.
+    1. Run a [[!CSP]] check with a [[CSP#directive-connect-src|connect-src]] directive on the URL
+        passed as |configUrl|. If it fails, [=reject=] |promise| with a "{{NetworkError}}"
+        {{DOMException}}.
+    1. If there is another pending {{IdentityCredential/disconnect}} call for this |globalObject|
+        (e.g. it has not yet thrown an exception or its associated {{Promise}} has not yet been
+        resolved), [=reject=] |promise| with a "{{NetworkError}}" {{DOMException}}.
+    1. If |configUrl| is not a [=potentially trustworthy origin=], [=reject=] |promise| with a
+        "{{NetworkError}}" {{DOMException}}.
+    1. If the user has disabled the FedCM API on the |globalObject|, [=reject=] |promise| with a
+        "{{NetworkError}}" {{DOMException}}.
+    1. If there does not exist an account |account| such that [=compute the connection status=] of
+        |options|, |account|, and |globalObject| returns
+        [=compute the connection status/connected=], then [=reject=] |promise| with a
+        "{{NetworkError}}" {{DOMException}}. This check can be performed by iterating over the
+        [=connected accounts set=] or by keeping a separate data structure to make this lookup fast.
+    1. Let |config| be the result of running [=fetch the config file=] with
+        |provider| and |globalObject|.
+    1. If |config| is failure, [=reject=] |promise| with a "{{NetworkError}}" {{DOMException}}.
+    1. Let |disconnectUrl| be the result of [=computing the manifest URL=] given |provider|,
+        |config|["{{IdentityProviderAPIConfig/disconnect_endpoint}}"], and |globalObject|.
+    1. If |disconnectUrl| is failure, [=reject=] |promise| with a "{{NetworkError}}"
+        {{DOMException}}.
+    1. [=Send a disconnect request=] with |disconnectUrl|, |options|, and |globalObject| and let
+        |accountId| be the result.
+    1. Let |idpOrigin| be the [=url/origin=] corresponding to |configUrl|.
+    1. Let |rpOrigin| be |globalObject|'s [=associated Document=]'s [=Document/origin=].
+    1. If |accountId| is not failure:
+        1. Let |triple| be (|rpOrigin|, |idpOrigin|, |accountId|).
+        1. If [=connected accounts set=] [=list/contains=] |triple|:
+            1. [=list/Remove=] |triple| from the [=connected accounts set=].
+            1. [=Resolve=] |promise|.
+            1. Return.
+    1. For every (|rp|, |idp|, |accountId|) |triple| in the [=connected accounts set=]:
+        1. If |rp| equals |rpOrigin| and |idp| equals |idpOrigin|, [=list/remove=] |triple| from the
+            [=connected accounts set=].
+    1. [=Reject=] |promise| with a "{{NetworkError}}" {{DOMException}}.
+</div>
+
+<!-- ============================================================ -->
+#### Disconnect request #### {#disconnect-request}
+<!-- ============================================================ -->
+
+The <a>send a disconnect request</a> algorithm sends a request to disconnect an account that has
+previously been used for federated login in the [=RP=].
+
+<div algorithm>
+When asked to <dfn>send a disconnect request</dfn> given a <a spec=url for=/>URL</a>
+|disconnectUrl|, and {{IdentityCredentialDisconnectOptions}} |options|, and a |globalObject|,
+perform the following steps. This returns an {{USVString}} or failure.
+
+    1. Let |requestBody| be the result of running [=urlencoded serializer=] with a list containing:
+        1. ("client_id", |options|'s {{IdentityProviderConfig/clientId}})
+        1. ("account_hint",  |options|'s {{IdentityCredentialDisconnectOptions/accountHint}})
+    1. Let |request| be a new <a spec=fetch for=/>request</a> as follows:
+
+        :  [=request/url=]
+        :: |disconnectUrl|
+        :  [=request/method=]
+        :: "POST"
+        :  [=request/body=]
+        :: the [=UTF-8 encode=] of |requestBody|
+        :  [=request/redirect mode=]
+        :: "error"
+        :  [=request/client=]
+        :: null
+        :  [=request/window=]
+        :: "no-window"
+        :  [=request/service-workers mode=]
+        :: "none"
+        :  [=request/destination=]
+        :: "webidentity"
+        :  [=request/origin=]
+        :: |globalObject|'s [=associated document=]'s [=Document/origin=]
+        :  [=request/header list=]
+        :: a [=list=] containing a single [=header=] with [=header/name=] set to `Accept` and
+            [=header/value=] set to `application/x-www-form-urlencoded`
+        :  [=request/credentials mode=]
+        :: "include"
+        :  [=request/mode=]
+        :: "cors"
+
+    1. Let |accountId| be null.
+    1. [=Fetch request=] with |request| and |globalObject|, and with
+        <var ignore>processResponseConsumeBody</var> set to the following steps given a
+        <a spec=fetch for=/>response</a> |response| and |responseBody|:
+        1. Let |json| be the result of [=extract the JSON fetch response=] from |response| and
+            |responseBody|.
+        1. [=converted to an IDL value|Convert=] |json| to a {{DisconnectedAccount}}, |account|.
+        1. If one of the previous two steps threw an exception, set |accountId| to failure
+            and return.
+        1. Set |accountId| to |account|'s {{DisconnectedAccount/account_id}}.
+    1. Wait for |accountId| to be set.
+    1. Return |accountId|.
+</div>
+
+<xmp class="idl">
+dictionary DisconnectedAccount {
+  required USVString account_id;
+};
+</xmp>
+
+<!-- ============================================================ -->
 ### The CredentialRequestOptions ### {#browser-api-credential-request-options}
 <!-- ============================================================ -->
 
@@ -532,7 +666,7 @@ This section defines the dictionaries passed into the JavaScript call:
 ```js
 const credential = await navigator.credentials.get({
   identity: { // IdentityCredentialRequestOptions
-    providers: [{  // sequence<IdentityProviderConfig>
+    providers: [{  // sequence<IdentityCredentialRequestOptions>
       configURL: "https://idp.example/manifest.json", // IdentityProviderConfig.configURL
       clientId: "123", // IdentityProviderConfig.clientId
       nonce: "nonce" // IdentityProviderConfig.nonce
@@ -932,7 +1066,7 @@ or failure.
         1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderAPIConfig}} stored
             in |config|.
         1. If one of the previous two steps threw an exception, set |config| to failure.
-        1. Set |config|.{{IdentityProviderAPIConfig/login_url}} to the result of  [=computing
+        1. Set |config|.{{IdentityProviderAPIConfig/login_url}} to the result of [=computing
             the manifest URL=] with |provider|, |config| and |globalObject|.
         1. If |config|.{{IdentityProviderAPIConfig/login_url}} is null, return failure.
     1. Wait for both |config| and |configInWellKnown| to be set.
@@ -969,6 +1103,7 @@ dictionary IdentityProviderAPIConfig {
   required USVString client_metadata_endpoint;
   required USVString id_assertion_endpoint;
   required USVString login_url;
+  USVString disconnect_endpoint;
   IdentityProviderBranding branding;
 };
 </xmp>
@@ -1449,8 +1584,8 @@ When invoking the {{IdentityProvider/getUserInfo()}} method given an {{IdentityP
                 [=list/contain=] |provider|'s {{IdentityProviderConfig/clientId}}, continue.
             
                 Note: this allows the [=IDP=] to override whether an account is a returning account.
-                This could be useful for instance in cases where the user has revoked the account
-                out of band.
+                This could be useful for instance in cases where the user has disconnected the
+                account out of band.
             
             1. [=Compute the connection status=] of |provider|, |account|, and |globalObject|. If the
                 result is [=compute the connection status/connected=], set |hasReturningAccount| to
@@ -1485,6 +1620,7 @@ The [=IDP=] exposes a series of HTTP endpoints:
 1. An [[#idp-api-accounts-endpoint]] endpoint
 1. A [[#idp-api-client-id-metadata-endpoint]] endpoint
 1. An [[#idp-api-id-assertion-endpoint]] endpoint
+1. An [[#idp-api-disconnect-endpoint]] endpoint if it supports {{IdentityCredential/disconnect}}.
 
 The FedCM API introduces the ability for a site to ask the browser to execute a few different
 network requests. It is important for the browser
@@ -1498,6 +1634,7 @@ network requests performed:
   <tr><td>accounts_endpoint</td><td>yes</td><td>no</td><td>no</td></tr>
   <tr><td>client_metadata_endpoint</td><td>no</td><td>yes</td><td>yes</td></tr>
   <tr><td>id_assertion_endpoint</td><td>yes</td><td>yes</td><td>yes</td></tr>
+  <tr><td>disconnect_endpoint</td><td>yes</td><td>yes</td><td>yes</td></tr>
 </table>
 
 <!-- ============================================================ -->
@@ -1572,6 +1709,9 @@ The {{IdentityProviderAPIConfig}} object's members have the following semantics:
     ::  A URL that points to an HTTP API that complies with the [[#idp-api-client-id-metadata-endpoint]] API.
     :   <dfn>id_assertion_endpoint</dfn>
     ::  A URL that points to an HTTP API that complies with the [[#idp-api-id-assertion-endpoint]] API.
+    :   <dfn>disconnect_endpoint</dfn>
+    ::  A URL that points to an HTTP API that complies with the [[#idp-api-disconnect-endpoint]]
+        API.
     :   <dfn>branding</dfn>
     ::  A set of {{IdentityProviderBranding}} options.
 </dl>
@@ -1629,6 +1769,7 @@ For example:
   "accounts_endpoint": "/accounts",
   "client_metadata_endpoint": "/metadata",
   "id_assertion_endpoint": "/assertion",
+  "disconnect_endpoint": "/disconnect",
   "branding": {
     "background_color": "green",
     "color": "#FFEEAA",
@@ -1857,6 +1998,61 @@ For example:
 }
 ```
 </div>
+
+<!-- ============================================================ -->
+## Disconnect endpoint ## {#idp-api-disconnect-endpoint}
+<!-- ============================================================ -->
+
+The <dfn>disconnect endpoint</dfn> is responsible for disconnecting a previously made federated
+login connection between an [=RP=] and an [=IDP=] account, and returning the account's
+{{IdentityProviderAccount/id}} so that the [=user agent=] can remove it from the
+[=connected accounts set=].
+
+The [=disconnect endpoint=] is fetched when invoking the {{IdentityCredential/disconnect}}
+method:
+
+(a) as a **POST** request,
+(b) **with** [=IDP=] cookies,
+(c) **with** the [=RP=]'s origin in the <a http-header>Origin</a> header,
+(d) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`,
+(e) **without** following [[RFC9110#section-10.2.2|HTTP redirects]], and
+(f) in "cors" [=request/mode=].
+
+It will also contain the following in the request body `application/x-www-form-urlencoded`:
+
+<dl dfn-type="argument" dfn-for="disconnect_endpoint_request">
+    :   <dfn>client_id</dfn>
+    ::  The [=RP=]'s unique identifier from the [=IDP=]
+    :   <dfn>account_hint</dfn>
+    ::  An account hint for the [=IDP=] account being disconnected from the [=RP=].
+</dl>
+
+For example:
+
+<div class=example>
+```http
+POST /fedcm_disconnect_endpoint HTTP/1.1
+Host: idp.example
+Origin: https://rp.example/
+Content-Type: application/x-www-form-urlencoded
+Cookie: 0x23223
+Sec-Fetch-Dest: webidentity
+client_id=client1234&account_hint=hint12
+```
+</div>
+
+If the disconnection is unsuccessful, the [=IDP=] may respond with an error. If it is successful,
+the response body must be a JSON object that can be [=converted to an IDL value|converted=] to an
+{{DisconnectedAccount}} without an exception.
+
+<dl dfn-type="dict-member" dfn-for="DisconnectedAccount">
+    :   <dfn>account_id</dfn>
+    ::  The {{IdentityProviderAccount/id}} of the account that was successfully disconnected.
+</dl>
+
+The [=IDP=] must return the {{DisconnectedAccount/account_id}} since it may be different from the
+{{disconnect_endpoint_request/account_hint}}, and the ID is the one which allows the
+[=user agent=] to disconnect the account from the [=connected accounts set=].
 
 <!-- ============================================================ -->
 # Permissions Policy Integration # {#permissions-policy-integration}
@@ -2353,6 +2549,14 @@ origin of the fetched URLs.
     information required to perform a federated signin/signup. It is not possible for the [=RP=] or
     the [=IDP=] to force the token fetch to happen without user permission, as the user agent cannot be
     spoofed or otherwise tricked.
+    
+* The [=disconnect endpoint=] may only be fetched after the user has successfully gone through the
+    FedCM flow at least once in the [=RP=]. It sends a credentialed request to the [=IDP=], so it
+    is important that the [=user agent=] does not allow unlimited requests of such type, even after
+    the user has used FedCM once. For this reason, any time that disconnection sends a credentialed
+    request, at least one account is removed from the [=connected accounts set=], thus ensuring that
+    this endpoint does not introduce a way for the [=RP=] to send requests to the [=IDP=] containing
+    the [=IDP=] cookies forever.
 
 <!-- ============================================================ -->
 ## Attack Scenarios ## {#attack-scenarios}
