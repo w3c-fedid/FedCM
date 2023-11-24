@@ -230,10 +230,20 @@ To use the DomainHint:
 ```
 {
   accounts: [{
-    id: "accountId",
-    email: "account@email.com",
+    id: "karenCorp1",
+    email: "karen@corp1.com",
+    name: "Karen",
     domain_hints: ["corp1", "corp2"],
-    ...
+  }, {
+    id: "otherId",
+    email: "karen@mail.com",
+    name: "Karen",
+  }, {
+    id: "karenCorp3",
+    email: "karen@corp3.com,
+    name: "Karen",
+    domain_hints: ["corp3"],
+  }
   }, ...]
 }
 ```
@@ -241,6 +251,7 @@ To use the DomainHint:
 * Invoke the API with the `domainHint` parameter like so:
 
 ```js
+  // This will show the karenCorp1 account.
   return await navigator.credentials.get({
       identity: {
         providers: [{
@@ -256,6 +267,20 @@ To use the DomainHint:
 Now, only accounts matching the hint provided will show in the chooser.
 
 You may also use "any" to show only accounts which list at least one domain hint.
+
+```js
+  // This will show the karenCorp1 and karenCorp3 accounts.
+  return await navigator.credentials.get({
+      identity: {
+        providers: [{
+          configURL: "https://idp.example/config.json",
+          clientId: "123",
+          nonce: nonce,
+          domainHint : "any"
+        }]
+      }
+  });
+```
 
 ### Disconnect API
 
@@ -300,9 +325,11 @@ account ID of the account that has been disconnected.
 }
 ```
 
-If the browser finds an account matching the ID provided, it will note the
-disconnection of that account. If the IdP fails or the `account_id` is nowhere
-to be found, the browser will remove from its memory all of the federated
-accounts associated with the (RP, IDP). As a reminder, an account needs to be
-in the browser memory in order for both auto reauthn and the User Info API to
-consider that as a returning account.
+When a user goes through the FedCM flow, the browser stores that (RP, IDP, account)
+knowledge in browser storage in order to allow auto reauthn and User Info API to
+work correctly in the future. If the browser finds an account in local storage
+matching the ID provided, it will note the disconnection of that account. If the
+IdP fails by either returning some network error or saying that the disconnection
+was unsuccessful, or if the `account_id` is nowhere to be found, the browser will
+remove from local storage all of the federated accounts associated with the (RP,
+IDP).
