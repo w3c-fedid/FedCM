@@ -222,7 +222,7 @@ if (cred.isAutoSelected !== undefined) {
 ### DomainHint
 
 To use the DomainHint:
-* Ensure that chrome://version shows TODO or higher.
+* Ensure that chrome://version shows 121.0.6146.0 or higher.
 * Enable the experimental feature `FedCmDomainHint` in `chrome://flags`.
 
 * Add an array of `domain_hints` to the accounts described in the accounts endpoint:
