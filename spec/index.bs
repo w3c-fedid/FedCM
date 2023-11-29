@@ -145,7 +145,6 @@ could be implemented.
             configURL: "https://idp.example/manifest.json",
             clientId: "123",
             nonce: nonce,
-            domainHint: "any"
           }]
         }
       });
@@ -775,8 +774,9 @@ the exception thrown.
         1. If |accountList| is now empty, go to the [=mismatch dialog step=].
     1. If |provider|'s {{IdentityProviderConfig/domainHint}} is not empty:
         1. For every |account| in |accountList|:
-            1. If {{IdentityProviderConfig/domainHint}} is "any", remove |account| from
-                |accountList| if |account|'s {{IdentityProviderAccount/domain_hints}}  is not empty.
+            1. If {{IdentityProviderConfig/domainHint}} is "any":
+                1. If |account|'s {{IdentityProviderAccount/domain_hints}} is empty, remove
+                    |account| from |accountList|.
             1. Otherwise, remove |account| from |accountList| if |account|'s
                 {{IdentityProviderAccount/domain_hints}} does not [=list/contain=] |provider|'s
                 {{IdentityProviderConfig/domainHint}}.
@@ -1345,8 +1345,8 @@ success or failure.
         |loginUrl| to the result of running [=url parser=] with
         |config|.{{IdentityProviderAPIConfig/login_url}}.
     1. Wait until |loginUrl| is not null.
-    1. Assert: |loginUrl| is not failure (the [=user agent=] has checked
-        |config|.{{IdentityProviderAPIConfig/login_url}} to be a valid URL previously).
+    1. Assert: |loginUrl| is not failure (the [=user agent=] has previously checked that
+        |config|.{{IdentityProviderAPIConfig/login_url}} is a valid URL).
     1. Let |queryList| be a new [=list=].
     1. If |provider|'s {{IdentityProviderConfig/loginHint}} is not empty, [=list/append=]
         ("login_hint", {{IdentityProviderConfig/loginHint}}) to |queryList|.
