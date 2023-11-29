@@ -453,7 +453,9 @@ an account identifier. It represents the set of triples such that the user has u
 the |rp| via the |idp| |account|.
 
 Issue: the [=connected accounts set=] should be double keyed in the [=RP=] (i.e., it should include
-both the requester and the embedder, or in other words the iframe and the top-level).
+both the requester and the embedder, or in other words the iframe and the top-level). Otherwise the
+top-level's state could be used and modified by the embedder, which introduces leaks and unwanted
+cross-origin communication.
 
 If a user clears browsing data for an |origin| (cookies, localStorage, etc.), the user agent MUST
 [=list/remove=] all triples with an [=/origin=] matching the |origin| from <a>connected accounts set</a>.
@@ -491,6 +493,20 @@ To <dfn>create a connection between the RP and the IdP account</dfn> given an
     1. [=set/Append=] |triple| to [=connected accounts set=].
 </div>
 
+<div algorithm>
+To <dfn>remove a connection</dfn> given |accountId|, |rpOrigin|, |idpOrigin|, run the following
+steps. It returns whether a connection matching the |accountId| was found and removed:
+    1. If |accountId| is not failure:
+        1. Let |triple| be (|rpOrigin|, |idpOrigin|, |accountId|).
+        1. If [=connected accounts set=] [=list/contains=] |triple|:
+            1. [=list/Remove=] |triple| from the [=connected accounts set=].
+            1. Return true.
+    1. For every (|rp|, |idp|, |accountId|) |triple| in the [=connected accounts set=]:
+        1. If |rp| equals |rpOrigin| and |idp| equals |idpOrigin|, [=list/remove=] |triple| from the
+            [=connected accounts set=].
+    1. Return false.
+</div>
+
 <!-- ============================================================ -->
 ## The IdentityCredential Interface ## {#browser-api-identity-credential-interface}
 <!-- ============================================================ -->
@@ -499,7 +515,7 @@ This specification introduces a new type of {{Credential}}, called an {{Identity
 
 <pre class="idl">
   dictionary IdentityCredentialDisconnectOptions : IdentityProviderConfig {
-    USVString accountHint;
+    required USVString accountHint;
   };
 
   [Exposed=Window, SecureContext]
@@ -537,7 +553,7 @@ When the static {{IdentityCredential/disconnect}} method is invoked, given an
     1. Let |document| be |globalObject|'s [=associated Document=].
     1. If |document| is not [=allowed to use=] the [=identity-credentials-get=]
         [=policy-controlled feature=], throw a "{{NotAllowedError}}" {{DOMException}}.
-    1. If |options| does not [=map/contain=] all of the following, then throw a new {{TypeError}}:
+    1. If any of the following members from |options| are empty, throw a new {{TypeError}}:
         * {{IdentityProviderConfig/configURL}}
         * {{IdentityProviderConfig/clientId}}
         * {{IdentityCredentialDisconnectOptions/accountHint}}
@@ -574,30 +590,24 @@ When asked to <dfn>attempt to disconnect</dfn> given an {{IdentityCredentialDisc
         |provider| and |globalObject|.
     1. If |config| is failure, [=reject=] |promise| with a "{{NetworkError}}" {{DOMException}}.
     1. Let |disconnectUrl| be the result of [=computing the manifest URL=] given |provider|,
-        |config|["{{IdentityProviderAPIConfig/disconnect_endpoint}}"], and |globalObject|.
+        |config|.{{IdentityProviderAPIConfig/disconnect_endpoint}}, and |globalObject|.
     1. If |disconnectUrl| is failure, [=reject=] |promise| with a "{{NetworkError}}"
         {{DOMException}}.
     1. [=Send a disconnect request=] with |disconnectUrl|, |options|, and |globalObject|, and let
         |accountId| be the result.
     1. Let |idpOrigin| be the [=url/origin=] corresponding to |configUrl|.
     1. Let |rpOrigin| be |globalObject|'s [=associated Document=]'s [=Document/origin=].
-    1. If |accountId| is not failure:
-        1. Let |triple| be (|rpOrigin|, |idpOrigin|, |accountId|).
-        1. If [=connected accounts set=] [=list/contains=] |triple|:
-            1. [=list/Remove=] |triple| from the [=connected accounts set=].
-            1. [=Resolve=] |promise|.
-            1. Return.
-    1. For every (|rp|, |idp|, |accountId|) |triple| in the [=connected accounts set=]:
-        1. If |rp| equals |rpOrigin| and |idp| equals |idpOrigin|, [=list/remove=] |triple| from the
-            [=connected accounts set=].
-    1. [=Reject=] |promise| with a "{{NetworkError}}" {{DOMException}}.
+    1. [=Remove a connection=] for |accountId|, |rpOrigin|, and |idpOrigin| and let |foundAccount|
+        be the result.
+    1. If |foundAccount|, [=resolve=] |promise|, otherwise [=reject=] |promise| with a
+        "{{NetworkError}}" {{DOMException}}.
 </div>
 
 <!-- ============================================================ -->
 #### Disconnect request #### {#disconnect-request}
 <!-- ============================================================ -->
 
-The <a>send a disconnect request</a> algorithm sends a request to disconnect an account that has
+The [=send a disconnect request=] algorithm sends a request to disconnect an account that has
 previously been used for federated login in the [=RP=].
 
 <div algorithm>
