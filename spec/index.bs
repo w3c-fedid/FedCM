@@ -374,8 +374,8 @@ If a user clears browsing data for an |origin| (cookies, localStorage, etc.), th
 [=same origin=] with |rp|, |idp|, or |embedder|.
 
 <div algorithm>
-To <dfn>compute the connected account key</dfn> given an {{IdentityProviderConfig}} |provider|, an
-{{IdentityProviderAccount}} |account|, and a |globalObject|, run the following steps. It returns a
+To <dfn>compute the connected account key</dfn> given an {{IdentityProviderConfig}} |provider|, a
+{{USVString}} |accountId|, and a |globalObject|, run the following steps. It returns a
 quadruple of the form (embedder, rp, idp, account).
     1. Let |configUrl| be the result of running [=parse url=] with |provider|'s
         {{IdentityProviderConfig/configURL}} and |globalObject|.
@@ -383,7 +383,6 @@ quadruple of the form (embedder, rp, idp, account).
         [=navigable/top-level traversable=]'s [=navigable/active document=]'s [=Document/origin=].
     1. Let |idpOrigin| be the [=url/origin=] corresponding to |configUrl|.
     1. Let |rpOrigin| be |globalObject|'s [=associated Document=]'s [=Document/origin=].
-    1. Let |accountId| be |account|'s {{IdentityProviderAccount/id}}.
     1. Return (|embedderOrigin|, |rpOrigin|, |idpOrigin|, |accountId|).
 </div>
 
@@ -395,8 +394,16 @@ When asked whether an {{IdentityProviderAccount}} |account| is
         |account|'s {{IdentityProviderAccount/approved_clients}} does not [=list/contain=]
         |provider|'s {{IdentityProviderConfig/clientId}}, return false.
     1. Let |tuple| be the result of running [=compute the connected account key=] given |provider|,
-        |account|, and |globalObject|.
-    1. Return whether [=connected accounts set=] [=list/contains=] |tuple|.
+        |account|'s {{IdentityProviderAccount/id}}, and |globalObject|.
+    1. If [=connected accounts set=] [=list/contains=] |tuple|, return true.
+    1. Let |idpOrigin| be the [=url/origin=] corresponding to |provider|'s
+        {{IdentityProviderConfig/configURL}}.
+    1. Let |rpOrigin| be |globalObject|'s [=associated Document=]'s [=Document/origin=].
+    1. If |account| [=map/contains=] {{IdentityProviderAccount/approved_clients}},
+        |account|'s {{IdentityProviderAccount/approved_clients}} [=list/contains=] |provider|'s
+        {{IdentityProviderConfig/clientId}}, and third party cookies are available for |idpOrigin|
+        on |rpOrigin|, return true.
+    1. Return false.
 </div>
 
 <div algorithm="compute the connection status">
@@ -409,7 +416,7 @@ This returns <dfn for="compute the connection status">connected</dfn> or
             {{IdentityProviderConfig/clientId}}, return [=compute the connection status/connected=].
         1. Return [=compute the connection status/disconnected=].
     1. Let |tuple| be the result of running [=compute the connected account key=] given |provider|,
-        |account|, and |globalObject|.
+        |account|'s {{IdentityProviderAccount/id}}, and |globalObject|.
     1. If [=connected accounts set=] [=list/contains=] |tuple|, return
         [=compute the connection status/connected=].
     1. Return [=compute the connection status/disconnected=].
@@ -417,15 +424,14 @@ This returns <dfn for="compute the connection status">connected</dfn> or
 
 <div algorithm>
 To <dfn>create a connection between the RP and the IdP account</dfn> given an
-{{IdentityProviderConfig}} |provider|, an {{IdentityProviderAccount}} |account|, and a
-|globalObject| (the [=RP=]'s), run the following steps:
+{{IdentityProviderConfig}} |provider|, a {{USVString}} |accountId|, and a |globalObject| (the
+[=RP=]'s), run the following steps:
     1. Let |configUrl| be the result of running [=parse url=] with |provider|'s
         {{IdentityProviderConfig/configURL}} and |globalObject|.
     1. Let |embedderOrigin| be the |globalObject|'s [=Window/navigable=]'s
         [=navigable/top-level traversable=]'s [=navigable/active document=]'s [=Document/origin=].
     1. Let |idpOrigin| be the [=url/origin=] corresponding to |configUrl|.
     1. Let |rpOrigin| be |globalObject|'s [=associated Document=]'s [=Document/origin=].
-    1. Let |accountId| be |account|'s {{IdentityProviderAccount/id}}.
     1. Let |tuple| be (|embedderOrigin|, |rpOrigin|, |idpOrigin|, |accountId|).
     1. [=set/Append=] |tuple| to [=connected accounts set=].
 </div>
@@ -530,9 +536,9 @@ When asked to <dfn>attempt to disconnect</dfn> given an {{IdentityCredentialDisc
         "{{NetworkError}}" {{DOMException}}.
     1. If the user has disabled the FedCM API on the |globalObject|, [=reject=] |promise| with a
         "{{NetworkError}}" {{DOMException}}.
-    1. If there does not exist an account |account| such that [=connected accounts set=]
-        [=list/contains=] the result of [=compute the connected account key=] given |account|,
-        |options|, and |globalObject|, then [=reject=] |promise| with a "{{NetworkError}}"
+    1. If [=connected accounts set=] does not [=list/contain=] the result of
+        [=compute the connected account key=] given |options|,
+        |options|.{{IdentityCredentialDisconnectOptions/accountHint}}, and |globalObject|, then [=reject=] |promise| with a "{{NetworkError}}"
         {{DOMException}}. This check can be performed by iterating over the
         [=connected accounts set=] or by keeping a separate data structure to make this lookup fast.
     1. Let |config| be the result of running [=fetch the config file=] with |options| and
@@ -903,7 +909,8 @@ the exception immediately.
         1. If |providerMap| [=map/contains=] |providerOrigin|, return (failure, true).
         1. If |mediation| is "{{CredentialMediationRequirement/silent}}" and there does not exist an
             account |account| such that [=connected accounts set=] [=list/contains=] the result of
-            [=compute the connected account key=] given |account|, |provider|, and |globalObject|,
+            [=compute the connected account key=] given |provider|, |account|'s
+            {{IdentityProviderAccount/id}}, and |globalObject|,
             [=continue=]. Note that this check can be performed by iterating over the
             [=connected accounts set=] or by keeping a separate data structure to make this lookup
             fast.
@@ -1135,7 +1142,7 @@ An extension may use the following instead of the [=create identity credential/s
                     to true.
                 1. Otherwise, if |provider|.{{IdentityProviderRequestOptions/fields}} is [=list/empty=],
                     [=create a connection between the RP and the IdP account=] with |provider|,
-                    |selectedAccount|, and |globalObject|, and set |permission| to true.
+                    |selectedAccount|'s {{IdentityProviderAccount/id}}, and |globalObject|, and set |permission| to true.
                     Note: The connection would normally be created in the [=request permission to sign-up=]
                         algorithm, but we do not want to show an extra dialog in this case.
                 1. Otherwise:
@@ -1566,8 +1573,8 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
         1. If |credential| is set:
             1. Assert that |credential| is set to failure.
             1. Return |credential|.
-        1. [=Create a connection between the RP and the IdP account=] with |provider|, |accountId|, and
-            |globalObject|.
+        1. If |isAutoSelected| is false, [=create a connection between the RP and the IdP account=] with
+            |provider|, |accountId|, and |globalObject|.
         1. Let |credential| be a new {{IdentityCredential}} given |globalObject|'s
             <a for="global object">realm</a>.
         1. Set |credential|'s {{IdentityCredential/token}} to |tokenValue|.
@@ -1976,13 +1983,17 @@ The <dfn>in parallel steps for getUserInfo</dfn> given a {{Promise}} |promise| a
     1. If |document| is not [=allowed to use=] the [=identity-credentials-get=]
         [=policy-controlled feature=], [=queue to reject=] |promise| with "{{NotAllowedError}}"
         and return.
-    1. If there does not exist an account |account| such that [=connected accounts set=]
-        [=list/contains=] the result of [=compute the connected account key=] given |account|,
-        |provider|, and |globalObject|, then [=queue to reject=] |promise| with "{{NetworkError}}"
-        and return. This check can be performed by iterating over the [=connected accounts set=] or
-        by keeping a separate data structure to make this lookup fast.
     1. Let |configUrl| be the result of running [=parse url=] with |provider|'s
         {{IdentityProviderConfig/configURL}} and |globalObject|.
+    1. If both of the following are true, [=queue to reject=] |promise| with "{{NetworkError}}"
+        and return:
+        * There does not exist an account |account| such that [=compute the connection status=] of
+            |provider|, |account|, and |globalObject| returns
+            [=compute the connection status/connected=]. This check can be performed by iterating
+            over the [=connected accounts set=] or by keeping a separate data structure to make these
+            lookups faster.
+        * There is no third party cookie access for |configUrl|'s [=url/origin=] on |document|'s
+            [=Document/origin=].
     1. If |configUrl| is failure, [=queue to reject=] |promise| with "{{InvalidStateError}}"
         and return.
     1. If |document|'s [=Document/origin=] is not [=same origin=] as |configUrl|'s [=url/origin=],
