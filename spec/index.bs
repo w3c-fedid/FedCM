@@ -557,10 +557,6 @@ When the static {{IdentityCredential/disconnect}} method is invoked, given an
     1. Let |document| be |globalObject|'s [=associated Document=].
     1. If |document| is not [=allowed to use=] the [=identity-credentials-get=]
         [=policy-controlled feature=], throw a "{{NotAllowedError}}" {{DOMException}}.
-    1. If any of the following members from |options| are empty, throw a new {{TypeError}}:
-        * {{IdentityProviderConfig/configURL}}
-        * {{IdentityProviderConfig/clientId}}
-        * {{IdentityCredentialDisconnectOptions/accountHint}}
     1. Let |promise| be a new {{Promise}}.
     1. [=In parallel=], [=attempt to disconnect=] given |options|, |promise|, and |globalObject|.
     1. Return |promise|.
@@ -598,16 +594,18 @@ When asked to <dfn>attempt to disconnect</dfn> given an {{IdentityCredentialDisc
     1. If |disconnectUrl| is failure, [=reject=] |promise| with a "{{NetworkError}}"
         {{DOMException}}.
     1. [=Send a disconnect request=] with |disconnectUrl|, |options|, and |globalObject|, and let
-        |accountId| be the result.
+        |result| be the result.
     1. Let |idpOrigin| be the [=url/origin=] corresponding to |configUrl|.
     1. Let |rpOrigin| be |globalObject|'s [=associated Document=]'s [=Document/origin=].
-    1. Let |wasAccountRemoved| be false.
-    1. If |accountId| is not failure, [=remove the connection=] given |accountId|, |rpOrigin|, and
-        |idpOrigin| and let |wasAccountRemoved| be the result.
-    1. If |accountId| is failure or |wasAccountRemoved| is false, [=remove all connections=] given
-        |rpOrigin| and |idpOrigin|.
-    1. If |accountId| is not failure, [=resolve=] |promise|, otherwise [=reject=] |promise| with a
-        "{{NetworkError}}" {{DOMException}}.
+    1. If |result| is failure:
+        1. [=Remove all connections=] given |rpOrigin| and |idpOrigin|.
+        1. [=Reject=] |promise| with a "{{NetworkError}}" {{DOMException}}.
+        1. Return.
+    1. Let |accountId| be |result| (note that it is not failure).
+    1. [=Remove the connection=] given |accountId|, |rpOrigin|, and |idpOrigin| and let
+        |wasAccountRemoved| be the result.
+    1. If |wasAccountRemoved| is false, [=remove all connections=] given |rpOrigin| and |idpOrigin|.
+    1. [=Resolve=] |promise|.
 </div>
 
 <!-- ============================================================ -->
