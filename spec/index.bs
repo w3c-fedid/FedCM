@@ -391,9 +391,16 @@ This returns <dfn for="compute the connection status">connected</dfn> or
         1. Return [=compute the connection status/disconnected=].
     1. Let |triple| be the result of running [=compute the connected account key=] given |provider|,
         |account|, and |globalObject|.
+    1. Let |idpOrigin| be the [=url/origin=] corresponding to |provider|'s
+        {{IdentityProviderConfig/configURL}}.
+    1. Let |rpOrigin| be |globalObject|'s [=associated Document=]'s [=Document/origin=].
     1. If [=connected accounts set=] [=list/contains=] |triple|, return
         [=compute the connection status/connected=].
-    1. Return [=compute the connection status/disconnected=].
+    1. Otherwise, if account| [=map/contains=] {{IdentityProviderAccount/approved_clients}},
+        |account|'s {{IdentityProviderAccount/approved_clients}} [=list/contains=] |provider|'s
+        {{IdentityProviderConfig/clientId}}, and third party cookies are available for |idpOrigin|
+        on |rpOrigin|, return [=compute the connection status/connected=].
+    1. Otherwise, return [=compute the connection status/disconnected=].
 </div>
 
 <div algorithm>
@@ -1525,13 +1532,16 @@ When invoking the {{IdentityProvider/getUserInfo()}} method given an {{IdentityP
     1. Let |document| be |globalObject|'s [=associated Document=].
     1. If |document| is not [=allowed to use=] the [=identity-credentials-get=]
         [=policy-controlled feature=], throw a "{{NotAllowedError}}" {{DOMException}}.
-    1. If there does not exist an account |account| such that [=connected accounts set=]
-        [=list/contains=] the result of [=compute the connected account key=] given |account|,
-        |provider|, and |globalObject|, then [=reject=] |promise| with a "{{NetworkError}}"
-        {{DOMException}}. This check can be performed by iterating over the
-        [=connected accounts set=] or by keeping a separate data structure to make this lookup fast.
     1. Let |configUrl| be the result of running [=parse url=] with |provider|'s
         {{IdentityProviderConfig/configURL}} and |globalObject|.
+    1. If both of the following are true, throw a new "{{NetworkError}}" {{DOMException}}:
+        * There does not exist an account |account| such that [=compute the connection status=] of
+            |provider|, |account|, and |globalObject| returns
+            [=compute the connection status/connected=]. This check can be performed by iterating
+            over the [=connected accounts set=] or by keeping a separate data structure to make this
+            lookup fast.
+        * There is third party cookie access for |configUrl|'s [=url/origin=] on |document|'s
+            [=Document/origin=].
     1. If |configUrl| is failure, throw an "{{InvalidStateError}}" {{DOMException}}.
     1. If |document|'s [=Document/origin=] is not [=same origin=] as |configUrl|'s [=url/origin=],
         throw an "{{InvalidStateError}}" {{DOMException}}.
