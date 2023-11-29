@@ -494,17 +494,21 @@ To <dfn>create a connection between the RP and the IdP account</dfn> given an
 </div>
 
 <div algorithm>
-To <dfn>remove a connection</dfn> given |accountId|, |rpOrigin|, |idpOrigin|, run the following
-steps. It returns whether a connection matching the |accountId| was found and removed:
-    1. If |accountId| is not failure:
-        1. Let |triple| be (|rpOrigin|, |idpOrigin|, |accountId|).
-        1. If [=connected accounts set=] [=list/contains=] |triple|:
-            1. [=list/Remove=] |triple| from the [=connected accounts set=].
-            1. Return true.
-    1. For every (|rp|, |idp|, |accountId|) |triple| in the [=connected accounts set=]:
+To <dfn>remove the connection</dfn> given |accountId|, |rpOrigin|, and |idpOrigin|, run the
+following steps. It returns whether the |accountId| connection was successfully removed.
+    1. Let |triple| be (|rpOrigin|, |idpOrigin|, |accountId|).
+    1. If [=connected accounts set=] [=list/contains=] |triple|:
+        1. [=list/Remove=] |triple| from the [=connected accounts set=].
+        1. Return true.
+    1. Return false.
+</div>
+
+<div algorithm>
+To <dfn>remove all connections</dfn> given |rpOrigin| and |idpOrigin|, run the following steps:
+    1. For every (|rp|, |idp|, <var ignore="">accountId</var>) |triple| in the
+        [=connected accounts set=]:
         1. If |rp| equals |rpOrigin| and |idp| equals |idpOrigin|, [=list/remove=] |triple| from the
             [=connected accounts set=].
-    1. Return false.
 </div>
 
 <!-- ============================================================ -->
@@ -597,9 +601,12 @@ When asked to <dfn>attempt to disconnect</dfn> given an {{IdentityCredentialDisc
         |accountId| be the result.
     1. Let |idpOrigin| be the [=url/origin=] corresponding to |configUrl|.
     1. Let |rpOrigin| be |globalObject|'s [=associated Document=]'s [=Document/origin=].
-    1. [=Remove a connection=] for |accountId|, |rpOrigin|, and |idpOrigin| and let |foundAccount|
-        be the result.
-    1. If |foundAccount|, [=resolve=] |promise|, otherwise [=reject=] |promise| with a
+    1. Let |wasAccountRemoved| be false.
+    1. If |accountId| is not failure, [=remove the connection=] given |accountId|, |rpOrigin|, and
+        |idpOrigin| and let |wasAccountRemoved| be the result.
+    1. If |accountId| is failure or |wasAccountRemoved| is false, [=remove all connections=] given
+        |rpOrigin| and |idpOrigin|.
+    1. If |accountId| is not failure, [=resolve=] |promise|, otherwise [=reject=] |promise| with a
         "{{NetworkError}}" {{DOMException}}.
 </div>
 
