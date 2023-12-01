@@ -1540,7 +1540,7 @@ The [=config file=] is fetched in the [=fetch the config file=] algorithm:
 (b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`,
 (c) **without** revealing the [=RP=] in the <a http-header>Origin</a> or
     [[RFC9110#field.referer|Referer]] headers, and
-(c) **without** following [[RFC9110#field.location|HTTP redirects]].
+(d) **without** following [[RFC9110#field.location|HTTP redirects]].
 
 For example:
 
@@ -1985,9 +1985,9 @@ The [=remote end steps=] are:
 
 1. Return [=success=] with data `null`.
 
-## Confirm IDP login ## {#webdriver-confirmidplogin}
+## Click dialog button ## {#webdriver-clickdialogbutton}
 
-<figure id="table-webdriver-confirmidplogin" class="table">
+<figure id="table-webdriver-clickdialogbutton" class="table">
     <table class="data">
         <thead>
             <tr>
@@ -1998,7 +1998,7 @@ The [=remote end steps=] are:
         <tbody>
             <tr>
                 <td>POST</td>
-                <td>`/session/{session id}/fedcm/confirmidplogin`</td>
+                <td>`/session/{session id}/fedcm/clickdialogbutton`</td>
             </tr>
         </tbody>
     </table>
@@ -2006,12 +2006,21 @@ The [=remote end steps=] are:
 
 The [=remote end steps=] are:
 
-1. If no FedCM dialog is currently open, or the dialog is not a [=confirm IDP
-    login dialog=] return a [=error|WebDriver error=] with [=error code=]
-    [=no such alert=].
+1. If |parameters| is not a JSON [[ECMASCRIPT#sec-json-object|Object]], return a
+    [=error|WebDriver error=] with [=error code=] [=invalid argument=].
 
-1. Act as if the user had clicked the "continue" button in the dialog and
-    initiate the login flow.
+1. Let |dialogButton| be the result of [=getting a property=] named
+    `"dialogButton"` from |parameters|.
+
+1. If |dialogButton| is not a string that is "`ConfirmIdpLoginContinue`", return
+    a [=error|WebDriver error=] with [=error code=] [=invalid argument=].
+
+1. If no FedCM dialog is currently open or the dialog is not a [=confirm IDP
+    login dialog=], return a [=error|WebDriver error=] with [=error code=] [=no
+    such alert=].
+
+1. Act as if the user had clicked the "continue" button in the [=confirm IDP
+    login dialog=] and initiate the login flow.
 
 1. Return [=success=] with data `null`.
 
@@ -2126,7 +2135,7 @@ The [=remote end steps=] are:
     [=error code=] [=no such alert=].
 
 1. Let |type| be a string that is "`AutoReauthn`" if the user is being [=auto-reauthenticated=],
-    or "`AccountChooser`" is the dialog is an account chooser, or "`ConfirmIdpLogin`" if the
+    or "`AccountChooser`" if the dialog is an account chooser, or "`ConfirmIdpLogin`" if the
     dialog is a [=confirm IDP login dialog=].
 
 1. Return [=success=] with data |type|.
