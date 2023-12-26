@@ -1,6 +1,6 @@
-# Web Platform Incubator Community Group
+# Federated Identity Community Group
 
-This repository is being used for work in the W3C Web Platform Incubator Community Group, governed by the [W3C Community License
+This repository is being used for work in the W3C Federated Identity Community Group, governed by the [W3C Community License
 Agreement (CLA)](http://www.w3.org/community/about/agreements/cla/). To make substantive contributions,
 you must join the CG.
 

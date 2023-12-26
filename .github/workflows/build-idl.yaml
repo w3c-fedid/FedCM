@@ -1,0 +1,30 @@
+name: Publish IDL to GitHub pages
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Build
+        run: |
+          make -C spec idl
+          mkdir out
+          cp spec/fedcm.idl out/
+
+      - name: Deploy
+        if: ${{ success() && github.ref == 'refs/heads/main' }}
+        uses: JamesIves/github-pages-deploy-action@4.1.3
+        with:
+          BRANCH: gh-pages
+          FOLDER: out
+          CLEAN-EXCLUDE:
+            index.html
+            static
+
