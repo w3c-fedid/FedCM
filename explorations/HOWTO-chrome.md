@@ -24,7 +24,7 @@ includes the time when the sign-up status was set.
 
 ## Experimental functionality
 
-In order to test experimental functionality:
+To test experimental functionality:
 
 1. Download Google Chrome Canary. It is best to experiment with the latest
    build possible to get the most up-to-date implementation.
@@ -67,9 +67,8 @@ succeeded or failed.
 
 ### LoginHint
 
-In order to use the LoginHint API:
+To use the LoginHint API:
 
-* Enable the experimental feature `FedCmLoginHint` in `chrome://flags`.
 * Add an array of `hints` to the accounts described in the accounts endpoint:
 
 ```
@@ -102,9 +101,8 @@ Now, only accounts with the "hint" provided will show in the chooser.
 
 ### UserInfo
 
-In order to use the UserInfo API:
+To use the UserInfo API:
 
-* Enable the experimental feature `FedCmLoginHint` in `chrome://flags`.
 * The RP must embed an IDP iframe, which will perform the query.
 * The embedded iframe must receive permissions to invoke FedCM (via Permissions Policy).
 * The user first needs to go through the FedCM flow once before invoking UserInfo.
@@ -128,9 +126,8 @@ user_info.forEach( info => {
 
 ### RP Context
 
-In order to use the RP Context API:
+To use the RP Context API:
 
-* Enable the experimental feature `FedCmRpContext` in `chrome://flags`.
 * Provide the `context` value in JS, like so:
 
 ```js
@@ -149,7 +146,7 @@ Now, the browser UI will be different based on the value provided.
 
 ### IdP Sign-in Status API
 
-In order to use the IdP Sign-in Status API:
+To use the IdP Sign-in Status API:
 
 1. Enable the experimental feature `FedCM with FedCM IDP sign-in status` in `chrome://flags`.
 2. When the user logs-in to the IdP, use the following HTTP header `IdP-SignIn-Status: action=signin`.
@@ -158,3 +155,181 @@ In order to use the IdP Sign-in Status API:
 5. The browser is going load the `signin_url` when the user is signed-out of the IdP.
 6. Call `IdentityProvider.close()` when the user is done logging-in to the IdP.
 
+### Error API
+
+To use the Error API:
+
+* Enable the experimental feature `FedCmError` in `chrome://flags`.
+* Provide an `error` in the ID assertion endpoint instead of a `token`:
+```
+{
+  "error" : {
+     "code" : "access_denied",
+     "url" : "https://idp.example/error?type=foo"
+  }
+}
+```
+Note that the `error` field in the response including both `code` and `url` is
+optional. As long as the flag is enabled, Chrome will render an error UI when
+the token request fails. The `error` field is used to customize the flow when an
+error happens. Chrome will show a customized UI with proper error message if the
+code is "invalid_request", "unauthorized_client", "access_denied", "server_error",
+or "temporarily_unavailable". If a `url` field is provided and same-site with
+the IdP's `configURL`, Chrome will add an affordance for users to open a new
+page (e.g., via pop-up window) with that URL to learn more about the error on
+that page.
+
+### Auto-selected Flag API
+
+To use the Auto-selected Flag API:
+* Enable the experimental feature `FedCmAutoSelectedFlag` in `chrome://flags`.
+
+The browser will send a new boolean to represent whether auto re-authentication
+was triggered such that the account was auto selected by the browser in the flow
+to both the IdP and the API caller.
+
+For IdP, the browser will include `is_auto_selected` in the request sent to the
+ID assersion endpoint:
+```
+POST /fedcm_assertion_endpoint HTTP/1.1
+Host: idp.example
+Origin: https://rp.example/
+Content-Type: application/x-www-form-urlencoded
+Cookie: 0x23223
+Sec-Fetch-Dest: webidentity
+
+account_id=123&client_id=client1234&nonce=Ct60bD&disclosure_text_shown=true&is_auto_selected=true
+```
+
+For the API caller, the browser will include a boolean when resolving the
+promise:
+```
+const cred = await navigator.credentials.get({
+  identity: {
+    providers: [{
+      configURL: "https://idp.example/manifest.json",
+      clientId: "1234"
+    }]
+  }
+});
+
+const token = cred.token;
+if (cred.isAutoSelected !== undefined) {
+  const isAutoSelected = cred.isAutoSelected;
+}
+```
+
+### DomainHint
+
+To use the DomainHint:
+* Ensure that chrome://version shows 121.0.6146.0 or higher.
+* Enable the experimental feature `FedCmDomainHint` in `chrome://flags`.
+
+* Add an array of `domain_hints` to the accounts described in the accounts endpoint:
+
+```
+{
+  accounts: [{
+    id: "karenCorp1",
+    email: "karen@corp1.com",
+    name: "Karen",
+    domain_hints: ["corp1", "corp2"],
+  }, {
+    id: "otherId",
+    email: "karen@mail.com",
+    name: "Karen",
+  }, {
+    id: "karenCorp3",
+    email: "karen@corp3.com,
+    name: "Karen",
+    domain_hints: ["corp3"],
+  }
+  }, ...]
+}
+```
+
+* Invoke the API with the `domainHint` parameter like so:
+
+```js
+  // This will show the karenCorp1 account.
+  return await navigator.credentials.get({
+      identity: {
+        providers: [{
+          configURL: "https://idp.example/config.json",
+          clientId: "123",
+          nonce: nonce,
+          domainHint : "corp1"
+        }]
+      }
+  });
+```
+
+Now, only accounts matching the hint provided will show in the chooser.
+
+You may also use "any" to show only accounts which list at least one domain hint.
+
+```js
+  // This will show the karenCorp1 and karenCorp3 accounts.
+  return await navigator.credentials.get({
+      identity: {
+        providers: [{
+          configURL: "https://idp.example/config.json",
+          clientId: "123",
+          nonce: nonce,
+          domainHint : "any"
+        }]
+      }
+  });
+```
+
+### Disconnect API
+
+To use the Disconnect API:
+* Ensure that chrome://version shows 121.0.6145.0 or higher.
+* Enable the experimental feature `FedCmDisconnect` in `chrome://flags`.
+
+Add a disconnect endpoint to the FedCM config file. It must be same-origin
+with the config file.
+
+```json
+{
+  "accounts_endpoint": "/accounts",
+  "id_assertion_endpoint": "/assertion",
+...
+  "disconnect_endpoint": "/disconnect"
+}
+```
+
+Implement the `disconnect_endpoint`. It is fetched using a POST credentialed
+request with CORS mode:
+
+```
+POST /disconnect HTTP/1.1
+Host: idp.example
+Referer: rp.example
+Content-Type: application/x-www-form-urlencoded
+Cookie: 0x123
+Sec-Fetch-Dest: webidentity
+
+account_hint=account456&client_id=rp123
+```
+
+The IdP can then disconnect the account and respond with the
+`Access-Control-Allow-Origin` and `Access-Control-Allow-Credentials` headers to
+satisfy CORS, and in the body of the response it should include a JSON with the
+account ID of the account that has been disconnected.
+
+```json
+{
+  "account_id": "account456Id"
+}
+```
+
+When a user goes through the FedCM flow, the browser stores that (RP, IDP, account)
+knowledge in browser storage in order to allow auto reauthn and User Info API to
+work correctly in the future. If the browser finds an account in local storage
+matching the ID provided, it will note the disconnection of that account. If the
+IdP fails by either returning some network error or saying that the disconnection
+was unsuccessful, or if the `account_id` is nowhere to be found, the browser will
+remove from local storage all of the federated accounts associated with the (RP,
+IDP).

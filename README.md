@@ -39,7 +39,7 @@ There are several ways to contribute to the Federated Credential Management API.
    [Fed-ID CG](https://www.w3.org/community/fed-id/) about the various use cases.
 
  * If you'd like to try out the current demo of the FedCM API you can follow the
-   [HOWTO](explorations/HOWTO.md) document.
+   [HOWTO](explorations/HOWTO-chrome.md) document.
 
  * If you're an Identity Provider, there are two sides of the implementation that
    will be needed and any feedback on either side is appreciated.
@@ -51,7 +51,7 @@ There are several ways to contribute to the Federated Credential Management API.
 
  * If you're a Relying Party (i.e. website) and would like to test the changes out
    we'd appreciate feedback, you'll need to do something similar to the
-   [HOWTO.md](explorations/HOWTO.md) to setup a fake IDP which can serve the needed
+   [HOWTO.md](explorations/HOWTO-chrome.md) to setup a fake IDP which can serve the needed
    JavaScript. (Until an IDP provides first party JavaScript to work with FedCM
    this integration will be tricker). You can also review the demo provided by the
    HOWTO and take a look at the
