@@ -1030,50 +1030,50 @@ or failure.
         Note: Because domain cookies are valid across an entire site, there is no privacy
             benefit from doing the well-known check if the RP and IDP are in the same site.
     1. Otherwise:
-      1. Let |wellKnownRequest| be a new [=/request=] as follows:
+        1. Let |wellKnownRequest| be a new [=/request=] as follows:
 
-          :  [=request/URL=]
-          :: |rootUrl|
-          :  [=request/client=]
-          :: null
-          :  [=request/window=]
-          :: "no-window"
-          :  [=request/service-workers mode=]
-          :: "none"
-          :  [=request/destination=]
-          :: "webidentity"
-          :  [=request/origin=]
-          :: a unique [=opaque origin=]
-          :  [=request/header list=]
-          :: a [=list=] containing a single [=header=] with [=header/name=] set to `Accept` and
-              [=header/value=] set to `application/json`
-          :  [=request/referrer policy=]
-          :: "no-referrer"
-          :  [=request/credentials mode=]
-          :: "omit"
-          :  [=request/mode=]
-          :: "no-cors"
+            :  [=request/URL=]
+            :: |rootUrl|
+            :  [=request/client=]
+            :: null
+            :  [=request/window=]
+            :: "no-window"
+            :  [=request/service-workers mode=]
+            :: "none"
+            :  [=request/destination=]
+            :: "webidentity"
+            :  [=request/origin=]
+            :: a unique [=opaque origin=]
+            :  [=request/header list=]
+            :: a [=list=] containing a single [=header=] with [=header/name=] set to `Accept` and
+                [=header/value=] set to `application/json`
+            :  [=request/referrer policy=]
+            :: "no-referrer"
+            :  [=request/credentials mode=]
+            :: "omit"
+            :  [=request/mode=]
+            :: "no-cors"
 
-          Issue: The spec is yet to be updated so that all <a spec=fetch for=/>requests</a> are created
-          with [=request/mode=] set to "user-agent-no-cors". See the relevant
-          [pull request](https://github.com/whatwg/fetch/pull/1533) for details.
+            Issue: The spec is yet to be updated so that all <a spec=fetch for=/>requests</a> are created
+            with [=request/mode=] set to "user-agent-no-cors". See the relevant
+            [pull request](https://github.com/whatwg/fetch/pull/1533) for details.
 
-      1. [=Fetch request=] with |wellKnownRequest| and |globalObject|, and with <var ignore>processResponseConsumeBody</var>
-          set to the following steps given a <a spec=fetch for=/>response</a> |response| and |responseBody|:
-          1. Let |json| be the result of [=extract the JSON fetch response=] from |response| and
-              |responseBody|.
-          1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderWellKnown}},
-              |discovery|.
-          1. If one of the previous two steps threw an exception, or if the
-              [=list/size=] of |discovery|["{{IdentityProviderWellKnown/provider_urls}}"] is
-              greater than 1, set |configInWellKnown| to false.
+        1. [=Fetch request=] with |wellKnownRequest| and |globalObject|, and with <var ignore>processResponseConsumeBody</var>
+            set to the following steps given a <a spec=fetch for=/>response</a> |response| and |responseBody|:
+            1. Let |json| be the result of [=extract the JSON fetch response=] from |response| and
+                |responseBody|.
+            1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderWellKnown}},
+                |discovery|.
+            1. If one of the previous two steps threw an exception, or if the
+                [=list/size=] of |discovery|["{{IdentityProviderWellKnown/provider_urls}}"] is
+                greater than 1, set |configInWellKnown| to false.
 
-              Issue: [relax](https://github.com/fedidcg/FedCM/issues/333) the size of the
-              provider_urls array.
+                Issue: [relax](https://github.com/fedidcg/FedCM/issues/333) the size of the
+                provider_urls array.
 
-          1. Otherwise, set to |configInWellKnown| to true if
-              |discovery|["{{IdentityProviderWellKnown/provider_urls}}"][0] [=string/is=] equal to
-              |provider|'s {{IdentityProviderConfig/configURL}}, and to false otherwise.
+            1. Otherwise, set to |configInWellKnown| to true if
+                |discovery|["{{IdentityProviderWellKnown/provider_urls}}"][0] [=string/is=] equal to
+                |provider|'s {{IdentityProviderConfig/configURL}}, and to false otherwise.
 
     1. Let |configRequest| be a new <a spec=fetch for=/>request</a> as follows:
 
