@@ -74,6 +74,15 @@ dl.domintro dt code {
     padding: 8px;
     border-left: 8px solid brown;
 }
+
+/* temporary fixes to the typogram diagrams
+   to support dark mode properly */
+script + svg :is(polygon, line, rect):not(.grid) {
+  stroke: currentcolor;
+}
+script + svg :is(polygon, text) {
+  fill: currentcolor;
+}
 </style>
 
 <script src="https://fedidcg.github.io/FedCM/static/underscore-min.js"></script>
@@ -144,7 +153,7 @@ could be implemented.
           providers: [{
             configURL: "https://idp.example/manifest.json",
             clientId: "123",
-            nonce: nonce
+            nonce: nonce,
           }]
         }
       });
@@ -452,6 +461,11 @@ the [=/origin=] of the [=RP=], |idp| is the [=/origin=] of the [=IDP=], and |acc
 an account identifier. It represents the set of triples such that the user has used FedCM to login to
 the |rp| via the |idp| |account|.
 
+Issue: the [=connected accounts set=] should be double keyed in the [=RP=] (i.e., it should include
+both the requester and the embedder, or in other words the iframe and the top-level). Otherwise the
+top-level's state could be used and modified by the embedder, which introduces leaks and unwanted
+cross-origin communication.
+
 If a user clears browsing data for an |origin| (cookies, localStorage, etc.), the user agent MUST
 [=list/remove=] all triples with an [=/origin=] matching the |origin| from <a>connected accounts set</a>.
 
@@ -460,6 +474,10 @@ To <dfn>compute the connection status</dfn> given an {{IdentityProviderConfig}} 
 {{IdentityProviderAccount}} |account|, and a |globalObject|, run the following steps. This returns
 <dfn for="compute the connection status">connected</dfn> or
 <dfn for="compute the connection status">disconnected</dfn>.
+    1. If |account| [=map/contains=] {{IdentityProviderAccount/approved_clients}} and
+        |account|'s {{IdentityProviderAccount/approved_clients}} does not [=list/contain=]
+        |provider|'s {{IdentityProviderConfig/clientId}}, return
+        [=compute the connection status/disconnected=].
     1. Let |configUrl| be the result of running [=parse url=] with |provider|'s
         {{IdentityProviderConfig/configURL}} and |globalObject|.
     1. Let |idpOrigin| be the [=url/origin=] corresponding to |configUrl|.
@@ -484,6 +502,24 @@ To <dfn>create a connection between the RP and the IdP account</dfn> given an
     1. [=set/Append=] |triple| to [=connected accounts set=].
 </div>
 
+<div algorithm>
+To <dfn>remove a connection</dfn>: given |accountId|, |rpOrigin|, and |idpOrigin|, run the
+following steps. It returns whether the |accountId| connection was successfully removed.
+    1. Let |triple| be (|rpOrigin|, |idpOrigin|, |accountId|).
+    1. If [=connected accounts set=] [=list/contains=] |triple|:
+        1. [=list/Remove=] |triple| from the [=connected accounts set=].
+        1. Return true.
+    1. Return false.
+</div>
+
+<div algorithm>
+To <dfn>remove all connections</dfn>: given |rpOrigin| and |idpOrigin|, run the following steps:
+    1. For every (|rp|, |idp|, <var ignore="">accountId</var>) |triple| in the
+        [=connected accounts set=]:
+        1. If |rp| equals |rpOrigin| and |idp| equals |idpOrigin|, [=list/remove=] |triple| from the
+            [=connected accounts set=].
+</div>
+
 <!-- ============================================================ -->
 ## The IdentityCredential Interface ## {#browser-api-identity-credential-interface}
 <!-- ============================================================ -->
@@ -491,8 +527,13 @@ To <dfn>create a connection between the RP and the IdP account</dfn> given an
 This specification introduces a new type of {{Credential}}, called an {{IdentityCredential}}:
 
 <pre class="idl">
+  dictionary IdentityCredentialDisconnectOptions : IdentityProviderConfig {
+    required USVString accountHint;
+  };
+
   [Exposed=Window, SecureContext]
   interface IdentityCredential : Credential {
+    static Promise&lt;undefined&gt; disconnect(optional IdentityCredentialDisconnectOptions options = {});
     readonly attribute USVString? token;
     readonly attribute boolean isAutoSelected;
   };
@@ -519,6 +560,132 @@ The main entrypoint in this specification is through the entrypoints exposed
 by the [[CM]] API.
 
 <!-- ============================================================ -->
+### The disconnect method ### {#browser-api-identity-credential-disconnect}
+<!-- ============================================================ -->
+
+<div algorithm="identity-credential-disconnect">
+When the static {{IdentityCredential/disconnect}} method is invoked, given an
+{{IdentityCredentialDisconnectOptions}} |options|, perform the following steps:
+
+    1. Let |globalObject| be the [=current global object=].
+    1. Let |document| be |globalObject|'s [=associated Document=].
+    1. If |document| is not [=allowed to use=] the [=identity-credentials-get=]
+        [=policy-controlled feature=], throw a "{{NotAllowedError}}" {{DOMException}}.
+    1. Let |promise| be a new {{Promise}}.
+    1. [=In parallel=], [=attempt to disconnect=] given |options|, |promise|, and |globalObject|.
+    1. Return |promise|.
+</div>
+
+<div algorithm>
+When asked to <dfn>attempt to disconnect</dfn> given an {{IdentityCredentialDisconnectOptions}}
+|options|, a {{Promise}} |promise|, and a |globalObject|, perform the following steps:
+
+    1. Assert: these steps are running [=in parallel=].
+    1. Let |configUrl| be the result of running [=parse url=] with |options|'s
+        {{IdentityProviderConfig/configURL}} and |globalObject|.
+    1. If |configUrl| is failure, [=reject=] |promise| with an "{{InvalidStateError}}"
+        {{DOMException}}.
+    1. Run a [[!CSP]] check with a [[CSP#directive-connect-src|connect-src]] directive on the URL
+        passed as |configUrl|. If it fails, [=reject=] |promise| with a "{{NetworkError}}"
+        {{DOMException}}.
+    1. If there is another pending {{IdentityCredential/disconnect}} call for this |globalObject|
+        (e.g., it has not yet thrown an exception or its associated {{Promise}} has not yet been
+        resolved), [=reject=] |promise| with a "{{NetworkError}}" {{DOMException}}.
+    1. If |configUrl| is not a [=potentially trustworthy origin=], [=reject=] |promise| with a
+        "{{NetworkError}}" {{DOMException}}.
+    1. If the user has disabled the FedCM API on the |globalObject|, [=reject=] |promise| with a
+        "{{NetworkError}}" {{DOMException}}.
+    1. If there does not exist an account |account| such that [=compute the connection status=] of
+        |options|, |account|, and |globalObject| returns
+        [=compute the connection status/connected=], then [=reject=] |promise| with a
+        "{{NetworkError}}" {{DOMException}}. This check can be performed by iterating over the
+        [=connected accounts set=] or by keeping a separate data structure to make this lookup fast.
+    1. Let |config| be the result of running [=fetch the config file=] with
+        |provider| and |globalObject|.
+    1. If |config| is failure, [=reject=] |promise| with a "{{NetworkError}}" {{DOMException}}.
+    1. Let |disconnectUrl| be the result of [=computing the manifest URL=] given |provider|,
+        |config|.{{IdentityProviderAPIConfig/disconnect_endpoint}}, and |globalObject|.
+    1. If |disconnectUrl| is failure, [=reject=] |promise| with a "{{NetworkError}}"
+        {{DOMException}}.
+    1. [=Send a disconnect request=] with |disconnectUrl|, |options|, and |globalObject|, and let
+        |result| be the result.
+    1. Let |idpOrigin| be the [=url/origin=] corresponding to |configUrl|.
+    1. Let |rpOrigin| be |globalObject|'s [=associated Document=]'s [=Document/origin=].
+    1. If |result| is failure:
+        1. [=Remove all connections=] given |rpOrigin| and |idpOrigin|.
+        1. [=Reject=] |promise| with a "{{NetworkError}}" {{DOMException}}.
+        1. Return.
+    1. Let |accountId| be |result| (note that it is not failure).
+    1. [=Remove a connection=] using |accountId|, |rpOrigin|, and |idpOrigin|, and let
+        |wasAccountRemoved| be the result.
+    1. If |wasAccountRemoved| is false, [=remove all connections=] given |rpOrigin| and |idpOrigin|.
+    1. [=Resolve=] |promise|.
+</div>
+
+<!-- ============================================================ -->
+#### Disconnect request #### {#disconnect-request}
+<!-- ============================================================ -->
+
+The [=send a disconnect request=] algorithm sends a request to disconnect an account that has
+previously been used for federated login in the [=RP=].
+
+<div algorithm>
+When asked to <dfn>send a disconnect request</dfn>, given a <a spec=url for=/>URL</a>
+|disconnectUrl|, and {{IdentityCredentialDisconnectOptions}} |options|, and a |globalObject|,
+perform the following steps. This returns an {{USVString}} or failure.
+
+    1. Let |requestBody| be the result of running [=urlencoded serializer=] with a list containing:
+        1. ("client_id", |options|'s {{IdentityProviderConfig/clientId}})
+        1. ("account_hint",  |options|'s {{IdentityCredentialDisconnectOptions/accountHint}})
+    1. Let |request| be a new <a spec=fetch for=/>request</a> as follows:
+
+        :  [=request/url=]
+        :: |disconnectUrl|
+        :  [=request/method=]
+        :: "POST"
+        :  [=request/body=]
+        :: the [=UTF-8 encode=] of |requestBody|
+        :  [=request/redirect mode=]
+        :: "error"
+        :  [=request/client=]
+        :: null
+        :  [=request/window=]
+        :: "no-window"
+        :  [=request/service-workers mode=]
+        :: "none"
+        :  [=request/destination=]
+        :: "webidentity"
+        :  [=request/origin=]
+        :: |globalObject|'s [=associated document=]'s [=Document/origin=]
+        :  [=request/header list=]
+        :: a [=list=] containing a single [=header=] with [=header/name=] set to `Accept` and
+            [=header/value=] set to `application/x-www-form-urlencoded`
+        :  [=request/credentials mode=]
+        :: "include"
+        :  [=request/mode=]
+        :: "cors"
+
+    1. Let |accountId| be null.
+    1. [=Fetch request=] with |request| and |globalObject|, and with
+        <var ignore>processResponseConsumeBody</var> set to the following steps given a
+        <a spec=fetch for=/>response</a> |response| and |responseBody|:
+        1. Let |json| be the result of [=extract the JSON fetch response=] from |response| and
+            |responseBody|.
+        1. [=converted to an IDL value|Convert=] |json| to a {{DisconnectedAccount}}, |account|.
+        1. If one of the previous two steps threw an exception, set |accountId| to failure
+            and return.
+        1. Set |accountId| to |account|'s {{DisconnectedAccount/account_id}}.
+    1. Wait for |accountId| to be set.
+    1. Return |accountId|.
+</div>
+
+<xmp class="idl">
+dictionary DisconnectedAccount {
+  required USVString account_id;
+};
+</xmp>
+
+<!-- ============================================================ -->
 ### The CredentialRequestOptions ### {#browser-api-credential-request-options}
 <!-- ============================================================ -->
 
@@ -528,7 +695,7 @@ This section defines the dictionaries passed into the JavaScript call:
 ```js
 const credential = await navigator.credentials.get({
   identity: { // IdentityCredentialRequestOptions
-    providers: [{  // sequence<IdentityProviderConfig>
+    providers: [{  // sequence<IdentityCredentialRequestOptions>
       configURL: "https://idp.example/manifest.json", // IdentityProviderConfig.configURL
       clientId: "123", // IdentityProviderConfig.clientId
       nonce: "nonce" // IdentityProviderConfig.nonce
@@ -561,7 +728,7 @@ enum IdentityCredentialRequestOptionsContext {
 };
 
 dictionary IdentityCredentialRequestOptions {
-  required sequence<IdentityProviderConfig> providers;
+  required sequence<IdentityProviderRequestOptions> providers;
   IdentityCredentialRequestOptionsContext context = "signin";
 };
 </xmp>
@@ -573,8 +740,12 @@ the [=RP=] supports (e.g. that it has a pre-registration agreement with).
 dictionary IdentityProviderConfig {
   required USVString configURL;
   required USVString clientId;
+};
+
+dictionary IdentityProviderRequestOptions : IdentityProviderConfig {
   USVString nonce;
   DOMString loginHint;
+  DOMString domainHint;
 };
 </xmp>
 
@@ -583,15 +754,20 @@ dictionary IdentityProviderConfig {
     ::  The URL of the configuration file for the identity provider.
     :   <b>{{IdentityProviderConfig/clientId}}</b>
     ::  The {{id_assertion_endpoint_request/client_id}} provided to the [=RP=] out of band by the [=IDP=]
-    :   <b>{{IdentityProviderConfig/nonce}}</b>
+    :   <b>{{IdentityProviderRequestOptions/nonce}}</b>
     ::  A random number of the choice of the [=RP=]. It is generally used to associate a client
         session with a {{IdentityProviderToken/token}} and to mitigate replay attacks. Therefore, this value should have
         sufficient entropy such that it would be hard to guess.
-    :   <b>{{IdentityProviderConfig/loginHint}}</b>
+    :   <b>{{IdentityProviderRequestOptions/loginHint}}</b>
     ::  A string representing the login hint corresponding to an account which the RP wants the user
         agent to show to the user. If provided, the user agent will not show accounts which do not
         match this login hint value. It generally matches some attribute from the desired
         {{IdentityProviderAccount}}.
+    :   <b>{{IdentityProviderConfig/domainHint}}</b>
+    ::  A string representing the domain hint corresponding to a domain which the [=RP=] is
+        interested in, or "any" if the [=RP=] wants any account associated with at least one domain
+        hint. If provided, the user agent will not show accounts which do not match the domain hint
+        value.
 </dl>
 
 <!-- ============================================================ -->
@@ -685,7 +861,7 @@ The <a>create an IdentityCredential</a> algorithm invokes the various FedCM fetc
 agent UI, and creates the {{IdentityCredential}} that is then returned to the [=RP=].
 
 <div algorithm="create an IdentityCredential">
-To <dfn>create an IdentityCredential</dfn> given an {{IdentityProviderConfig}}
+To <dfn>create an IdentityCredential</dfn> given an {{IdentityProviderRequestOptions}}
 |provider|, a {{CredentialRequestOptions}} |options|, and a
 |globalObject|, run the following steps. This returns an {{IdentityCredential}}
 or a pair (failure, bool), where the bool indicates whether to skip delaying
@@ -706,7 +882,7 @@ the exception thrown.
                 1. Let |config| be the result of running [=fetch the config file=]
                     with |provider| and |globalObject|.
                 1. If |config| is failure, return (failure, true).
-                1. [=Show an IDP login dialog=] with |config|.
+                1. [=Show an IDP login dialog=] with |config| and |provider|.
                 1. If that algorithm returns failure, return (failure, true).
 
         Issue: We should perhaps provide a way to let the [=RP=] request that
@@ -736,8 +912,8 @@ the exception thrown.
         1. <dfn>Mismatch dialog step</dfn>: If |loginStatus| is [=logged-in=], show a
             dialog to the user. The contents of this dialog are defined by the user
             agent. This dialog SHOULD provide an affordance for the user to trigger
-            the [=show an IDP login dialog=] algorithm with |config|; this dialog
-            is the <dfn>confirm IDP login dialog</dfn>.
+            the [=show an IDP login dialog=] algorithm with |config| and |provider|;
+            this dialog is the <dfn>confirm IDP login dialog</dfn>.
 
             Note: This situation happens when the browser expects the user
                 to be signed in, but the accounts fetch indicated that the user
@@ -762,10 +938,19 @@ the exception thrown.
     1. Assert: |accountsList| is not failure and the size of |accountsList| is not 0.
     1. [=Set the login status=] for the [=/origin=] of the
         {{IdentityProviderConfig/configURL}} to [=logged-in=].
-    1. If |provider|'s {{IdentityProviderConfig/loginHint}} is not empty:
+    1. If |provider|'s {{IdentityProviderRequestOptions/loginHint}} is not empty:
         1. For every |account| in |accountList|, remove |account| from |accountList| if |account|'s
             {{IdentityProviderAccount/login_hints}} does not [=list/contain=] |provider|'s
-            {{IdentityProviderConfig/loginHint}}.
+            {{IdentityProviderRequestOptions/loginHint}}.
+        1. If |accountList| is now empty, go to the [=mismatch dialog step=].
+    1. If |provider|'s {{IdentityProviderConfig/domainHint}} is not empty:
+        1. For every |account| in |accountList|:
+            1. If {{IdentityProviderConfig/domainHint}} is "any":
+                1. If |account|'s {{IdentityProviderAccount/domain_hints}} is empty, remove
+                    |account| from |accountList|.
+            1. Otherwise, remove |account| from |accountList| if |account|'s
+                {{IdentityProviderAccount/domain_hints}} does not [=list/contain=] |provider|'s
+                {{IdentityProviderConfig/domainHint}}.
         1. If |accountList| is now empty, go to the [=mismatch dialog step=].
     1. For each |acc| in |accountsList|:
         1. If |acc|["{{IdentityProviderAccount/picture}}"] is present, [=fetch the account picture=]
@@ -830,7 +1015,7 @@ The <a>fetch the config file</a> algorithm fetches both the [=well-known file=] 
 the [=IDP=], checks that the config file is mentioned in the [=well-known file=], and returns the config.
 
 <div algorithm>
-To <dfn>fetch the config file</dfn> given an {{IdentityProviderConfig}} |provider| and
+To <dfn>fetch the config file</dfn> given an {{IdentityProviderRequestOptions}} |provider| and
 |globalObject|, run the following steps. This returns an {{IdentityProviderAPIConfig}}
 or failure.
     1. Let |configUrl| be the result of running [=parse url=] with |provider|'s
@@ -843,51 +1028,59 @@ or failure.
     1. Set |rootUrl|'s [=url/scheme=] to |configUrl|'s [=url/scheme=].
     1. Set |rootUrl|'s [=url/host=] to |configUrl|'s [=url/host=]'s [=host/registrable domain=].
     1. Set |rootUrl|'s [=url/path=] to the <a>list</a> «".well-known", "web-identity"».
-    1. Let |wellKnownRequest| be a new [=/request=] as follows:
-
-        :  [=request/URL=]
-        :: |rootUrl|
-        :  [=request/client=]
-        :: null
-        :  [=request/window=]
-        :: "no-window"
-        :  [=request/service-workers mode=]
-        :: "none"
-        :  [=request/destination=]
-        :: "webidentity"
-        :  [=request/origin=]
-        :: a unique [=opaque origin=]
-        :  [=request/header list=]
-        :: a [=list=] containing a single [=header=] with [=header/name=] set to `Accept` and
-            [=header/value=] set to `application/json`
-        :  [=request/referrer policy=]
-        :: "no-referrer"
-        :  [=request/credentials mode=]
-        :: "omit"
-        :  [=request/mode=]
-        :: "no-cors"
-
-        Issue: The spec is yet to be updated so that all <a spec=fetch for=/>requests</a> are created
-        with [=request/mode=] set to "user-agent-no-cors". See the relevant
-        [pull request](https://github.com/whatwg/fetch/pull/1533) for details.
-
     1. Let |config|, |configInWellKnown| both be null.
-    1. [=Fetch request=] with |wellKnownRequest| and |globalObject|, and with <var ignore>processResponseConsumeBody</var>
-        set to the following steps given a <a spec=fetch for=/>response</a> |response| and |responseBody|:
-        1. Let |json| be the result of [=extract the JSON fetch response=] from |response| and
-            |responseBody|.
-        1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderWellKnown}},
-            |discovery|.
-        1. If one of the previous two steps threw an exception, or if the
-            [=list/size=] of |discovery|["{{IdentityProviderWellKnown/provider_urls}}"] is
-            greater than 1, set |configInWellKnown| to false.
+    1. Let |rpOrigin| be |globalObject|'s [=associated Document=]'s [=Document/origin=].
+    1. If |rpOrigin| is not an [=opaque origin=], and |rootUrl|'s [=url/host=] is equal
+        to |rpOrigin|'s [=host/registrable domain=], and |rootUrl|'s [=url/scheme=] is
+        equal to |rpOrigin|'s [=origin/scheme=], set |configInWellKnown| to true.
 
-            Issue: [relax](https://github.com/fedidcg/FedCM/issues/333) the size of the
-            provider_urls array.
+        Note: Because domain cookies are valid across an entire site, there is no privacy
+            benefit from doing the well-known check if the RP and IDP are in the same site.
+    1. Otherwise:
+        1. Let |wellKnownRequest| be a new [=/request=] as follows:
 
-        1. Otherwise, set to |configInWellKnown| to true if
-            |discovery|["{{IdentityProviderWellKnown/provider_urls}}"][0] [=string/is=] equal to
-            |provider|'s {{IdentityProviderConfig/configURL}}, and to false otherwise.
+            :  [=request/URL=]
+            :: |rootUrl|
+            :  [=request/client=]
+            :: null
+            :  [=request/window=]
+            :: "no-window"
+            :  [=request/service-workers mode=]
+            :: "none"
+            :  [=request/destination=]
+            :: "webidentity"
+            :  [=request/origin=]
+            :: a unique [=opaque origin=]
+            :  [=request/header list=]
+            :: a [=list=] containing a single [=header=] with [=header/name=] set to `Accept` and
+                [=header/value=] set to `application/json`
+            :  [=request/referrer policy=]
+            :: "no-referrer"
+            :  [=request/credentials mode=]
+            :: "omit"
+            :  [=request/mode=]
+            :: "no-cors"
+
+            Issue: The spec is yet to be updated so that all <a spec=fetch for=/>requests</a> are created
+            with [=request/mode=] set to "user-agent-no-cors". See the relevant
+            [pull request](https://github.com/whatwg/fetch/pull/1533) for details.
+
+        1. [=Fetch request=] with |wellKnownRequest| and |globalObject|, and with <var ignore>processResponseConsumeBody</var>
+            set to the following steps given a <a spec=fetch for=/>response</a> |response| and |responseBody|:
+            1. Let |json| be the result of [=extract the JSON fetch response=] from |response| and
+                |responseBody|.
+            1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderWellKnown}},
+                |discovery|.
+            1. If one of the previous two steps threw an exception, or if the
+                [=list/size=] of |discovery|["{{IdentityProviderWellKnown/provider_urls}}"] is
+                greater than 1, set |configInWellKnown| to false.
+
+                Issue: [relax](https://github.com/fedidcg/FedCM/issues/333) the size of the
+                provider_urls array.
+
+            1. Otherwise, set to |configInWellKnown| to true if
+                |discovery|["{{IdentityProviderWellKnown/provider_urls}}"][0] [=string/is=] equal to
+                |provider|'s {{IdentityProviderConfig/configURL}}, and to false otherwise.
 
     1. Let |configRequest| be a new <a spec=fetch for=/>request</a> as follows:
 
@@ -926,7 +1119,7 @@ or failure.
         1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderAPIConfig}} stored
             in |config|.
         1. If one of the previous two steps threw an exception, set |config| to failure.
-        1. Set |config|.{{IdentityProviderAPIConfig/login_url}} to the result of  [=computing
+        1. Set |config|.{{IdentityProviderAPIConfig/login_url}} to the result of [=computing
             the manifest URL=] with |provider|, |config| and |globalObject|.
         1. If |config|.{{IdentityProviderAPIConfig/login_url}} is null, return failure.
     1. Wait for both |config| and |configInWellKnown| to be set.
@@ -963,6 +1156,7 @@ dictionary IdentityProviderAPIConfig {
   required USVString client_metadata_endpoint;
   required USVString id_assertion_endpoint;
   required USVString login_url;
+  USVString disconnect_endpoint;
   IdentityProviderBranding branding;
 };
 </xmp>
@@ -977,8 +1171,8 @@ FedCM UI to the user.
 
 <div algorithm>
 To <dfn>fetch the accounts list</dfn> given an {{IdentityProviderAPIConfig}} |config|, an
-{{IdentityProviderConfig}} |provider|, and |globalObject|, run the following steps. This returns an
-{{IdentityProviderAccountList}}.
+{{IdentityProviderRequestOptions}} |provider|, and |globalObject|, run the following steps. This
+returns an {{IdentityProviderAccountList}}.
     1. Let |accountsUrl| be the result of [=computing the manifest URL=] given |provider|,
         |config|["{{IdentityProviderAPIConfig/accounts_endpoint}}"], and |globalObject|.
     1. If |accountsUrl| is failure, return an empty list.
@@ -1041,6 +1235,7 @@ dictionary IdentityProviderAccount {
   USVString picture;
   sequence<USVString> approved_clients;
   sequence<DOMString> login_hints;
+  sequence<DOMString> domain_hints;
 };
 dictionary IdentityProviderAccountList {
   sequence<IdentityProviderAccount> accounts;
@@ -1097,14 +1292,14 @@ the token that will be provided to the [=RP=].
 <div algorithm>
 To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
     |accountId|, a boolean |disclosureTextShown|, a boolean |isAutoSelected|, an
-    {{IdentityProviderConfig}} |provider|, an {{IdentityProviderAPIConfig}} |config|, and
-    |globalObject|, run the following steps. This returns an {{IdentityCredential}} or failure.
+    {{IdentityProviderRequestOptions}} |provider|, an {{IdentityProviderAPIConfig}} |config|,
+    and |globalObject|, run the following steps. This returns an {{IdentityCredential}} or failure.
     1. Let |tokenUrl| be the result of [=computing the manifest URL=] given |provider|,
         |config|["{{IdentityProviderAPIConfig/id_assertion_endpoint}}"], and |globalObject|.
     1. If |tokenUrl| is failure, return failure.
     1. Let |requestBody| be the result of running [=urlencoded serializer=] with a list containing:
         1. ("client_id", |provider|'s {{IdentityProviderConfig/clientId}})
-        1. ("nonce", |provider|'s {{IdentityProviderConfig/nonce}})
+        1. ("nonce", |provider|'s {{IdentityProviderRequestOptions/nonce}})
         1. ("account_id",  |accountId|)
         1. ("disclosure_text_shown", |disclosureTextShown|)
         1. ("is_auto_selected", |isAutoSelected|)
@@ -1183,7 +1378,7 @@ granted permission or not.
 
 <div algorithm>
 To <dfn>request permission to sign-up</dfn> the user with a given an {{IdentityProviderAccount}} |account|,
-an {{IdentityProviderAPIConfig}} |config|, an {{IdentityProviderConfig}} |provider|, and a
+an {{IdentityProviderAPIConfig}} |config|, an {{IdentityProviderRequestOptions}} |provider|, and a
 |globalObject|, run the following steps. This returns a boolean.
     1. Assert: These steps are running [=in parallel=].
     1. Let |metadata| be the result of running [=fetch the client metadata=] with |config|,
@@ -1208,7 +1403,7 @@ an {{IdentityProviderAPIConfig}} |config|, an {{IdentityProviderConfig}} |provid
 
 <div algorithm>
 To <dfn noexport>fetch the client metadata</dfn> given an {{IdentityProviderAPIConfig}} |config| and
-an {{IdentityProviderConfig}} |provider|, run the following steps. This returns an
+an {{IdentityProviderRequestOptions}} |provider|, run the following steps. This returns an
 {{IdentityProviderClientMetadata}} or failure.
     1. Let |clientMetadataUrl| be the result of [=computing the manifest URL=] given |provider|,
         |config|["{{IdentityProviderAPIConfig/client_metadata_endpoint}}"], and |globalObject|.
@@ -1291,7 +1486,7 @@ To <dfn>fetch request</dfn> given a [=/request=] |request|, |globalObject|, and 
 </div>
 
 <div algorithm>
-When <dfn>computing the manifest URL</dfn> given an {{IdentityProviderConfig}} |provider|, a
+When <dfn>computing the manifest URL</dfn> given an {{IdentityProviderRequestOptions}} |provider|, a
 [=string=] |manifestString|, and |globalObject|, perform the following steps. This returns a
 <a spec=url for=/>URL</a> or failure.
     1. Let |configUrl| be the result of running [=parse url=] with |provider|'s
@@ -1325,10 +1520,27 @@ and a |responseBody|, run the following steps. This returns an [=ordered map=].
 </div>
 
 <div algorithm>
-To <dfn>show an IDP login dialog</dfn> given an {{IdentityProviderAPIConfig}} |config|, run
-the following steps. This returns success or failure.
-    1. [=Create a fresh top-level traversable=] with URL
+To <dfn>show an IDP login dialog</dfn> given an {{IdentityProviderAPIConfig}} |config|, an
+{{IdentityProviderConfig}} |provider|, and a |globalObject|, run the following steps. This returns
+success or failure.
+    1. Assert: these steps are running [=in parallel=].
+    1. Let |loginUrl| be null.
+    1. [=Queue a global task=] on the [=DOM manipulation task source=] given |globalObject| to set
+        |loginUrl| to the result of running [=url parser=] with
         |config|.{{IdentityProviderAPIConfig/login_url}}.
+    1. Wait until |loginUrl| is not null.
+    1. Assert: |loginUrl| is not failure (the [=user agent=] has previously checked that
+        |config|.{{IdentityProviderAPIConfig/login_url}} is a valid URL).
+    1. Let |queryList| be a new [=list=].
+    1. If |provider|'s {{IdentityProviderConfig/loginHint}} is not empty, [=list/append=]
+        ("login_hint", {{IdentityProviderConfig/loginHint}}) to |queryList|.
+    1. If |provider|'s {{IdentityProviderConfig/domainHint}} is not empty, [=list/append=]
+        ("domain_hint", {{IdentityProviderConfig/domainHint}}) to |queryList|.
+    1. If |queryList| is not [=list/empty=]:
+        1. Let |queryParameters| be the result of the [=urlencoded serializer=] with |queryList|.
+        1. If |loginUrl|'s [=url/query=] is not null or empty, prepend "&" to |queryParameters|.
+        1. Append |queryParameters| to |loginUrl|'s [=url/query=].
+    1. [=Create a fresh top-level traversable=] with |loginUrl|.
     1. The user agent MAY [=set up browsing context features=] or otherwise
         affect the presentation of this traversable in an implementation-defined
         way.
@@ -1446,8 +1658,8 @@ When invoking the {{IdentityProvider/getUserInfo()}} method given an {{IdentityP
                 [=list/contain=] |provider|'s {{IdentityProviderConfig/clientId}}, continue.
             
                 Note: this allows the [=IDP=] to override whether an account is a returning account.
-                This could be useful for instance in cases where the user has revoked the account
-                out of band.
+                This could be useful for instance in cases where the user has disconnected the
+                account out of band.
             
             1. [=Compute the connection status=] of |provider|, |account|, and |globalObject|. If the
                 result is [=compute the connection status/connected=], set |hasReturningAccount| to
@@ -1482,6 +1694,7 @@ The [=IDP=] exposes a series of HTTP endpoints:
 1. An [[#idp-api-accounts-endpoint]] endpoint
 1. A [[#idp-api-client-id-metadata-endpoint]] endpoint
 1. An [[#idp-api-id-assertion-endpoint]] endpoint
+1. An [[#idp-api-disconnect-endpoint]] endpoint if it supports {{IdentityCredential/disconnect}}.
 
 The FedCM API introduces the ability for a site to ask the browser to execute a few different
 network requests. It is important for the browser
@@ -1495,6 +1708,7 @@ network requests performed:
   <tr><td>accounts_endpoint</td><td>yes</td><td>no</td><td>no</td></tr>
   <tr><td>client_metadata_endpoint</td><td>no</td><td>yes</td><td>yes</td></tr>
   <tr><td>id_assertion_endpoint</td><td>yes</td><td>yes</td><td>yes</td></tr>
+  <tr><td>disconnect_endpoint</td><td>yes</td><td>yes</td><td>yes</td></tr>
 </table>
 
 <!-- ============================================================ -->
@@ -1510,7 +1724,7 @@ The [=well-known file=] is fetched in the [=fetch the config file=] algorithm:
 (a) **without** cookies,
 (b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`, and
 (c) **without** revealing the [=RP=] in the <a http-header>Origin</a> or
-    [[RFC9110#section-10.1.3|Referer]] headers.
+    [[RFC9110#field.referer|Referer]] headers.
 
 For example:
 
@@ -1544,8 +1758,8 @@ The [=config file=] is fetched in the [=fetch the config file=] algorithm:
 (a) **without** cookies,
 (b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`,
 (c) **without** revealing the [=RP=] in the <a http-header>Origin</a> or
-    [[RFC9110#section-10.1.3|Referer]] headers, and
-(c) **without** following [[RFC9110#section-10.2.2|HTTP redirects]].
+    [[RFC9110#field.referer|Referer]] headers, and
+(d) **without** following [[RFC9110#field.location|HTTP redirects]].
 
 For example:
 
@@ -1569,6 +1783,9 @@ The {{IdentityProviderAPIConfig}} object's members have the following semantics:
     ::  A URL that points to an HTTP API that complies with the [[#idp-api-client-id-metadata-endpoint]] API.
     :   <dfn>id_assertion_endpoint</dfn>
     ::  A URL that points to an HTTP API that complies with the [[#idp-api-id-assertion-endpoint]] API.
+    :   <dfn>disconnect_endpoint</dfn>
+    ::  A URL that points to an HTTP API that complies with the [[#idp-api-disconnect-endpoint]]
+        API.
     :   <dfn>branding</dfn>
     ::  A set of {{IdentityProviderBranding}} options.
 </dl>
@@ -1626,6 +1843,7 @@ For example:
   "accounts_endpoint": "/accounts",
   "client_metadata_endpoint": "/metadata",
   "id_assertion_endpoint": "/assertion",
+  "disconnect_endpoint": "/disconnect",
   "branding": {
     "background_color": "green",
     "color": "#FFEEAA",
@@ -1650,8 +1868,8 @@ The [=accounts list endpoint=] is fetched in the [=fetch the accounts list=] alg
 (a) **with** [=IDP=] cookies,
 (b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`,
 (c) **without** revealing the [=RP=] in the <a http-header>Origin</a> or
-    [[RFC9110#section-10.1.3|Referer]] headers, and
-(d) **without** following [[RFC9110#section-10.2.2|HTTP redirects]].
+    [[RFC9110#field.referer|Referer]] headers, and
+(d) **without** following [[RFC9110#field.location|HTTP redirects]].
 
 For example:
 
@@ -1686,8 +1904,12 @@ Every {{IdentityProviderAccount}} is expected to have members with the following
         the Privacy Policy and the Terms of Service.
     :   <dfn>login_hints</dfn>
     ::  A list of strings which correspond to all of the login hints which match with this account.
-        An [=RP=] can use the {{IdentityProviderConfig/loginHint}} to request that only an account
+        An [=RP=] can use the {{IdentityProviderRequestOptions/loginHint}} to request that only an account
         matching a given value is shown to the user.
+    :   <dfn>domain_hints</dfn>
+    ::  A list of strings which correspond to all of the domain hints which match with this account.
+        An [=RP=] can use the {{IdentityProviderConfig/domainHint}} to request that only an account
+        matching a given value or containing some domain hint is shown to the user.
 </dl>
 
 For example:
@@ -1702,7 +1924,8 @@ For example:
    "email": "john_doe@idp.example",
    "picture": "https://idp.example/profile/123",
    "approved_clients": ["123", "456", "789"],
-   "login_hints": ["john_doe"]
+   "login_hints": ["john_doe"],
+   "domain_hints": ["idp.example"],
   }, {
    "id": "5678",
    "given_name": "Johnny",
@@ -1710,7 +1933,8 @@ For example:
    "email": "johnny@idp.example",
    "picture": "https://idp.example/profile/456",
    "approved_clients": ["abc", "def", "ghi"],
-   "login_hints": ["email=johhny@idp.example", "id=5678"]
+   "login_hints": ["email=johhny@idp.example", "id=5678"],
+   "domain_hints": ["idp.example"],
   }]
 }
 ```
@@ -1729,7 +1953,7 @@ The [=client metadata endpoint=] is fetched in the [=fetch the client metadata=]
 (a) **without** cookies,
 (b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`,
 (c) **with** the [=RP=]'s origin in the <a http-header>Origin</a> header, and
-(d) **without** following [[RFC9110#section-10.2.2|HTTP redirects]].
+(d) **without** following [[RFC9110#field.location|HTTP redirects]].
 
 The user agent also passes the **client_id**.
 
@@ -1779,7 +2003,7 @@ The [=identity assertion endpoint=] is fetched in the [=fetch an identity assert
 (b) **with** [=IDP=] cookies,
 (c) **with** the [=RP=]'s origin in the <a http-header>Origin</a> header, and
 (d) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`,
-(e) **without** following [[RFC9110#section-10.2.2|HTTP redirects]].
+(e) **without** following [[RFC9110#field.location|HTTP redirects]].
 
 It will also contain the following parameters in the request body `application/x-www-form-urlencoded`:
 
@@ -1854,6 +2078,63 @@ For example:
 }
 ```
 </div>
+
+<!-- ============================================================ -->
+## Disconnect endpoint ## {#idp-api-disconnect-endpoint}
+<!-- ============================================================ -->
+
+The <dfn>disconnect endpoint</dfn> is responsible for disconnecting a previously made federated
+login connection between an [=RP=] and an [=IDP=] account, and returning the account's
+{{IdentityProviderAccount/id}} so that the [=user agent=] can remove it from the
+[=connected accounts set=].
+
+The [=disconnect endpoint=] is fetched when invoking the {{IdentityCredential/disconnect}}
+method:
+
+(a) as a **POST** request,
+(b) **with** [=IDP=] cookies,
+(c) **with** the [=RP=]'s origin in the <a http-header>Origin</a> header,
+(d) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`,
+(e) **without** following [[RFC9110#section-10.2.2|HTTP redirects]], and
+(f) in "cors" [=request/mode=].
+
+It will also contain the following in the request body `application/x-www-form-urlencoded`:
+
+<dl dfn-type="argument" dfn-for="disconnect_endpoint_request">
+    :   <dfn>client_id</dfn>
+    ::  The [=RP=]'s unique identifier from the [=IDP=]
+    :   <dfn>account_hint</dfn>
+    ::  An account hint for the [=IDP=] account being disconnected from the [=RP=].
+</dl>
+
+For example:
+
+<div class=example>
+```http
+POST /fedcm_disconnect_endpoint HTTP/1.1
+Host: idp.example
+Origin: https://rp.example/
+Content-Type: application/x-www-form-urlencoded
+Cookie: 0x23223
+Sec-Fetch-Dest: webidentity
+client_id=client1234&account_hint=hint12
+```
+</div>
+
+If the disconnection is unsuccessful, the [=IDP=] may respond with an error. If it is successful,
+the response body must be a JSON object that can be [=converted to an IDL value|converted=] to an
+{{DisconnectedAccount}} without an exception.
+
+<dl dfn-type="dict-member" dfn-for="DisconnectedAccount">
+    :   <dfn>account_id</dfn>
+    ::  The {{IdentityProviderAccount/id}} of the account that was successfully disconnected.
+</dl>
+
+The [=IDP=] must return the {{DisconnectedAccount/account_id}} since it may be different from the
+{{disconnect_endpoint_request/account_hint}}, and the ID is the one which allows the [=user agent=]
+to disconnect the account from the [=connected accounts set=]. If the [=IDP=] returns an error or
+the [=user agent=] does not find the account with the ID provided by the [=IDP=], then all accounts
+associated with the relevant ([=RP=], [=IDP=]) are removed from the [=connected accounts set=].
 
 <!-- ============================================================ -->
 # Permissions Policy Integration # {#permissions-policy-integration}
@@ -1990,9 +2271,9 @@ The [=remote end steps=] are:
 
 1. Return [=success=] with data `null`.
 
-## Confirm IDP login ## {#webdriver-confirmidplogin}
+## Click dialog button ## {#webdriver-clickdialogbutton}
 
-<figure id="table-webdriver-confirmidplogin" class="table">
+<figure id="table-webdriver-clickdialogbutton" class="table">
     <table class="data">
         <thead>
             <tr>
@@ -2003,7 +2284,7 @@ The [=remote end steps=] are:
         <tbody>
             <tr>
                 <td>POST</td>
-                <td>`/session/{session id}/fedcm/confirmidplogin`</td>
+                <td>`/session/{session id}/fedcm/clickdialogbutton`</td>
             </tr>
         </tbody>
     </table>
@@ -2011,12 +2292,21 @@ The [=remote end steps=] are:
 
 The [=remote end steps=] are:
 
-1. If no FedCM dialog is currently open, or the dialog is not a [=confirm IDP
-    login dialog=] return a [=error|WebDriver error=] with [=error code=]
-    [=no such alert=].
+1. If |parameters| is not a JSON [[ECMASCRIPT#sec-json-object|Object]], return a
+    [=error|WebDriver error=] with [=error code=] [=invalid argument=].
 
-1. Act as if the user had clicked the "continue" button in the dialog and
-    initiate the login flow.
+1. Let |dialogButton| be the result of [=getting a property=] named
+    `"dialogButton"` from |parameters|.
+
+1. If |dialogButton| is not a string that is "`ConfirmIdpLoginContinue`", return
+    a [=error|WebDriver error=] with [=error code=] [=invalid argument=].
+
+1. If no FedCM dialog is currently open or the dialog is not a [=confirm IDP
+    login dialog=], return a [=error|WebDriver error=] with [=error code=] [=no
+    such alert=].
+
+1. Act as if the user had clicked the "continue" button in the [=confirm IDP
+    login dialog=] and initiate the login flow.
 
 1. Return [=success=] with data `null`.
 
@@ -2051,7 +2341,7 @@ The [=remote end steps=] are:
 
 1. For each |account| in |accounts|:
     1. Let |accountState| be the result of running the [=compute the connection status=]
-        algorithm given |account| and the {{IdentityProviderConfig}} of the IDP
+        algorithm given |account| and the {{IdentityProviderRequestOptions}} of the IDP
         |account| belongs to
     1. [=list/Append=] a [=dictionary=] to |list| with the following properties:
         1. `accountId` set to the account's {{IdentityProviderAccount/id}}
@@ -2131,7 +2421,7 @@ The [=remote end steps=] are:
     [=error code=] [=no such alert=].
 
 1. Let |type| be a string that is "`AutoReauthn`" if the user is being [=auto-reauthenticated=],
-    or "`AccountChooser`" is the dialog is an account chooser, or "`ConfirmIdpLogin`" if the
+    or "`AccountChooser`" if the dialog is an account chooser, or "`ConfirmIdpLogin`" if the
     dialog is a [=confirm IDP login dialog=].
 
 1. Return [=success=] with data |type|.
@@ -2350,6 +2640,14 @@ origin of the fetched URLs.
     information required to perform a federated signin/signup. It is not possible for the [=RP=] or
     the [=IDP=] to force the token fetch to happen without user permission, as the user agent cannot be
     spoofed or otherwise tricked.
+    
+* The [=disconnect endpoint=] may only be fetched after the user has successfully gone through the
+    FedCM flow at least once in the [=RP=]. It sends a credentialed request to the [=IDP=], so it
+    is important that the [=user agent=] does not allow unlimited requests of such type, even after
+    the user has used FedCM once. For this reason, any time that disconnection sends a credentialed
+    request, at least one account is removed from the [=connected accounts set=], thus ensuring that
+    this endpoint does not introduce a way for the [=RP=] to send requests to the [=IDP=] containing
+    the [=IDP=] cookies forever.
 
 <!-- ============================================================ -->
 ## Attack Scenarios ## {#attack-scenarios}
