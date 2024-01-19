@@ -535,6 +535,7 @@ This specification introduces a new type of {{Credential}}, called an {{Identity
   interface IdentityCredential : Credential {
     static Promise&lt;undefined&gt; disconnect(optional IdentityCredentialDisconnectOptions options = {});
     readonly attribute USVString? token;
+    readonly attribute boolean isAutoSelected;
   };
 </pre>
 
@@ -544,6 +545,10 @@ This specification introduces a new type of {{Credential}}, called an {{Identity
     :   <b>{{IdentityCredential/token}}</b>
     ::  The {{IdentityCredential/token}}'s attribute getter returns the value it is set to.
         It represents the minted {{IdentityProviderToken/token}} provided by the [=IDP=].
+    :   <b>{{IdentityCredential/isAutoSelected}}</b>
+    ::  {{IdentityCredential/isAutoSelected}}'s attribute getter returns the value it is
+        set to. It represents whether the user's identity credential was automatically selected when
+        going through the UI flow which resulted in this {{IdentityCredential}}.
     :   <b>{{Credential/[[type]]}}</b>
     ::  The {{IdentityCredential}}'s {{Credential/[[type]]}}'s value is "<b>identity</b>".
     :   <b>{{Credential/[[discovery]]}}</b>
@@ -961,13 +966,14 @@ the exception thrown.
             |provider| and |acc|.
         1. If |accState| is [=compute the connection status/connected=], set |registeredAccount| to
             |acc| and increase |numRegisteredAccounts| by 1.
-    1. Let |permission| and |disclosureTextShown| both be false.
+    1. Let |permission|, |disclosureTextShown|, and |isAutoSelected| be set to false.
     1. If |mediation| is not "{{CredentialMediationRequirement/required}}", |requiresUserMediation|
         is false, and |numRegisteredAccounts| is equal to 1:
         1. Set |account| to |registeredAccount| and |accountState| to the result of running
             [=compute the connection status=] algorithm given |provider| and |account|. When doing this,
             the user agent MAY show some UI to the user indicating that they are being
             <dfn>auto-reauthenticated</dfn>.
+        1. Set |isAutoSelected| to true.
     1. Otherwise, if |mediation| is "{{CredentialMediationRequirement/silent}}", return (failure, true).
     1. Otherwise, if |accountsList|'s size is 1:
         1. Set |account| to |accountsList|[0].
@@ -996,8 +1002,8 @@ the exception thrown.
     1. Assert: |account| is not null.
     1. If |permission| is false, then return (failure, true).
     1. Let |credential| be the result of running the [=fetch an identity assertion=] algorithm with
-        |account|'s {{IdentityProviderAccount/id}}, |disclosureTextShown|, |provider|, |config|, and
-        |globalObject|.
+        |account|'s {{IdentityProviderAccount/id}}, |disclosureTextShown|, |isAutoSelected|,
+        |provider|, |config|, and |globalObject|.
     1. Return |credential|.
 </div>
 
@@ -1285,9 +1291,9 @@ the token that will be provided to the [=RP=].
 
 <div algorithm>
 To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
-    |accountId|, a boolean |disclosureTextShown|, an {{IdentityProviderRequestOptions}} |provider|,
-    an {{IdentityProviderAPIConfig}} |config|, and |globalObject|, run the following steps. This
-    returns an {{IdentityCredential}} or failure.
+    |accountId|, a boolean |disclosureTextShown|, a boolean |isAutoSelected|, an
+    {{IdentityProviderRequestOptions}} |provider|, an {{IdentityProviderAPIConfig}} |config|,
+    and |globalObject|, run the following steps. This returns an {{IdentityCredential}} or failure.
     1. Let |tokenUrl| be the result of [=computing the manifest URL=] given |provider|,
         |config|["{{IdentityProviderAPIConfig/id_assertion_endpoint}}"], and |globalObject|.
     1. If |tokenUrl| is failure, return failure.
@@ -1296,6 +1302,7 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
         1. ("nonce", |provider|'s {{IdentityProviderRequestOptions/nonce}})
         1. ("account_id",  |accountId|)
         1. ("disclosure_text_shown", |disclosureTextShown|)
+        1. ("is_auto_selected", |isAutoSelected|)
     1. Let |request| be a new <a spec=fetch for=/>request</a> as follows:
 
         :  [=request/url=]
@@ -1339,6 +1346,8 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
         1. Let |credential| be a new {{IdentityCredential}} given |globalObject|'s
             <a for="global object">realm</a>.
         1. Set |credential|'s {{IdentityCredential/token}} to |token|.
+        1. Set |credential|'s {{IdentityCredential/isAutoSelected}} to
+            |isAutoSelected|.
     1. Wait for |credential| to be set.
     1. Return |credential|.
 </div>
