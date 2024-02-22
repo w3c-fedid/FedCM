@@ -763,7 +763,7 @@ dictionary IdentityProviderRequestOptions : IdentityProviderConfig {
         agent to show to the user. If provided, the user agent will not show accounts which do not
         match this login hint value. It generally matches some attribute from the desired
         {{IdentityProviderAccount}}.
-    :   <b>{{IdentityProviderConfig/domainHint}}</b>
+    :   <b>{{IdentityProviderRequestOptions/domainHint}}</b>
     ::  A string representing the domain hint corresponding to a domain which the [=RP=] is
         interested in, or "any" if the [=RP=] wants any account associated with at least one domain
         hint. If provided, the user agent will not show accounts which do not match the domain hint
@@ -896,8 +896,8 @@ the exception thrown.
     1. Let |config| be the result of running [=fetch the config file=] with
         |provider| and |globalObject|.
     1. If |config| is failure, return (failure, false).
-    1. <dfn>Fetch accounts list step</dfn>: Let |accountsList| be the result of
-        [=fetch the accounts list=] with |config|, |provider|, and |globalObject|.
+    1. <dfn>Fetch accounts step</dfn>: Let |accountsList| be the result of
+        [=fetch the accounts=] with |config|, |provider|, and |globalObject|.
     1. If |accountsList| is failure, or the size of |accountsList| is 0:
         1. [=Set the login status=] for the [=/origin=] of the
             {{IdentityProviderConfig/configURL}} to [=logged-out=].
@@ -933,7 +933,7 @@ the exception thrown.
                     1. If |result| is failure, return (failure, true). The user
                         agent MAY show a dialog to the user before or after
                         returning failure indicating this failure.
-                    1. Otherwise, go back to the [=fetch accounts list step=].
+                    1. Otherwise, go back to the [=fetch accounts step=].
 
     1. Assert: |accountsList| is not failure and the size of |accountsList| is not 0.
     1. [=Set the login status=] for the [=/origin=] of the
@@ -943,14 +943,14 @@ the exception thrown.
             {{IdentityProviderAccount/login_hints}} does not [=list/contain=] |provider|'s
             {{IdentityProviderRequestOptions/loginHint}}.
         1. If |accountList| is now empty, go to the [=mismatch dialog step=].
-    1. If |provider|'s {{IdentityProviderConfig/domainHint}} is not empty:
+    1. If |provider|'s {{IdentityProviderRequestOptions/domainHint}} is not empty:
         1. For every |account| in |accountList|:
-            1. If {{IdentityProviderConfig/domainHint}} is "any":
+            1. If {{IdentityProviderRequestOptions/domainHint}} is "any":
                 1. If |account|'s {{IdentityProviderAccount/domain_hints}} is empty, remove
                     |account| from |accountList|.
             1. Otherwise, remove |account| from |accountList| if |account|'s
                 {{IdentityProviderAccount/domain_hints}} does not [=list/contain=] |provider|'s
-                {{IdentityProviderConfig/domainHint}}.
+                {{IdentityProviderRequestOptions/domainHint}}.
         1. If |accountList| is now empty, go to the [=mismatch dialog step=].
     1. For each |acc| in |accountsList|:
         1. If |acc|["{{IdentityProviderAccount/picture}}"] is present, [=fetch the account picture=]
@@ -1162,15 +1162,15 @@ dictionary IdentityProviderAPIConfig {
 </xmp>
 
 <!-- ============================================================ -->
-### Fetch the accounts list ### {#fetch-accounts-list}
+### Fetch the accounts ### {#fetch-accounts}
 <!-- ============================================================ -->
 
-The <a>fetch the accounts list</a> algorithm fetches the [=accounts list endpoint=] to determine the
+The <a>fetch the accounts</a> algorithm fetches the [=accounts endpoint=] to determine the
 list of [=IDP=] accounts that the user is signed in to, so that the user agent can later show the
 FedCM UI to the user.
 
 <div algorithm>
-To <dfn>fetch the accounts list</dfn> given an {{IdentityProviderAPIConfig}} |config|, an
+To <dfn>fetch the accounts</dfn> given an {{IdentityProviderAPIConfig}} |config|, an
 {{IdentityProviderRequestOptions}} |provider|, and |globalObject|, run the following steps. This
 returns an {{IdentityProviderAccountList}}.
     1. Let |accountsUrl| be the result of [=computing the manifest URL=] given |provider|,
@@ -1532,10 +1532,10 @@ success or failure.
     1. Assert: |loginUrl| is not failure (the [=user agent=] has previously checked that
         |config|.{{IdentityProviderAPIConfig/login_url}} is a valid URL).
     1. Let |queryList| be a new [=list=].
-    1. If |provider|'s {{IdentityProviderConfig/loginHint}} is not empty, [=list/append=]
-        ("login_hint", {{IdentityProviderConfig/loginHint}}) to |queryList|.
-    1. If |provider|'s {{IdentityProviderConfig/domainHint}} is not empty, [=list/append=]
-        ("domain_hint", {{IdentityProviderConfig/domainHint}}) to |queryList|.
+    1. If |provider|'s {{IdentityProviderRequestOptions/loginHint}} is not empty, [=list/append=]
+        ("login_hint", {{IdentityProviderRequestOptions/loginHint}}) to |queryList|.
+    1. If |provider|'s {{IdentityProviderRequestOptions/domainHint}} is not empty, [=list/append=]
+        ("domain_hint", {{IdentityProviderRequestOptions/domainHint}}) to |queryList|.
     1. If |queryList| is not [=list/empty=]:
         1. Let |queryParameters| be the result of the [=urlencoded serializer=] with |queryList|.
         1. If |loginUrl|'s [=url/query=] is not null or empty, prepend "&" to |queryParameters|.
@@ -1598,7 +1598,7 @@ An {{IdentityUserInfo}} represents user account information from a user. This in
 to the [=IDP=] once the user has already used the FedCM API to login in the [=RP=]. That is, it is
 exposed when there exists an account |account| such that the [=connected accounts set=] [=list/contains=]
 the triple ([=RP=], [=IDP=], |account|). The information matches what is received from the
-<a>accounts list endpoint</a>. The [=IDP=] can obtain this information by invoking the
+<a>accounts endpoint</a>. The [=IDP=] can obtain this information by invoking the
 {{IdentityProvider/getUserInfo()}} static method from an iframe matching the [=/origin=] of its
 {{IdentityProviderConfig/configURL}}.
 
@@ -1650,7 +1650,7 @@ When invoking the {{IdentityProvider/getUserInfo()}} method given an {{IdentityP
             |globalObject|.
         1. If |config| is failure, [=reject=] |promise| with a new "{{NetworkError}}"
             {{DOMException}}.
-        1. Let |accountsList| be the result of [=fetch the accounts list=] with |config|, |provider|,
+        1. Let |accountsList| be the result of [=fetch the accounts=] with |config|, |provider|,
             and |globalObject|.
         1. Let |hasReturningAccount| be false.
         1. For each |account| in |accountsList|:
@@ -1858,12 +1858,12 @@ For example:
 </div>
 
 <!-- ============================================================ -->
-## Accounts list endpoint ## {#idp-api-accounts-endpoint}
+## Accounts endpoint ## {#idp-api-accounts-endpoint}
 <!-- ============================================================ -->
 
-The <dfn>accounts list endpoint</dfn> provides the list of accounts the user has at the [=IDP=].
+The <dfn>accounts endpoint</dfn> provides the list of accounts the user has at the [=IDP=].
 
-The [=accounts list endpoint=] is fetched in the [=fetch the accounts list=] algorithm:
+The [=accounts endpoint=] is fetched in the [=fetch the accounts=] algorithm:
 
 (a) **with** [=IDP=] cookies,
 (b) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`,
@@ -1908,7 +1908,7 @@ Every {{IdentityProviderAccount}} is expected to have members with the following
         matching a given value is shown to the user.
     :   <dfn>domain_hints</dfn>
     ::  A list of strings which correspond to all of the domain hints which match with this account.
-        An [=RP=] can use the {{IdentityProviderConfig/domainHint}} to request that only an account
+        An [=RP=] can use the {{IdentityProviderRequestOptions/domainHint}} to request that only an account
         matching a given value or containing some domain hint is shown to the user.
 </dl>
 
@@ -2095,7 +2095,7 @@ method:
 (b) **with** [=IDP=] cookies,
 (c) **with** the [=RP=]'s origin in the <a http-header>Origin</a> header,
 (d) **with** the <a http-header>Sec-Fetch-Dest</a> header set to `webidentity`,
-(e) **without** following [[RFC9110#section-10.2.2|HTTP redirects]], and
+(e) **without** following [[RFC9110#field.location|HTTP redirects]], and
 (f) in "cors" [=request/mode=].
 
 It will also contain the following in the request body `application/x-www-form-urlencoded`:
@@ -2618,7 +2618,7 @@ origin of the fetched URLs.
     or referrer. Thus, anyone could perform this fetch, and the information contained therein
     is considered public.
 
-* The [=accounts list endpoint=] fetch can't be used to track users because it is performed with cookies from the
+* The [=accounts endpoint=] fetch can't be used to track users because it is performed with cookies from the
     [=IDP=] but, importantly, without the {{id_assertion_endpoint_request/client_id}} or referrer. This in theory is a new power
     that the [=RP=] gains that it would not have otherwise. Preventing too many of these fetches may
     be important, but [=IDP=]s are already expected to protect against DoS attacks. In addition, the
