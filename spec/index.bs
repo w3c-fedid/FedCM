@@ -1329,11 +1329,7 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
         :  [=request/credentials mode=]
         :: "include"
         :  [=request/mode=]
-        :: "no-cors"
-
-        Issue: The spec is yet to be updated so that all <a spec=fetch for=/>requests</a> are created
-        with [=request/mode=] set to "user-agent-no-cors". See the relevant
-        [pull request](https://github.com/whatwg/fetch/pull/1533) for details.
+        :: "cors"
 
     1. Let |credential| be null.
     1. [=Fetch request=] with |request| and |globalObject|, and with <var ignore>processResponseConsumeBody</var>
@@ -2528,6 +2524,16 @@ websites trying to run an XSS attack. An [=IDP=] needs to check for this header'
 credentialed requests it receives, which ensures that the request was initiated by the user agent,
 based on the FedCM API. A malicious actor cannot spam FedCM API calls, so this is sufficient
 protection for the new [=IDP=] endpoints.
+
+<!-- ============================================================ -->
+## CORS Header ## {#sec-cors-header}
+<!-- ============================================================ -->
+
+The FedCM API allows the response from the [=identity assertion endpoint=] to be shared to the
+[=RP=]. Because of this, we impose the requirement that the [=IDP=] explicitly consents to this
+sharing taking place by using the "cors" [=request/mode=] when fetching this endpoint. This also
+helps with servers that may accidentally ignore the <a http-header>Sec-Fetch-Dest</a>: they cannot
+ignore CORS, as otherwise the fetch will fail.
 
 <!-- ============================================================ -->
 ## Browser Surface Impersonation ## {#browser-surface-impersonation}
