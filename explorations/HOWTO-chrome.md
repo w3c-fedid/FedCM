@@ -378,7 +378,7 @@ Note that we currently only include the new parameter in the button flow. Other 
 types such as "widget" (name TBD) will be added when Chrome ships this feature.
 
 #### Use Other Account API
-This API allows users to “use other accounts” in the account chooser when, for example, IdPs
+This API allows users to use other accounts in the account chooser when, for example, IdPs
 support multiple accounts or replacing the existing account.
 
 To use the Use Other Account API:
