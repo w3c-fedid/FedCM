@@ -348,18 +348,18 @@ To use the Button Mode API:
 * Enable the experimental feature `FedCmButtonMode` in `chrome://flags`.
 * Make sure to invoke the API behind [transient user activation](https://html.spec.whatwg.org/multipage/interaction.html#transient-activation).
 * Invoke the API with the `mode` parameter like so:
-```js
-  return await navigator.credentials.get({
-      identity: {
-        providers: [{
-          configURL: "https://idp.example/config.json",
-          clientId: "123",
-          nonce: nonce
-        }],
-        mode: "button"
-      }
-  });
-```
+  ```js
+    return await navigator.credentials.get({
+        identity: {
+          providers: [{
+            configURL: "https://idp.example/config.json",
+            clientId: "123",
+            nonce: nonce
+          }],
+          mode: "button"
+        }
+    });
+  ```
 
 The browser will send a new parameter to the IdP representing the request type by including
 `mode=button` in the request sent to the ID assersion endpoint:
@@ -378,7 +378,7 @@ Note that we currently only include the new parameter in the button flow. Other 
 types such as "widget" (name TBD) will be added when Chrome ships this feature.
 
 #### Use Other Account API
-This API allows users to “use other accounts” in the account chooser, for example, when IdPs
+This API allows users to “use other accounts” in the account chooser when, for example, IdPs
 support multiple accounts or replacing the existing account.
 
 To use the Use Other Account API:
