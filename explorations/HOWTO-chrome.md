@@ -336,8 +336,8 @@ IDP).
 
 ### Button Flow
 The button flow differs from the widget flow in several ways. The most significant
-difference is that the button flow is on the critical path of a user's sign-in
-journey. This means that a user must be able to successfully sign in with a
+difference is that the button flow requires a user gesture such as clicking on a
+sign-in button. This means that a user must be able to successfully sign in with a
 federated account using this flow. In contrast, the widget flow is an optimized
 flow that can reduce sign-in friction. This means that if the widget flow is
 unavailable, a user can still click a "Sign in with IdP" button to continue. See
@@ -394,6 +394,3 @@ To use the Use Other Account API:
   }
 }
 ```
-
-Note: IdP can add "widget" in "modes" to support this feature in the non-button flow. However,
-this is not currently planned for shipping.
