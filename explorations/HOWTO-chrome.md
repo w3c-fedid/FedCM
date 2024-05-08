@@ -396,7 +396,7 @@ To use the Use Other Account API:
 ```
 
 ### Continuation API
-This API lets the IdP request that the login-to-RP flow should continue
+This API lets the IdP request that the authorization flow should continue
 in a popup window that is controlled by the IdP. This can be used to request
 additional permission, to ask a user to confirm their account details, or
 for a variety of other use cases.
@@ -410,7 +410,7 @@ To use this feature:
     "continue_on": "https://idp.example/finish_login?account_id=123"
   }
   ```
-* When the login flow finishes, call `IdentityProvider.resolve` to close the
+* When the authorization flow finishes, call `IdentityProvider.resolve` to close the
   popup and provide the token that will be passed to the RP:
   ```js
     IdentityProvider.resolve("this is the token");
@@ -441,17 +441,22 @@ To use this feature:
             clientId: "123",
             nonce: nonce,
             params: {
-              "key": "value"
+              "key": "value",
+              "anything_goes": "yes",
+              "really": "yes",
+              "scopes": "calendar.readonly",
+              "dpop": "something",
+              "moar": "sure",
             }
           }],
         }
     });
   ```
 * These key/value pairs will be sent as-is in the ID assertion request:
-  `key=value&account_id=123&...`
+  `account_id=123&key=value&anything_goes=yes&really=yes&scopes=calendar.readonly&dpop=something&moar=sure&...`
   
 
-### Scaling .well-known
+### Multiple configURLs
 This feature lets you have multiple different config files under the same
 eTLD+1 as long as they all have the same accounts_endpoint. This can be
 useful to specify different branding or different ID assertion endpoints.
