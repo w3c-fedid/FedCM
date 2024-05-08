@@ -394,3 +394,108 @@ To use the Use Other Account API:
   }
 }
 ```
+
+### Continuation API
+This API lets the IdP request that the authorization flow should continue
+in a popup window that is controlled by the IdP. This can be used to request
+additional permission, to ask a user to confirm their account details, or
+for a variety of other use cases.
+
+To use this feature:
+* Enable the experimental feature `FedCmAuthz` in chrome://flags
+* Return a "continue_on" field with a URL instead of a token
+  from the ID assertion endpoint. For example:
+  ```js
+  {
+    "continue_on": "https://idp.example/finish_login?account_id=123"
+  }
+  ```
+* When the authorization flow finishes, call `IdentityProvider.resolve` to close the
+  popup and provide the token that will be passed to the RP:
+  ```js
+    IdentityProvider.resolve("this is the token");
+  ```
+* If the account ID has changed (for example, if the popup provided a "Switch
+  User" function), you can specify it in a second parameter:
+  ```js
+    IdentityProvider.resolve("this is the token", {accountId: "123"});
+  ```
+* If the user cancels the login flow, call `IdentityProvider.close` to close
+  the popup and reject the promise that was returned from `navigator.credentials.get`:
+  ```js
+    IdentityProvider.close();
+  ```
+
+### Parameters API
+This feature lets RPs specify additional key/value pairs that will get sent
+to the ID assertion endpoint.
+
+To use this feature:
+* Enable the experimental feature `FedCmAuthz` in chrome://flags
+* Add a `params` field to the `navigator.credentials.get` call:
+  ```js
+    navigator.credentials.get({
+        identity: {
+          providers: [{
+            configURL: "https://idp.example/config.json",
+            clientId: "123",
+            nonce: nonce,
+            params: {
+              "key": "value",
+              "anything_goes": "yes",
+              "really": "yes",
+              "scopes": "calendar.readonly",
+              "dpop": "something",
+              "moar": "sure",
+            }
+          }],
+        }
+    });
+  ```
+* These key/value pairs will be sent as-is in the ID assertion request:
+  `account_id=123&key=value&anything_goes=yes&really=yes&scopes=calendar.readonly&dpop=something&moar=sure&...`
+  
+
+### Multiple configURLs
+This feature lets you have multiple different config files under the same
+eTLD+1 as long as they all have the same accounts_endpoint. This can be
+useful to specify different branding or different ID assertion endpoints.
+
+To use this feature:
+* Enable the experimental feature `FedCmAuthz` in chrome://flags
+* Add the login_url and accounts_endpoint to the .well-known/web-identity
+  file:
+  ```js
+  {
+    "provider_urls": [
+      // keep this unchanged
+    ],
+    "accounts_endpoint": "https://fedcm.idp.example/accounts",
+    "login_url": "https://fedcm.idp.example/login.html"
+  }
+  ```
+
+### Account labels
+The account labels API lets IdPs give a list of labels to an account and
+lets different config files specify a filter for those labels.
+
+To use the API:
+* Enable the experimental feature `FedCmAuthz` in chrome://flags
+* Add a `labels` field to accounts in the account endpoint:
+  ```js
+  {
+    "name": "John Smith",
+    //...
+    "labels": ["label1"]
+  }
+  ```
+* Add the desired label to the config file:
+  ```js
+  {
+    "accounts_endpoint": "...",
+    // ...
+    "accounts": {
+      "include": "label1"
+    }
+  }
+  ```
