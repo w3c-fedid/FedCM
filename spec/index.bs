@@ -1694,9 +1694,9 @@ To <dfn>fetch request</dfn> given a [=/request=] |request|, |globalObject|, and 
 </div>
 
 <div algorithm>
-When <dfn>computing the manifest URL</dfn> given an {{IdentityProviderRequestOptions}} |provider|, a
-[=string=] |manifestString|, and |globalObject|, perform the following steps. This returns a
-<a spec=url for=/>URL</a> or failure.
+When <dfn>computing the manifest URL</dfn> given an {{IdentityProviderConfig}} |provider|, a
+[=string=] |manifestString|, a boolean |requireSameOrigin|, and |globalObject|, perform the
+following steps. This returns a <a spec=url for=/>URL</a> or failure.
     1. Let |configUrl| be the result of running [=parse url=] with |provider|'s
         {{IdentityProviderConfig/configURL}} and |globalObject|.
     1. Let |manifestUrl| be the result of running [=parse url=] given |manifestString| (the relative
@@ -1707,7 +1707,10 @@ When <dfn>computing the manifest URL</dfn> given an {{IdentityProviderRequestOpt
         allowed.
 
     1. If |manifestUrl| is failure, return failure.
-    1. If |manifestUrl| is not [=same origin=] with |configUrl|, return failure.
+    1. If |requireSameOrigin| and |manifestUrl| is not [=same origin=] with |configUrl|, return
+        failure.
+    1. If |requireSameOrigin| is false and |manifestUrl|'s <a spec=url>domain</a> is not equal to
+        |configUrl|'s, return failure.
     1. If |manifestUrl| is not a [=potentially trustworthy URL=], return failure.
     1. Return |manifestUrl|.
 </div>
