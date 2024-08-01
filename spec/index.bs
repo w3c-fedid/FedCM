@@ -620,7 +620,7 @@ to use a federated account.
 
 <xmp class="idl">
 dictionary IdentityCredentialErrorInit {
-  DOMString code;
+  DOMString error;
   DOMString url;
 };
 </xmp>
@@ -629,7 +629,7 @@ dictionary IdentityCredentialErrorInit {
   [Exposed=Window, SecureContext]
   interface IdentityCredentialError : DOMException {
     constructor(optional DOMString message = "", optional IdentityCredentialErrorInit options = {});
-    readonly attribute DOMString code;
+    readonly attribute DOMString error;
     readonly attribute DOMString url;
   };
 </pre>
@@ -638,15 +638,15 @@ dictionary IdentityCredentialErrorInit {
 The {{IdentityCredentialError/constructor()}}, given a |realm|, a {{DOMString}} |message| and a
     {{IdentityCredentialErrorInit}} |options| must run the following steps:
     1. Invoke the {{DOMException}}'s {{DOMException/constructor()}}, passing |realm| and |message|.
-    1. Set <a>this</a>.{{IdentityCredentialError/code}} to |options|.{{IdentityCredentialError/code}}
+    1. Set <a>this</a>.{{IdentityCredentialError/error}} to |options|.{{IdentityCredentialError/error}}
         if it is present in |options|, or to "" otherwise.
     1. Set <a>this</a>.{{IdentityCredentialError/url}} to |options|.{{IdentityCredentialError/url}}
         if it is present in |options|, or to "" otherwise.
 </div>
 
 <dl>
-    :   <b>{{IdentityCredentialError/code}}</b>
-    ::  The {{IdentityCredentialError/code}}'s attribute getter returns the value it is set to.
+    :   <b>{{IdentityCredentialError/error}}</b>
+    ::  The {{IdentityCredentialError/error}}'s attribute getter returns the value it is set to.
         It represents the type of error which resulted in an {{IdentityCredential}} not being created.
     :   <b>{{IdentityCredentialError/url}}</b>
     ::  The {{IdentityCredentialError/url}}'s attribute getter returns the value it is set to.
@@ -1070,7 +1070,7 @@ throwing the exception.
     1. If |credential| is an {{IdentityCredentialError}}:
         1. The [=user agent=] MUST show UI to the user indicating that the identity assertion fetch
             has failed.
-        1. The [=user agent=] MAY use the {{IdentityCredentialError/code}} in its UI to provide a
+        1. The [=user agent=] MAY use the {{IdentityCredentialError/error}} in its UI to provide a
             more specific error message to the user. For instance, if the value is one of
             "invalid_request", "unauthorized_client", "access_denied", "server_error", and
             "temporarily_unavailable", the [=user agent=] may note the reason in a user-friendly
