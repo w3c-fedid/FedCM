@@ -357,6 +357,26 @@ value |value|:
 
 </div>
 
+### Infrastructure algorithm ### {#infra-algorithm}
+
+<div algorithm>
+An [=environment settings object=] (|settings|) is <dfn noexport>same-site with its
+  ancestors</dfn> if the following algorithm returns `true`:
+
+1.  If |settings|'s [=relevant global object=] has no [=associated Document=],
+    return `false`.
+1.  Let |document| be |settings|' [=relevant global object=]'s [=associated Document=].
+1.  If |document| has no [=Document/browsing context=], return `false`.
+1.  Let |origin| be |settings|' [=environment settings object/origin=].
+1.  Let |navigable| be |document|'s [=node navigable=].
+1.  While |navigable| has a non-null [=navigable/parent=]:
+    1.  Set |navigable| to |navigable|'s [=navigable/parent=].
+    1.  If |navigable|'s [=active document=]'s [=Document/origin=] is not
+        [=/same site=] with |origin|, return `false`.
+1.  Return `true`.
+
+</div>
+
 ### HTTP header API ### {#login-status-http}
 
 [=IDPs=] can set the login status using an HTTP [=response=] [=header=] as follows.
@@ -369,14 +389,15 @@ be the result of [=get a structured field value=] from the response's header
 list with name "<dfn><code>Set-Login</code></dfn>" and type "`item`". If |value| is not null,
 process this header as follows:
 
+
 <div algorithm="process the login status header">
 1. Let |origin| be the response's [=response/URL=]'s [=/origin=].
 1. Let |client| be the [=/request=]'s [=request/client=].
 1. If the request's [=request/destination=] is not `"document"`:
     1. If |client| is null, return.
-    1. If |origin| is not [=same origin=] with the [=/request=]'s
+    1. If |origin| is not [=/same site=] with the [=/request=]'s
         [=request/origin=], return.
-    1. If |client| is not [=same-origin with its ancestors=], return.
+    1. If |client| is not [=same-site with its ancestors=], return.
 1. Assert that |value| is a tuple.
 1. Let |token| be the first entry of |value|.
 1. If |token| is `"logged-in"`, [=set the login status=] for |origin|
@@ -409,7 +430,7 @@ partial interface Navigator {
 
 <div algorithm="setStatus">
 When {{NavigatorLogin/setStatus()}} is called with argument |status|:
-1. If the [=current settings object=] is not [=same-origin with its ancestors=],
+1. If the [=current settings object=] is not [=same-site with its ancestors=],
     throw a {{SecurityError}} {{DOMException}}.
 1. Let |origin| be the [=current settings object=]'s
     [=environment settings object/origin=].
