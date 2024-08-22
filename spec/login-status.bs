@@ -1,0 +1,264 @@
+<pre class='metadata'>
+Title: Login Status API
+Shortname: login-status
+Level: 1
+Status: w3c/FPWD
+Group: fedid
+TR: http://www.w3.org/TR/fedcm/login-status.html
+ED: https://w3c-fedid.github.io/fedcm/login-status.html
+Prepare for TR: true
+Repository: w3c-fedid/FedCM
+Editor: Sam Goto, w3cid 50308, Google Inc. https://google.com, goto@google.com
+
+Markup Shorthands: markdown yes, biblio yes
+Default Biblio Display: inline
+
+Text Macro: FALSE <code>false</code>
+Text Macro: TRUE <code>true</code>
+Text Macro: RP Relying Party
+Text Macro: IDP Identity Provider
+
+Abstract: A Web Platform API that allows websites to notify the browser when their users login and logout.
+
+Test Suite: https://github.com/web-platform-tests/wpt/tree/master/fedcm
+</pre>
+
+<pre class=anchors>
+spec: ecma262; urlPrefix: https://tc39.github.io/ecma262/
+    type: dfn
+        text: internal method; url: sec-ordinary-object-internal-methods-and-internal-slots
+
+spec: credential-management-1; urlPrefix: https://w3c.github.io/webappsec-credential-management/
+    type: dfn
+        text: same-origin with its ancestors; url: same-origin-with-its-ancestors
+    type: dfn
+        text: requires user mediation; url: origin-requires-user-mediation
+spec: webdriver; urlPrefix: https://w3c.github.io/webdriver/
+    type: dfn
+        text: endpoint node; url: dfn-endpoint-node
+        text: extension capability; url: dfn-extension-capability
+        text: getting a property; url: dfn-getting-properties
+        text: matching capabilities; url: dfn-matching-capabilities
+        text: no such alert; url: dfn-no-such-alert
+        text: error code; url: dfn-error-code
+        text: validating capabilities; url: dfn-validate-capabilities
+spec: webappsec-fetch-metadata; urlPrefix: https://w3c.github.io/webappsec-fetch-metadata/
+    type: dfn
+        text: Directly User-Initiated Requests; url: directly-user-initiated
+</pre>
+
+<pre class=link-defaults>
+spec:infra; type:dfn; text:list
+spec:infra; type:dfn; text:user agent
+spec:html; type:dfn; for:environment settings object; text:global object
+spec:html; type:dfn; for:html-origin-def; text:origin
+spec:webidl; type:dfn; text:resolve
+spec:webdriver2; type:dfn; text:error
+spec:fetch; type:dfn; for:/; text:response
+</pre>
+
+<style>
+dl.domintro dt {
+    font-family: Menlo, Consolas, "DejaVu Sans Mono", Monaco, monospace;
+
+    padding-top: 0.5em;
+    padding-bottom: 1em;
+}
+dl.domintro dt a {
+    color: inherit; border-bottom-style: none;
+}
+dl.domintro dt code {
+    font-size: inherit;
+}
+.idp-normative-text {
+    background-color: rgba(165, 42, 42, 0.3);
+    margin: 16px 0px;
+    padding: 8px;
+    border-left: 8px solid brown;
+}
+
+/* temporary fixes to the typogram diagrams
+   to support dark mode properly */
+script + svg :is(polygon, line, rect):not(.grid) {
+  stroke: currentcolor;
+}
+script + svg :is(polygon, text) {
+  fill: currentcolor;
+}
+</style>
+
+<script src="https://fedidcg.github.io/FedCM/static/underscore-min.js"></script>
+<script src="https://fedidcg.github.io/FedCM/static/raphael.min.js"></script>
+<script src="https://fedidcg.github.io/FedCM/static/webfont.js"></script>
+<script src="https://fedidcg.github.io/FedCM/static/typogram.js"></script>
+
+<!-- ============================================================ -->
+# Introduction # {#introduction}
+<!-- ============================================================ -->
+
+*This section is non-normative.*
+
+Note: use the introduction from the explainer.
+
+<!-- ============================================================ -->
+# The Login Status API # {#browser-api-login-status}
+<!-- ============================================================ -->
+
+## Login Status Map ## {#hdr-login-status-map}
+
+Each [=user agent=] keeps a global, persistent <dfn>Login Status
+map</dfn>, an initially empty [=map=]. The [=map/keys=] in this map are
+[=/origin=] (of [=IDPs=]), and the [=map/values=] are enums that can be one of
+"<dfn><code>unknown</code></dfn>", "<dfn><code>logged-in</code></dfn>",
+and "<dfn><code>logged-out</code></dfn>".
+
+<div algorithm>
+To <dfn>get the login status</dfn> for an [=/origin=] |origin|:
+1. If [=Login Status map=][|origin|] exists, return it.
+1. Otherwise, return [=unknown=].
+
+</div>
+
+<div algorithm>
+To <dfn>set the login status</dfn> for an [=/origin=] |origin| to
+value |value|:
+1. Assert that |value| is one of [=logged-in=] or [=logged-out=].
+1. [=map/Set=] [=Login Status map=][|origin|] to |value|.
+
+</div>
+
+## HTTP header API ## {#login-status-http}
+
+[=IDPs=] can set the login status using an HTTP [=response=] [=header=] as follows.
+
+Issue: The HTTP header checking should move into the Fetch spec, since it
+    affects all resource loads.
+
+For each [=http-redirect fetch=] and [=http fetch=]'s [=response=], let |value|
+be the result of [=get a structured field value=] from the response's header
+list with name "<dfn><code>Set-Login</code></dfn>" and type "`item`". If |value| is not null,
+process this header as follows:
+
+<div algorithm="process the login status header">
+1. Let |origin| be the response's [=response/URL=]'s [=/origin=].
+1. Let |client| be the [=/request=]'s [=request/client=].
+1. If the request's [=request/destination=] is not `"document"`:
+    1. If |client| is null, return.
+    1. If |origin| is not [=same origin=] with the [=/request=]'s
+        [=request/origin=], return.
+    1. If |client| is not [=same-origin with its ancestors=], return.
+1. Assert that |value| is a tuple.
+1. Let |token| be the first entry of |value|.
+1. If |token| is `"logged-in"`, [=set the login status=] for |origin|
+    to [=logged-in=].
+1. If |token| is `"logged-out"`, [=set the login status=] for |origin|
+    to [=logged-out=].
+
+</div>
+
+## JavaScript API ## {#login-status-javascript}
+
+[=IDPs=] can also use a JavaScript API to update the stored login status:
+
+
+<pre class="idl">
+enum LoginStatus {
+  "logged-in",
+  "logged-out",
+};
+
+[Exposed=Window, SecureContext] 
+interface NavigatorLogin {
+  Promise&lt;undefined&gt; setStatus(LoginStatus status);
+};
+
+partial interface Navigator {
+  [SecureContext] readonly attribute NavigatorLogin login;
+};
+</pre>
+
+<div algorithm="setStatus">
+When {{NavigatorLogin/setStatus()}} is called with argument |status|:
+1. If the [=current settings object=] is not [=same-origin with its ancestors=],
+    throw a {{SecurityError}} {{DOMException}}.
+1. Let |origin| be the [=current settings object=]'s
+    [=environment settings object/origin=].
+1. Let |value| be [=logged-in=] if |status| is `"logged-in"` or [=logged-out=]
+    if |status| is `"logged-out"`.
+1. [=Set the login status=] for |origin| to |value|.
+
+</div>
+
+## Clearing the Login Status Map data ## {#login-status-clear-data}
+
+User agents MUST also clear the [=Login Status map=] data when:
+    :   the user clears all cookies or site settings data
+    ::  The user agent MUST clear the entire map.
+    :   the user clears all cookies or all site data for a specific origin
+    ::  The user agent MUST remove all entries that would be affected
+            by the deleted cookies, that is, any entry with an origin
+            to which a deleted cookie could be sent to.
+
+            Note: For example, domain cookies may affect subdomains of
+                the deleted origin, e.g. clearing cookies for `google.com`
+                should also reset the login status for `accounts.google.com`,
+                since it may rely on a domain cookie for google.com.
+    :   the user deletes individual cookies (if allowed by the user agent)
+    ::  the behavior is user agent-defined.
+
+            Note: The user agent MAY want to reset the state to [=unknown=],
+                since is impossible to know whether this cookie affects
+                authorization state.
+    : the user agent receives a <a http-header>Clear-Site-Data</a> header with a
+        value of `"cookies"` or `"*"`, and the [=/request=]'s [=request/client=] is
+        not null, and the client's [=environment settings object/origin=] is [=same
+        origin=] with the [=top-level origin=]
+    :: while [$clear cookies for origin|clearing cookies for
+        origin$] it MUST remove any entries in the [=Login Status Map=] where
+        the [=map/key=] is the input origin.
+
+        Issue: Once Clear-Site-Data [supports partitioned cookies](https://github.com/w3c/webappsec-clear-site-data/issues/72),
+            this wording should be updated.
+
+Note: Other website-initiated cookie changes should not affect this map. When
+    [=IDP=] login state changes, it should send an explicit [=Set-Login=] header.
+    [=RP=] state should not affect this map since it only reflects [=IDP=] state.
+
+<!-- ====================================================================== -->
+# Acknowledgements # {#acknowledgements}
+<!-- ====================================================================== -->
+
+Note: write down the Acknowledgements section.
+
+<pre class="biblio">
+{
+  "CM": {
+    "href": "https://w3c.github.io/webappsec-credential-management/",
+    "title": "Credential Management"
+  },
+  "OIDC-Connect-Core": {
+    "href": "https://openid.net/specs/openid-connect-core-1_0.html",
+    "title": "OIDC Connect Core"
+  },
+  "PERMISSIONS-POLICY": {
+    "href": "https://w3c.github.io/webappsec-permissions-policy",
+    "title": "Permissions Policy"
+  },
+  "PRIVACY-MODEL": {
+    "href": "https://github.com/michaelkleber/privacy-model",
+    "title": "Privacy Model"
+  },
+  "PRIVACY-THREAT-MODEL": {
+    "href": "https://w3cping.github.io/privacy-threat-model/",
+    "title": "Target Privacy Threat Model"
+  },
+  "RFC7258": {
+    "href": "https://datatracker.ietf.org/doc/html/rfc7258",
+    "title": "Pervasive Monitoring Is an Attack"
+  }
+}
+</pre>
+
+</body>
+</html>
+
