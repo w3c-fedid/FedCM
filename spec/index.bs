@@ -46,6 +46,13 @@ spec: webdriver; urlPrefix: https://w3c.github.io/webdriver/
 spec: webappsec-fetch-metadata; urlPrefix: https://w3c.github.io/webappsec-fetch-metadata/
     type: dfn
         text: Directly User-Initiated Requests; url: directly-user-initiated
+spec: login-status; urlPrefix: login-status.html
+    type: dfn
+        text: logged-in; url: logged-in
+        text: logged-out; url: logged-out
+        text: unknown; url: unknown
+        text: get the login status; url: get-the-login-status
+        text: set the login status; url: set-the-login-status
 </pre>
 
 <pre class=link-defaults>
@@ -329,151 +336,6 @@ regardless of the
 value (which is used when a resource loaded as a third-party, not first-party). This makes it easy
 for an [=IDP=] to adopt the FedCM API. It doesn't introduce security issues on the API because the
 [=RP=] cannot inspect the results from the fetches in any way.
-
-<!-- ============================================================ -->
-## The Login Status API ## {#browser-api-login-status}
-<!-- ============================================================ -->
-
-### Login Status Map ### {#hdr-login-status-map}
-
-Each [=user agent=] keeps a global, persistent <dfn>Login Status
-map</dfn>, an initially empty [=map=]. The [=map/keys=] in this map are
-[=/origin=] (of [=IDPs=]), and the [=map/values=] are enums that can be one of
-"<dfn><code>unknown</code></dfn>", "<dfn><code>logged-in</code></dfn>",
-and "<dfn><code>logged-out</code></dfn>".
-
-<div algorithm>
-To <dfn>get the login status</dfn> for an [=/origin=] |origin|:
-1. If [=Login Status map=][|origin|] exists, return it.
-1. Otherwise, return [=unknown=].
-
-</div>
-
-<div algorithm>
-To <dfn>set the login status</dfn> for an [=/origin=] |origin| to
-value |value|:
-1. Assert that |value| is one of [=logged-in=] or [=logged-out=].
-1. [=map/Set=] [=Login Status map=][|origin|] to |value|.
-
-</div>
-
-### Infrastructure algorithm ### {#infra-algorithm}
-
-<div algorithm>
-An [=environment settings object=] (|settings|) is <dfn noexport>same-site with its
-  ancestors</dfn> if the following algorithm returns `true`:
-
-1.  If |settings|'s [=relevant global object=] has no [=associated Document=],
-    return `false`.
-1.  Let |document| be |settings|' [=relevant global object=]'s [=associated Document=].
-1.  If |document| has no [=Document/browsing context=], return `false`.
-1.  Let |origin| be |settings|' [=environment settings object/origin=].
-1.  Let |navigable| be |document|'s [=node navigable=].
-1.  While |navigable| has a non-null [=navigable/parent=]:
-    1.  Set |navigable| to |navigable|'s [=navigable/parent=].
-    1.  If |navigable|'s [=active document=]'s [=Document/origin=] is not
-        [=/same site=] with |origin|, return `false`.
-1.  Return `true`.
-
-</div>
-
-### HTTP header API ### {#login-status-http}
-
-[=IDPs=] can set the login status using an HTTP [=response=] [=header=] as follows.
-
-Issue: The HTTP header checking should move into the Fetch spec, since it
-    affects all resource loads.
-
-For each [=http-redirect fetch=] and [=http fetch=]'s [=response=], let |value|
-be the result of [=get a structured field value=] from the response's header
-list with name "<dfn><code>Set-Login</code></dfn>" and type "`item`". If |value| is not null,
-process this header as follows:
-
-
-<div algorithm="process the login status header">
-1. Let |origin| be the response's [=response/URL=]'s [=/origin=].
-1. Let |client| be the [=/request=]'s [=request/client=].
-1. If the request's [=request/destination=] is not `"document"`:
-    1. If |client| is null, return.
-    1. If |origin| is not [=/same site=] with the [=/request=]'s
-        [=request/origin=], return.
-    1. If |client| is not [=same-site with its ancestors=], return.
-1. Assert that |value| is a tuple.
-1. Let |token| be the first entry of |value|.
-1. If |token| is `"logged-in"`, [=set the login status=] for |origin|
-    to [=logged-in=].
-1. If |token| is `"logged-out"`, [=set the login status=] for |origin|
-    to [=logged-out=].
-
-</div>
-
-### JavaScript API ### {#login-status-javascript}
-
-[=IDPs=] can also use a JavaScript API to update the stored login status:
-
-
-<pre class="idl">
-enum LoginStatus {
-  "logged-in",
-  "logged-out",
-};
-
-[Exposed=Window, SecureContext] 
-interface NavigatorLogin {
-  Promise&lt;undefined&gt; setStatus(LoginStatus status);
-};
-
-partial interface Navigator {
-  [SecureContext] readonly attribute NavigatorLogin login;
-};
-</pre>
-
-<div algorithm="setStatus">
-When {{NavigatorLogin/setStatus()}} is called with argument |status|:
-1. If the [=current settings object=] is not [=same-site with its ancestors=],
-    throw a {{SecurityError}} {{DOMException}}.
-1. Let |origin| be the [=current settings object=]'s
-    [=environment settings object/origin=].
-1. Let |value| be [=logged-in=] if |status| is `"logged-in"` or [=logged-out=]
-    if |status| is `"logged-out"`.
-1. [=Set the login status=] for |origin| to |value|.
-
-</div>
-
-### Clearing the Login Status Map data ### {#login-status-clear-data}
-
-User agents MUST also clear the [=Login Status map=] data when:
-    :   the user clears all cookies or site settings data
-    ::  The user agent MUST clear the entire map.
-    :   the user clears all cookies or all site data for a specific origin
-    ::  The user agent MUST remove all entries that would be affected
-            by the deleted cookies, that is, any entry with an origin
-            to which a deleted cookie could be sent to.
-
-            Note: For example, domain cookies may affect subdomains of
-                the deleted origin, e.g. clearing cookies for `google.com`
-                should also reset the login status for `accounts.google.com`,
-                since it may rely on a domain cookie for google.com.
-    :   the user deletes individual cookies (if allowed by the user agent)
-    ::  the behavior is user agent-defined.
-
-            Note: The user agent MAY want to reset the state to [=unknown=],
-                since is impossible to know whether this cookie affects
-                authorization state.
-    : the user agent receives a <a http-header>Clear-Site-Data</a> header with a
-        value of `"cookies"` or `"*"`, and the [=/request=]'s [=request/client=] is
-        not null, and the client's [=environment settings object/origin=] is [=same
-        origin=] with the [=top-level origin=]
-    :: while [$clear cookies for origin|clearing cookies for
-        origin$] it MUST remove any entries in the [=Login Status Map=] where
-        the [=map/key=] is the input origin.
-
-        Issue: Once Clear-Site-Data [supports partitioned cookies](https://github.com/w3c/webappsec-clear-site-data/issues/72),
-            this wording should be updated.
-
-Note: Other website-initiated cookie changes should not affect this map. When
-    [=IDP=] login state changes, it should send an explicit [=Set-Login=] header.
-    [=RP=] state should not affect this map since it only reflects [=IDP=] state.
 
 <!-- ============================================================ -->
 ## The connected accounts set ## {#browser-connected-accounts-set}
@@ -1587,8 +1449,8 @@ success or failure.
                 with the [=/origin=] of the {{IdentityProviderAPIConfig/login_url}}.
 
                 Note: The IDP login flow may set this value to logged-in using
-                    either the [[#login-status-javascript|JavaScript]] or
-                    [[#login-status-http|HTTP header]] API during the login
+                    either the [login-status.html#login-status-javascript](JavaScript) or
+                    [login-status.html#login-status-http](HTTP header) API during the login
                     flow. It is also possible that this change happened in
                     a different browsing context.
             1. If |loginStatus| is [=logged-in=], return success.
