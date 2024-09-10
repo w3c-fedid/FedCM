@@ -1,6 +1,6 @@
 # Alternatives Considered
 
-Now that we have a deep understanding of (a) the [problem](README.md) and (b) the [motivations](https://w3c-fedid.github.io/FedCM#privacy-threat-model) and [topology](activation.md) of the parties involved, lets look at some **why not**s.
+Now that we have a deep understanding of (a) the [problem](README.md) and (b) the [motivations](https://w3cping.github.io/privacy-threat-model/) and [topology](activation.md) of the parties involved, lets look at some **why not**s.
 
 ## The Status Quo
 
