@@ -1,6 +1,6 @@
 # Cookies
 
-This is a **proposal** for a high level API to support identity federation under this [threat model](https://w3cping.github.io/privacy-threat-model/).
+This is a **proposal** for a high level API to support identity federation under this [threat model](https://w3c-fedid.github.io/FedCM/#privacy).
 
 It is widely known that browsers are either **already** blocking third party cookies or are planning to.
 
