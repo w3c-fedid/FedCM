@@ -127,7 +127,7 @@ Notably, for cases where the IDP controls the deployment of the JavaScript runni
 ```javascript
 // This is just a possible starting point, largely TBD.
 //
-// Note, this historical, see https://fedidcg.github.io/FedCM for the current API.
+// Note, this historical, see https://w3c-fedid.github.io/FedCM for the current API.
 //
 let {idToken} = await navigator.credentials.get({
   provider: 'https://accounts.example.com',
@@ -151,7 +151,7 @@ In this formulation, the triggering of the API works similarly as before, but th
 ```javascript
 // This is just a possible starting point, largely TBD.
 //
-// Note, this historical, see https://fedidcg.github.io/FedCM for the current API.
+// Note, this historical, see https://w3c-fedid.github.io/FedCM for the current API.
 //
 let {idToken} = await navigator.credentials.get({
   provider: 'https://accounts.example.com',

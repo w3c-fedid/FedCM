@@ -107,8 +107,8 @@ resulting from browsing in incognito mode should be cleared once the user ends t
 
 ### 15. Does this specification have both "Security Considerations" and "Privacy Considerations" sections?
 
-Security section is work in progress: https://fedidcg.github.io/FedCM/#security Privacy is discussed
-more in depth: https://fedidcg.github.io/FedCM/#privacy 
+Security section is work in progress: https://w3c-fedid.github.io/FedCM/#security Privacy is discussed
+more in depth: https://w3c-fedid.github.io/FedCM#privacy 
 
 ### 16. Do features in your specification enable origins to downgrade default security protections?
 
