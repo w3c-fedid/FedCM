@@ -86,7 +86,7 @@ References: [OIDC terminology](https://openid.net/specs/openid-connect-core-1_0.
 ### IDP tracking
 * _A privacy threat in which an [Identity Provider](#identity-provider-idp) is able to surveil or correlate user activity across the web._
 
-References: [FedCM Threat Model](https://fedidcg.github.io/FedCM/#attack-scenarios-by-idp)
+References: [FedCM Threat Model](https://w3c-fedid.github.io/FedCM/#idp-intrusion)
 
 
 ### Relying Party (RP)
@@ -106,7 +106,7 @@ References: [OIDC terminology](https://openid.net/specs/openid-connect-core-1_0.
 ### RP tracking
 * _A privacy threat in which a [Relying Party](#relying-party-rp) is able to surveil or correlate user activity across the web._
 
-References: [FedCM Threat Model](https://fedidcg.github.io/FedCM/#attack-scenarios-by-rp)
+References: [FedCM Threat Model](https://w3c-fedid.github.io/FedCM/#rp-fingerprinting)
 
 
 ### Standard claims

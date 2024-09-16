@@ -1,10 +1,10 @@
 # Navigations
 
-This is an **early exploration** of the design alternatives to address [bounce tracking](README.md#stage-2-bounce-tracking) under [this threat model](https://fedidcg.github.io/FedCM/#privacy-threat-model).
+This is an **early exploration** of the design alternatives to address [bounce tracking](README.md#stage-2-bounce-tracking) under [this threat model](https://w3cping.github.io/privacy-threat-model/).
 
 This section goes over the **what** and the **how**. It presuposes that you have read and started from:
 
-- The **why**: the [problem statement](problem.md) and the [motivations](https://fedidcg.github.io/FedCM/#privacy-threat-model) and the [topology](activation.md) of the parties involved.
+- The **why**: the [problem statement](problem.md) and the [motivations](https://w3cping.github.io/privacy-threat-model/) and the [topology](activation.md) of the parties involved.
 - The **why not**: the [alternatives considered](alternatives_considered.md) (e.g. the [prior art](prior.md), the [status quo](alternatives_considered.md#the-status-quo) and the [requestStorageAccess API](alternatives_considered.md#the-request-storage-access-api)).
 
 We'll then go over the [high-level overview](#high-level-design) and a breakdown into two smaller problems:
@@ -39,7 +39,7 @@ We'll go over each of these separately next.
 
 The consumer API is the Web Platform privacy-oriented API that relying parties call to request information from a specific identity provider, to be used in replacement of the current redirect/popup affordances that are currently used.
 
-From the perspective of [The Privacy Threat Model](https://fedidcg.github.io/FedCM/#privacy-threat-model), there are two notably distinct uses of federation:
+From the perspective of [The Privacy Threat Model](https://w3cping.github.io/privacy-threat-model/), there are two notably distinct uses of federation:
 
 * [signing-in](glossary.md#federated-sign-in) and
 * [authorization](glossary.md#authorization)
@@ -128,7 +128,7 @@ Now that we looked at the surface area introduced for relying parties, lets turn
 
 The purpose of the Provider API is to fulfill the invocation of [The Consumer API](#the-Consumer-api) by coordinating with the identity provider.
 
-From the perspective of [The Privacy Threat Model](https://fedidcg.github.io/FedCM/#privacy-threat-model), the Provider API has a much wider set of choices and trade-offs:
+From the perspective of [The Privacy Threat Model](https://w3cping.github.io/privacy-threat-model/), the Provider API has a much wider set of choices and trade-offs:
 
 1. Because of the [classification problem](README.md#the-classification-problem), we want to prevent a tracker from abusing this API by impersonating an IDP to track users.
 1. Because of the [RP tracking problem](README.md#the-rp-tracking-problem), we want to promote directed identifiers as much as we can.
