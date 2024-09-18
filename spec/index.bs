@@ -330,13 +330,11 @@ const credential = await navigator.credentials.get({
 ```
 </div>
 
-For fetches that are sent with cookies, unpartitioned cookies are included,
-as if the resource was loaded as a same-origin request, e.g.
-regardless of the
-[SameSite](https://httpwg.org/http-extensions/draft-ietf-httpbis-rfc6265bis.html#name-the-samesite-attribute-2)
-value (which is used when a resource loaded as a third-party, not first-party). This makes it easy
-for an [=IDP=] to adopt the FedCM API. It doesn't introduce security issues on the API because the
-[=RP=] cannot inspect the results from the fetches in any way.
+For fetches that are sent with cookies, unpartitioned
+[SameSite](https://httpwg.org/http-extensions/draft-ietf-httpbis-rfc6265bis.html#name-the-samesite-attribute-2)=None
+cookies are included. This makes it easy for an [=IDP=] to adopt the FedCM API. It doesn't introduce
+security issues on the API because the [=RP=] cannot inspect the results from the fetches on its
+own (e.g. the browser mediates what the [=RP=] can receive).
 
 <!-- ============================================================ -->
 ## The connected accounts set ## {#browser-connected-accounts-set}
@@ -1111,7 +1109,7 @@ returns an {{IdentityProviderAccountList}}.
         with [=request/mode=] set to "user-agent-no-cors". See the relevant
         [pull request](https://github.com/whatwg/fetch/pull/1533) for details.
 
-        Note: This fetch should only send Same-Site None cookies. Specifying this will require cookie layering.
+        Note: This fetch should only send Same-Site=None cookies. Specifying this will require cookie layering.
 
     1. Let |accountsList| be null.
     1. [=Fetch request=] with |request| and |globalObject|, and with <var ignore>processResponseConsumeBody</var>
