@@ -333,3 +333,169 @@ IdP fails by either returning some network error or saying that the disconnectio
 was unsuccessful, or if the `account_id` is nowhere to be found, the browser will
 remove from local storage all of the federated accounts associated with the (RP,
 IDP).
+
+### Button Flow
+The button flow differs from the widget flow in several ways. The most significant
+difference is that the button flow requires a user gesture such as clicking on a
+sign-in button. This means that a user must be able to successfully sign in with a
+federated account using this flow. In contrast, the widget flow is an optimized
+flow that can reduce sign-in friction. This means that if the widget flow is
+unavailable, a user can still click a "Sign in with IdP" button to continue. See
+illustrative [mocks here](https://docs.google.com/presentation/d/1iURrPakaHgBfQ6mAefKijjxToiTTgBSPz1rtaV0od98/edit?usp=sharing).
+
+#### Button Mode API
+To use the Button Mode API:
+* Enable the experimental feature `FedCmButtonMode` in `chrome://flags`.
+* Make sure to invoke the API behind [transient user activation](https://html.spec.whatwg.org/multipage/interaction.html#transient-activation).
+* Invoke the API with the `mode` parameter like so:
+  ```js
+    return await navigator.credentials.get({
+        identity: {
+          providers: [{
+            configURL: "https://idp.example/config.json",
+            clientId: "123",
+            nonce: nonce
+          }],
+          mode: "button"
+        }
+    });
+  ```
+
+The browser will send a new parameter to the IdP representing the request type by including
+`mode=button` in the request sent to the ID assersion endpoint:
+```
+POST /fedcm_assertion_endpoint HTTP/1.1
+Host: idp.example
+Origin: https://rp.example/
+Content-Type: application/x-www-form-urlencoded
+Cookie: 0x23223
+Sec-Fetch-Dest: webidentity
+
+account_id=123&client_id=client1234&nonce=Ct60bD&disclosure_text_shown=true&is_auto_selected=false
+&mode=button
+```
+Note that we currently only include the new parameter in the button flow. Other flow
+types such as "widget" (name TBD) will be added when Chrome ships this feature.
+
+#### Use Other Account API
+This API allows users to use other accounts in the account chooser when, for example, IdPs
+support multiple accounts or replacing the existing account.
+
+To use the Use Other Account API:
+* Enable the experimental feature `FedCmUseOtherAccount` in `chrome://flags`.
+* IdP specifies the following in the FedCM config file:
+```
+{
+  "accounts_endpoint" : ...,
+  "modes: {
+    "button": {
+      "supports_use_other_account": true|false,
+    }
+  }
+}
+```
+
+### Continuation API
+This API lets the IdP request that the authorization flow should continue
+in a popup window that is controlled by the IdP. This can be used to request
+additional permission, to ask a user to confirm their account details, or
+for a variety of other use cases.
+
+To use this feature:
+* Enable the experimental feature `FedCmAuthz` in chrome://flags
+* Return a "continue_on" field with a URL instead of a token
+  from the ID assertion endpoint. For example:
+  ```js
+  {
+    "continue_on": "https://idp.example/finish_login?account_id=123"
+  }
+  ```
+* When the authorization flow finishes, call `IdentityProvider.resolve` to close the
+  popup and provide the token that will be passed to the RP:
+  ```js
+    IdentityProvider.resolve("this is the token");
+  ```
+* If the account ID has changed (for example, if the popup provided a "Switch
+  User" function), you can specify it in a second parameter:
+  ```js
+    IdentityProvider.resolve("this is the token", {accountId: "123"});
+  ```
+* If the user cancels the login flow, call `IdentityProvider.close` to close
+  the popup and reject the promise that was returned from `navigator.credentials.get`:
+  ```js
+    IdentityProvider.close();
+  ```
+
+### Parameters API
+This feature lets RPs specify additional key/value pairs that will get sent
+to the ID assertion endpoint.
+
+To use this feature:
+* Enable the experimental feature `FedCmAuthz` in chrome://flags
+* Add a `params` field to the `navigator.credentials.get` call:
+  ```js
+    navigator.credentials.get({
+        identity: {
+          providers: [{
+            configURL: "https://idp.example/config.json",
+            clientId: "123",
+            nonce: nonce,
+            params: {
+              "key": "value",
+              "anything_goes": "yes",
+              "really": "yes",
+              "scopes": "calendar.readonly",
+              "dpop": "something",
+              "moar": "sure",
+            }
+          }],
+        }
+    });
+  ```
+* These key/value pairs will be sent as-is in the ID assertion request:
+  `account_id=123&key=value&anything_goes=yes&really=yes&scopes=calendar.readonly&dpop=something&moar=sure&...`
+  
+
+### Multiple configURLs
+This feature lets you have multiple different config files under the same
+eTLD+1 as long as they all have the same accounts_endpoint. This can be
+useful to specify different branding or different ID assertion endpoints.
+
+To use this feature:
+* Enable the experimental feature `FedCmAuthz` in chrome://flags
+* Add the login_url and accounts_endpoint to the .well-known/web-identity
+  file:
+  ```js
+  {
+    "provider_urls": [
+      // keep this unchanged
+    ],
+    "accounts_endpoint": "https://fedcm.idp.example/accounts",
+    "login_url": "https://fedcm.idp.example/login.html"
+  }
+  ```
+
+### Account labels
+The account labels API lets IdPs give a list of labels to an account and
+lets different config files specify a filter for those labels.
+
+To use the API:
+* Enable the experimental feature `FedCmAuthz` in chrome://flags
+* Add a `labels` field to accounts in the account endpoint:
+  ```js
+  {
+    "name": "John Smith",
+    //...
+    "labels": ["label1"]
+  }
+  ```
+* Add the desired label to the config file:
+  ```js
+  {
+    "accounts_endpoint": "...",
+    // ...
+    "accounts": {
+      "include": "label1"
+    }
+  }
+  ```
