@@ -531,7 +531,7 @@ When asked to <dfn>attempt to disconnect</dfn> given an {{IdentityCredentialDisc
         |provider| and |globalObject|.
     1. If |config| is failure, [=reject=] |promise| with a "{{NetworkError}}" {{DOMException}}.
     1. Let |disconnectUrl| be the result of [=computing the manifest URL=] given |provider|,
-        |config|.{{IdentityProviderAPIConfig/disconnect_endpoint}}, and |globalObject|.
+        |config|.{{IdentityProviderAPIConfig/disconnect_endpoint}}, true, and |globalObject|.
     1. If |disconnectUrl| is failure, [=reject=] |promise| with a "{{NetworkError}}"
         {{DOMException}}.
     1. [=Send a disconnect request=] with |disconnectUrl|, |options|, and |globalObject|, and let
@@ -1703,8 +1703,8 @@ To <dfn>fetch request</dfn> given a [=/request=] |request|, |globalObject|, and 
 
 <div algorithm>
 When <dfn>computing the manifest URL</dfn> given an {{IdentityProviderConfig}} |provider|, a
-[=string=] |manifestString|, and |globalObject|, perform the following steps. This returns a
-<a spec=url for=/>URL</a> or failure.
+[=string=] |manifestString|, a boolean |requireSameOrigin|, and |globalObject|, perform the following
+steps. This returns a <a spec=url for=/>URL</a> or failure.
     1. Let |configUrl| be the result of running [=parse url=] with |provider|'s
         {{IdentityProviderConfig/configURL}} and |globalObject|.
     1. Let |manifestUrl| be the result of running [=parse url=] given |manifestString| (the relative
@@ -1715,7 +1715,10 @@ When <dfn>computing the manifest URL</dfn> given an {{IdentityProviderConfig}} |
         allowed.
 
     1. If |manifestUrl| is failure, return failure.
-    1. If |manifestUrl| is not [=same origin=] with |configUrl|, return failure.
+    1. If |requireSameOrigin| and |manifestUrl| is not [=same origin=] with |configUrl|, return
+        failure.
+    1. If |requireSameOrigin| is false and |manifestUrl|'s [=url/host=]'s [=host/registrable domain=]
+        is not equal to |configUrl|'s, return failure.
     1. If |manifestUrl| is not a [=potentially trustworthy URL=], return failure.
     1. Return |manifestUrl|.
 </div>
