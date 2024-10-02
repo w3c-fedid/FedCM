@@ -624,7 +624,8 @@ The {{IdentityCredentialRequestOptions}} contains a list of
 {{IdentityProviderConfig}}s that the [=RP=] supports and has
 pre-registered with (i.e. the [=IDP=] has given the [=RP=] a `clientId`).
 The {{IdentityCredentialRequestOptions}} also contains a {{IdentityCredentialRequestOptionsContext}}
-which the user agent can use to provide a more meaningful dialog to users.
+which the user agent can use to provide a more meaningful dialog to users and {{IdentityCredentialRequestOptionsMode}}
+which the user agent can use to specify different behaviors or dialog types.
 
 <xmp class=idl>
 enum IdentityCredentialRequestOptionsContext {
@@ -634,9 +635,15 @@ enum IdentityCredentialRequestOptionsContext {
   "continue"
 };
 
+enum IdentityCredentialRequestOptionsMode {
+  "active",
+  "passive"
+};
+
 dictionary IdentityCredentialRequestOptions {
   required sequence<IdentityProviderRequestOptions> providers;
   IdentityCredentialRequestOptionsContext context = "signin";
+  IdentityCredentialRequestOptionsMode mode = "passive";
 };
 </xmp>
 
@@ -777,24 +784,27 @@ the exception thrown.
     1. Let |loginStatus| be the result of [=get the login status=] with
         the [=/origin=] of |provider|'s {{IdentityProviderConfig/configURL}}.
     1. If |loginStatus| is [=unknown=], a user agent MAY set it to [=logged-out=].
+    1. Let |showIdpLoginDialog| be an affordance to [=show an IDP login dialog=]:
+        1. Let |config| be the result of running [=fetch the config file=]
+                  with |provider| and |globalObject|.
+        1. If |config| is failure, return (failure, true).
+        1. [=Show an IDP login dialog=] with |config| and |provider|.
+        1. If that algorithm returns failure, return (failure, true).
     1. If |loginStatus| is [=logged-out=], the user agent MUST do one of the following:
 
         * Return (failure, false).
         * Prompt the user whether to continue. If the user continues, the user
-            agent SHOULD set |loginStatus| to [=unknown=]. This MAY include an
-            affordance to [=show an IDP login dialog=].
+            agent SHOULD set |loginStatus| to [=unknown=]. This MAY include |showIdpLoginDialog| affordance.
 
             * If the user cancels this dialog, return (failure, true).
-            * If the user triggers this affordance:
-                1. Let |config| be the result of running [=fetch the config file=]
-                    with |provider| and |globalObject|.
-                1. If |config| is failure, return (failure, true).
-                1. [=Show an IDP login dialog=] with |config| and |provider|.
-                1. If that algorithm returns failure, return (failure, true).
+            * If the user continues, trigger |showIdpLoginDialog|.
+        * Trigger |showIdpLoginDialog| directly. The user agent SHOULD set |loginStatus| to [=unknown=].
 
-        Issue: We should perhaps provide a way to let the [=RP=] request that
-            the second option is provided, possibly gated on a user gesture.
-            See [this issue](https://github.com/fedidcg/FedCM/issues/442) for discussion.
+            * Let |mode| be |options|'s {{IdentityCredentialRequestOptions/mode}}.
+            * If |mode| is [=passive=], return (failure, true).
+            * If |mode| is [=active=] and user gesture is not present, return (failure, true).
+            * If |mode| is [=active=] and user gesture is present, trigger |showIdpLoginDialog|.
+
     1. Let |requiresUserMediation| be |provider|'s {{IdentityProviderConfig/configURL}}'s [=/origin=]'s
         [=requires user mediation=].
     1. Let |mediation| be |options|'s {{CredentialRequestOptions/mediation}}.
@@ -884,7 +894,8 @@ the exception thrown.
         1. If [=compute the connection status=] of |account|, |provider| and |globalObject| returns
             [=compute the connection status/connected=], show a dialog to request user permission to sign
             in via |account|, and set the result in |permission|. The user agent MAY use |options|'s
-            {{IdentityCredentialRequestOptions/context}} to customize the dialog.
+            {{IdentityCredentialRequestOptions/context}} and |options|'s
+            {{IdentityCredentialRequestOptions/mode}} to customize the dialog.
         1. Otherwise, let |permission| be the result of running [=request permission to sign-up=]
             algorithm with |account|, |config|, |provider|, and |globalObject|. Also set
             |disclosureTextShown| to true.
@@ -1290,8 +1301,8 @@ an {{IdentityProviderAPIConfig}} |config|, an {{IdentityProviderRequestOptions}}
             is defined, and the |provider|'s {{IdentityProviderConfig/clientId}} is not in the list of
             |account|["{{IdentityProviderAccount/approved_clients}}"], then the user agent MUST display
             the |metadata|["{{IdentityProviderClientMetadata/terms_of_service_url}}"] link.
-        1. The user agent MAY use the {{IdentityCredentialRequestOptions/context}} to customize the
-            dialog shown.
+        1. The user agent MAY use the {{IdentityCredentialRequestOptions/context}} and |options|'s
+            {{IdentityCredentialRequestOptions/mode}} to customize the dialog shown.
     1. If the user does not grant permission, return false.
     1. [=Create a connection between the RP and the IdP account=] with |provider|, |account|, and
         |globalObject|.
