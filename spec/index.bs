@@ -1240,9 +1240,25 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
         1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderToken}}, |token|.
         1. If one of the previous two steps threw an exception, set |credential| to failure
             and return.
+        1. If neither {{IdentityProviderToken/token}} nor {{IdentityProviderToken/continue_on}} was
+            specified, set |credential| to failure and return.
+        1. If {{IdentityProviderToken/token}} was not specified but
+            {{IdentityProviderToken/continue_on}} was specified:
+            1. Let |continueOnUrl| be the result of running [=parse url=] with |token|'s
+                {{IdentityProviderToken/continue_on}} and |globalObject|.
+            1. If |continueOnUrl| is failure, set |credential| to failure and return.
+            1. If |continueOnUrl| is not [=same origin=] with |tokenUrl|, set |credential|
+                to failure and return.
+            1. Let |tokenPair| be the result of [=show a continuation dialog=] with |continueOnUrl|.
+            1. If |tokenPair| is failure, set |credential| to failure and return.
+            1. Let |tokenString| be the first entry of |tokenPair|.
+            1. If the second entry of |tokenPair| is not null, set |accountId| to that second entry.
+        1. Otherwise, let |tokenString| be |token|'s {{IdentityProviderToken/token}}.
+        1. [=Create a connection between the RP and the IdP account=] with |provider|, |accountId|, and
+            |globalObject|.
         1. Let |credential| be a new {{IdentityCredential}} given |globalObject|'s
             <a for="global object">realm</a>.
-        1. Set |credential|'s {{IdentityCredential/token}} to |token|.
+        1. Set |credential|'s {{IdentityCredential/token}} to |tokenString|.
         1. Set |credential|'s {{IdentityCredential/isAutoSelected}} to
             |isAutoSelected|.
     1. Wait for |credential| to be set.
@@ -1251,7 +1267,8 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
 
 <xmp class="idl">
 dictionary IdentityProviderToken {
-  required USVString token;
+  USVString token;
+  USVString continue_on;
 };
 </xmp>
 
@@ -1293,8 +1310,6 @@ an {{IdentityProviderAPIConfig}} |config|, an {{IdentityProviderRequestOptions}}
         1. The user agent MAY use the {{IdentityCredentialRequestOptions/context}} to customize the
             dialog shown.
     1. If the user does not grant permission, return false.
-    1. [=Create a connection between the RP and the IdP account=] with |provider|, |account|, and
-        |globalObject|.
     1. Return true.
 </div>
 
@@ -1458,6 +1473,31 @@ success or failure.
             1. Otherwise, return failure.
 </div>
 
+<div algorithm>
+To <dfn>show a continuation dialog</dfn> given a |continueOnUrl|, run the
+following steps. This returns a failure or a tuple (string, string?) (a token
+and an optional account ID).
+    1. Assert: these steps are running [=in parallel=].
+    1. [=Create a fresh top-level traversable=] with |continueOnUrl|.
+    1. The user agent MAY [=set up browsing context features=] or otherwise
+        affect the presentation of this traversable in an implementation-defined
+        way.
+    1. Wait for one of the following conditions:
+        * The user closes the browsing context: return failure.
+        * {{IdentityProvider}}.{{IdentityProvider/close}} is called in the
+            context of this new traversable:
+            1. Close the traversable.
+            1. Return failure.
+        * {{IdentityProvider}}.{{IdentityProvider/resolve()}} is called in
+            the context of this new traversable.
+            1. Close the traversable.
+            1. Let |token| be the token that was passed to that resolve call.
+            1. If {{IdentityResolveOptions/accountId}} was specified in the
+                resolve call, let |accountId| be that account ID.
+            1. Otherwise, let |accountId| be null.
+            1. Return (|token|, |accountId|).
+
+</div>
 <!-- ============================================================ -->
 ## The IdentityProvider Interface ## {#browser-api-identity-provider-interface}
 <!-- ============================================================ -->
@@ -1473,8 +1513,13 @@ This specification introduces the {{IdentityUserInfo}} dictionary as well as the
     USVString picture;
   };
 
+  dictionary IdentityResolveOptions {
+    USVString accountId;
+  };
+
   [Exposed=Window, SecureContext] interface IdentityProvider {
       static undefined close();
+      static undefined resolve(DOMString token, optional IdentityResolveOptions options = {});
       static Promise&lt;sequence&lt;IdentityUserInfo&gt;&gt; getUserInfo(IdentityProviderConfig config);
   };
 </pre>
