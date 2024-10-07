@@ -1242,8 +1242,9 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
             and return.
         1. If neither {{IdentityProviderToken/token}} nor {{IdentityProviderToken/continue_on}} was
             specified, set |credential| to failure and return.
-        1. If {{IdentityProviderToken/token}} was not specified but
-            {{IdentityProviderToken/continue_on}} was specified:
+        1. If {{IdentityProviderToken/token}} was specified, let |tokenString|
+            be |token|'s {{IdentityProviderToken/token}}.
+        1.  Otherwise, if {{IdentityProviderToken/continue_on}} was specified:
             1. Let |continueOnUrl| be the result of running [=parse url=] with |token|'s
                 {{IdentityProviderToken/continue_on}} and |globalObject|.
             1. If |continueOnUrl| is failure, set |credential| to failure and return.
@@ -1253,7 +1254,6 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
             1. If |tokenPair| is failure, set |credential| to failure and return.
             1. Let |tokenString| be the first entry of |tokenPair|.
             1. If the second entry of |tokenPair| is not null, set |accountId| to that second entry.
-        1. Otherwise, let |tokenString| be |token|'s {{IdentityProviderToken/token}}.
         1. [=Create a connection between the RP and the IdP account=] with |provider|, |accountId|, and
             |globalObject|.
         1. Let |credential| be a new {{IdentityCredential}} given |globalObject|'s
