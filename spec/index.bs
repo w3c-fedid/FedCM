@@ -653,6 +653,7 @@ dictionary IdentityProviderRequestOptions : IdentityProviderConfig {
   USVString nonce;
   DOMString loginHint;
   DOMString domainHint;
+  any params;
 };
 </xmp>
 
@@ -1198,12 +1199,17 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
     1. Let |tokenUrl| be the result of [=computing the manifest URL=] given |provider|,
         |config|["{{IdentityProviderAPIConfig/id_assertion_endpoint}}"], and |globalObject|.
     1. If |tokenUrl| is failure, return failure.
-    1. Let |requestBody| be the result of running [=urlencoded serializer=] with a list containing:
+    1. Let |list| be a list with the following entries:
         1. ("client_id", |provider|'s {{IdentityProviderConfig/clientId}})
         1. ("nonce", |provider|'s {{IdentityProviderRequestOptions/nonce}})
         1. ("account_id",  |accountId|)
         1. ("disclosure_text_shown", |disclosureTextShown|)
         1. ("is_auto_selected", |isAutoSelected|)
+    1. If |provider|'s {{IdentityProviderRequestOptions/params}} is not empty:
+        1. Let |json| be the result of [=serializing a JavaScript value to a JSON string=]
+            with |provider|'s {{IdentityProviderRequestOptions/params}}.
+        1. Append ("params", |json|) to |list|.
+    1. Let |requestBody| be the result of running [=urlencoded serializer=] with |list|.
     1. Let |request| be a new <a spec=fetch for=/>request</a> as follows:
 
         :  [=request/url=]
