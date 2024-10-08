@@ -787,8 +787,9 @@ the exception thrown.
     1. If |mode| is [=active=]
         1. If [=transient activation=] is not present, return (failure, true).
         1. If [=transient activation=] is present and there is a pending
-            request where |mode| is [=passive=], return (failure, true) for the
-            pending request.
+            request where |mode| is [=passive=], cancel the previous request
+            as if a {{CredentialRequestOptions/signal}} was given to it and
+            was [=AbortSignal/aborted=].
     1. Let |loginStatus| be the result of [=get the login status=] with
         the [=/origin=] of |provider|'s {{IdentityProviderConfig/configURL}}.
     1. If |loginStatus| is [=unknown=], a user agent MAY set it to [=logged-out=].
@@ -802,7 +803,7 @@ the exception thrown.
             * If the user cancels this dialog, return (failure, true).
             * If the user triggers this affordance,
                 [=fetch the config file and show an IDP login dialog=].
-        * If |mode| is [=active=] and [=transient activation=] is present,
+        * If |mode| is [=active=],
             [=fetch the config file and show an IDP login dialog=].
 
     1. Let |requiresUserMediation| be |provider|'s {{IdentityProviderConfig/configURL}}'s [=/origin=]'s
