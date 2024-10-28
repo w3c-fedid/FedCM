@@ -930,59 +930,48 @@ or failure.
     1. Set |rootUrl|'s [=url/scheme=] to |configUrl|'s [=url/scheme=].
     1. Set |rootUrl|'s [=url/host=] to |configUrl|'s [=url/host=]'s [=host/registrable domain=].
     1. Set |rootUrl|'s [=url/path=] to the <a>list</a> «".well-known", "web-identity"».
-    1. Let |config|, |configInWellKnown| both be null.
+    1. Let |config|, |discovery|, |accounts_url| and |login_url| be null.
     1. Let |rpOrigin| be |globalObject|'s [=associated Document=]'s [=Document/origin=].
-    1. If |rpOrigin| is not an [=opaque origin=], and |rootUrl|'s [=url/host=] is equal
-        to |rpOrigin|'s [=host/registrable domain=], and |rootUrl|'s [=url/scheme=] is
-        equal to |rpOrigin|'s [=origin/scheme=], set |configInWellKnown| to true.
+    1. Let |wellKnownRequest| be a new [=/request=] as follows:
 
-        Note: Because domain cookies are valid across an entire site, there is no privacy
-            benefit from doing the well-known check if the RP and IDP are in the same site.
-    1. Otherwise:
-        1. Let |wellKnownRequest| be a new [=/request=] as follows:
+        :  [=request/URL=]
+        :: |rootUrl|
+        :  [=request/client=]
+        :: null
+        :  [=request/window=]
+        :: "no-window"
+        :  [=request/service-workers mode=]
+        :: "none"
+        :  [=request/destination=]
+        :: "webidentity"
+        :  [=request/origin=]
+        :: a unique [=opaque origin=]
+        :  [=request/header list=]
+        :: a [=list=] containing a single [=header=] with [=header/name=] set to `Accept` and
+            [=header/value=] set to `application/json`
+        :  [=request/referrer policy=]
+        :: "no-referrer"
+        :  [=request/credentials mode=]
+        :: "omit"
+        :  [=request/mode=]
+        :: "no-cors"
 
-            :  [=request/URL=]
-            :: |rootUrl|
-            :  [=request/client=]
-            :: null
-            :  [=request/window=]
-            :: "no-window"
-            :  [=request/service-workers mode=]
-            :: "none"
-            :  [=request/destination=]
-            :: "webidentity"
-            :  [=request/origin=]
-            :: a unique [=opaque origin=]
-            :  [=request/header list=]
-            :: a [=list=] containing a single [=header=] with [=header/name=] set to `Accept` and
-                [=header/value=] set to `application/json`
-            :  [=request/referrer policy=]
-            :: "no-referrer"
-            :  [=request/credentials mode=]
-            :: "omit"
-            :  [=request/mode=]
-            :: "no-cors"
+        Issue: The spec is yet to be updated so that all <a spec=fetch for=/>requests</a> are created
+        with [=request/mode=] set to "user-agent-no-cors". See the relevant
+        [pull request](https://github.com/whatwg/fetch/pull/1533) for details.
 
-            Issue: The spec is yet to be updated so that all <a spec=fetch for=/>requests</a> are created
-            with [=request/mode=] set to "user-agent-no-cors". See the relevant
-            [pull request](https://github.com/whatwg/fetch/pull/1533) for details.
+    1. [=Fetch request=] with |wellKnownRequest| and |globalObject|, and with <var ignore>processResponseConsumeBody</var>
+        set to the following steps given a <a spec=fetch for=/>response</a> |response| and |responseBody|:
+        1. Let |json| be the result of [=extract the JSON fetch response=] from |response| and
+            |responseBody|.
+        1. Set |discovery| to the result of [=converted to an IDL value|converting=] |json|
+            to an {{IdentityProviderWellKnown}}.
+        1. If one of the previous two steps threw an exception, or if the
+            [=list/size=] of |discovery|["{{IdentityProviderWellKnown/provider_urls}}"] is
+            greater than 1, set |discovery| to null.
 
-        1. [=Fetch request=] with |wellKnownRequest| and |globalObject|, and with <var ignore>processResponseConsumeBody</var>
-            set to the following steps given a <a spec=fetch for=/>response</a> |response| and |responseBody|:
-            1. Let |json| be the result of [=extract the JSON fetch response=] from |response| and
-                |responseBody|.
-            1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderWellKnown}},
-                |discovery|.
-            1. If one of the previous two steps threw an exception, or if the
-                [=list/size=] of |discovery|["{{IdentityProviderWellKnown/provider_urls}}"] is
-                greater than 1, set |configInWellKnown| to false.
-
-                Issue: [relax](https://github.com/fedidcg/FedCM/issues/333) the size of the
-                provider_urls array.
-
-            1. Otherwise, set to |configInWellKnown| to true if
-                |discovery|["{{IdentityProviderWellKnown/provider_urls}}"][0] [=string/is=] equal to
-                |provider|'s {{IdentityProviderConfig/configURL}}, and to false otherwise.
+            Issue: [relax](https://github.com/fedidcg/FedCM/issues/333) the size of the
+            provider_urls array.
 
     1. Let |configRequest| be a new <a spec=fetch for=/>request</a> as follows:
 
@@ -1021,11 +1010,34 @@ or failure.
         1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderAPIConfig}} stored
             in |config|.
         1. If one of the previous two steps threw an exception, set |config| to failure.
-        1. Set |config|.{{IdentityProviderAPIConfig/login_url}} to the result of [=computing
-            the manifest URL=] with |provider|, |config| and |globalObject|.
-        1. If |config|.{{IdentityProviderAPIConfig/login_url}} is null, return failure.
-    1. Wait for both |config| and |configInWellKnown| to be set.
-    1. If |configInWellKnown| is true, return |config|. Otherwise, return failure.
+        1. Set |login_url| to the result of [=computing the manifest URL=] with |provider|,
+            |config|.{{IdentityProviderAPIConfig/login_url}} and |globalObject|.
+        1. Set |accounts_url| to the result of [=computing the manifest URL=] with |provider|,
+            |config|.{{IdentityProviderAPIConfig/accounts_endpoint}} and |globalObject|.
+        1. If |login_url| or |accounts_url| is failure, return failure.
+    1. Wait for both |config| and |discovery| to be set.
+    1. If |discovery| is null, return failure.
+    1. If |rpOrigin| is not an [=opaque origin=], and |rootUrl|'s [=url/host=] is equal
+        to |rpOrigin|'s [=host/registrable domain=], and |rootUrl|'s [=url/scheme=] is
+        equal to |rpOrigin|'s [=origin/scheme=], return |config|.
+
+        Note: Because domain cookies are valid across an entire site, there is no privacy
+            benefit from doing the well-known check if the RP and IDP are in the same site.
+    1. If |discovery|.{{IdentityProviderWellKnown/accounts_endpoint}} and |discovery|.
+        {{IdentityProviderWellKnown/login_url}} are set:
+        1. Let |well_known_accounts_url| be the result of [=computing the manifest URL=] with
+            |provider|, |discovery|.{{IdentityProviderWellKnown/accounts_endpoint}}
+            and |globalObject|.
+        1. Let |well_known_login_url| be the result of [=computing the manifest URL=] with |provider|,
+            |discovery|.{{IdentityProviderWellKnown/login_url}} and |globalObject|.
+        1. If |well_known_accounts_url| is not [=url/equal=] to |accounts_url|, return failure.
+        1. If |well_known_login_url| is not [=url/equal=] to |login_url|, return failure.
+    1. Otherwise:
+        1. Let |allowed_config_url| be the result of [=computing the manifest URL=] with |provider|,
+            |discovery|.{{IdentityProviderWellKnown/provider_urls}}[0] and |globalObject|.
+        1. If |allowed_config_url| is not [=url/equal=] to |configUrl|, return failure.
+    1. Return |config|.
+
 </div>
 
 NOTE: a two-tier file system is used in order to prevent the [=IDP=] from easily determining the [=RP=]
@@ -1038,7 +1050,9 @@ path manipulation to fingerprint (for instance, by including the RP in the path)
 
 <xmp class="idl">
 dictionary IdentityProviderWellKnown {
-  required sequence<USVString> provider_urls;
+  sequence<USVString> provider_urls;
+  USVString accounts_endpoint;
+  USVString login_url;
 };
 
 dictionary IdentityProviderIcon {
