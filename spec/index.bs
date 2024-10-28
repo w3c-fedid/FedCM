@@ -653,6 +653,7 @@ dictionary IdentityProviderRequestOptions : IdentityProviderConfig {
   USVString nonce;
   DOMString loginHint;
   DOMString domainHint;
+  sequence<USVString> fields;
   any params;
 };
 </xmp>
@@ -872,7 +873,7 @@ the exception thrown.
     1. For each |acc| in |accountsList|:
         1. If |acc| is [=eligible for auto reauthentication=] given |provider|, and |globalObject|,
             set |registeredAccount| to |acc| and increase |numRegisteredAccounts| by 1.
-    1. Let |permission|, |disclosureTextShown|, and |isAutoSelected| be set to false.
+    1. Let |permission|, |permissionRequested|, and |isAutoSelected| be set to false.
     1. If |mediation| is not "{{CredentialMediationRequirement/required}}", |requiresUserMediation|
         is false, and |numRegisteredAccounts| is equal to 1:
         1. Set |account| to |registeredAccount| and |permission| to true. When doing this, the user
@@ -888,23 +889,24 @@ the exception thrown.
             {{IdentityCredentialRequestOptions/context}} to customize the dialog.
         1. Otherwise, let |permission| be the result of running [=request permission to sign-up=]
             algorithm with |account|, |config|, |provider|, and |globalObject|. Also set
-            |disclosureTextShown| to true.
+            |permissionRequested| to true.
     1. Otherwise:
         1. Set |account| to the result of running the [=select an account=] from the
             |accountsList|.
         1. If |account| is failure, return (failure, true).
         1. If [=compute the connection status=] of |account|, |provider| and |globalObject| is
-            [=compute the connection status/connected=], set |permission| to true.
+            [=compute the connection status/connected=], or if |provider|.
+            {{IdentityProviderRequestOptions/fields}} is [=list/empty=], set |permission| to true.
         1. Otherwise:
             1. Let |permission| be the result of running the [=request permission to sign-up=]
                 algorithm with |account|, |config|, |provider|, and |globalObject|.
-            1. Set |disclosureTextShown| to true.
+            1. Set |permissionRequested| to true.
     1. Wait until the [=user agent=]'s dialogs requesting for user choice or permission to be
         closed, if any are created in the previous steps.
     1. Assert: |account| is not null.
     1. If |permission| is false, then return (failure, true).
     1. Let |credential| be the result of running the [=fetch an identity assertion=] algorithm with
-        |account|'s {{IdentityProviderAccount/id}}, |disclosureTextShown|, |isAutoSelected|,
+        |account|'s {{IdentityProviderAccount/id}}, |permissionRequested|, |isAutoSelected|,
         |provider|, |config|, and |globalObject|.
     1. Return |credential|.
 </div>
@@ -1193,18 +1195,32 @@ the token that will be provided to the [=RP=].
 
 <div algorithm>
 To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
-    |accountId|, a boolean |disclosureTextShown|, a boolean |isAutoSelected|, an
+    |accountId|, a boolean |permissionRequested|, a boolean |isAutoSelected|, an
     {{IdentityProviderRequestOptions}} |provider|, an {{IdentityProviderAPIConfig}} |config|,
     and |globalObject|, run the following steps. This returns an {{IdentityCredential}} or failure.
     1. Let |tokenUrl| be the result of [=computing the manifest URL=] given |provider|,
         |config|["{{IdentityProviderAPIConfig/id_assertion_endpoint}}"], and |globalObject|.
     1. If |tokenUrl| is failure, return failure.
+    1. Let |disclosureShownFor| and |fields| be the empty list.
+    1. If |permissionRequested| is true:
+        1. Set |fields| to |provider|.{{IdentityProviderRequestOptions/fields}}.
+        1. Set |disclosureShownFor| to the subset of strings in |fields| that are
+            in the [=list of recognized fields=].
     1. Let |list| be a list with the following entries:
         1. ("client_id", |provider|'s {{IdentityProviderConfig/clientId}})
         1. ("nonce", |provider|'s {{IdentityProviderRequestOptions/nonce}})
         1. ("account_id",  |accountId|)
-        1. ("disclosure_text_shown", |disclosureTextShown|)
         1. ("is_auto_selected", |isAutoSelected|)
+    1. If |fields| is not empty:
+        1. Let |serializedFields| be the entries of |fields| concatenated with a ","
+            between elements.
+        1. Append ("fields", |serializedFields|) to |list|.
+    1. If |disclosureShownFor| is not empty:
+        1. Let |serializedDisclosure| be the entries of |disclosureShownFor| concatenated
+            with a "," between elements.
+        1. Append ("disclosure_shown_for", |serializedDisclosure|) to |list|.
+    1. If |disclosureShownFor| contains all of "name", "email" and "picture", append
+        ("disclosure_text_shown", true) to |list|.
     1. If |provider|'s {{IdentityProviderRequestOptions/params}} is not empty:
         1. Let |json| be the result of [=serializing a JavaScript value to a JSON string=]
             with |provider|'s {{IdentityProviderRequestOptions/params}}.
@@ -1280,25 +1296,40 @@ The <a>request permission to sign-up</a> algorithm fetches the [=client metadata
 waits for the user to grant permission to use the given account, and returns whether the user
 granted permission or not.
 
-<div algorithm>
+<div algorithm="request permission to sign-up">
 To <dfn>request permission to sign-up</dfn> the user with a given an {{IdentityProviderAccount}} |account|,
 an {{IdentityProviderAPIConfig}} |config|, an {{IdentityProviderRequestOptions}} |provider|, and a
 |globalObject|, run the following steps. This returns a boolean.
     1. Assert: These steps are running [=in parallel=].
     1. Let |metadata| be the result of running [=fetch the client metadata=] with |config|,
         |provider|, and |globalObject|.
+    1. Let |fields| be |provider|.{{IdentityProviderRequestOptions/fields}} or, if not specified,
+        `["name", "email", "picture"]`.
+
+        Note: Unspecified is different from an explicitly specified empty list.
     1. Prompt the user to gather explicit intent to create an account. The user agent MAY use the
         {{IdentityProviderBranding}} to inform the style choices of its UI. Additionally:
-        1. If |metadata| is not failure, |metadata|["{{IdentityProviderClientMetadata/privacy_policy_url}}"]
-            is defined and the |provider|'s {{IdentityProviderConfig/clientId}} is not in the list of
-            |account|["{{IdentityProviderAccount/approved_clients}}"], then the user agent MUST display
-            the |metadata|["{{IdentityProviderClientMetadata/privacy_policy_url}}"] link.
-        1. If |metadata| is not failure, |metadata|["{{IdentityProviderClientMetadata/terms_of_service_url}}"]
-            is defined, and the |provider|'s {{IdentityProviderConfig/clientId}} is not in the list of
-            |account|["{{IdentityProviderAccount/approved_clients}}"], then the user agent MUST display
-            the |metadata|["{{IdentityProviderClientMetadata/terms_of_service_url}}"] link.
-        1. The user agent MAY use the {{IdentityCredentialRequestOptions/context}} to customize the
-            dialog shown.
+        1. If |provider|.{{IdentityProviderRequestOptions/fields}} is not [=list/empty=]:
+            1. If |metadata| is not failure, |metadata|["{{IdentityProviderClientMetadata/privacy_policy_url}}"]
+                is defined and the |provider|'s {{IdentityProviderConfig/clientId}} is not in the list of
+                |account|["{{IdentityProviderAccount/approved_clients}}"], then the user agent MUST display
+                the |metadata|["{{IdentityProviderClientMetadata/privacy_policy_url}}"] link.
+            1. If |metadata| is not failure, |metadata|["{{IdentityProviderClientMetadata/terms_of_service_url}}"]
+                is defined, and the |provider|'s {{IdentityProviderConfig/clientId}} is not in the list of
+                |account|["{{IdentityProviderAccount/approved_clients}}"], then the user agent MUST display
+                the |metadata|["{{IdentityProviderClientMetadata/terms_of_service_url}}"] link.
+            1. The user agent MUST prompt the user for permission to share the data in |fields|,
+                interpreting the strings as follows (this is the <dfn>list of recognized fields</dfn>):
+                : `"name"`
+                :: The user's name as given in {{IdentityProviderAccount}}.{{IdentityProviderAccount/name}}.
+                : `"email"`
+                :: The user's email address as given in {{IdentityProviderAccount}}.{{IdentityProviderAccount/email}}.
+                : `"picture"`
+                :: The user's profile picture as given in {{IdentityProviderAccount}}.{{IdentityProviderAccount/picture}}.
+
+                Any other string is ignored for forwards compatibility.
+            1. The user agent MAY use the {{IdentityCredentialRequestOptions/context}} to customize the
+                dialog shown.
     1. If the user does not grant permission, return false.
     1. [=Create a connection between the RP and the IdP account=] with |provider|, |account|, and
         |globalObject|.
@@ -1923,6 +1954,12 @@ It will also contain the following parameters in the request body `application/x
         with rp.example"), used by the [=request permission to sign-up=] algorithm for new users. It
         is used as an assurance by the user agent to the [=IDP=] that it has indeed shown the terms
         of service and privacy policy to the user in the cases where it is required to do so.
+    :   <dfn>fields</dfn>
+    ::  The list of fields that the [=RP=] has requested in {{IdentityProviderRequestOptions/fields}}.
+    :   <dfn>disclosure_shown_for</dfn>
+    ::  The list of fields that the user was prompted for. This can be a subset of
+        {{IdentityProviderRequestOptions/fields}} if a field is requested that is not in the [=list
+        of recognized fields=].
 </dl>
 
 For example:
@@ -1935,7 +1972,7 @@ Origin: https://rp.example/
 Content-Type: application/x-www-form-urlencoded
 Cookie: 0x23223
 Sec-Fetch-Dest: webidentity
-account_id=123&client_id=client1234&nonce=Ct60bD&disclosure_text_shown=true
+account_id=123&client_id=client1234&nonce=Ct60bD&disclosure_text_shown=true&fields=name,email,picture&disclosure_shown_for=name,email,picture
 ```
 </div>
 
