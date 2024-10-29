@@ -930,7 +930,7 @@ or failure.
     1. Set |rootUrl|'s [=url/scheme=] to |configUrl|'s [=url/scheme=].
     1. Set |rootUrl|'s [=url/host=] to |configUrl|'s [=url/host=]'s [=host/registrable domain=].
     1. Set |rootUrl|'s [=url/path=] to the <a>list</a> «".well-known", "web-identity"».
-    1. Let |config|, |discovery|, |accounts_url| and |login_url| be null.
+    1. Let |config|, |discovery|, |accounts_url|, and |login_url| be null.
     1. Let |rpOrigin| be |globalObject|'s [=associated Document=]'s [=Document/origin=].
     1. Let |wellKnownRequest| be a new [=/request=] as follows:
 
@@ -961,7 +961,7 @@ or failure.
         [pull request](https://github.com/whatwg/fetch/pull/1533) for details.
 
     1. [=Fetch request=] with |wellKnownRequest| and |globalObject|, and with <var ignore>processResponseConsumeBody</var>
-        set to the following steps given a <a spec=fetch for=/>response</a> |response| and |responseBody|:
+        set to the following steps, given a <a spec=fetch for=/>response</a> |response| and |responseBody|:
         1. Let |json| be the result of [=extract the JSON fetch response=] from |response| and
             |responseBody|.
         1. Set |discovery| to the result of [=converted to an IDL value|converting=] |json|
@@ -1011,9 +1011,9 @@ or failure.
             in |config|.
         1. If one of the previous two steps threw an exception, set |config| to failure.
         1. Set |login_url| to the result of [=computing the manifest URL=] with |provider|,
-            |config|.{{IdentityProviderAPIConfig/login_url}} and |globalObject|.
+            |config|.{{IdentityProviderAPIConfig/login_url}}, and |globalObject|.
         1. Set |accounts_url| to the result of [=computing the manifest URL=] with |provider|,
-            |config|.{{IdentityProviderAPIConfig/accounts_endpoint}} and |globalObject|.
+            |config|.{{IdentityProviderAPIConfig/accounts_endpoint}}, and |globalObject|.
         1. If |login_url| or |accounts_url| is failure, return failure.
     1. Wait for both |config| and |discovery| to be set.
     1. If |discovery| is null, return failure.
@@ -1023,18 +1023,18 @@ or failure.
 
         Note: Because domain cookies are valid across an entire site, there is no privacy
             benefit from doing the well-known check if the RP and IDP are in the same site.
-    1. If |discovery|.{{IdentityProviderWellKnown/accounts_endpoint}} and |discovery|.
-        {{IdentityProviderWellKnown/login_url}} are set:
+    1. If |discovery|.{{IdentityProviderWellKnown/accounts_endpoint}} and
+        |discovery|.{{IdentityProviderWellKnown/login_url}} are set:
         1. Let |well_known_accounts_url| be the result of [=computing the manifest URL=] with
-            |provider|, |discovery|.{{IdentityProviderWellKnown/accounts_endpoint}}
+            |provider|, |discovery|.{{IdentityProviderWellKnown/accounts_endpoint}},
             and |globalObject|.
         1. Let |well_known_login_url| be the result of [=computing the manifest URL=] with |provider|,
-            |discovery|.{{IdentityProviderWellKnown/login_url}} and |globalObject|.
+            |discovery|.{{IdentityProviderWellKnown/login_url}}, and |globalObject|.
         1. If |well_known_accounts_url| is not [=url/equal=] to |accounts_url|, return failure.
         1. If |well_known_login_url| is not [=url/equal=] to |login_url|, return failure.
     1. Otherwise:
         1. Let |allowed_config_url| be the result of [=computing the manifest URL=] with |provider|,
-            |discovery|.{{IdentityProviderWellKnown/provider_urls}}[0] and |globalObject|.
+            |discovery|.{{IdentityProviderWellKnown/provider_urls}}[0], and |globalObject|.
         1. If |allowed_config_url| is not [=url/equal=] to |configUrl|, return failure.
     1. Return |config|.
 
