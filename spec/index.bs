@@ -968,7 +968,7 @@ or failure.
             to an {{IdentityProviderWellKnown}}.
         1. If one of the previous two steps threw an exception, or if the
             [=list/size=] of |discovery|["{{IdentityProviderWellKnown/provider_urls}}"] is
-            greater than 1, set |discovery| to null.
+            greater than 1, set |discovery| to failure.
 
             Issue: [relax](https://github.com/fedidcg/FedCM/issues/333) the size of the
             provider_urls array.
@@ -1014,9 +1014,9 @@ or failure.
             |config|.{{IdentityProviderAPIConfig/login_url}}, and |globalObject|.
         1. Set |accounts_url| to the result of [=computing the manifest URL=] with |provider|,
             |config|.{{IdentityProviderAPIConfig/accounts_endpoint}}, and |globalObject|.
-        1. If |login_url| or |accounts_url| is failure, return failure.
+        1. If |login_url| or |accounts_url| is failure, set |config| to failure.
     1. Wait for both |config| and |discovery| to be set.
-    1. If |discovery| is null, return failure.
+    1. If |discovery| or |config| is failure, return failure.
     1. If |rpOrigin| is not an [=opaque origin=], and |rootUrl|'s [=url/host=] is equal
         to |rpOrigin|'s [=host/registrable domain=], and |rootUrl|'s [=url/scheme=] is
         equal to |rpOrigin|'s [=origin/scheme=], return |config|.
