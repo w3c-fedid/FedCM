@@ -2,7 +2,7 @@
 
 This is the repository for the W3C's FedID CG Federated Credentials Management API.
 
-Explainer: [explainer.md](explainer.md)
+Developer documentation: [Federated Credential Management (FedCM) API]([explainer.md](https://developer.mozilla.org/en-US/docs/Web/API/FedCM_API))
 
 Work-in-progress specification: <https://w3c-fedid.github.io/FedCM/>
 
