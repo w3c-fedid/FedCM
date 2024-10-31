@@ -930,7 +930,7 @@ or failure.
     1. Set |rootUrl|'s [=url/scheme=] to |configUrl|'s [=url/scheme=].
     1. Set |rootUrl|'s [=url/host=] to |configUrl|'s [=url/host=]'s [=host/registrable domain=].
     1. Set |rootUrl|'s [=url/path=] to the <a>list</a> «".well-known", "web-identity"».
-    1. Let |config|, |discovery|, |accounts_url|, and |login_url| be null.
+    1. Let |config|, |wellKnown|, |accounts_url|, and |login_url| be null.
     1. Let |skipWellKnown| be false.
     1. Let |rpOrigin| be |globalObject|'s [=associated Document=]'s [=Document/origin=].
     1. If |rpOrigin| is not an [=opaque origin=], and |rootUrl|'s [=url/host=] is equal
@@ -972,11 +972,11 @@ or failure.
             set to the following steps, given a <a spec=fetch for=/>response</a> |response| and |responseBody|:
             1. Let |json| be the result of [=extract the JSON fetch response=] from |response| and
                 |responseBody|.
-            1. Set |discovery| to the result of [=converted to an IDL value|converting=] |json|
+            1. Set |wellKnown| to the result of [=converted to an IDL value|converting=] |json|
                 to an {{IdentityProviderWellKnown}}.
             1. If one of the previous two steps threw an exception, or if the
-                [=list/size=] of |discovery|["{{IdentityProviderWellKnown/provider_urls}}"] is
-                greater than 1, set |discovery| to failure.
+                [=list/size=] of |wellKnown|["{{IdentityProviderWellKnown/provider_urls}}"] is
+                greater than 1, set |wellKnown| to failure.
 
                 Issue: [relax](https://github.com/fedidcg/FedCM/issues/333) the size of the
                 provider_urls array.
@@ -1026,20 +1026,20 @@ or failure.
     1. Wait for |config| to be set.
     1. If |config| is failure, return failure.
     1. If |skipWellKnown| is true, return |config|.
-    1. Wait for |discovery| to be set.
-    1. If |discovery| is failure, return failure.
-    1. If |discovery|.{{IdentityProviderWellKnown/accounts_endpoint}} and
-        |discovery|.{{IdentityProviderWellKnown/login_url}} are set:
+    1. Wait for |wellKnown| to be set.
+    1. If |wellKnown| is failure, return failure.
+    1. If |wellKnown|.{{IdentityProviderWellKnown/accounts_endpoint}} and
+        |wellKnown|.{{IdentityProviderWellKnown/login_url}} are set:
         1. Let |well_known_accounts_url| be the result of [=computing the manifest URL=] with
-            |provider|, |discovery|.{{IdentityProviderWellKnown/accounts_endpoint}},
+            |provider|, |wellKnown|.{{IdentityProviderWellKnown/accounts_endpoint}},
             and |globalObject|.
         1. Let |well_known_login_url| be the result of [=computing the manifest URL=] with |provider|,
-            |discovery|.{{IdentityProviderWellKnown/login_url}}, and |globalObject|.
+            |wellKnown|.{{IdentityProviderWellKnown/login_url}}, and |globalObject|.
         1. If |well_known_accounts_url| is not [=url/equal=] to |accounts_url|, return failure.
         1. If |well_known_login_url| is not [=url/equal=] to |login_url|, return failure.
     1. Otherwise:
         1. Let |allowed_config_url| be the result of [=computing the manifest URL=] with |provider|,
-            |discovery|.{{IdentityProviderWellKnown/provider_urls}}[0], and |globalObject|.
+            |wellKnown|.{{IdentityProviderWellKnown/provider_urls}}[0], and |globalObject|.
         1. If |allowed_config_url| is not [=url/equal=] to |configUrl|, return failure.
     1. Return |config|.
 
