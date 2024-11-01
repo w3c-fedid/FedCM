@@ -731,11 +731,6 @@ algorithm is invoked, the user agent MUST execute the following steps. This retu
 
 
         Issue: Support choosing accounts from multiple [=IDP=]s, as described [here](https://github.com/fedidcg/FedCM/issues/319).
-    1. The user agent can decide when to continue with the next steps.
-
-        Note: For example, user agents may show an identity provider selector before making
-            network requests, or provide a button in the URL bar and wait for user input
-            before continuing.
     1. Let |provider| be |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"][0].
     1. Let |credential| be the result of running [=create an IdentityCredential=] with |provider|,
         |options|, and |globalObject|.
@@ -775,6 +770,15 @@ To <dfn>create an IdentityCredential</dfn> given an {{IdentityProviderRequestOpt
 or a pair (failure, bool), where the bool indicates whether to skip delaying
 the exception thrown.
     1. Assert: These steps are running [=in parallel=].
+    1. The user agent MAY wait an arbitrary amount of time before continuing with the
+        next steps. The user agent MAY also return (failure, false) at this point or
+        after some arbitrary wait.
+
+        Note: For example, the user agent could show an identity provider selector and
+            only proceed once the user confirms their desire to use an identity provider.
+            Or the user agent could provide a button in the URL bar and wait for user
+            input before continuing. Or the user agent could use previous user behavior
+            to determine not to show any UI to the user and silently reject the request.
     1. Let |loginStatus| be the result of [=get the login status=] with
         the [=/origin=] of |provider|'s {{IdentityProviderConfig/configURL}}.
     1. If |loginStatus| is [=unknown=], a user agent MAY set it to [=logged-out=].
