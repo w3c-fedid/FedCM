@@ -804,6 +804,10 @@ the exception thrown.
     1. Let |config| be the result of running [=fetch the config file=] with
         |provider| and |globalObject|.
     1. If |config| is failure, return (failure, false).
+    1. Let |modeSettings| be |config|.{{IdentityProviderAPIConfig/modes}}.
+        {{IdentityProviderModes/active}} if |options|.{{IdentityCredentialRequestOptions/mode}}
+        is "active" or |config|.{{IdentityProviderAPIConfig/modes}}.{{IdentityProviderModes/passive}}
+        otherwise.
     1. <dfn>Fetch accounts step</dfn>: Let |accountsList| be the result of
         [=fetch the accounts=] with |config|, |provider|, and |globalObject|.
     1. If |accountsList| is failure, or the size of |accountsList| is 0:
@@ -890,8 +894,8 @@ the exception thrown.
             algorithm with |account|, |config|, |provider|, and |globalObject|. Also set
             |disclosureTextShown| to true.
     1. Otherwise:
-        1. Set |account| to the result of running the [=select an account=] from the
-            |accountsList|.
+        1. Set |account| to the result of running the [=select an account=] with
+            |accountsList|, |modeSettings|, |config|, |provider| and |globalObject|.
         1. If |account| is failure, return (failure, true).
         1. If [=compute the connection status=] of |account|, |provider| and |globalObject| is
             [=compute the connection status/connected=], set |permission| to true.
@@ -1053,6 +1057,15 @@ dictionary IdentityProviderBranding {
   USVString name;
 };
 
+dictionary IdentityProviderModeSettings {
+  boolean supports_use_other_account;
+};
+
+dictionary IdentityProviderModes {
+  IdentityProviderModeSettings active;
+  IdentityProviderModeSettings passive;
+};
+
 dictionary IdentityProviderAPIConfig {
   required USVString accounts_endpoint;
   required USVString client_metadata_endpoint;
@@ -1060,6 +1073,7 @@ dictionary IdentityProviderAPIConfig {
   required USVString login_url;
   USVString disconnect_endpoint;
   IdentityProviderBranding branding;
+  IdentityProviderModes modes;
 };
 </xmp>
 
@@ -1267,10 +1281,17 @@ dictionary IdentityProviderToken {
 <!-- ============================================================ -->
 
 <div algorithm>
-To <dfn>select an account</dfn> given an |accountsList|, run the following steps. This returns an
-{{IdentityProviderAccount}} or failure.
+To <dfn>select an account</dfn> given an |accountsList|, {{IdentityProviderModeSettings}}
+|modeSettings|, an {{IdentityProviderAPIConfig}} |config|, an {{IdentityProviderConfig}} |provider|,
+and a |globalObject|, run the following steps. This returns an {{IdentityProviderAccount}} or
+failure.
     1. Assert |accountsList|'s [=list/size=] is greater than 1.
     1. Display an account chooser displaying the options from |accountsList|.
+    1. If |modeSettings|.{{IdentityProviderModeSettings/supports_use_other_account}} is true,
+        the account chooser MUST provide an affordance to use another account. If that
+        affordance is triggered:
+        1. [=Show an IDP login dialog=] with |config|, |provider| and |globalObject|.
+        1. If that returned sucess, go back to the [=fetch accounts step=].
     1. Let |account| be the {{IdentityProviderAccount}} of the account that the user
         manually selects from the accounts chooser, or failure if no account is selected.
     1. Return |account|.
