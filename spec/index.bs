@@ -895,8 +895,13 @@ the exception thrown.
             |accountsList|.
         1. If |account| is failure, return (failure, true).
         1. If [=compute the connection status=] of |account|, |provider| and |globalObject| is
-            [=compute the connection status/connected=], or if |provider|.
-            {{IdentityProviderRequestOptions/fields}} is [=list/empty=], set |permission| to true.
+            [=compute the connection status/connected=], set |permission| to true.
+        1. Otherwise, if |provider|.{{IdentityProviderRequestOptions/fields}} is [=list/empty=],
+            [=create a connection between the RP and the IdP account=] with |provider|, |account|,
+            and |globalObject| and set |permission| to |true|.
+
+            Note: The connection would normally be created in the [=request permission to sign-up=]
+                algorithm, but we do not want to show an extra dialog in this case.
         1. Otherwise:
             1. Let |permission| be the result of running the [=request permission to sign-up=]
                 algorithm with |account|, |config|, |provider|, and |globalObject|.
@@ -1212,15 +1217,20 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
         1. ("account_id",  |accountId|)
         1. ("is_auto_selected", |isAutoSelected|)
     1. If |fields| is not empty:
-        1. Let |serializedFields| be the entries of |fields| concatenated with a comma ("`,`")
+        1. Let |fieldsString| be the entries of |fields| concatenated with a comma ("`,`")
             between elements.
-        1. Append ("fields", |serializedFields|) to |list|.
+        1. Append ("fields", |fieldsString|) to |list|.
     1. If |disclosureShownFor| is not empty:
-        1. Let |serializedDisclosure| be the entries of |disclosureShownFor| concatenated
+        1. Let |disclosureString| be the entries of |disclosureShownFor| concatenated
             with a comma ("`,`") between elements.
-        1. Append ("disclosure_shown_for", |serializedDisclosure|) to |list|.
+        1. Append ("disclosure_shown_for", |disclosureString|) to |list|.
     1. If |disclosureShownFor| contains all of "name", "email", and "picture", append
         ("disclosure_text_shown", true) to |list|.
+
+        Note: This parameter exists for backwards compatibility with older identity providers
+            that do not yet support `disclosure_shown_for`. At the time, the disclosure text,
+            if shown, always included name, email and picture. Newer identity providers should
+            check `disclosure_shown_for` instead.
     1. If |provider|'s {{IdentityProviderRequestOptions/params}} is not empty:
         1. Let |json| be the result of [=serializing a JavaScript value to a JSON string=]
             with |provider|'s {{IdentityProviderRequestOptions/params}}.
@@ -1301,15 +1311,16 @@ To <dfn>request permission to sign-up</dfn> the user with a given an {{IdentityP
 an {{IdentityProviderAPIConfig}} |config|, an {{IdentityProviderRequestOptions}} |provider|, and a
 |globalObject|, run the following steps. This returns a boolean.
     1. Assert: These steps are running [=in parallel=].
-    1. Let |metadata| be the result of running [=fetch the client metadata=] with |config|,
-        |provider|, and |globalObject|.
-    1. Let |fields| be |provider|.{{IdentityProviderRequestOptions/fields}} or, if not specified,
+    1. Let |fields| be |provider|.{{IdentityProviderRequestOptions/fields}} or, if not present,
         `["name", "email", "picture"]`.
 
-        Note: Unspecified is different from an explicitly specified empty list.
+        Note: Omitted is different from an explicitly present empty list.
+    1. Let |metadata| be null.
+    1. If |fields| is not [=list/empty=], set |metadata| to the result of running [=fetch the client
+        metadata=] with |config|, |provider|, and |globalObject|.
     1. Prompt the user to gather explicit intent to create an account. The user agent MAY use the
         {{IdentityProviderBranding}} to inform the style choices of its UI. Additionally:
-        1. If |provider|.{{IdentityProviderRequestOptions/fields}} is not [=list/empty=]:
+        1. If |fields| is not [=list/empty=]:
             1. If |metadata| is not failure, |metadata|["{{IdentityProviderClientMetadata/privacy_policy_url}}"]
                 is defined, and the |provider|'s {{IdentityProviderConfig/clientId}} is not in the list of
                 |account|["{{IdentityProviderAccount/approved_clients}}"], then the user agent MUST display
