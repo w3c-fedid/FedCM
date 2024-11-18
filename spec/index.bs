@@ -451,7 +451,7 @@ This specification introduces a new type of {{Credential}}, called an {{Identity
     ::  The {{Credential/id}}'s attribute getter returns the empty string.
     :   <b>{{IdentityCredential/token}}</b>
     ::  The {{IdentityCredential/token}}'s attribute getter returns the value it is set to.
-        It represents the minted {{IdentityProviderToken/token}} provided by the [=IDP=].
+        It represents the minted {{IdentityAssertionResponse/token}} provided by the [=IDP=].
     :   <b>{{IdentityCredential/isAutoSelected}}</b>
     ::  {{IdentityCredential/isAutoSelected}}'s attribute getter returns the value it is
         set to. It represents whether the user's identity credential was automatically selected when
@@ -673,8 +673,8 @@ dictionary IdentityProviderRequestOptions : IdentityProviderConfig {
     ::  The {{id_assertion_endpoint_request/client_id}} provided to the [=RP=] out of band by the [=IDP=]
     :   <b>{{IdentityProviderRequestOptions/nonce}}</b>
     ::  A random number of the choice of the [=RP=]. It is generally used to associate a client
-        session with a {{IdentityProviderToken/token}} and to mitigate replay attacks. Therefore, this value should have
-        sufficient entropy such that it would be hard to guess.
+        session with a {{IdentityAssertionResponse/token}} and to mitigate replay attacks.
+        Therefore, this value should have sufficient entropy such that it would be hard to guess.
     :   <b>{{IdentityProviderRequestOptions/loginHint}}</b>
     ::  A string representing the login hint corresponding to an account which the RP wants the user
         agent to show to the user. If provided, the user agent will not show accounts which do not
@@ -1261,12 +1261,33 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
         set to the following steps given a <a spec=fetch for=/>response</a> |response| and |responseBody|:
         1. Let |json| be the result of [=extract the JSON fetch response=] from |response| and
             |responseBody|.
-        1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderToken}}, |token|.
+        1. [=converted to an IDL value|Convert=] |json| to an {{IdentityAssertionResponse}}, |token|.
         1. If one of the previous two steps threw an exception, set |credential| to failure
             and return.
+        1. If neither {{IdentityAssertionResponse/token}} nor
+            {{IdentityAssertionResponse/continue_on}} was specified, set |credential| to failure
+            and return.
+        1. If {{IdentityAssertionResponse/token}} was specified, let |tokenString|
+            be |token|'s {{IdentityAssertionResponse/token}}.
+        1.  Otherwise, run these steps [=in parallel=]:
+            1. Let |continueOnUrl| be the result of running [=parse url=] with |token|'s
+                {{IdentityAssertionResponse/continue_on}} and |globalObject|.
+            1. If |continueOnUrl| is failure, set |credential| to failure and return.
+            1. If |continueOnUrl| is not [=same origin=] with |tokenUrl|, set |credential|
+                to failure and return.
+            1. Let |tokenPair| be the result of [=show a continuation dialog=] with |continueOnUrl|.
+            1. If |tokenPair| is failure, set |credential| to failure and return.
+            1. Let |tokenString| be the first entry of |tokenPair|.
+            1. If the second entry of |tokenPair| is not null, set |accountId| to that second entry.
+        1. Wait for |tokenString| or |credential| to be set.
+        1. If |credential| is set:
+            1. Assert that |credential| is set to failure.
+            1. Return |credential|.
+        1. [=Create a connection between the RP and the IdP account=] with |provider|, |accountId|, and
+            |globalObject|.
         1. Let |credential| be a new {{IdentityCredential}} given |globalObject|'s
             <a for="global object">realm</a>.
-        1. Set |credential|'s {{IdentityCredential/token}} to |token|.
+        1. Set |credential|'s {{IdentityCredential/token}} to |tokenString|.
         1. Set |credential|'s {{IdentityCredential/isAutoSelected}} to
             |isAutoSelected|.
     1. Wait for |credential| to be set.
@@ -1274,8 +1295,9 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
 </div>
 
 <xmp class="idl">
-dictionary IdentityProviderToken {
-  required USVString token;
+dictionary IdentityAssertionResponse {
+  USVString token;
+  USVString continue_on;
 };
 </xmp>
 
@@ -1318,8 +1340,6 @@ an {{IdentityProviderAPIConfig}} |config|, an {{IdentityProviderRequestOptions}}
             {{IdentityCredentialRequestOptions/context}} and |options|'s
             {{IdentityCredentialRequestOptions/mode}} to customize the dialog shown.
     1. If the user does not grant permission, return false.
-    1. [=Create a connection between the RP and the IdP account=] with |provider|, |account|, and
-        |globalObject|.
     1. Return true.
 </div>
 
@@ -1484,6 +1504,32 @@ success or failure.
 </div>
 
 <div algorithm>
+To <dfn>show a continuation dialog</dfn> given a |continueOnUrl|, run the
+following steps. This returns a failure or a tuple (string, string?) (a token
+and an optional account ID).
+    1. Assert: these steps are running [=in parallel=].
+    1. [=Create a fresh top-level traversable=] with |continueOnUrl|.
+    1. The user agent MAY [=set up browsing context features=] or otherwise
+        affect the presentation of this traversable in an implementation-defined
+        way.
+    1. Wait for the first occurence of one of the following conditions:
+        * The user closes the browsing context: return failure.
+        * {{IdentityProvider}}.{{IdentityProvider/close}} is called in the
+            context of this new traversable:
+            1. Close the traversable.
+            1. Return failure.
+        * {{IdentityProvider}}.{{IdentityProvider/resolve()}} is called in
+            the context of this new traversable.
+            1. Close the traversable.
+            1. Let |token| be the token that was passed to that resolve call.
+            1. If {{IdentityResolveOptions/accountId}} was specified in the
+                resolve call, let |accountId| be that account ID.
+            1. Otherwise, let |accountId| be null.
+            1. Return (|token|, |accountId|).
+
+</div>
+
+<div algorithm>
 To <dfn>fetch the config file and show an IDP login dialog</dfn> given an
 {{IdentityProviderConfig}} |provider|, and a |globalObject|, run the following
 steps. This returns success or failure.
@@ -1511,8 +1557,13 @@ This specification introduces the {{IdentityUserInfo}} dictionary as well as the
     USVString picture;
   };
 
+  dictionary IdentityResolveOptions {
+    USVString accountId;
+  };
+
   [Exposed=Window, SecureContext] interface IdentityProvider {
       static undefined close();
+      static undefined resolve(DOMString token, optional IdentityResolveOptions options = {});
       static Promise&lt;sequence&lt;IdentityUserInfo&gt;&gt; getUserInfo(IdentityProviderConfig config);
   };
 </pre>
@@ -1978,22 +2029,26 @@ the <a http-header>Origin</a> header value is represented by the
 [=IDP=]-specific, the [=user agent=] cannot perform this check.
 </div>
 
-The response body must be a JSON object that can be [=converted to an IDL value|converted=] to an {{IdentityProviderToken}} without an exception.
+The response body must be a JSON object that can be [=converted to an IDL value|converted=] to an {{IdentityAssertionResponse}} without an exception.
 
-Every {{IdentityProviderToken}} is expected to have members with the following semantics:
+Every {{IdentityAssertionResponse}} is expected to have members with the following semantics:
 
-<dl dfn-type="dict-member" dfn-for="IdentityProviderToken">
+<dl dfn-type="dict-member" dfn-for="IdentityAssertionResponse">
     :   <dfn>token</dfn>
     ::  The resulting token.
+    :   <dfn>continue_on</dfn>
+    ::  A URL that the user agent will open in a popup to finish the authentication process.
 </dl>
 
-The content of the {{IdentityProviderToken/token}} is opaque to the user agent and can contain
+Only one of `token` and `continue_on` should be specified.
+
+The content of the {{IdentityAssertionResponse/token}} is opaque to the user agent and can contain
 anything that the [=IDP=] would like to pass to the
 [=RP=] to facilitate the login. For this reason the [=RP=]
-is expected to be the party responsible for validating the {{IdentityProviderToken/token}} passed
-along from the [=IDP=] using the appropriate token validation
-algorithms defined. One example of how this might be done is defined
-in [[OIDC-Connect-Core#IDTokenValidation]].
+is expected to be the party responsible for validating the
+{{IdentityAssertionResponse/token}} passed along from the [=IDP=] using the
+appropriate token validation algorithms defined. One example of how this might
+be done is defined in [[OIDC-Connect-Core#IDTokenValidation]].
 
 NOTE: For [=IDPs=], it is worth considering how
 [portable](https://github.com/fedidcg/FedCM/issues/314) accounts are.
