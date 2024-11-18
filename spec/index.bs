@@ -1279,7 +1279,10 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
             1. If |tokenPair| is failure, set |credential| to failure and return.
             1. Let |tokenString| be the first entry of |tokenPair|.
             1. If the second entry of |tokenPair| is not null, set |accountId| to that second entry.
-        1. Wait for |tokenString| to be set.
+        1. Wait for |tokenString| or |credential| to be set.
+        1. If |credential| is set:
+            1. Assert that |credential| is set to failure.
+            1. Return |credential|.
         1. [=Create a connection between the RP and the IdP account=] with |provider|, |accountId|, and
             |globalObject|.
         1. Let |credential| be a new {{IdentityCredential}} given |globalObject|'s
