@@ -2,7 +2,7 @@
 
 This is the repository for the W3C's FedID CG Federated Credentials Management API.
 
-Developer documentation: [Federated Credential Management (FedCM) API]([explainer.md](https://developer.mozilla.org/en-US/docs/Web/API/FedCM_API))
+Developer documentation: [Federated Credential Management (FedCM) API](https://developer.mozilla.org/en-US/docs/Web/API/FedCM_API)
 
 Work-in-progress specification: <https://w3c-fedid.github.io/FedCM/>
 
@@ -21,8 +21,9 @@ the removal of third-party cookies on federated login. Historically this has
 relied on third-party cookies or navigational redirects in order to function
 as they were the primitives provided by the web.
 
-The [explainer](explainer.md) and [spec](https://w3c-fedid.github.io/FedCM)
-provide a potential API and the rational behind how that API was designed.
+The [documentation](https://developer.mozilla.org/en-US/docs/Web/API/FedCM_API)
+and [spec](https://w3c-fedid.github.io/FedCM) provide a potential API and the
+rational behind how that API was designed.
 
 ## Contributing
 
