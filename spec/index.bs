@@ -862,6 +862,15 @@ the exception thrown.
     1. Assert: |accountsList| is not failure and the size of |accountsList| is not 0.
     1. [=Set the login status=] for the [=/origin=] of the
         {{IdentityProviderConfig/configURL}} to [=logged-in=].
+    1. For each |acc| in |accountsList|:
+        1. If |acc|["{{IdentityProviderAccount/picture}}"] is present, [=fetch the account picture=]
+            with |acc| and |globalObject|. If the [=user agent=] displays this picture to
+            the user at any point, it MUST reuse the result of this fetch instead of redownloading
+            the picture.
+
+        Note: We require downloading the pictures here before we potentially filter the account
+            list so that the identity provider cannot determine what hints were provided
+            based on which fetches occurred.
     1. If |provider|'s {{IdentityProviderRequestOptions/loginHint}} is not empty:
         1. For every |account| in |accountList|, remove |account| from |accountList| if |account|'s
             {{IdentityProviderAccount/login_hints}} does not [=list/contain=] |provider|'s
@@ -876,13 +885,6 @@ the exception thrown.
                 {{IdentityProviderAccount/domain_hints}} does not [=list/contain=] |provider|'s
                 {{IdentityProviderRequestOptions/domainHint}}.
         1. If |accountList| is now empty, go to the [=mismatch dialog step=].
-    1. For each |acc| in |accountsList|:
-        1. If |acc|["{{IdentityProviderAccount/picture}}"] is present, [=fetch the account picture=]
-            with |acc| and |globalObject|.
-
-        Note: The [=user agent=] may choose to show UI which does not initially require fetching the
-        account pictures. In these cases, the [=user agent=] may delay these fetches until they are
-        needed. Because errors from these fetches are ignored, they can happen in any order.
     1. Let |registeredAccount|, |numRegisteredAccounts| be null and 0, respectively.
     1. Let |account| be null.
     1. For each |acc| in |accountsList|:
