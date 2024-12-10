@@ -441,6 +441,7 @@ This specification introduces a new type of {{Credential}}, called an {{Identity
     static Promise&lt;undefined&gt; disconnect(IdentityCredentialDisconnectOptions options);
     readonly attribute USVString? token;
     readonly attribute boolean isAutoSelected;
+    readonly attribute USVString configURL;
   };
 </pre>
 
@@ -454,6 +455,9 @@ This specification introduces a new type of {{Credential}}, called an {{Identity
     ::  {{IdentityCredential/isAutoSelected}}'s attribute getter returns the value it is
         set to. It represents whether the user's identity credential was automatically selected when
         going through the UI flow which resulted in this {{IdentityCredential}}.
+    : <b>{{IdentityCredential/configURL}}</b>
+    :: The {{IdentityCredential/configURL}}'s attribute getter returns the value it is set to.
+        It represents the config URL corresponding to the [=IDP=] which issued this credential.
     :   <b>{{Credential/[[type]]}}</b>
     ::  The {{IdentityCredential}}'s {{Credential/[[type]]}}'s value is "<b>identity</b>".
     :   <b>{{Credential/[[discovery]]}}</b>
@@ -1394,6 +1398,8 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
         1. Set |credential|'s {{IdentityCredential/token}} to |tokenString|.
         1. Set |credential|'s {{IdentityCredential/isAutoSelected}} to
             |isAutoSelected|.
+        1. Set |credential|'s {{IdentityCredential/configURL}} to |provider|'s
+            {{IdentityProviderConfig/configURL}}.
     1. Wait for |credential| to be set.
     1. Return |credential|.
 </div>
