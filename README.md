@@ -23,7 +23,7 @@ as they were the primitives provided by the web.
 
 The [documentation](https://developer.mozilla.org/en-US/docs/Web/API/FedCM_API)
 and [spec](https://w3c-fedid.github.io/FedCM) provide a potential API and the
-rational behind how that API was designed.
+rationale behind that API's design.
 
 ## Contributing
 
