@@ -797,12 +797,15 @@ the exception thrown.
     1. Let |mediation| be |options|'s {{CredentialRequestOptions/mediation}}.
     1. Let |providerMap| be a new [=map=].
     1. For each |provider| in |providerList|:
+        Note: The fetches performed in these steps to populate |providerMap| can be peformed at the
+            same time, e.g. the second [=IDP=]'s fetches can be started before the first ones finish,
+            since these are indepedent.
         1. Let |providerOrigin| be the [=/origin=] of |provider|'s {{IdentityProviderConfig/configURL}}.
         1. If |providerMap| [=map/contains=] |providerOrigin|, return (failure, true).
         1. Let |loginStatus| be the result of [=get the login status=] with |providerOrigin|.
         1. If |loginStatus| is [=unknown=], a user agent MAY set it to [=logged-out=].
         1. If |loginStatus| is [=logged-out=]:
-            1. If |mode| is {{IdentityCredentialRequestOptionsMode/active}}: 
+            1. If |mode| is {{IdentityCredentialRequestOptionsMode/active}}:
                 1. Let |result| be the result of running
                     [=fetch the config file and show an IDP login dialog=] with
                     |provider| and |globalObject|.
@@ -845,24 +848,48 @@ the exception thrown.
                     {{IdentityProviderRequestOptions/domainHint}}.
             1. If |accountList| is now empty, go to the [=mismatch dialog step=].
         1. Set |providerMap|[|providerOrigin|] to |accountsList|.
-    1. If |providerMap| [=map/is empty=], return (failure, false).
-    1. For each |providerOrigin|, |value| in |providerMap|:
+    1. If |providerMap| is [=map/is empty=], return (failure, false).
+    1. The user agent will now create a prompt to the user by building on the values from |providerMap|.
+    1. Let |registeredAccount|, |numRegisteredAccounts| be null and 0, respectively.
+    1. Let |selectedAccount| be null.
+    1. For each (|providerOrigin|, |value|) in |providerMap|:
         1. If |value| is not a [=list=] |accountsList|, [=continue=].
-        1. If |providerMap|[|providerOrigin|] is "logged-out", the user agent MUST do one of the following:
-            * Return (failure, false).
-            * Prompt the user whether to continue. If the user continues, the user
-                agent SHOULD set |loginStatus| to [=unknown=]. This MAY include an
+        1. For each |acc| in |accountsList|:
+            1. If |acc|["{{IdentityProviderAccount/picture}}"] is present, [=fetch the account picture=]
+                with |acc| and |globalObject|.
+
+            Note: The [=user agent=] may choose to show UI which does not initially require fetching the
+            account pictures. In these cases, the [=user agent=] may delay these fetches until they are
+            needed. Because errors from these fetches are ignored, they can happen in any order.
+        1. For each |acc| in |accountsList|:
+            1. If |acc| is [=eligible for auto reauthentication=] given the relevant |provider|, and
+                |globalObject|, set |registeredAccount| to |acc|, increase |numRegisteredAccounts| by 1,
+                and set |requiresUserMediation| be |providerOrigin|'s [=requires user mediation=].
+    1. If |mediation| is not "{{CredentialMediationRequirement/required}}", |requiresUserMediation|
+        is false, |numRegisteredAccounts| is equal to 1, and |providerMap|'s [=map/values=] do not
+        [=map/contain=] "mismatch":
+        1. Set |selectedAccount| to |registeredAccount| and |permission| to true. When doing this, the user
+            agent MAY show some UI to the user indicating that they are being
+            <dfn>auto-reauthenticated</dfn>.
+        1. Set |isAutoSelected| to true.
+    1. Otherwise, if |mediation| is "{{CredentialMediationRequirement/silent}}" and |providerMap|'s
+        [=map/values=] do not [=map/contain=] "mismatch", return (failure, true).
+    1. Let |permission|, |disclosureTextShown|, and |isAutoSelected| be set to false.
+    1. Build UI by adding the following for each (|providerOrigin|, |value|) in |providerMap|:
+        1. If |value| is "logged-out", the user agent adds one of the following:
+            * Nothing: no UI is shown regarding this [=IDP=].
+            * Prompt to continue with this [=IDP=]. If the user continues, the user
+                agent SHOULD set the login status to [=unknown=]. This MAY include an
                 affordance to [=show an IDP login dialog=].
                 * If the user cancels this dialog, return (failure, true).
                 * If the user triggers this affordance:
                     1. Let |result| be the result of running
                         [=fetch the config file and show an IDP login dialog=]
-                        with |provider| and |globalObject|.
+                        with the relevant |provider| and |globalObject|.
                     1. If |result| is failure, return (failure, true).
-        1. If |providerMap|[|providerOrigin|] is "mismatch", show a
-            dialog to the user. The contents of this dialog are defined by the user
-            agent. This dialog SHOULD provide an affordance for the user to trigger
-            the [=show an IDP login dialog=] algorithm with |config| and |provider|;
+        1. Otherwise, if |value| is "mismatch", add contents indicating this [=IDP=]
+            to the user. The contents SHOULD provide an affordance for the user to trigger
+            the [=show an IDP login dialog=] algorithm with the relevant |config| and |provider|;
             this dialog is the <dfn>confirm IDP login dialog</dfn>.
 
             Note: This situation happens when the browser expects the user
@@ -875,6 +902,8 @@ the exception thrown.
 
             1. Wait until one of the following occurs:
 
+                * If the user selects another option, do nothing.
+                
                 * If the user closes the dialog, return (failure, true).
 
                 * If the [=show an IDP login dialog=] algorithm was triggered:
@@ -921,7 +950,7 @@ the exception thrown.
         is false, and |numRegisteredAccounts| is equal to 1:
         1. Set |account| to |registeredAccount| and |permission| to true. When doing this, the user
             agent MAY show some UI to the user indicating that they are being
-            <dfn>auto-reauthenticated</dfn>.
+            [=auto-reauthenticated=].
         1. Set |isAutoSelected| to true.
     1. Otherwise, if |mediation| is "{{CredentialMediationRequirement/silent}}", return (failure, true).
     1. Otherwise, if |accountsList|'s size is 1:
@@ -952,10 +981,10 @@ the exception thrown.
             1. Set |permissionRequested| to true.
     1. Wait until the [=user agent=]'s dialogs requesting for user choice or permission to be
         closed, if any are created in the previous steps.
-    1. Assert: |account| is not null.
+    1. Assert: |selectedAccount| is not null.
     1. If |permission| is false, then return (failure, true).
     1. Let |credential| be the result of running the [=fetch an identity assertion=] algorithm with
-        |account|'s {{IdentityProviderAccount/id}}, |permissionRequested|, |isAutoSelected|,
+        |selectedAccount|'s {{IdentityProviderAccount/id}}, |disclosureTextShown|, |isAutoSelected|,
         |provider|, |config|, and |globalObject|.
     1. Return |credential|.
 </div>
