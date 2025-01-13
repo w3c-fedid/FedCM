@@ -786,18 +786,18 @@ or a pair (failure, bool), where the bool indicates whether to skip delaying
 the exception thrown.
     1. Assert: These steps are running [=in parallel=].
     1. Let |mode| be |options|'s {{IdentityCredentialRequestOptions/mode}}.
-    1. If |mode| is [=active=]:
-        1. Let |W| be |globalObject|'s [=associated Window=].
-        1. If |W| does not have [=transient activation=], return (failure, true).
-        1. Otherwise, if there is a pending request where |mode| is [=passive=]
-            on |W|'s [=Window/navigable=]'s [=navigable/top-level traversable=]
-            or on any of its descendants, reject the pending request with a
-            "{{NetworkError}}" {{DOMException}}.
+    1. If |mode| is {{IdentityCredentialRequestOptionsMode/active}}:
+        1. Assert: |globalObject| is a {{Window}}.
+        1. If |globalObject| does not have [=transient activation=], return (failure, true).
+        1. Otherwise, if there is a pending request where |mode| is
+            {{IdentityCredentialRequestOptionsMode/passive}} on |globalObject|'s [=Window/navigable=]'s
+            [=navigable/top-level traversable=] or on any of its descendants, reject the pending
+            request with a "{{NetworkError}}" {{DOMException}}.
     1. Let |loginStatus| be the result of [=get the login status=] with
         the [=/origin=] of |provider|'s {{IdentityProviderConfig/configURL}}.
     1. If |loginStatus| is [=unknown=], a user agent MAY set it to [=logged-out=].
     1. If |loginStatus| is [=logged-out=]:
-        1. If |mode| is [=active=]: 
+        1. If |mode| is {{IdentityCredentialRequestOptionsMode/active}}:
             1. Let |result| be the result of running
                 [=fetch the config file and show an IDP login dialog=] with
                 |provider| and |globalObject|.
@@ -917,7 +917,7 @@ the exception thrown.
             [=compute the connection status/connected=], set |permission| to true.
         1. Otherwise, if |provider|.{{IdentityProviderRequestOptions/fields}} is [=list/empty=],
             [=create a connection between the RP and the IdP account=] with |provider|, |account|,
-            and |globalObject|, and set |permission| to |true|.
+            and |globalObject|, and set |permission| to true.
 
             Note: The connection would normally be created in the [=request permission to sign-up=]
                 algorithm, but we do not want to show an extra dialog in this case.
@@ -1407,7 +1407,7 @@ an {{IdentityProviderAPIConfig}} |config|, an {{IdentityProviderRequestOptions}}
 
                 Any other string is ignored for forwards compatibility.
             1. The user agent MAY use the
-                {{IdentityCredentialRequestOptions/context}} and |options|'s
+                {{IdentityCredentialRequestOptions/context}} and |provider|'s
                 {{IdentityCredentialRequestOptions/mode}} to customize the dialog shown.
     1. If the user does not grant permission, return false.
     1. Return true.
@@ -1888,7 +1888,7 @@ developer provides an icon that is not square, the [=user agent=] may choose to 
 all, trim the icon and show a square portion of it, or even transform it into a square icon and show
 that.
 
-The <dfn>color</dfn> is a subset of CSS <<color>> syntax, namely <<hex-color>>s, ''hsl()''s, ''rgb()''s and <<named-color>>.
+The {{IdentityProviderBranding/color}} is a subset of CSS <<color>> syntax, namely <<hex-color>>s, ''hsl()''s, ''rgb()''s and <<named-color>>.
 
 For example:
 
