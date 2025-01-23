@@ -872,7 +872,7 @@ the exception thrown.
                 continue.
         1. Set |providerMap|[|providerOrigin|] to |accountsList|.
     1. If |providerMap| [=map/is empty=], return (failure, false).
-    1. Let |registeredAccount|, |numRegisteredAccounts| be null and 0, respectively.
+    1. Let |registeredAccount| and |numRegisteredAccounts| be null and 0, respectively.
     1. Let |selectedAccount| be null.
     1. For each (|providerOrigin|, |value|) in |providerMap|:
         1. If |value| is not a [=list=] |accountsList|, [=continue=].
@@ -936,16 +936,15 @@ the exception thrown.
                 result in |permission|. The user agent MAY use |options|'s
                 {{IdentityCredentialRequestOptions/context}} and |options|'s
                 {{IdentityCredentialRequestOptions/mode}} to customize the dialog.
-            1. Otherwise, let |permission| be the result of running [=request permission to sign-up=]
+            1. Otherwise, set |permission| to the result of running [=request permission to sign-up=]
                 algorithm with |selectedAccount|, the relevant |config|, the relevant |provider|,
                 and |globalObject|. Also set |permissionRequested| to true if the user agent
                 [=supports showing a permission prompt=].
         1. Otherwise:
-            1. Assert |allAccounts|'s [=list/size=] is greater than 1.
             1. Show UI to allow the user to select an account chooser displaying the options from
                 |accountsList|.
             1. If the user selects an account, perform the following steps:
-                1. Let |selectedAccount| be the {{IdentityProviderAccount}} chosen.
+                1. Set |selectedAccount| to the chosen {{IdentityProviderAccount}}.
                 1. If [=compute the connection status=] of |selectedAccount|, the relevant |provider|,
                     and |globalObject| is [=compute the connection status/connected=], set |permission|
                     to true.
@@ -955,12 +954,12 @@ the exception thrown.
                     Note: The connection would normally be created in the [=request permission to sign-up=]
                         algorithm, but we do not want to show an extra dialog in this case.
                 1. Otherwise:
-                    1. Let |permission| be the result of running the [=request permission to sign-up=]
+                    1. Set |permission| to the result of running the [=request permission to sign-up=]
                         algorithm with |selectedAccount|, the relevant |config|, the relevant |provider|,
                         and |globalObject|.
                     1. Set |permissionRequested| to true.
-    1. Wait until the [=user agent=]'s dialogs requesting for user choice or permission to be
-        closed, if any are created in the previous steps.
+    1. If the [=user agent=] created any dialogs requesting user choice or permission in the previous
+        steps, wait until they are closed.
     1. Assert: |selectedAccount| is not null.
     1. If |permission| is false, then return (failure, true).
     1. Let |credential| be the result of running the [=fetch an identity assertion=] algorithm with
