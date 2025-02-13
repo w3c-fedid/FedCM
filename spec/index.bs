@@ -2561,6 +2561,49 @@ separate section for [[#privacy]] considerations.
 
 In FedCM, there are various assets that need to be protected. All of the endpoints need basic
 protections, and the credentialed ones need protections from various kinds of attacks and threats.
+
+<!-- ============================================================ -->
+## Security Assumptions ## {#security-assumptions}
+<!-- ============================================================ -->
+
+The design of FedCM relies on several key security assumptions:
+
+<!-- ============================================================ -->
+### Trusted User Agent ### {#trusted-user-agent}
+<!-- ============================================================ -->
+
+The user agent (i.e., the browser) is assumed to be a trusted entity. It is expected to faithfully 
+enforce same-origin policies, execute CSP and CORS checks, and present a secure, non-forgeable UI 
+that users can trust, and to not contains or executes malicious third parties scripts. The browser 
+is responsible for mediating the flow and preventing unauthorized access to credentials.
+
+<!-- ============================================================ -->
+### Secure Network and Transport ### {#secure-network-transport}
+<!-- ============================================================ -->
+
+All network requests — especially those carrying sensitive information such as tokens — occur over
+secure channels (e.g. HTTPS). The specification assumes that the transport layer prevents 
+man-in-the-middle and other network attacks.
+
+<!-- ============================================================ -->
+### Proper Implementation of Security Headers ### {#proper-implementation-headers}
+<!-- ============================================================ -->
+
+[=IDP=] and [=RP=] implement and enforce appropriate security headers (such as CSP, CORS, 
+and the mandatory use of the `Sec-Fetch-Dest: webidentity` header). These headers are key to 
+distinguishing browser-initiated FedCM flows from arbitrary requests.
+
+<!-- ============================================================ -->
+### IDP and RP Integrity ### {#idp-and-rp-integrity}
+<!-- ============================================================ -->
+
+[=IDP=] and [=RP=] endpoints are implemented correctly and do not contain vulnerabilities that could 
+allow an attacker to bypass the FedCM flow or extract sensitive data.
+
+<!-- ============================================================ -->
+## Threats and Attacks ## {#security-threats-aattacks}
+<!-- ============================================================ -->
+
 The following subsections cover the various security threats and the mitigations from the FedCM
 spec.
 
@@ -2568,21 +2611,33 @@ spec.
 ## Cross-Site Scripting ## {#cross-site-scripting}
 <!-- ============================================================ -->
 
+**Threat**
+
 Imagine a malicious script included by (and running as) the [=RP=] attempting to execute the FedCM
 API calls to a legitimate [=IDP=]. If the call is successful, this would introduce some browser UI
 where all parties might look legitimate to the user. If the user logs in using the FedCM API in this
 scenario, their credentials are then received by the malicious script, which can then send it to its
-own server. The protection against this attack is to sanitize all user input to prevent script
+own server.
+
+**Mitigation**
+
+The protection against this attack is to sanitize all user input to prevent script
 injection, and to use [[!CSP]] to restrict the execution of inline scripts.
+
+**Threat**
 
 A script could also instead use the FedCM API to request credentials from some [=IDP=] that is not
 approved by the [=RP=]. If the user went through this flow, these credentials could also be stolen,
-or the [=RP=]'s reputation could be harmed. An additional protection for this scenario is that the
-origin of the [=config file=] of the malicious [=IDP=] would not be an origin included in the
-allowlist specified by the [[CSP#directive-connect-src|connect-src]] [[!CSP]] check of the [=RP=],
-hence preventing the undesired FedCM UI from being shown. Since any subsequent fetches are same
-origin with respect to the [=config file=] or at least dependent on the contents of the [=config
-file=], they do not require additional checks.
+or the [=RP=]'s reputation could be harmed.
+
+**Mitigation**
+
+An additional protection for this scenario is that the origin of the [=config file=] of the
+malicious [=IDP=] would not be an origin included in the allowlist specified by the
+[[CSP#directive-connect-src|connect-src]] [[!CSP]] check of the [=RP=], hence preventing the
+undesired FedCM UI from being shown. Since any subsequent fetches are same origin with respect to
+the [=config file=] or at least dependent on the contents of the [=config file=], they do not
+require additional checks.
 
 Note that the non-same-origin fetches include, for example, the brand icon. The user agent does not
 perform a [[!CSP]] check on these because they are directly specified from the manifest. In
@@ -2593,57 +2648,80 @@ affect the [=RP=] site nor can they be inspected by the [=RP=] in any way.
 ## Unauthorized Fetching ## {#unauthorized-fetching}
 <!-- ============================================================ -->
 
+**Threat**
+
 The FedCM API introduces several non-static endpoints on the [=IDP=]. These are meant to be invoked
 only by the user agent as part of a FedCM flow. If an attacker wanted to invoke these endpoints
 directly, the [=IDP=] should have the capability to revoke the fetch. This applies even if the call
 originated from a valid [=RP=] so just having the origin of the fetch is not a sufficient mitigation
-here. In order to distinguish the fetches that are initiated from the FedCM flow from fetches coming
-from elsewhere, the FedCM API introduces a new value for the <a http-header>Sec-Fetch-Dest</a>
-header, a [=forbidden request-header=]. The requests initiated by the FedCM API have a `webidentity`
-value for this header. The value cannot be set by random websites, so the [=IDP=] can be confident
-that the request was originated by the FedCM browser rather than sent by a websites trying to run an
-XSS attack. An [=IDP=] needs to check for this header's value in the credentialed requests it
-receives, which ensures that the request was initiated by the user agent, based on the FedCM API.
-This protects the new [=IDP=] endpoints from unauthorized fetches. Also note that a [=user agent=]
-which does not send third-party cookies also adds a protection, since a regular fetch from an [=RP=]
+here.
+
+**Mitigation**
+
+In order to distinguish the fetches that are initiated from the FedCM flow from fetches coming from
+elsewhere, the FedCM API introduces a new value for the <a http-header>Sec-Fetch-Dest</a> header, a
+[=forbidden request-header=]. The requests initiated by the FedCM API have a `webidentity` value for
+this header. The value cannot be set by random websites, so the [=IDP=] can be confident that the
+request was originated by the FedCM browser rather than sent by a websites trying to run an XSS
+attack. An [=IDP=] needs to check for this header's value in the credentialed requests it receives,
+which ensures that the request was initiated by the user agent, based on the FedCM API. This
+protects the new [=IDP=] endpoints from unauthorized fetches. Also note that a [=user agent=] which
+does not send third-party cookies also adds a protection, since a regular fetch from an [=RP=]
 context will not contain the [=IDP=]'s first-party cookies.
 
 <!-- ============================================================ -->
 ## Sensitive Data Access ## {#sec-cors-header}
 <!-- ============================================================ -->
 
+**Threat**
+
 The FedCM API allows the response from the [=identity assertion endpoint=] to be shared to the
 [=RP=]. This endpoint typically contains user data that is extremly sensitive, and as such needs
-enhanced protection. To enable this, we impose the requirement that the [=IDP=] explicitly consents
-to this sharing taking place by using the "cors" [=request/mode=] when fetching this endpoint. This
-also helps with servers that may accidentally ignore the <a http-header>Sec-Fetch-Dest</a>: they
-cannot ignore CORS, as without it the fetch will fail.
+enhanced protection.
+
+**Mitigation**
+
+To enable this, we impose the requirement that the [=IDP=] explicitly consents to this sharing
+taking place by using the "cors" [=request/mode=] when fetching this endpoint. This also helps with
+servers that may accidentally ignore the <a http-header>Sec-Fetch-Dest</a>: they cannot ignore CORS,
+as without it the fetch will fail.
 
 <!-- ============================================================ -->
 ## Browser Surface Impersonation ## {#browser-surface-impersonation}
 <!-- ============================================================ -->
+
+**Threat**
 
 The FedCM API introduces new (trusted) user agent UI, and the user agent may choose to show the UI
 entirely on top of the page's contents, if anything because the page was the one responsible for
 this UI. This introduces a potential concern of a malicious site to try to replicate the FedCM UI,
 gain the user's trust that the user is interacting with a trusted browser surface, and gather
 information from the user that they would only give to the browser rather than the site (e.g.
-usernames/passwords of **another** site). This would be hard to achieve because the FedCM UI uses
-metadata about the user accounts of the [=IDP=], which the malicious website doesn't have access to.
-If this is a malicious site, it would not know the user accounts unless the user is already
-compromised. However, the site could have some guess of the user identity, so the browser is
-encouraged to provide UI that is hard to replicate and that clearly presents the domains of the
-parties involved in the website's FedCM call.
+usernames/passwords of **another** site).
+
+**Mitigation**
+
+This would be hard to achieve because the FedCM UI uses metadata about the user accounts of the
+[=IDP=], which the malicious website doesn't have access to. If this is a malicious site, it would
+not know the user accounts unless the user is already compromised. However, the site could have some
+guess of the user identity, so the browser is encouraged to provide UI that is hard to replicate and
+that clearly presents the domains of the parties involved in the website's FedCM call.
+
+**Threat**
 
 One impersonation attack that would work for an attacker that the user somewhat trusts consists of
 the attacker first using the FedCM API. A trusting user would then login to FedCM using the browser
 UI. The attacker would then gain access to the information about the user and immediately would
 create a mockup of browser UI which would look almost identical in style that would request
 sensitive user information such as the password of the user account that the user just logged in to
-via FedCM. This attack requires the user to somewhat trust the attacker since FedCM needs to be
-successfully used first. It is mitigated by the fact that the FedCM UI does not ever require the
-user to enter passwords in the UI, so the new UI will look suspicious, especially to a user who has
-previously seen the FedCM flow on other sites.
+via FedCM.
+
+**Mitigation**
+
+This attack requires the user to somewhat trust the attacker since FedCM needs to be successfully
+used first. It is mitigated by the fact that the FedCM UI does not ever require the user to enter
+passwords in the UI, so the new UI will look suspicious, especially to a user who has previously
+seen the FedCM flow on other sites.
 
 Overall, an attacker trying to impersonate the browser using exclusively UI that is accessible to
 the content area (e.g., iframes) to attempt to retrieve sensitive information from the user would be
@@ -2656,25 +2734,36 @@ force the FedCM UI to occlude important content from the main page.
 ## IDP Impersonation ## {#idp-impersonation}
 <!-- ============================================================ -->
 
+**Threat**
+
 An attacker who has some knowledge about the user via previous tracking could try to impersonate a
 real [=IDP=] by pretending to be an [=IDP=] and invoking the FedCM API. However, this does not grant
 much more power to the attacker: if the user logs in via FedCM to the attacker, the attacker can now
 track the user more easily within the [=RP=], but the attacker was already tracking the user in
-order to surface a meaningful dialog. That said, [=IDP=] impersonation would still be poor UX for
-the user and it would also reflect poorly on the real [=IDP=]. To protect from this, the user agent
-is encouraged to not just include the [=IDP=] branding in the UI dialogs, but also include the
-origins of the relevant parties as well. This way, the attacker can never create a FedCM dialog
-identical to that of the real [=IDP=] since its origin will be different.
+order to surface a meaningful dialog.
+
+**Mitigation**
+
+That said, [=IDP=] impersonation would still be poor UX for the user and it would also reflect
+poorly on the real [=IDP=]. To protect from this, the user agent is encouraged to not just include
+the [=IDP=] branding in the UI dialogs, but also include the origins of the relevant parties as
+well. This way, the attacker can never create a FedCM dialog identical to that of the real [=IDP=]
+since its origin will be different.
 
 <!-- ============================================================ -->
 ## Clickbait ## {#clickbait}
 <!-- ============================================================ -->
+
+**Threat**
 
 An attacker controlled [=IDP=] could attempt to trick the user into going through the FedCM UI by
 introducing fake text into the name/email fields of the accounts endpoint response that become
 visible in the UI. For example, they could enter text such as "Click here to win $100!". As this
 requires the attacker to control the [=IDP=], the gain would be minimal, i.e. access to user
 tracking within the [=RP=]. No sensitive information would be shared with the attacker in this case.
+
+**Mitigation**
+
 To mitigate this, the user agent can add [=IDP=]-independent text to ensure that the user has some
 context about what the dialog is for (like 'sign in'). Because this text would not be something the
 attacker can just override, it will ensure that this kind of abuse looks suspicious to the user. In
@@ -2689,16 +2778,22 @@ within pages that do not condone their practices, so this attack is not viable f
 ## Clickjacking ## {#clickjacking}
 <!-- ============================================================ -->
 
+**Threat**
+
 An attacker could surface UI to try to force the user into accidentally consenting to the FedCM
 dialog. In this case, the attacker would likely be the [=RP=], which would want to gain valuable
 user information from a real [=IDP=]. For example, an attacker could have a button 'click here 4
 times' which would surface the FedCM dialog the first time it is clicked. If the timing and the
 location of this button works out, an unsuspecting user would click on their account in the FedCM
-dialog when it appears. There are a couple of possible mitigations to this. One is the user agent
-can always show a confirmation dialog after an account has been selected. This reduces the chance of
-the user accidentally confirming the entire FedCM flow. Another is that the user agent can establish
-a limited window of time during which user input is ignored, right after the FedCM dialog is shown
-to the user. This allows the user to have time to react to the dialog showing up while also not
+dialog when it appears.
+
+**Mitigation**
+
+There are a couple of possible mitigations to this. One is the user agent can always show a
+confirmation dialog after an account has been selected. This reduces the chance of the user
+accidentally confirming the entire FedCM flow. Another is that the user agent can establish a
+limited window of time during which user input is ignored, right after the FedCM dialog is shown to
+the user. This allows the user to have time to react to the dialog showing up while also not
 impacting the regular scenario of FedCM being used successfully. It is recommended for the user
 agent to implement at least one of these two mitigations in order to prevent an attacker from
 tricking the user into providing their credentials via the FedCM API. For this particular attack,
