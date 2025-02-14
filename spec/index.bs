@@ -741,11 +741,6 @@ algorithm is invoked, the user agent MUST execute the following steps. This retu
 
 
         Issue: Support choosing accounts from multiple [=IDP=]s, as described [here](https://github.com/fedidcg/FedCM/issues/319).
-    1. The user agent can decide when to continue with the next steps.
-
-        Note: For example, user agents may show an identity provider selector before making
-            network requests, or provide a button in the URL bar and wait for user input
-            before continuing.
     1. Let |provider| be |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"][0].
     1. Let |credential| be the result of running [=create an IdentityCredential=] with |provider|,
         |options|, and |globalObject|.
@@ -793,6 +788,19 @@ the exception thrown.
             {{IdentityCredentialRequestOptionsMode/passive}} on |globalObject|'s [=Window/navigable=]'s
             [=navigable/top-level traversable=] or on any of its descendants, reject the pending
             request with a "{{NetworkError}}" {{DOMException}}.
+    1. The user agent MAY wait an arbitrary amount of time before continuing with the
+        next steps. The user agent MAY also return (failure, false) at this point or
+        after some arbitrary wait.
+
+        <div class="note">
+        NOTE: For example, the user agent could do any of the following:
+            * Show an identity provider selector and only proceed once
+                  the user confirms their desire to use an identity provider.
+            * Provide a button in the URL bar and wait for user input
+                  before continuing. 
+            * Use previous user behavior to determine not to show any
+                  UI to the user and silently reject the request.
+        </div>
     1. Let |loginStatus| be the result of [=get the login status=] with
         the [=/origin=] of |provider|'s {{IdentityProviderConfig/configURL}}.
     1. If |loginStatus| is [=unknown=], a user agent MAY set it to [=logged-out=].
