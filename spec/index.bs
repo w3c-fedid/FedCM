@@ -732,6 +732,14 @@ algorithm is invoked, the user agent MUST execute the following steps. This retu
 {{IdentityCredential}} (or throws an error to the caller).
 
     1. Assert: These steps are running [=in parallel=].
+    1. If
+        |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"]
+        is [=list/empty=], [=queue a global task=] on the [=DOM manipulation task source=] given
+        |globalObject| to throw a new "{{NetworkError}}" {{DOMException}}.
+
+        Note: The |globalObject| is not currently passed onto the
+        {{Credential/[[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors)}}
+        algorithm. See <a href="https://github.com/w3c/webappsec-credential-management/issues/210">issue</a>.
     1. Let |providerList| be |options|["{{CredentialRequestOptions/identity}}"]["{{IdentityCredentialRequestOptions/providers}}"].
     1. Let |credential| be the result of running [=create an IdentityCredential=] with |providerList|,
         |options|, and |globalObject|.
@@ -801,7 +809,7 @@ the exception thrown.
     1. Let |mediation| be |options|'s {{CredentialRequestOptions/mediation}}.
     1. Let |providerMap| be a new [=map=].
     1. For each |provider| in |providerList|:
-        Note: The fetches performed in these steps to populate |providerMap| can be peformed at the
+        Note: The fetches performed in these steps to populate |providerMap| can be performed at the
             same time, e.g., the second [=IDP=]'s fetches can be started before the first ones finish,
             since these are indepedent.
         1. Let |providerOrigin| be the [=/origin=] of |provider|'s {{IdentityProviderConfig/configURL}}.
@@ -833,8 +841,8 @@ the exception thrown.
                     the user's identity. In this situation, we do not know whether
                     the user is signed in or not and so we may not want to reset
                     the status.
-            1. <dfn>Mismatch dialog step</dfn>: If |loginStatus| is [=logged-in=], set
-                |providerMap|[|providerOrigin|] to "mismatch" and [=continue=].
+            1. If |loginStatus| is [=logged-in=], set |providerMap|[|providerOrigin|] to "mismatch"
+                and [=continue=].
         1. Assert: |accountsList| is not failure and the size of |accountsList| is not 0.
         1. [=Set the login status=] for |providerOrigin| to [=logged-in=].
         1. For each |acc| in |accountsList|:
@@ -850,7 +858,8 @@ the exception thrown.
             1. For every |account| in |accountList|, remove |account| from |accountList| if |account|'s
                 {{IdentityProviderAccount/login_hints}} does not [=list/contain=] |provider|'s
                 {{IdentityProviderRequestOptions/loginHint}}.
-            1. If |accountList| is now empty, go to the [=mismatch dialog step=].
+            1. If |accountList| is now empty, set |providerMap|[|providerOrigin|] to "mismatch" and
+                continue.
         1. If |provider|'s {{IdentityProviderRequestOptions/domainHint}} is not empty:
             1. For every |account| in |accountList|:
                 1. If {{IdentityProviderRequestOptions/domainHint}} is "any":
@@ -859,10 +868,10 @@ the exception thrown.
                 1. Otherwise, remove |account| from |accountList| if |account|'s
                     {{IdentityProviderAccount/domain_hints}} does not [=list/contain=] |provider|'s
                     {{IdentityProviderRequestOptions/domainHint}}.
-            1. If |accountList| is now empty, go to the [=mismatch dialog step=].
+            1. If |accountList| is now empty, set |providerMap|[|providerOrigin|] to "mismatch" and
+                continue.
         1. Set |providerMap|[|providerOrigin|] to |accountsList|.
     1. If |providerMap| is [=map/is empty=], return (failure, false).
-    1. The user agent will now create a prompt to the user by building on the values from |providerMap|.
     1. Let |registeredAccount|, |numRegisteredAccounts| be null and 0, respectively.
     1. Let |selectedAccount| be null.
     1. For each (|providerOrigin|, |value|) in |providerMap|:
@@ -881,19 +890,19 @@ the exception thrown.
     1. Otherwise, if |mediation| is "{{CredentialMediationRequirement/silent}}" and |providerMap|'s
         [=map/values=] do not [=map/contain=] "mismatch", return (failure, true).
     1. Let |permission|, |permissionRequested|, and |isAutoSelected| be set to false.
+    1. Let |allAccounts| be an empty [=list=].
     1. Build UI by adding the following for each (|providerOrigin|, |value|) in |providerMap|:
         1. If |value| is "logged-out", the user agent adds one of the following:
             * Nothing: no UI is shown regarding this [=IDP=].
             * Prompt to continue with this [=IDP=]. If the user continues, the user
                 agent SHOULD set the login status to [=unknown=]. This MAY include an
                 affordance to [=show an IDP login dialog=].
-                * If the user cancels this dialog, return (failure, true).
                 * If the user triggers this affordance:
                     1. Let |result| be the result of running
                         [=fetch the config file and show an IDP login dialog=]
                         with the relevant |provider| and |globalObject|.
                     1. If |result| is failure, return (failure, true).
-        1. Otherwise, if |value| is "mismatch", add contents indicating this [=IDP=]
+        1. Otherwise, if |value| is "mismatch", add contents indicating this |providerOrigin|
             to the user. The contents SHOULD provide an affordance for the user to trigger
             the [=show an IDP login dialog=] algorithm with the relevant |config| and |provider|;
             this dialog is the <dfn>confirm IDP login dialog</dfn>.
@@ -906,51 +915,47 @@ the exception thrown.
                 impossible by always showing UI of some kind when credentials
                 were sent to the server.
 
-            1. Wait until one of the following occurs:
+            * If the [=show an IDP login dialog=] algorithm was triggered:
 
-                * If the user selects another option, do nothing.
-
-                * If the user closes the dialog, return (failure, true).
-
-                * If the [=show an IDP login dialog=] algorithm was triggered:
-
-                    1. Let |result| be the result of that algorithm.
-                    1. If |result| is failure, return (failure, true). The user
-                        agent MAY show a dialog to the user before or after
-                        returning failure indicating this failure.
-                    1. Otherwise, go back to the [=fetch accounts step=] to get an updated
-                        value of |providerMap| for this [=IDP=].
-        1. Otherwise, |value| is a [=list=] of accounts. All accounts are aggregated into a single
-            |accountsList| and these are then presented to the user as follows:
-            1. If |accountsList|'s size is 1:
-                1. Set |selectedAccount| to |accountsList|[0].
-                1. If [=compute the connection status=] of |selectedAccount|, the relevant |provider|,
-                    and |globalObject| returns [=compute the connection status/connected=], show a
-                    dialog to request user permission to sign in via |selectedAccount|, and set the
-                    result in |permission|. The user agent MAY use |options|'s
-                    {{IdentityCredentialRequestOptions/context}} and |options|'s
-                    {{IdentityCredentialRequestOptions/mode}} to customize the dialog.
-                1. Otherwise, let |permission| be the result of running [=request permission to sign-up=]
-                    algorithm with |selectedAccount|, the relevant |config|, the relevant |provider|,
-                    and |globalObject|. Also set |permissionRequested| to true if the user agent
-                    [=supports showing a permission prompt=].
+                1. Let |result| be the result of that algorithm.
+                1. If |result| is failure, return (failure, true). The user
+                    agent MAY show a dialog to the user before or after
+                    returning failure indicating this failure.
+                1. Otherwise, go back to the [=fetch accounts step=] to get an updated
+                    value of |providerMap| for this [=IDP=].
+        1. Otherwise, |value| is a [=list=] of accounts. [=list/Extend=] |allAccounts| with |value|.
+    1. If |allAccounts| is not [=list/empty=], add UI to present the account options to the user as follows:
+        1. If |allAccounts|'s size is 1 and |providerMap|'s [=map/values=] do not [=map/contain=]
+            "mismatch":
+            1. Set |selectedAccount| to |allAccounts|[0].
+            1. If [=compute the connection status=] of |selectedAccount|, the relevant |provider|,
+                and |globalObject| returns [=compute the connection status/connected=], show a
+                dialog to request user permission to sign in via |selectedAccount|, and set the
+                result in |permission|. The user agent MAY use |options|'s
+                {{IdentityCredentialRequestOptions/context}} and |options|'s
+                {{IdentityCredentialRequestOptions/mode}} to customize the dialog.
+            1. Otherwise, let |permission| be the result of running [=request permission to sign-up=]
+                algorithm with |selectedAccount|, the relevant |config|, the relevant |provider|,
+                and |globalObject|. Also set |permissionRequested| to true if the user agent
+                [=supports showing a permission prompt=].
+        1. Otherwise:
+            1. Set |selectedAccount| to the result of running the [=select an account=] from |allAccounts|.
+            1. If |selectedAccount| is failure, return (failure, true).
+            1. If [=compute the connection status=] of |selectedAccount|, the relevant |provider|,
+                and |globalObject| is [=compute the connection status/connected=], set |permission|
+                to true.
+            1. Otherwise, if |provider|.{{IdentityProviderRequestOptions/fields}} is [=list/empty=],
+                [=create a connection between the RP and the IdP account=] with |provider|, |account|,
+                and |globalObject|, and set |permission| to true.
+                Note: The connection would normally be created in the [=request permission to sign-up=]
+                    algorithm, but we do not want to show an extra dialog in this case.
             1. Otherwise:
-                1. Set |selectedAccount| to the result of running the [=select an account=] from the
-                    |accountsList|.
-                1. If |selectedAccount| is failure, return (failure, true).
-                1. If [=compute the connection status=] of |selectedAccount|, the relevant |provider|,
-                    and |globalObject| is [=compute the connection status/connected=], set |permission|
-                    to true.
-                1. Otherwise, if |provider|.{{IdentityProviderRequestOptions/fields}} is [=list/empty=],
-                    [=create a connection between the RP and the IdP account=] with |provider|, |account|,
-                    and |globalObject|, and set |permission| to true.
-                    Note: The connection would normally be created in the [=request permission to sign-up=]
-                        algorithm, but we do not want to show an extra dialog in this case.
-                1. Otherwise:
-                    1. Let |permission| be the result of running the [=request permission to sign-up=]
-                        algorithm with |selectedAccount|, the relevant |config|, the relevant |provider|,
-                        and |globalObject|.
-                    1. Set |permissionRequested| to true.
+                1. Let |permission| be the result of running the [=request permission to sign-up=]
+                    algorithm with |selectedAccount|, the relevant |config|, the relevant |provider|,
+                    and |globalObject|.
+                1. Set |permissionRequested| to true.
+    1. Also include an affordance to close the dialog. If the user closes this dialog, return (failure,
+        true).
     1. Wait until the [=user agent=]'s dialogs requesting for user choice or permission to be
         closed, if any are created in the previous steps.
     1. Assert: |selectedAccount| is not null.
