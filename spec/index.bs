@@ -793,9 +793,9 @@ the exception thrown.
             {{IdentityCredentialRequestOptionsMode/passive}} on |globalObject|'s [=Window/navigable=]'s
             [=navigable/top-level traversable=] or on any of its descendants, reject the pending
             request with a "{{NetworkError}}" {{DOMException}}.
-    1. The user agent MAY wait an arbitrary amount of time before continuing with the
-        next steps. The user agent MAY also return (failure, false) at this point or
-        after some arbitrary wait.
+    1. The user agent MAY wait an arbitrary amount of time before continuing with the next steps.
+        The user agent MAY also return (failure, false) at this point or after some arbitrary wait.
+        The user agent MAY also set |providerList| to a subset of itself after some arbitrary wait.
 
         <div class="note">
         NOTE: For example, the user agent could do any of the following:
@@ -896,6 +896,9 @@ the exception thrown.
             * Nothing: no UI is shown regarding this [=IDP=].
             * Prompt to continue with this [=IDP=]. If the user continues, the user
                 agent SHOULD set the login status to [=unknown=]. This MAY include an
+            * Return (failure, false).
+            * Prompt the user whether to continue. If the user continues, the user
+                agent SHOULD set |loginStatus| to [=unknown=]. This MAY include an
                 affordance to [=show an IDP login dialog=].
                 * If the user triggers this affordance:
                     1. Let |result| be the result of running
@@ -2580,11 +2583,11 @@ The [=remote end steps=] are:
 1. Return [=success=] with data `null`.
 
 <!-- ============================================================ -->
-# Security Considerations # {#security}
+# Security Considerations # {#security-considerations}
 <!-- ============================================================ -->
 
 This section provides a few of the security considerations for the FedCM API. Note that there is a
-separate section for [[#privacy]].
+separate section for [[#privacy-considerations]].
 
 In FedCM, there are various assets that need to be protected. All of the endpoints need basic
 protections, and the credentialed ones need protections from various kinds of attacks and threats.
@@ -2828,7 +2831,7 @@ the attacker's [=RP=] might also not be trusted by the [=IDP=], so the flow woul
 {{id_assertion_endpoint_request/client_id}} or CORS checks.
 
 <!-- ============================================================ -->
-# Privacy Considerations # {#privacy}
+# Privacy Considerations # {#privacy-considerations}
 <!-- ============================================================ -->
 
 This section is intended to provide a comprehensive overview of the privacy risks associated with
