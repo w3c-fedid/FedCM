@@ -892,11 +892,10 @@ the exception thrown.
                 {{IdentityProviderAccount/domain_hints}} does not [=list/contain=] |provider|'s
                 {{IdentityProviderRequestOptions/domainHint}}.
         1. If |accountList| is now empty, go to the [=mismatch dialog step=].
-    1. If |config|.{{IdentityProviderAPIConfig/accounts}}.{{IdentityProviderLabelConfig/include}}
-        is present:
+    1. If |config|.{{IdentityProviderAPIConfig/account_label}} is present:
         1. For every |account| in |accountList|, remove |account| from |accountList| if |account|'s
-            {{IdentityProviderAccount/labels}} does not [=list/contain=]
-            |config|.{{IdentityProviderAPIConfig/accounts}}.{{IdentityProviderLabelConfig/include}}.
+            {{IdentityProviderAccount/label_hints}} does not [=list/contain=]
+            |config|.{{IdentityProviderAPIConfig/account_label}}.
         1. If |accountList| is now empty, go to the [=mismatch dialog step=].
     1. For each |acc| in |accountsList|:
         1. If |acc|["{{IdentityProviderAccount/picture}}"] is present, [=fetch the account picture=]
@@ -1117,10 +1116,6 @@ dictionary IdentityProviderBranding {
   USVString name;
 };
 
-dictionary IdentityProviderLabelConfig {
-  USVString include;
-};
-
 dictionary IdentityProviderAPIConfig {
   required USVString accounts_endpoint;
   required USVString client_metadata_endpoint;
@@ -1128,7 +1123,7 @@ dictionary IdentityProviderAPIConfig {
   required USVString login_url;
   USVString disconnect_endpoint;
   IdentityProviderBranding branding;
-  IdentityProviderLabelConfig accounts;
+  USVString account_label;
 };
 </xmp>
 
@@ -1210,7 +1205,7 @@ dictionary IdentityProviderAccount {
   sequence<USVString> approved_clients;
   sequence<DOMString> login_hints;
   sequence<DOMString> domain_hints;
-  sequence<DOMString> labels;
+  sequence<DOMString> label_hints;
 };
 dictionary IdentityProviderAccountList {
   sequence<IdentityProviderAccount> accounts;
@@ -1993,7 +1988,7 @@ Every {{IdentityProviderAccount}} is expected to have members with the following
     ::  A list of strings which correspond to all of the domain hints which match with this account.
         An [=RP=] can use the {{IdentityProviderRequestOptions/domainHint}} to request that only an account
         matching a given value or containing some domain hint is shown to the user.
-    :   <dfn>labels</dfn>
+    :   <dfn>label_hints</dfn>
     ::  A list of strings which give the accounts a list of labels. The config file can specify a filter
         for a label string.
 </dl>
@@ -2021,7 +2016,7 @@ For example:
    "approved_clients": ["abc", "def", "ghi"],
    "login_hints": ["email=johhny@idp.example", "id=5678"],
    "domain_hints": ["idp.example"],
-   "labels:" ["l1"]
+   "label_hints:" ["l1"]
   }]
 }
 ```
