@@ -828,11 +828,9 @@ the exception thrown.
     1. Let |config| be the result of running [=fetch the config file=] with
         |provider| and |globalObject|.
     1. If |config| is failure, return (failure, false).
-    1. If |options|.{{IdentityCredentialRequestOptions/mode}} is "active",
-        then let |modeSettings| be 
-        |config|.{{IdentityProviderAPIConfig/modes}}.{{IdentityProviderModes/active}};
-        otherwise, 
-        |config|.{{IdentityProviderAPIConfig/modes}}.{{IdentityProviderModes/passive}}.
+    1. Let |supportsUseOtherAccount| be the value of |config|.
+        {{IdentityProviderAPIConfig/supports_use_other_account}} if |options|.
+        {{IdentityCredentialRequestOptions/mode}} is `"active"`, otherwise `"false"`.
     1. <dfn>Fetch accounts step</dfn>: Let |accountsList| be the result of
         [=fetch the accounts=] with |config|, |provider|, and |globalObject|.
     1. If |accountsList| is failure, or the size of |accountsList| is 0:
@@ -925,18 +923,17 @@ the exception thrown.
                 {{IdentityCredentialRequestOptions/context}} and |options|'s
                 {{IdentityCredentialRequestOptions/mode}} to customize the
                 dialog.
-            1. If |modeSettings|.{{IdentityProviderModeSettings/supports_use_other_account}} is true,
-                that dialog MUST provide an affordance to use another account. If that
-                affordance is triggered:
+            1. If |supportsUseOtherAccount| is true, that dialog MUST provide
+                an affordance to use another account. If that affordance is triggered:
                 1. [=Show an IDP login dialog=] with |config|, |provider|, and |globalObject|.
                 1. If that returned success, go back to the [=fetch accounts step=].
         1. Otherwise, let |permission| be the result of running [=request permission to sign-up=]
-            algorithm with |account|, |modeSettings|, |config|, |provider|, and
+            algorithm with |account|, |supportsUseOtherAccount|, |config|, |provider|, and
             |globalObject|. Also set |permissionRequested| to true if the user
             agent [=supports showing a permission prompt=].
     1. Otherwise:
         1. Set |account| to the result of running [=select an account=] with
-            |accountsList|, |modeSettings|, |config|, |provider|, and |globalObject|.
+            |accountsList|, |supportsUseOtherAccount|, |config|, |provider|, and |globalObject|.
         1. If |account| is failure, return (failure, true).
         1. If [=compute the connection status=] of |account|, |provider|, and |globalObject| is
             [=compute the connection status/connected=], set |permission| to true.
@@ -948,7 +945,8 @@ the exception thrown.
                 algorithm, but we do not want to show an extra dialog in this case.
         1. Otherwise:
             1. Let |permission| be the result of running the [=request permission to sign-up=]
-                algorithm with |account|, |modeSettings|, |config|, |provider|, and |globalObject|.
+                algorithm with |account|, |supportsUseOtherAccount|, |config|,
+                |provider|, and |globalObject|.
             1. Set |permissionRequested| to true.
     1. Wait until the [=user agent=]'s dialogs requesting for user choice or permission to be
         closed, if any are created in the previous steps.
@@ -1123,15 +1121,6 @@ dictionary IdentityProviderBranding {
   USVString name;
 };
 
-dictionary IdentityProviderModeSettings {
-  boolean supports_use_other_account;
-};
-
-dictionary IdentityProviderModes {
-  IdentityProviderModeSettings active;
-  IdentityProviderModeSettings passive;
-};
-
 dictionary IdentityProviderAPIConfig {
   required USVString accounts_endpoint;
   required USVString client_metadata_endpoint;
@@ -1139,7 +1128,7 @@ dictionary IdentityProviderAPIConfig {
   required USVString login_url;
   USVString disconnect_endpoint;
   IdentityProviderBranding branding;
-  IdentityProviderModes modes;
+  boolean supports_use_other_account = false;
   USVString account_label;
 };
 </xmp>
@@ -1393,15 +1382,14 @@ dictionary IdentityAssertionResponse {
 <!-- ============================================================ -->
 
 <div algorithm>
-To <dfn>select an account</dfn> given an |accountsList|, some {{IdentityProviderModeSettings}}
-|modeSettings|, an {{IdentityProviderAPIConfig}} |config|, an {{IdentityProviderConfig}} |provider|,
-and a |globalObject|, run the following steps. This returns an {{IdentityProviderAccount}} or
-failure.
+To <dfn>select an account</dfn> given an |accountsList|, a boolean
+|supportsUseOtherAccount|, an {{IdentityProviderAPIConfig}} |config|, an
+{{IdentityProviderConfig}} |provider|, and a |globalObject|, run the following
+steps. This returns an {{IdentityProviderAccount}} or failure.
     1. Assert |accountsList|'s [=list/size=] is greater than 1.
     1. Display an account chooser displaying the options from |accountsList|.
-    1. If |modeSettings|.{{IdentityProviderModeSettings/supports_use_other_account}} is true,
-        the account chooser MUST provide an affordance to use another account. If that
-        affordance is triggered:
+    1. If |supportsUseOtherAccount| is true, the account chooser MUST provide
+        an affordance to use another account. If that affordance is triggered:
         1. [=Show an IDP login dialog=] with |config|, |provider| and |globalObject|.
         1. If that returned success, go back to the [=fetch accounts step=].
     1. Let |account| be the {{IdentityProviderAccount}} of the account that the user
@@ -1414,8 +1402,8 @@ waits for the user to grant permission to use the given account, and returns whe
 granted permission or not.
 
 <div algorithm="request permission to sign-up">
-To <dfn>request permission to sign-up</dfn> the user with a given an {{IdentityProviderAccount}} |account|,
-some {{IdentityProviderModeSettings}} |modeSettings|, an
+To <dfn>request permission to sign-up</dfn> the user with a given an
+{{IdentityProviderAccount}} |account|, a boolean |supportsUseOtherAccount|, an
 {{IdentityProviderAPIConfig}} |config|, an {{IdentityProviderRequestOptions}}
 |provider|, and a |globalObject|, run the following steps. This returns a
 boolean.
@@ -1458,10 +1446,10 @@ boolean.
             1. The user agent MAY use the
                 {{IdentityCredentialRequestOptions/context}} and |provider|'s
                 {{IdentityCredentialRequestOptions/mode}} to customize the dialog shown.
-            1. If |modeSettings|.{{IdentityProviderModeSettings/supports_use_other_account}} is true,
-                the account chooser MUST provide an affordance to use another account unless such an
-                affordance was provided in a previous step (e.g., if [=select an account=] was
-                invoked). If that affordance is triggered:
+            1. If |supportsUseOtherAccount| is true, the account chooser MUST
+                provide an affordance to use another account unless such an affordance was
+                provided in a previous step (e.g., if [=select an account=] was invoked). If
+                that affordance is triggered:
                 1. [=Show an IDP login dialog=] with |config|, |provider|, and |globalObject|.
                 1. If that returned success, go back to the [=fetch accounts step=].
     1. If the user does not grant permission, return false.
