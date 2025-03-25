@@ -65,6 +65,7 @@ spec:webdriver2; type:dfn; text:error
 spec:webdriver2; type:dfn; text:remote end steps
 spec:fetch; type:dfn; for:/; text:response
 spec:css-color-5; type:type; text:<color>
+spec:html; type:dfn; text:allowed to use
 </pre>
 
 <style>
@@ -870,6 +871,12 @@ the exception thrown.
                     {{IdentityProviderRequestOptions/domainHint}}.
             1. If |accountList| is now empty, set |providerMap|[|providerOrigin|] to "mismatch" and
                 continue.
+        1. If |config|.{{IdentityProviderAPIConfig/account_label}} is present:
+            1. For every |account| in |accountList|, remove |account| from |accountList| if |account|'s
+                {{IdentityProviderAccount/label_hints}} does not [=list/contain=]
+                |config|.{{IdentityProviderAPIConfig/account_label}}.
+            1. If |accountList| is now empty, set |providerMap|[|providerOrigin|] to "mismatch" and
+                continue.
         1. Set |providerMap|[|providerOrigin|] to |accountsList|.
     1. If |providerMap| [=map/is empty=], return (failure, false).
     1. Let |registeredAccount| and |numRegisteredAccounts| be null and 0, respectively.
@@ -1141,6 +1148,7 @@ dictionary IdentityProviderAPIConfig {
   required USVString login_url;
   USVString disconnect_endpoint;
   IdentityProviderBranding branding;
+  USVString account_label;
 };
 </xmp>
 
@@ -1222,6 +1230,7 @@ dictionary IdentityProviderAccount {
   sequence<USVString> approved_clients;
   sequence<DOMString> login_hints;
   sequence<DOMString> domain_hints;
+  sequence<DOMString> label_hints;
 };
 dictionary IdentityProviderAccountList {
   sequence<IdentityProviderAccount> accounts;
@@ -1596,8 +1605,8 @@ success or failure.
                 with the [=/origin=] of the {{IdentityProviderAPIConfig/login_url}}.
 
                 Note: The IDP login flow may set this value to logged-in using
-                    either the [login-status.html#login-status-javascript](JavaScript) or
-                    [login-status.html#login-status-http](HTTP header) API during the login
+                    either the [JavaScript](login-status.html#login-status-javascript) or
+                    [HTTP header](login-status.html#login-status-http) API during the login
                     flow. It is also possible that this change happened in
                     a different browsing context.
             1. If |loginStatus| is [=logged-in=], return success.
@@ -1996,6 +2005,9 @@ Every {{IdentityProviderAccount}} is expected to have members with the following
     ::  A list of strings which correspond to all of the domain hints which match with this account.
         An [=RP=] can use the {{IdentityProviderRequestOptions/domainHint}} to request that only an account
         matching a given value or containing some domain hint is shown to the user.
+    :   <dfn>label_hints</dfn>
+    ::  A list of strings which give the accounts a list of labels. The config file can specify a filter
+        for a label string.
 </dl>
 
 For example:
@@ -2011,7 +2023,7 @@ For example:
    "picture": "https://idp.example/profile/123",
    "approved_clients": ["123", "456", "789"],
    "login_hints": ["john_doe"],
-   "domain_hints": ["idp.example"],
+   "domain_hints": ["idp.example"]
   }, {
    "id": "5678",
    "given_name": "Johnny",
@@ -2021,6 +2033,7 @@ For example:
    "approved_clients": ["abc", "def", "ghi"],
    "login_hints": ["email=johhny@idp.example", "id=5678"],
    "domain_hints": ["idp.example"],
+   "label_hints:" ["l1"]
   }]
 }
 ```
