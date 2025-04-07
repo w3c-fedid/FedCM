@@ -199,9 +199,6 @@ The [[#idp-api]] defines a set of HTTP APIs that [=IDP=]s expose as well as the 
 |           |   |              |           |     |                |           |
 |           |   |              |           |     +------------->*-+ Accounts  |
 |           |   |              |           |     |                |           |
-|           |   |              |           |     +------------->*-+ Client    |
-|           |   |              |           |     |                | Metadata  |
-|           |   |              |           |     |                |           |
 |           |   |              |           |     +------------->*-+ Assertion |
 |           |   |              |           |     |                |           |
 |           |   |              |           |     |                |           |
@@ -212,6 +209,19 @@ The [[#idp-api]] defines a set of HTTP APIs that [=IDP=]s expose as well as the 
 |           |                  |           |                      |           |
 +-----------+                  +-----------+                      +-----------+
 </script>
+
+<div class="issue" heading="extension">
+An extension spec may add a client metadata endpoint in between accounts and assertion:
+<script type="text/typogram">
+|           |   |              |           |     +------------->*-+ Accounts  |
+|           |   |              |           |     |                |           |
+|           |   |              |           |     +------------->*-+ Client    |
+|           |   |              |           |     |                | Metadata  |
+|           |   |              |           |     |                |           |
+|           |   |              |           |     +------------->*-+ Assertion |
+|           |   |              |           |     |                |           |
+</script>
+</div>
 
 The user agent intermediates in such a matter that makes it impractical for the
 API to be used for tracking purposes, while preserving the functionality of
@@ -268,16 +278,7 @@ identity federation.
       |                                   |                                 | "}"
       |                                   |                                 |
       |                                   |                                 |
-      | "(5) The browser then           " | "GET /client_metadata"          |
-      | "fetches metadata about the     " | "client_id"                     |
-      | "Relying Party.                 " |-------------------------------->|
-      |                                   |<--------------------------------| "{"
-      |                                   |                                 |   "terms_of_service_url: ...,"
-      |                                   |                                 |   "privacy_policy_url: ...,"
-      |                                   |                                 | "}"
-      |                                   |                                 |
-      |                                   |                                 |
-      |                     +-------------+ "(6) With all of this, the    " |
+      |                     +-------------+ "(5) With all of this, the    " |
       |                     |             | "browser asks for the user's  " |
       |                     |             | "permission to sign-in to the " |
       |  "account chooser"  |             | "RP with the IdP's account.   " |
@@ -287,19 +288,35 @@ identity federation.
       |                                   |                                 |
       |                                   |                                 |
       |                                   |                                 |
-      | "(7) Once the user selects an   " | "POST /assertion"               |
+      | "(6) Once the user selects an   " | "POST /assertion"               |
       | "account and permission, the    " | "client_id, cookies, account"   |
       | "browser fetches the token.     " |-------------------------------->|
       |                                   |<--------------------------------| "{"
       |                                   |                                 |   "token: ...,"
       |                                   |                                 | "}"
       |                                   |                                 |
-      |                "{ token }"        | "(8) Which is then ultimately " |
+      |                "{ token }"        | "(7) Which is then ultimately " |
       |<----------------------------------| "used to resolve the promise. " |
       |                                   |                                 |
       |                                   |                                 |
      -+-                                 -+-                               -+-
 </script>
+
+<div class="issue" heading="extension">
+The following could be added to an extension spec:
+
+<script type="text/typogram">
+      |                                   |                                 |
+      | "(4.5) The browser then         " | "GET /client_metadata"          |
+      | "fetches metadata about the     " | "client_id"                     |
+      | "Relying Party.                 " |-------------------------------->|
+      |                                   |<--------------------------------| "{"
+      |                                   |                                 |   "terms_of_service_url: ...,"
+      |                                   |                                 |   "privacy_policy_url: ...,"
+      |                                   |                                 | "}"
+      |                                   |                                 |
+</script>
+</div>
 
 <!-- ============================================================ -->
 # The Browser API # {#browser-api}
@@ -936,8 +953,25 @@ the exception thrown.
         1. Otherwise, |value| is a [=list=] of accounts. [=list/Extend=] |allAccounts| with |value|.
     1. Also include a UI affordance to close the dialog. If the user closes this dialog, return (failure,
         true).
+    1. <dfn for="create identity credential">Show accounts</dfn> step: if |allAccounts| is not [=list/empty=], also add UI to present the account options to the user.
+        If the user selects an account, perform the following steps:
+            1. Set |selectedAccount| to the chosen {{IdentityProviderAccount}}.
+            1. Close the dialog.
+    1. If the [=user agent=] created any dialogs requesting user choice or permission in the previous
+        steps, wait until they are closed.
+    1. If |permission| is false, then return (failure, true).
+    1. Assert: |selectedAccount| is not null.
+    1. Let |credential| be the result of running the [=fetch an identity assertion=] algorithm with
+        |selectedAccount|'s {{IdentityProviderAccount/id}}, |permissionRequested|, |isAutoSelected|,
+        |provider|, |config|, and |globalObject|.
+    1. Return |credential|.
+</div>
+
+<div class="issue" heading="extension">
+An extension may use the following instead of the [=create identity credential/show accounts=] step, where
+    |permissionRequested| is sometimes set:
     1. If |allAccounts| is not [=list/empty=], also add UI to present the account options to the user as follows:
-        1. If |allAccounts|'s size is 1 and |providerMap|'s [=map/values=] do not [=map/contain=]
+        1. If |allAccounts|'s size is 1 and <var ignore="">providerMap</var>'s [=map/values=] do not [=map/contain=]
             "mismatch":
             1. Set |selectedAccount| to |allAccounts|[0].
             1. If [=compute the connection status=] of |selectedAccount|, the relevant |provider|,
@@ -952,7 +986,7 @@ the exception thrown.
                 [=supports showing a permission prompt=].
         1. Otherwise:
             1. Show UI to allow the user to select an account chooser displaying the options from
-                |accountsList|.
+                <var ignore="">accountsList</var>.
             1. If the user selects an account, perform the following steps:
                 1. Set |selectedAccount| to the chosen {{IdentityProviderAccount}}.
                 1. If [=compute the connection status=] of |selectedAccount|, the relevant |provider|,
@@ -968,15 +1002,8 @@ the exception thrown.
                         algorithm with |selectedAccount|, the relevant |config|, the relevant |provider|,
                         and |globalObject|.
                     1. Set |permissionRequested| to true.
-    1. If the [=user agent=] created any dialogs requesting user choice or permission in the previous
-        steps, wait until they are closed.
-    1. If |permission| is false, then return (failure, true).
-    1. Assert: |selectedAccount| is not null.
-    1. Let |credential| be the result of running the [=fetch an identity assertion=] algorithm with
-        |selectedAccount|'s {{IdentityProviderAccount/id}}, |permissionRequested|, |isAutoSelected|,
-        |provider|, |config|, and |globalObject|.
-    1. Return |credential|.
 </div>
+
 
 <!-- ============================================================ -->
 ### Fetch the config file ### {#fetch-config-file}
@@ -1284,39 +1311,19 @@ The <a>fetch an identity assertion</a> algorithm is invoked after the user has g
 use FedCM with a specific [=IDP=] account. It fetches the [=identity assertion endpoint=] to obtain
 the token that will be provided to the [=RP=].
 
-<div algorithm>
+<div algorithm="fetch an identity assertion">
 To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
-    |accountId|, a boolean |permissionRequested|, a boolean |isAutoSelected|, an
+    |accountId|, a boolean <var ignore="">permissionRequested</var>, a boolean |isAutoSelected|, an
     {{IdentityProviderRequestOptions}} |provider|, an {{IdentityProviderAPIConfig}} |config|,
     and |globalObject|, run the following steps. This returns an {{IdentityCredential}} or failure.
     1. Let |tokenUrl| be the result of [=computing the manifest URL=] given |provider|,
         |config|["{{IdentityProviderAPIConfig/id_assertion_endpoint}}"], and |globalObject|.
     1. If |tokenUrl| is failure, return failure.
-    1. Let |disclosureShownFor| and |fields| be the empty list.
-    1. If |permissionRequested| is true:
-        1. Set |fields| to |provider|.{{IdentityProviderRequestOptions/fields}}.
-        1. Set |disclosureShownFor| to the subset of strings in |fields| that are
-            in the [=list of recognized fields=].
-    1. Let |list| be a list with the following entries:
+    1. <dfn for="fetch identity assertion">Create a list</dfn>: let |list| be a list with the following entries:
         1. ("client_id", |provider|'s {{IdentityProviderConfig/clientId}})
         1. ("nonce", |provider|'s {{IdentityProviderRequestOptions/nonce}})
         1. ("account_id",  |accountId|)
         1. ("is_auto_selected", |isAutoSelected|)
-    1. If |fields| is not empty:
-        1. Let |fieldsString| be the entries of |fields| concatenated with a comma ("`,`")
-            between elements.
-        1. Append ("fields", |fieldsString|) to |list|.
-    1. If |disclosureShownFor| is not empty:
-        1. Let |disclosureString| be the entries of |disclosureShownFor| concatenated
-            with a comma ("`,`") between elements.
-        1. Append ("disclosure_shown_for", |disclosureString|) to |list|.
-    1. If |disclosureShownFor| contains all of "name", "email", and "picture", append
-        ("disclosure_text_shown", true) to |list|.
-
-        Note: This parameter exists for backwards compatibility with older identity providers
-            that do not yet support `disclosure_shown_for`. At the time, the disclosure text,
-            if shown, always included name, email, and picture. Newer identity providers should
-            instead check `disclosure_shown_for`.
     1. If |provider|'s {{IdentityProviderRequestOptions/params}} is not empty:
         1. Let |json| be the result of [=serializing a JavaScript value to a JSON string=]
             with |provider|'s {{IdentityProviderRequestOptions/params}}.
@@ -1391,6 +1398,30 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
     1. Return |credential|.
 </div>
 
+<div class="issue" heading="extension">
+An extension may add the following steps after the [=fetch identity assertion/create a list=] step:
+    1. Let |disclosureShownFor| and |fields| be the empty list.
+    1. If |permissionRequested| is true:
+        1. Set |fields| to |provider|.{{IdentityProviderRequestOptions/fields}}.
+        1. Set |disclosureShownFor| to the subset of strings in |fields| that are
+            in the [=list of recognized fields=].
+    1. If |fields| is not empty:
+        1. Let |fieldsString| be the entries of |fields| concatenated with a comma ("`,`")
+            between elements.
+        1. Append ("fields", |fieldsString|) to |list|.
+    1. If |disclosureShownFor| is not empty:
+        1. Let |disclosureString| be the entries of |disclosureShownFor| concatenated
+            with a comma ("`,`") between elements.
+        1. Append ("disclosure_shown_for", |disclosureString|) to |list|.
+    1. If |disclosureShownFor| contains all of "name", "email", and "picture", append
+        ("disclosure_text_shown", true) to |list|.
+
+        Note: This parameter exists for backwards compatibility with older identity providers
+            that do not yet support `disclosure_shown_for`. At the time, the disclosure text,
+            if shown, always included name, email, and picture. Newer identity providers should
+            instead check `disclosure_shown_for`.
+</div>
+
 <xmp class="idl">
 dictionary IdentityAssertionResponse {
   USVString token;
@@ -1399,8 +1430,11 @@ dictionary IdentityAssertionResponse {
 </xmp>
 
 <!-- ============================================================ -->
-### Request permission to sign-up ### {#request-permission-signup}
+### Extension: Request permission to sign-up ### {#request-permission-signup}
 <!-- ============================================================ -->
+
+<div class="issue" heading="extension">
+The following section may be added to an extension spec.
 
 The <a>request permission to sign-up</a> algorithm fetches the [=client metadata endpoint=] of the [=RP=],
 waits for the user to grant permission to use the given account, and returns whether the user
@@ -1506,6 +1540,8 @@ dictionary IdentityProviderClientMetadata {
   USVString terms_of_service_url;
 };
 </xmp>
+
+</div>
 
 <!-- ============================================================ -->
 ### Helper algorithms ### {#helper-algorithms}
@@ -2000,9 +2036,11 @@ Every {{IdentityProviderAccount}} is expected to have members with the following
     :   <dfn>picture</dfn>
     ::  URL for the account's picture.
     :   <dfn>approved_clients</dfn>
-    ::  A list of [=RP=]s (that gets matched against the requesting {{IdentityProviderConfig/clientId}}) this account is already registered with.
-        Used in the [=request permission to sign-up=] to allow the [=IDP=] to control whether to show
-        the Privacy Policy and the Terms of Service.
+    ::  A list of [=RP=]s (that gets matched against the requesting {{IdentityProviderConfig/clientId}}) this account is already registered with. Use to [=compute the connection status=] of an account.
+        <div class="issue" heading="extension">
+            In an extension spec, also used in the [=request permission to sign-up=] to allow the [=IDP=] to control whether
+            to show the Privacy Policy and the Terms of Service.
+        </div>
     :   <dfn>login_hints</dfn>
     ::  A list of strings which correspond to all of the login hints which match with this account.
         An [=RP=] can use the {{IdentityProviderRequestOptions/loginHint}} to request that only an account
@@ -2048,10 +2086,12 @@ For example:
 Issue: [Clarify](https://github.com/fedidcg/FedCM/issues/218) the IDP API response when the user is not signed in.
 
 <!-- ============================================================ -->
-## Client Metadata ## {#idp-api-client-id-metadata-endpoint}
+## Extension: Client Metadata ## {#idp-api-client-id-metadata-endpoint}
 <!-- ============================================================ -->
 
-The <dfn>client metadata endpoint</dfn> provides metadata about [=RP=]s.
+<div class="issue" heading="extension">
+
+An extension may add the <dfn>client metadata endpoint</dfn>, which provides metadata about [=RP=]s.
 
 The [=client metadata endpoint=] is fetched in the [=fetch the client metadata=] algorithm:
 
@@ -2096,6 +2136,8 @@ For example:
 ```
 </div>
 
+</div>
+
 <!-- ============================================================ -->
 ## Identity assertion endpoint ## {#idp-api-id-assertion-endpoint}
 <!-- ============================================================ -->
@@ -2119,19 +2161,25 @@ It will also contain the following parameters in the request body `application/x
     ::  The request nonce
     :   <dfn>account_id</dfn>
     ::  The account identifier that was selected.
+    :   <dfn>fields</dfn>
+    ::  The list of fields that the [=RP=] has requested in {{IdentityProviderRequestOptions/fields}}.
+</dl>
+
+<div class="issue" heading="extension">
+    An extension may add the following:
+<dl dfn-type="argument" dfn-for="id_assertion_endpoint_request">
     :   <dfn>disclosure_text_shown</dfn>
     ::  Whether the user agent has explicitly shown to the user what specific information the
         [=IDP=] intends to share with the [=RP=] (e.g. "idp.example will share your name, email...
         with rp.example"), used by the [=request permission to sign-up=] algorithm for new users. It
         is used as an assurance by the user agent to the [=IDP=] that it has indeed shown the terms
         of service and privacy policy to the user in the cases where it is required to do so.
-    :   <dfn>fields</dfn>
-    ::  The list of fields that the [=RP=] has requested in {{IdentityProviderRequestOptions/fields}}.
     :   <dfn>disclosure_shown_for</dfn>
     ::  The list of fields that the user was prompted for. This can be a subset of
         {{IdentityProviderRequestOptions/fields}} if a field is requested that is not in the [=list
         of recognized fields=].
 </dl>
+</div>
 
 For example:
 
@@ -2379,9 +2427,11 @@ The [=remote end steps=] are:
     [=invalid argument=].
 
 1. Close the dialog and continue the [=create an IdentityCredential=] algorithm
-    as if the user had selected the account indicated by |accountIndex| and
-    [=request permission to sign-up|granted permission to sign-up=], if applicable.
-
+    as if the user had selected the account indicated by |accountIndex|.
+    <div class="issue" heading="extension">
+      An extension spec may also simulate the user to have [=request permission to sign-up|granted permission to sign-up=],
+      if applicable.
+    </div>
 1. Return [=success=] with data `null`.
 
 ## Click dialog button ## {#webdriver-clickdialogbutton}
@@ -2456,7 +2506,8 @@ The [=remote end steps=] are:
     1. Let |accountState| be the result of running the [=compute the connection status=]
         algorithm given |account| and the {{IdentityProviderRequestOptions}} of the IDP
         |account| belongs to
-    1. [=list/Append=] a [=dictionary=] to |list| with the following properties:
+    1. <dfn for="fedcm webdriver error">Create dictionary</dfn>[=list/Append=] a [=dictionary=] to |list|
+        with the following properties:
         1. `accountId` set to the account's {{IdentityProviderAccount/id}}
         1. `email` set to the account's {{IdentityProviderAccount/email}}
         1. `name` set to the account's {{IdentityProviderAccount/name}}
@@ -2468,10 +2519,14 @@ The [=remote end steps=] are:
             IDP this account belongs to
         1. `loginState` to `"SignUp"` if |accountState| is
             [=compute the connection status/disconnected=] and `"SignIn"` otherwise
-        1. `termsOfServiceUrl` to the {{IdentityProviderClientMetadata/terms_of_service_url}}
-            if one was provided and the `loginState` is `"SignUp"`, otherwise {{undefined}}
-        1. `privacyPolicyUrl` to the {{IdentityProviderClientMetadata/privacy_policy_url}}
-            if one was provided and the `loginState` is `"SignUp"`, otherwise {{undefined}}
+
+      <div class="issue" heading="extension">
+      An extension may add the following subteps to the [=fedcm webdriver error/create dictionary=] step:
+          1. `termsOfServiceUrl` to the {{IdentityProviderClientMetadata/terms_of_service_url}}
+              if one was provided and the `loginState` is `"SignUp"`, otherwise {{undefined}}
+          1. `privacyPolicyUrl` to the {{IdentityProviderClientMetadata/privacy_policy_url}}
+              if one was provided and the `loginState` is `"SignUp"`, otherwise {{undefined}}
+      </div>
 
 1. Return [=success=] with data |list|.
 
@@ -2925,12 +2980,14 @@ origin of the fetched URLs.
     interacts or after a long timer, the number of fetches performed is not a concern. The [=IDP=]
     does learn a lot about the user from this fetch, but this is discussed in detail below.
 
-* The [=client metadata endpoint=] fetch can't be used to track users too because it is performed without cookies
-    from the [=IDP=], albeit with a {{id_assertion_endpoint_request/client_id}} and a referrer. This allows the [=IDP=] to
-    communicate the relevant Privacy Policy and Terms of Service to the user agent, in case
-    they need to be displayed. Again, besides possible timing attacks described here, the [=RP=]
-    gains nothing from this fetch, and the [=RP=] could already perform this fetch if it wanted to
-    since it involves no cookies from the [=IDP=].
+<div class="issue" heading="extension">
+    * The [=client metadata endpoint=] fetch can't be used to track users too because it is performed without cookies
+        from the [=IDP=], albeit with a {{id_assertion_endpoint_request/client_id}} and a referrer. This allows the [=IDP=] to
+        communicate the relevant Privacy Policy and Terms of Service to the user agent, in case
+        they need to be displayed. Again, besides possible timing attacks described here, the [=RP=]
+        gains nothing from this fetch, and the [=RP=] could already perform this fetch if it wanted to
+        since it involves no cookies from the [=IDP=].
+</div>
 
 * By design, the token fetch exposes the user at the website to the [=IDP=]: it is
     peformed with cookies, {{id_assertion_endpoint_request/client_id}}, and referrer. Because of that, it is gated on the user
