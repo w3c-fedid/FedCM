@@ -211,7 +211,7 @@ The [[#idp-api]] defines a set of HTTP APIs that [=IDP=]s expose as well as the 
 </script>
 
 <div class="issue" heading="extension">
-An extension spec may add a client metadata endpoint in between accounts and assertion:
+An extension spec may add a client metadata endpoint between accounts and assertion:
 <script type="text/typogram">
 |           |   |              |           |     +------------->*-+ Accounts  |
 |           |   |              |           |     |                |           |
@@ -223,7 +223,7 @@ An extension spec may add a client metadata endpoint in between accounts and ass
 </script>
 </div>
 
-The user agent intermediates in such a matter that makes it impractical for the
+The user agent intermediates in a manner that makes it impractical for the
 API to be used for tracking purposes, while preserving the functionality of
 identity federation.
 
@@ -1398,6 +1398,11 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
     1. Return |credential|.
 </div>
 
+<div class="issue">
+We may modify the spec to include {{IdentityProviderRequestOptions/fields}} in the
+[=fetch identity assertion/create a list=] step.
+</div>
+
 <div class="issue" heading="extension">
 An extension may add the following steps after the [=fetch identity assertion/create a list=] step:
     1. Let |disclosureShownFor| and |fields| be the empty list.
@@ -2036,7 +2041,7 @@ Every {{IdentityProviderAccount}} is expected to have members with the following
     :   <dfn>picture</dfn>
     ::  URL for the account's picture.
     :   <dfn>approved_clients</dfn>
-    ::  A list of [=RP=]s (that gets matched against the requesting {{IdentityProviderConfig/clientId}}) this account is already registered with. Use to [=compute the connection status=] of an account.
+    ::  A list of [=RP=]s (that gets matched against the requesting {{IdentityProviderConfig/clientId}}) this account is already registered with. Used to [=compute the connection status=] of an account.
         <div class="issue" heading="extension">
             In an extension spec, also used in the [=request permission to sign-up=] to allow the [=IDP=] to control whether
             to show the Privacy Policy and the Terms of Service.
@@ -2981,10 +2986,10 @@ origin of the fetched URLs.
     does learn a lot about the user from this fetch, but this is discussed in detail below.
 
 <div class="issue" heading="extension">
-    * The [=client metadata endpoint=] fetch can't be used to track users too because it is performed without cookies
+    * The [=client metadata endpoint=] fetch can't be used to track users because it is performed without cookies
         from the [=IDP=], albeit with a {{id_assertion_endpoint_request/client_id}} and a referrer. This allows the [=IDP=] to
         communicate the relevant Privacy Policy and Terms of Service to the user agent, in case
-        they need to be displayed. Again, besides possible timing attacks described here, the [=RP=]
+        they need to be displayed. Again, beyond possible timing attacks described here, the [=RP=]
         gains nothing from this fetch, and the [=RP=] could already perform this fetch if it wanted to
         since it involves no cookies from the [=IDP=].
 </div>
