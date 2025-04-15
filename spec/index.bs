@@ -1170,7 +1170,7 @@ dictionary IdentityProviderBranding {
 
 dictionary IdentityProviderAPIConfig {
   required USVString accounts_endpoint;
-  required USVString client_metadata_endpoint;
+  USVString client_metadata_endpoint;
   required USVString id_assertion_endpoint;
   required USVString login_url;
   USVString disconnect_endpoint;
@@ -1496,6 +1496,8 @@ an {{IdentityProviderAPIConfig}} |config|, an {{IdentityProviderRequestOptions}}
 To <dfn noexport>fetch the client metadata</dfn> given an {{IdentityProviderAPIConfig}} |config| and
 an {{IdentityProviderRequestOptions}} |provider|, run the following steps. This returns an
 {{IdentityProviderClientMetadata}} or failure.
+    1. If |config|["{{IdentityProviderAPIConfig/client_metadata_endpoint}}"] is not present, return
+        failure.
     1. Let |clientMetadataUrl| be the result of [=computing the manifest URL=] given |provider|,
         |config|["{{IdentityProviderAPIConfig/client_metadata_endpoint}}"], and |globalObject|.
     1. If |clientMetadataUrl| is failure, return failure.
