@@ -1238,7 +1238,14 @@ returns an {{IdentityProviderAccountList}}.
             |responseBody|.
         1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderAccountList}}, and
             store the result in |accountsList|.
-        1. If one of the previous two steps threw an exception, set |accountsList| to failure.
+        1. If one of the previous two steps threw an exception, or if there is an account in
+            |accountsList| that has neither {{IdentityProviderAccount/email}}, {{IdentityProviderAccount/name}},
+            {{IdentityProviderAccount/tel}}, nor {{IdentityProviderAccount/username}} set, set |accountsList|
+            to failure.
+
+        Note: If the user agent only has space to display two attributes in its account choosers,
+            it SHOULD display the first two that are set, in the order `name`, `username`,
+            `email`, and `tel`.
 
         Issue: the accounts list returned here should be validated for repeated ids, as described
         [here](https://github.com/fedidcg/FedCM/issues/336).
@@ -1250,8 +1257,10 @@ returns an {{IdentityProviderAccountList}}.
 <xmp class="idl">
 dictionary IdentityProviderAccount {
   required USVString id;
-  required USVString name;
-  required USVString email;
+  USVString name;
+  USVString email;
+  USVString tel;
+  USVString username;
   USVString given_name;
   USVString picture;
   sequence<USVString> approved_clients;
@@ -1481,6 +1490,10 @@ an {{IdentityProviderAPIConfig}} |config|, an {{IdentityProviderRequestOptions}}
                 :: The user's name as given in {{IdentityProviderAccount}}.{{IdentityProviderAccount/name}}.
                 : `"email"`
                 :: The user's email address as given in {{IdentityProviderAccount}}.{{IdentityProviderAccount/email}}.
+                : `"tel"`
+                :: The user's phone number as given in {{IdentityProviderAccount}}.{{IdentityProviderAccount/tel}}.
+                : `"username"`
+                :: The user's username as given in {{IdentityProviderAccount}}.{{IdentityProviderAccount/username}}.
                 : `"picture"`
                 :: The user's profile picture as given in {{IdentityProviderAccount}}.{{IdentityProviderAccount/picture}}.
 
@@ -2029,7 +2042,8 @@ Sec-Fetch-Dest: webidentity
 
 The response body must be a JSON object that can be [=converted to an IDL value|converted=] to an {{IdentityProviderAccountList}} without an exception.
 
-Every {{IdentityProviderAccount}} is expected to have members with the following semantics:
+Every {{IdentityProviderAccount}} is expected to have members with the following semantics. `name`,
+`email`, `username`, and `tel` are optional but at least one of them must be present and nonempty.
 
 <dl dfn-type="dict-member" dfn-for="IdentityProviderAccount">
     :   <dfn>id</dfn>
@@ -2038,6 +2052,13 @@ Every {{IdentityProviderAccount}} is expected to have members with the following
     ::  The user's full name.
     :   <dfn>email</dfn>
     ::  The user's email address.
+    :   <dfn>tel</dfn>
+    ::  The user's phone number.
+
+        Note: As this is only meant to be shown to the user, the phone number
+              can be in any format.
+    :   <dfn>username</dfn>
+    ::  The user's username.
     :   <dfn>given_name</dfn>
     ::  The user's given name.
     :   <dfn>picture</dfn>
@@ -2078,7 +2099,6 @@ For example:
   }, {
    "id": "5678",
    "given_name": "Johnny",
-   "name": "Johnny",
    "email": "johnny@idp.example",
    "picture": "https://idp.example/profile/456",
    "approved_clients": ["abc", "def", "ghi"],
