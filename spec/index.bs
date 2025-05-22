@@ -1790,22 +1790,27 @@ When invoking the {{IdentityProvider/getUserInfo()}} method given an {{IdentityP
             {{DOMException}}.
         1. Let |accountsList| be the result of [=fetch the accounts=] with |config|, |provider|,
             and |globalObject|.
-        1. Let |hasAccountEligibleForAutoReauthentication| be false.
-        1. For each |account| in |accountsList|:
+        1. Let |isEligibleForAutoReauthentication| be a new [=list=] of the same length as |accountsList|,
+            with all values initially set to false.
+        1. For each |i| from 0 to the length of |accountsList| minus 1:
+            1. Let |account| be |accountsList|[|i|].
             1. If |account|["{{IdentityProviderAccount/approved_clients}}"] is not empty and it does not
                 [=list/contain=] |provider|'s {{IdentityProviderConfig/clientId}}, continue.
-            
+
                 Note: this allows the [=IDP=] to override whether an account is a returning account.
                 This could be useful for instance in cases where the user has disconnected the
                 account out of band.
-            
-            1. If |account| is [=eligible for auto reauthentication=] given |provider| and
-                |globalObject|, set |hasAccountEligibleForAutoReauthentication| to true.
-        1. If |hasAccountEligibleForAutoReauthentication| is false, [=reject=] |promise| with a new
-            "{{NetworkError}}" {{DOMException}}.
+
+            1. [=Compute the connection status=] of |provider|, |account|, and |globalObject|. If the
+                result is [=compute the connection status/connected=], set
+                |isEligibleForAutoReauthentication|[|i|] to true.
+        1. If |isEligibleForAutoReauthentication| does not [=list/contain=] true, [=reject=] |promise| with
+            a new "{{NetworkError}}" {{DOMException}}.
         1. Let |userInfoList| be a new [=list=].
-        1. For each |account| in |accountsList|:
-            1. [=list/Append=] an {{IdentityUserInfo}} to |userInfoList| with the following values:
+        1. Let |notReturningUserInfos| be a new [=list=].
+        1. For each |i| from 0 to the length of |accountsList| minus 1:
+            1. Let |account| be |accountsList|[|i|].
+            1. Let |userInfo| be an {{IdentityUserInfo}} with the following values:
 
                 :  {{IdentityUserInfo/email}}
                 :: |account|["{{IdentityProviderAccount/email}}"]   
@@ -1815,6 +1820,9 @@ When invoking the {{IdentityProvider/getUserInfo()}} method given an {{IdentityP
                 :: |account|["{{IdentityProviderAccount/given_name}}"]   
                 :  {{IdentityUserInfo/picture}}
                 :: |account|["{{IdentityProviderAccount/picture}}"]
+            1. If |isEligibleForAutoReauthentication|[|i|], [=list/append=] |userInfo| to |userInfoList|.
+            1. Otherwise, [=list/append=] |userInfo| to |notReturningUserInfos|.
+        1. [=list/Extend=] |userInfo| with |notReturningUserInfos|.
         1. [=Resolve=] a new {{Promise}} with |userInfoList|.
 </div>
 
