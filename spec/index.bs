@@ -359,29 +359,28 @@ the [=RP=] can receive).
 <!-- ============================================================ -->
 
 Each [=user agent=] has a global <dfn>connected accounts set</dfn>, an initially empty
-[=ordered set=]. Its [=list/items=] are triples of the form (|rp|, |idp|, |account|) where |rp| is
-the [=/origin=] of the [=RP=], |idp| is the [=/origin=] of the [=IDP=], and |account| is a string representing
-an account identifier. It represents the set of triples such that the user has used FedCM to login to
-the |rp| via the |idp| |account|.
-
-Issue: the [=connected accounts set=] should be double keyed in the [=RP=] (i.e., it should include
-both the requester and the embedder, or in other words the iframe and the top-level). Otherwise the
-top-level's state could be used and modified by the embedder, which introduces leaks and unwanted
-cross-origin communication.
+[=ordered set=]. Its [=list/items=] are quadruples of the form (|embedder|, |rp|, |idp|, |account|)
+where |embedder| is the [=/origin=] of the [=navigable/top-level traversable=], |rp| is the
+[=/origin=] of the [=RP=], |idp| is the [=/origin=] of the [=IDP=], and |account| is a string
+representing an account identifier. It represents the set of triples such that the user has used
+FedCM to login to the |rp| via the |idp| |account|.
 
 If a user clears browsing data for an |origin| (cookies, localStorage, etc.), the user agent MUST
-[=list/remove=] all triples with an [=/origin=] matching the |origin| from <a>connected accounts set</a>.
+[=list/remove=] all quadruples in the <a>connected accounts set</a> with |origin| matching one of
+the items of the quadruple. 
 
 <div algorithm>
 To <dfn>compute the connected account key</dfn> given an {{IdentityProviderConfig}} |provider|, an
 {{IdentityProviderAccount}} |account|, and a |globalObject|, run the following steps. It returns a
-triple of the form (rp, idp, account).
+quadruple of the form (embedder, rp, idp, account).
     1. Let |configUrl| be the result of running [=parse url=] with |provider|'s
         {{IdentityProviderConfig/configURL}} and |globalObject|.
+    1. Let |embedderOrigin| be the |globalObject|'s [=Window/navigable=]'s
+        [=navigable/top-level traversable=]'s [=navigable/active document=]'s [=Document/origin=].
     1. Let |idpOrigin| be the [=url/origin=] corresponding to |configUrl|.
     1. Let |rpOrigin| be |globalObject|'s [=associated Document=]'s [=Document/origin=].
     1. Let |accountId| be |account|'s {{IdentityProviderAccount/id}}.
-    1. Return (|rpOrigin|, |idpOrigin|, |accountId|).
+    1. Return (|embedderOrigin|, |rpOrigin|, |idpOrigin|, |accountId|).
 </div>
 
 <div algorithm>
@@ -391,9 +390,9 @@ When asked whether an {{IdentityProviderAccount}} |account| is
     1. If |account| [=map/contains=] {{IdentityProviderAccount/approved_clients}} and
         |account|'s {{IdentityProviderAccount/approved_clients}} does not [=list/contain=]
         |provider|'s {{IdentityProviderConfig/clientId}}, return false.
-    1. Let |triple| be the result of running [=compute the connected account key=] given |provider|,
+    1. Let |tuple| be the result of running [=compute the connected account key=] given |provider|,
         |account|, and |globalObject|.
-    1. Return whether [=connected accounts set=] [=list/contains=] |triple|.
+    1. Return whether [=connected accounts set=] [=list/contains=] |tuple|.
 </div>
 
 <div algorithm="compute the connection status">
@@ -405,9 +404,9 @@ This returns <dfn for="compute the connection status">connected</dfn> or
         1. If |account|'s {{IdentityProviderAccount/approved_clients}} [=list/contains=]|provider|'s
             {{IdentityProviderConfig/clientId}}, return [=compute the connection status/connected=].
         1. Return [=compute the connection status/disconnected=].
-    1. Let |triple| be the result of running [=compute the connected account key=] given |provider|,
+    1. Let |tuple| be the result of running [=compute the connected account key=] given |provider|,
         |account|, and |globalObject|.
-    1. If [=connected accounts set=] [=list/contains=] |triple|, return
+    1. If [=connected accounts set=] [=list/contains=] |tuple|, return
         [=compute the connection status/connected=].
     1. Return [=compute the connection status/disconnected=].
 </div>
@@ -418,29 +417,32 @@ To <dfn>create a connection between the RP and the IdP account</dfn> given an
 |globalObject| (the [=RP=]'s), run the following steps:
     1. Let |configUrl| be the result of running [=parse url=] with |provider|'s
         {{IdentityProviderConfig/configURL}} and |globalObject|.
+    1. Let |embedderOrigin| be the |globalObject|'s [=Window/navigable=]'s
+        [=navigable/top-level traversable=]'s [=navigable/active document=]'s [=Document/origin=].
     1. Let |idpOrigin| be the [=url/origin=] corresponding to |configUrl|.
     1. Let |rpOrigin| be |globalObject|'s [=associated Document=]'s [=Document/origin=].
     1. Let |accountId| be |account|'s {{IdentityProviderAccount/id}}.
-    1. Let |triple| be (|rpOrigin|, |idpOrigin|, |accountId|).
-    1. [=set/Append=] |triple| to [=connected accounts set=].
+    1. Let |tuple| be (|embedderOrigin|, |rpOrigin|, |idpOrigin|, |accountId|).
+    1. [=set/Append=] |tuple| to [=connected accounts set=].
 </div>
 
 <div algorithm>
-To <dfn>remove a connection</dfn>: given |accountId|, |rpOrigin|, and |idpOrigin|, run the
-following steps. It returns whether the |accountId| connection was successfully removed.
-    1. Let |triple| be (|rpOrigin|, |idpOrigin|, |accountId|).
-    1. If [=connected accounts set=] [=list/contains=] |triple|:
-        1. [=list/Remove=] |triple| from the [=connected accounts set=].
+To <dfn>remove a connection</dfn>: given |accountId|, |embedderOrigin|, |rpOrigin|, and |idpOrigin|,
+run the following steps. It returns whether the |accountId| connection was successfully removed.
+    1. Let |tuple| be (|embedderOrigin|, |rpOrigin|, |idpOrigin|, |accountId|).
+    1. If [=connected accounts set=] [=list/contains=] |tuple|:
+        1. [=list/Remove=] |tuple| from the [=connected accounts set=].
         1. Return true.
     1. Return false.
 </div>
 
 <div algorithm>
-To <dfn>remove all connections</dfn>: given |rpOrigin| and |idpOrigin|, run the following steps:
-    1. For every (|rp|, |idp|, <var ignore="">accountId</var>) |triple| in the
+To <dfn>remove all connections</dfn>: given |embedderOrigin|, |rpOrigin| and |idpOrigin|, run the
+following steps:
+    1. For every (|embedder|, |rp|, |idp|, <var ignore="">accountId</var>) |tuple| in the
         [=connected accounts set=]:
-        1. If |rp| equals |rpOrigin| and |idp| equals |idpOrigin|, [=list/remove=] |triple| from the
-            [=connected accounts set=].
+        1. If |embedder| equals |embedderOrigin|, |rp| equals |rpOrigin|, and |idp| equals
+            |idpOrigin|, [=list/remove=] |tuple| from the [=connected accounts set=].
 </div>
 
 <!-- ============================================================ -->
@@ -538,14 +540,17 @@ When asked to <dfn>attempt to disconnect</dfn> given an {{IdentityCredentialDisc
         |result| be the result.
     1. Let |idpOrigin| be the [=url/origin=] corresponding to |configUrl|.
     1. Let |rpOrigin| be |globalObject|'s [=associated Document=]'s [=Document/origin=].
+    1. Let |embedderOrigin| be the |globalObject|'s [=Window/navigable=]'s
     1. If |result| is failure:
-        1. [=Remove all connections=] given |rpOrigin| and |idpOrigin|.
+        1. [=Remove all connections=] given |embedderOrigin|, |rpOrigin| and |idpOrigin|.
         1. [=Reject=] |promise| with a "{{NetworkError}}" {{DOMException}}.
         1. Return.
     1. Let |accountId| be |result| (note that it is not failure).
-    1. [=Remove a connection=] using |accountId|, |rpOrigin|, and |idpOrigin|, and let
-        |wasAccountRemoved| be the result.
-    1. If |wasAccountRemoved| is false, [=remove all connections=] given |rpOrigin| and |idpOrigin|.
+        [=navigable/top-level traversable=]'s [=navigable/active document=]'s [=Document/origin=].
+    1. [=Remove a connection=] using |accountId|, |embedderOrigin|, |rpOrigin|, and |idpOrigin|, and
+        let |wasAccountRemoved| be the result.
+    1. If |wasAccountRemoved| is false, [=remove all connections=] given |embedderOrigin|,
+        |rpOrigin| and |idpOrigin|.
     1. [=Resolve=] |promise|.
 </div>
 
@@ -1735,7 +1740,7 @@ See the [=show an IDP login dialog=] algorithm for more details.
 An {{IdentityUserInfo}} represents user account information from a user. This information is exposed
 to the [=IDP=] once the user has already used the FedCM API to login in the [=RP=]. That is, it is
 exposed when there exists an account |account| such that the [=connected accounts set=] [=list/contains=]
-the triple ([=RP=], [=IDP=], |account|). The information matches what is received from the
+the tuple (embedder, [=RP=], [=IDP=], |account|). The information matches what is received from the
 <a>accounts endpoint</a>. The [=IDP=] can obtain this information by invoking the
 {{IdentityProvider/getUserInfo()}} static method from an iframe matching the [=/origin=] of its
 {{IdentityProviderConfig/configURL}}.
