@@ -37,11 +37,6 @@ rationale behind that API's design.
 
 ## Contributing
 
-Much of the FedCM specification has evolved due to the experimentation detailed
-in the [explorations](explorations/README.md). The explorations documents give a good
-overview of the _why_ of the FedCM API. Please read over the documents to
-understand how the current API has evolved.
-
 There are several ways to contribute to the Federated Credential Management API.
 
  * If you'd like to try out the current demo of the FedCM API you can follow the
@@ -59,11 +54,12 @@ There are several ways to contribute to the Federated Credential Management API.
  * If you're a Relying Party (i.e. website) and would like to test the changes out
    we'd appreciate feedback, you have a couple of options:
 
-   1. Use [HOWTO.md](explorations/HOWTO-chrome.md) to setup a fake IDP which can serve
-      the needed JavaScript. You can also review the demo provided by the HOWTO and take a
-      look at the [Relying Party API](https://w3c-fedid.github.io/FedCM/#rp) to see what is
-      needed on the RP side.
-   2. Try using an existing IDP which deploys FedCM.
+   1. Use the [documentation](https://developer.mozilla.org/en-US/docs/Web/API/FedCM_API)
+      to setup a fake IDP which can serve the needed JavaScript. You can also review the demo
+      provided by the HOWTO and take a look at the
+      [Relying Party API](https://w3c-fedid.github.io/FedCM/#rp) to see what is needed on the
+      RP side.
+   3. Try using an existing IDP which deploys FedCM.
 
 ## Code of Conduct
 
