@@ -15,16 +15,21 @@ trusted Identity Provider, all through a browser-mediated and standardized flow.
 
 In an era of increasing focus on user privacy and data control, the FedCM API offers
 a forward-looking solution to the known privacy and usability challenges of
-traditional federated login systems. By shifting control to the browser, it creates
-a more transparent and consistent authentication process. This ensures that users
-have a clearer understanding and more explicit control over what information is
-being shared and with whom.
+traditional federated login systems. By introducing the browser as an active
+participant, it creates a more interoperable and consistent authentication process.
+This ensures that users have a clearer understanding and more explicit control over
+what information is being shared and with whom.
 
-For developers, FedCM offers a durable and streamlined API for implementing
+For websites, FedCM offers a durable and efficient API for implementing
 federated sign-in that is not dependent on the shifting landscape of browser
 tracking technologies. It represents a proactive step towards building a more
 trustworthy and user-centric web by improving the fundamental mechanics of how
 we manage identity online.
+
+Identity providers gain increased visibility with FedCM. The API allows the
+browser to display a single account chooser that can include multiple providers,
+letting users easily select their favorite. This unified login experience, managed
+directly by the browser, opens up new access points for providers.
 
 The [documentation](https://developer.mozilla.org/en-US/docs/Web/API/FedCM_API)
 and [spec](https://w3c-fedid.github.io/FedCM) provide a potential API and the
