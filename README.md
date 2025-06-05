@@ -59,7 +59,7 @@ There are several ways to contribute to the Federated Credential Management API.
       provided by the HOWTO and take a look at the
       [Relying Party API](https://w3c-fedid.github.io/FedCM/#rp) to see what is needed on the
       RP side.
-   3. Try using an existing IDP which deploys FedCM.
+   2. Try using an existing IDP which deploys FedCM.
 
 ## Code of Conduct
 
