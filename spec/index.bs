@@ -366,8 +366,8 @@ representing an account identifier. It represents the set of triples such that t
 FedCM to login to the |rp| via the |idp| |account|.
 
 If a user clears browsing data for an |origin| (cookies, localStorage, etc.), the user agent MUST
-[=list/remove=] all quadruples in the <a>connected accounts set</a> with |origin| matching one of
-the items of the quadruple. 
+[=list/remove=] all quadruples in the <a>connected accounts set</a> where |origin| is
+[=same origin=] with |rp|, |idp|, or |embedder|.
 
 <div algorithm>
 To <dfn>compute the connected account key</dfn> given an {{IdentityProviderConfig}} |provider|, an
@@ -541,8 +541,9 @@ When asked to <dfn>attempt to disconnect</dfn> given an {{IdentityCredentialDisc
     1. Let |idpOrigin| be the [=url/origin=] corresponding to |configUrl|.
     1. Let |rpOrigin| be |globalObject|'s [=associated Document=]'s [=Document/origin=].
     1. Let |embedderOrigin| be the |globalObject|'s [=Window/navigable=]'s
+        [=navigable/top-level traversable=]'s [=navigable/active document=]'s [=Document/origin=].
     1. If |result| is failure:
-        1. [=Remove all connections=] given |embedderOrigin|, |rpOrigin| and |idpOrigin|.
+        1. [=Remove all connections=] given |embedderOrigin|, |rpOrigin|, and |idpOrigin|.
         1. [=Reject=] |promise| with a "{{NetworkError}}" {{DOMException}}.
         1. Return.
     1. Let |accountId| be |result| (note that it is not failure).
