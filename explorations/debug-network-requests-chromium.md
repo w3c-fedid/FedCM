@@ -1,6 +1,6 @@
 Chromium now provides developer support for inspecting FedCM API network requests within DevTools.
 
-1. To inspect network requests initiated by FedCM, open Chrome DevTools by pressing Ctrl + Shift + I or navigating to Settings → More tools → Developer tools.
+1. To inspect network requests initiated by FedCM, open DevTools.
 <p align="center">
      <img width="467" src="https://github.com/fedidcg/FedCM/blob/main/explorations/static/devtools/open-devtools.png"/>
 </p>
