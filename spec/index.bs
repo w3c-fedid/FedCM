@@ -531,7 +531,7 @@ When asked to <dfn>attempt to disconnect</dfn> given an {{IdentityCredentialDisc
         |provider| and |globalObject|.
     1. If |config| is failure, [=reject=] |promise| with a "{{NetworkError}}" {{DOMException}}.
     1. Let |disconnectUrl| be the result of [=computing the manifest URL=] given |provider|,
-        |config|.{{IdentityProviderAPIConfig/disconnect_endpoint}}, true, and |globalObject|.
+        |config|.{{IdentityProviderAPIConfig/disconnect_endpoint}}, and |globalObject|.
     1. If |disconnectUrl| is failure, [=reject=] |promise| with a "{{NetworkError}}"
         {{DOMException}}.
     1. [=Send a disconnect request=] with |disconnectUrl|, |options|, and |globalObject|, and let
@@ -648,7 +648,7 @@ Given a |realm|, a {{DOMString}} |message|, and an {{IdentityCredentialErrorInit
     :   <b>{{IdentityCredentialError/error}}</b>
     ::  The {{IdentityCredentialError/error}}'s attribute getter returns the value it is set to.
         It represents the type of error which resulted in an {{IdentityCredential}} not being created.
-        An [=IDP=] MUST not expose sensitive user information in this field, since it is exposed to
+        An [=IDP=] MUST NOT expose sensitive user information in this field, since it is exposed to
         the [=RP=].
     :   <b>{{IdentityCredentialError/url}}</b>
     ::  The {{IdentityCredentialError/url}}'s attribute getter returns the value it is set to.
@@ -810,10 +810,10 @@ algorithm is invoked, the user agent MUST execute the following steps. This retu
         algorithm. See <a href="https://github.com/w3c/webappsec-credential-management/issues/210">issue</a>.
 
     1. If |credential| is a pair:
-        1. Let |delayException| be the value of the second element of the pair.
+        1. Let |throwImmediately| be the value of the second element of the pair.
         1. The user agent SHOULD wait a random amount of time
             before the next step if all of the following conditions hold:
-            * |delayException| is true
+            * |throwImmediately| is false
             * The <dfn>promise rejection delay</dfn> was not disabled by
                 [=setdelayenabled|user agent automation=]
             * The user agent has not implemented another way to prevent
@@ -1233,11 +1233,31 @@ or failure.
         1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderAPIConfig}} stored
             in |config|.
         1. If one of the previous two steps threw an exception, set |config| to failure.
-        1. Set |config|.{{IdentityProviderAPIConfig/login_url}} to the result of [=computing
-            the manifest URL=] with |provider|, |config|, true, and |globalObject|.
-        1. If |config|.{{IdentityProviderAPIConfig/login_url}} is null, return failure.
-    1. Wait for both |config| and |configInWellKnown| to be set.
-    1. If |configInWellKnown| is true, return |config|. Otherwise, return failure.
+        1. Set |login_url| to the result of [=computing the manifest URL=] with |provider|,
+            |config|.{{IdentityProviderAPIConfig/login_url}}, and |globalObject|.
+        1. Set |accounts_url| to the result of [=computing the manifest URL=] with |provider|,
+            |config|.{{IdentityProviderAPIConfig/accounts_endpoint}}, and |globalObject|.
+        1. If |login_url| or |accounts_url| is failure, set |config| to failure.
+    1. Wait for |config| to be set.
+    1. If |config| is failure, return failure.
+    1. If |skipWellKnown| is true, return |config|.
+    1. Wait for |wellKnown| to be set.
+    1. If |wellKnown| is failure, return failure.
+    1. If |wellKnown|.{{IdentityProviderWellKnown/accounts_endpoint}} and
+        |wellKnown|.{{IdentityProviderWellKnown/login_url}} are set:
+        1. Let |well_known_accounts_url| be the result of [=computing the manifest URL=] with
+            |provider|, |wellKnown|.{{IdentityProviderWellKnown/accounts_endpoint}}, and
+            |globalObject|.
+        1. Let |well_known_login_url| be the result of [=computing the manifest URL=] with |provider|,
+            |wellKnown|.{{IdentityProviderWellKnown/login_url}}, and |globalObject|.
+        1. If |well_known_accounts_url| is not [=url/equal=] to |accounts_url|, return failure.
+        1. If |well_known_login_url| is not [=url/equal=] to |login_url|, return failure.
+    1. Otherwise:
+        1. Let |allowed_config_url| be the result of [=computing the manifest URL=] with |provider|,
+            |wellKnown|.{{IdentityProviderWellKnown/provider_urls}}[0], and |globalObject|.
+        1. If |allowed_config_url| is not [=url/equal=] to |configUrl|, return failure.
+    1. Return |config|.
+
 </div>
 
 NOTE: a two-tier file system is used in order to prevent the [=IDP=] from easily determining the [=RP=]
@@ -1291,7 +1311,7 @@ To <dfn>fetch the accounts</dfn> given an {{IdentityProviderAPIConfig}} |config|
 {{IdentityProviderRequestOptions}} |provider|, and |globalObject|, run the following steps. This
 returns an {{IdentityProviderAccountList}}.
     1. Let |accountsUrl| be the result of [=computing the manifest URL=] given |provider|,
-        |config|["{{IdentityProviderAPIConfig/accounts_endpoint}}"], true, and |globalObject|.
+        |config|["{{IdentityProviderAPIConfig/accounts_endpoint}}"], and |globalObject|.
     1. If |accountsUrl| is failure, return an empty list.
     1. Let |request| be a new <a spec=fetch for=/>request</a> as follows:
 
@@ -1422,7 +1442,7 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
     and |globalObject|, run the following steps. This returns an {{IdentityCredential}} or an
     {{IdentityCredentialError}}.
     1. Let |tokenUrl| be the result of [=computing the manifest URL=] given |provider|,
-        |config|["{{IdentityProviderAPIConfig/id_assertion_endpoint}}"], true, and |globalObject|.
+        |config|["{{IdentityProviderAPIConfig/id_assertion_endpoint}}"], and |globalObject|.
     1. If |tokenUrl| is failure:
         1. [=Queue a global task=] on the [=DOM manipulation task source=] given |globalObject| to
             let |error| be a new {{IdentityCredentialError}} given |globalObject|'s
@@ -1470,29 +1490,22 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
         set to the following steps given a <a spec=fetch for=/>response</a> |response| and |responseBody|:
         1. Let |json| be the result of [=extract the JSON fetch response=] from |response| and
             |responseBody|.
-        1. If |json|[|token|] and |json|[|error|] both [=map/exist=] or both do not [=map/exist=],
-            set |credential| to a new {{IdentityCredentialError}} given |globalObject|'s
-            [=global object/realm=] and "IdentityCredentialError", and return.
-        1. If |json|[|token|] [=map/exists=]:
-            1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderToken}}, |token|.
-            1. If one of the previous steps threw an exception, set |credential| to a new
-                {{IdentityCredentialError}} given |globalObject|'s [=global object/realm=]
-                and "IdentityCredentialError", and return.
-            1. Let |credential| be a new {{IdentityCredential}} given |globalObject|'s
-                [=global object/realm=].
-            1. Set |credential|'s {{IdentityCredential/token}} to |token|.
-            1. Set |credential|'s {{IdentityCredential/isAutoSelected}} to |isAutoSelected|.
-        1. Otherwise, i.e. if |json|[|error|] [=map/exists=]:
-            1. If |json|[|error|] is not an [=ordered map=], set |credential| to a new
-                {{IdentityCredentialError}} given |globalObject|'s [=global object/realm=] and
-                "IdentityCredentialError", and return.
-            1. [=converted to an IDL value|Convert=] |json| to an {{IdentityCredentialErrorInit}},
-                |errorInit|.
+        1. [=converted to an IDL value|Convert=] |json| to an {{IdentityAssertionResponse}}, |token|.
+        1. If one of the previous two steps threw an exception, set |credential| to a new
+            {{IdentityCredentialError}} given |globalObject|'s [=global object/realm=] and
+            "IdentityCredentialError", and return.
+        1. If {{IdentityAssertionResponse/error}} was specified:
             1. If |errorInit|.{{IdentityCredentialErrorInit/url}} is present:
-                1. Let |errorUrl| be the result of [=computing the manifest URL=] given |provider|,
-                    |errorInit|.{{IdentityCredentialErrorInit/url}}, false, and |globalObject|.
+                1. Let |errorUrl| be the result of running [=parse url=] given
+                    |errorInit|.{{IdentityCredentialErrorInit/url}} (the relative URL),
+                    |globalObject|, and |tokenUrl| (the base URL).
+                1. If |errorUrl|'s [=url/host=]'s [=host/registrable domain=]
+                    is not equal to |tokenUrl|'s, set |errorUrl| to failure.
+                1. If |errorUrl| is not a [=potentially trustworthy URL=], set set |errorUrl| to
+                    failure.
                 1. If |errorUrl| is failure, set |errorInit|.{{IdentityCredentialErrorInit/url}}
-                    to "".
+                    to "". Otherwise, set |errorInit|.{{IdentityCredentialErrorInit/url}} to
+                    |errorUrl|.
             1. Let |credential| be a new {{IdentityCredentialError}} given |globalObject|'s
                 [=global object/realm=], "IdentityCredentialError", and |errorInit|. 
     1. Wait for |credential| to be set.
@@ -1604,7 +1617,7 @@ an {{IdentityProviderRequestOptions}} |provider|, run the following steps. This 
     1. If |config|["{{IdentityProviderAPIConfig/client_metadata_endpoint}}"] is not present, return
         failure.
     1. Let |clientMetadataUrl| be the result of [=computing the manifest URL=] given |provider|,
-        |config|["{{IdentityProviderAPIConfig/client_metadata_endpoint}}"], true, and |globalObject|.
+        |config|["{{IdentityProviderAPIConfig/client_metadata_endpoint}}"], and |globalObject|.
     1. If |clientMetadataUrl| is failure, return failure.
     1. Let |request| be a new <a spec=fetch for=/>request</a> as follows:
 
@@ -1685,8 +1698,8 @@ To <dfn>fetch request</dfn> given a [=/request=] |request|, |globalObject|, and 
 
 <div algorithm>
 When <dfn>computing the manifest URL</dfn> given an {{IdentityProviderConfig}} |provider|, a
-[=string=] |manifestString|, a boolean |requireSameOrigin|, and |globalObject|, perform the following
-steps. This returns a <a spec=url for=/>URL</a> or failure.
+[=string=] |manifestString|, and |globalObject|, perform the following steps. This returns a
+<a spec=url for=/>URL</a> or failure.
     1. Let |configUrl| be the result of running [=parse url=] with |provider|'s
         {{IdentityProviderConfig/configURL}} and |globalObject|.
     1. Let |manifestUrl| be the result of running [=parse url=] given |manifestString| (the relative
@@ -1697,10 +1710,7 @@ steps. This returns a <a spec=url for=/>URL</a> or failure.
         allowed.
 
     1. If |manifestUrl| is failure, return failure.
-    1. If |requireSameOrigin| and |manifestUrl| is not [=same origin=] with |configUrl|, return
-        failure.
-    1. If |requireSameOrigin| is false and |manifestUrl|'s [=url/host=]'s [=host/registrable domain=]
-        is not equal to |configUrl|'s, return failure.
+    1. If |manifestUrl| is not [=same origin=] with |configUrl|, return failure.
     1. If |manifestUrl| is not a [=potentially trustworthy URL=], return failure.
     1. Return |manifestUrl|.
 </div>
