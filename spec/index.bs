@@ -634,6 +634,19 @@ dictionary IdentityCredentialErrorInit {
   };
 </pre>
 
+<div algorithm="create an IdentityCredentialError">
+To <dfn>create an IdentityCredentialError</dfn> given an {{IdentityCredentialErrorInit}} |options|
+and a |globalObject|, run the following steps:
+    1. Let |error| be a [=new=] {{IdentityCredentialError}} with |globalObject|'s
+        [=relevant realm=].
+    1. Set |error|'s {{DOMException/message}} to "IdentityCredentialError".
+    1. Set |error|.{{IdentityCredentialError/error}} to |options|.{{IdentityCredentialError/error}}
+        if it is present in |options|, or to "" otherwise.
+    1. Set |error|.{{IdentityCredentialError/url}} to |options|.{{IdentityCredentialError/url}}
+        if it is present in |options|, or to "" otherwise.
+    1. Return |error|.
+</div>
+
 <div algorithm="IdentityCredentialError constructor">
 Given a |realm|, a {{DOMString}} |message|, and an {{IdentityCredentialErrorInit}} |options|, the
 {{IdentityCredentialError/constructor()}} must run the following steps:
@@ -844,8 +857,8 @@ returned to the [=RP=].
 To <dfn>create an IdentityCredential</dfn> given an {{IdentityProviderRequestOptions}}
 |provider|, a {{CredentialRequestOptions}} |options|, and a
 |globalObject|, run the following steps. This returns an {{IdentityCredential}}, an
-{{IdentityCredentialError}}, or a pair (failure, bool), where the bool indicates whether to delay
-throwing the exception.
+{{IdentityCredentialError}}, or a pair (failure, bool), where the bool indicates whether to throw
+the exception immediately.
     1. Assert: These steps are running [=in parallel=].
     1. Let |mode| be |options|'s {{IdentityCredentialRequestOptions/mode}}.
     1. If |mode| is {{IdentityCredentialRequestOptionsMode/active}}:
@@ -1013,8 +1026,8 @@ throwing the exception.
     1. If |credential| is an {{IdentityCredentialError}}:
         1. The [=user agent=] MUST show UI to the user indicating that the identity assertion fetch
             has failed.
-        1. The [=user agent=] MAY use the {{IdentityCredentialError/error}} in its UI to provide a
-            more specific error message to the user. For instance, if the value is one of
+        1. The [=user agent=] SHOULD use the {{IdentityCredentialError/error}} in its UI to provide
+            a more specific error message to the user. For instance, if the value is one of
             "invalid_request", "unauthorized_client", "access_denied", "server_error", and
             "temporarily_unavailable", the [=user agent=] may note the reason in a user-friendly
             manner. See [here](https://datatracker.ietf.org/doc/html/rfc6749#section-4.1.2.1) for
@@ -1383,8 +1396,8 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
         |config|["{{IdentityProviderAPIConfig/id_assertion_endpoint}}"], and |globalObject|.
     1. If |tokenUrl| is failure:
         1. [=Queue a global task=] on the [=DOM manipulation task source=] given |globalObject| to
-            let |error| be a new {{IdentityCredentialError}} given |globalObject|'s
-            [=global object/realm=].
+            let |error| be the result of [=create an IdentityCredentialError=] given {} and
+            |globalObject|.
         1. Wait for |error| to be set, and return it.
     1. Let |requestBody| be the result of running [=urlencoded serializer=] with a list containing:
         1. ("client_id", |provider|'s {{IdentityProviderConfig/clientId}})
@@ -1429,9 +1442,8 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
         1. Let |json| be the result of [=extract the JSON fetch response=] from |response| and
             |responseBody|.
         1. [=converted to an IDL value|Convert=] |json| to an {{IdentityAssertionResponse}}, |token|.
-        1. If one of the previous two steps threw an exception, set |credential| to a new
-            {{IdentityCredentialError}} given |globalObject|'s [=global object/realm=] and
-            "IdentityCredentialError", and return.
+        1. If one of the previous two steps threw an exception, set |credential| to the result of
+            [=create an IdentityCredentialError=] with {} and |globalObject|.
         1. If {{IdentityAssertionResponse/error}} was specified:
             1. If |errorInit|.{{IdentityCredentialErrorInit/url}} is present:
                 1. Let |errorUrl| be the result of running [=parse url=] given
@@ -1444,8 +1456,36 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
                 1. If |errorUrl| is failure, set |errorInit|.{{IdentityCredentialErrorInit/url}}
                     to "". Otherwise, set |errorInit|.{{IdentityCredentialErrorInit/url}} to
                     |errorUrl|.
-            1. Let |credential| be a new {{IdentityCredentialError}} given |globalObject|'s
-                [=global object/realm=], "IdentityCredentialError", and |errorInit|. 
+            1. Set |credential| to the result of [=create an IdentityCredentialError=] with
+                |errorInit|, and |globalObject|.
+        1. Otherwise, if {{IdentityAssertionResponse/token}} was specified, let |tokenString|
+            be |token|'s {{IdentityAssertionResponse/token}}.
+        1.  Otherwise, if {{IdentityAssertionResponse/continue_on}} was specified, run these steps
+            [=in parallel=]:
+            1. Let |continueOnUrl| be the result of running [=parse url=] with |token|'s
+                {{IdentityAssertionResponse/continue_on}} and |globalObject|.
+            1. If |continueOnUrl| is failure, set |credential| to failure and return.
+            1. If |continueOnUrl| is not [=same origin=] with |tokenUrl|, set |credential|
+                to failure and return.
+            1. Let |tokenPair| be the result of [=show a continuation dialog=] with |continueOnUrl|.
+            1. If |tokenPair| is failure, set |credential| to failure and return.
+            1. Let |tokenString| be the first entry of |tokenPair|.
+            1. If the second entry of |tokenPair| is not null, set |accountId| to that second entry.
+        1. Otherwise, set |credential| to a the result of [=create an IdentityCredentialError=] with
+            |errorInit| and |globalObject|,
+        1. Wait for |tokenString| or |credential| to be set.
+        1. If |credential| is set:
+            1. Assert that |credential| is set to failure.
+            1. Return |credential|.
+        1. [=Create a connection between the RP and the IdP account=] with |provider|, |accountId|, and
+            |globalObject|.
+        1. Let |credential| be a new {{IdentityCredential}} given |globalObject|'s
+            <a for="global object">realm</a>.
+        1. Set |credential|'s {{IdentityCredential/token}} to |tokenString|.
+        1. Set |credential|'s {{IdentityCredential/isAutoSelected}} to
+            |isAutoSelected|.
+        1. Set |credential|'s {{IdentityCredential/configURL}} to |provider|'s
+            {{IdentityProviderConfig/configURL}}.
     1. Wait for |credential| to be set.
     1. Return |credential|.
 </div>
