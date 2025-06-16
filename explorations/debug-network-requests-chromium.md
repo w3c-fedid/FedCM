@@ -14,5 +14,5 @@ Chromium now provides developer support for inspecting FedCM API network request
 </p>
 4. Click on any individual request to view detailed information about it.
 <p align="center">
-     <img width="467" src="https://github.com/fedidcg/FedCM/blob/main/explorations/static/net-export/request-inspect.png"/>
+     <img width="467" src="https://github.com/fedidcg/FedCM/blob/main/explorations/static/devtools/request-inspect.png"/>
 </p>
