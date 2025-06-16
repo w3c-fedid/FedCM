@@ -1231,31 +1231,11 @@ or failure.
         1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderAPIConfig}} stored
             in |config|.
         1. If one of the previous two steps threw an exception, set |config| to failure.
-        1. Set |login_url| to the result of [=computing the manifest URL=] with |provider|,
-            |config|.{{IdentityProviderAPIConfig/login_url}}, and |globalObject|.
-        1. Set |accounts_url| to the result of [=computing the manifest URL=] with |provider|,
-            |config|.{{IdentityProviderAPIConfig/accounts_endpoint}}, and |globalObject|.
-        1. If |login_url| or |accounts_url| is failure, set |config| to failure.
-    1. Wait for |config| to be set.
-    1. If |config| is failure, return failure.
-    1. If |skipWellKnown| is true, return |config|.
-    1. Wait for |wellKnown| to be set.
-    1. If |wellKnown| is failure, return failure.
-    1. If |wellKnown|.{{IdentityProviderWellKnown/accounts_endpoint}} and
-        |wellKnown|.{{IdentityProviderWellKnown/login_url}} are set:
-        1. Let |well_known_accounts_url| be the result of [=computing the manifest URL=] with
-            |provider|, |wellKnown|.{{IdentityProviderWellKnown/accounts_endpoint}},
-            and |globalObject|.
-        1. Let |well_known_login_url| be the result of [=computing the manifest URL=] with |provider|,
-            |wellKnown|.{{IdentityProviderWellKnown/login_url}}, and |globalObject|.
-        1. If |well_known_accounts_url| is not [=url/equal=] to |accounts_url|, return failure.
-        1. If |well_known_login_url| is not [=url/equal=] to |login_url|, return failure.
-    1. Otherwise:
-        1. Let |allowed_config_url| be the result of [=computing the manifest URL=] with |provider|,
-            |wellKnown|.{{IdentityProviderWellKnown/provider_urls}}[0], and |globalObject|.
-        1. If |allowed_config_url| is not [=url/equal=] to |configUrl|, return failure.
-    1. Return |config|.
-
+        1. Set |config|.{{IdentityProviderAPIConfig/login_url}} to the result of [=computing
+            the manifest URL=] with |provider|, |config|, true, and |globalObject|.
+        1. If |config|.{{IdentityProviderAPIConfig/login_url}} is null, return failure.
+    1. Wait for both |config| and |configInWellKnown| to be set.
+    1. If |configInWellKnown| is true, return |config|. Otherwise, return failure.
 </div>
 
 NOTE: a two-tier file system is used in order to prevent the [=IDP=] from easily determining the [=RP=]
