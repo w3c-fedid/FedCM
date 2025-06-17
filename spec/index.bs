@@ -856,8 +856,9 @@ thrown to the [=RP=].
 <div algorithm="create an IdentityCredential">
 To <dfn>create an IdentityCredential</dfn> given a [=sequence=] of
 {{IdentityProviderRequestOptions}} |providerList|, a {{CredentialRequestOptions}} |options|, and a
-|globalObject|, run the following steps. This returns an {{IdentityCredential}} or a pair (failure,
-bool), where the bool indicates whether to throw the exception immediately.
+|globalObject|, run the following steps. This returns an {{IdentityCredential}}, an
+{{IdentityCredentialError}}, or a pair (failure, bool), where the bool indicates whether to throw
+the exception immediately.
     1. Assert: These steps are running [=in parallel=].
     1. Let |mode| be |options|'s {{IdentityCredentialRequestOptions/mode}}.
     1. If |mode| is {{IdentityCredentialRequestOptionsMode/active}}:
@@ -1439,11 +1440,13 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
     1. Let |credential| be null.
     1. [=Fetch request=] with |request| and |globalObject|, and with <var ignore>processResponseConsumeBody</var>
         set to the following steps given a <a spec=fetch for=/>response</a> |response| and |responseBody|:
+        1. If |responseBody| is null or failure, set |credential| to the result of
+            [=create an IdentityCredentialError=] with {} and |globalObject|, and return.
         1. Let |json| be the result of [=extract the JSON fetch response=] from |response| and
             |responseBody|.
         1. [=converted to an IDL value|Convert=] |json| to an {{IdentityAssertionResponse}}, |token|.
         1. If one of the previous two steps threw an exception, set |credential| to the result of
-            [=create an IdentityCredentialError=] with {} and |globalObject|.
+            [=create an IdentityCredentialError=] with {} and |globalObject|, and return.
         1. If {{IdentityAssertionResponse/error}} was specified, let |errorInit| be the value and:
             1. If |errorInit|.{{IdentityCredentialErrorInit/url}} is present:
                 1. Let |errorUrl| be the result of running [=parse url=] given
