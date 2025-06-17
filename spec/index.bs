@@ -955,6 +955,14 @@ the exception thrown.
                 1. Otherwise, go back to the [=fetch accounts step=] to get an updated
                     value of |providerMap| for this [=IDP=].
         1. Otherwise, |value| is a [=list=] of accounts. [=list/Extend=] |allAccounts| with |value|.
+        1. If |options|.{{IdentityCredentialRequestOptions/mode}} is `"active"` and the provider's
+            |config|.{{IdentityProviderAPIConfig/supports_use_other_account}} is true, add an
+            affordance to trigger [=show an IDP login dialog=] to let the user sign in to another
+            account. If that affordance is triggered:
+                1. Let |result| be the result of that algorithm.
+                1. If |result| is failure, go to [=show accounts=].
+                1. Otherwise, go back to the [=fetch accounts step=] to get an updated
+                    value of |providerMap| for this [=IDP=].
     1. Also include a UI affordance to close the dialog. If the user closes this dialog, return (failure,
         true).
     1. <dfn for="create identity credential">Show accounts</dfn> step: if |allAccounts| is not [=list/empty=], also add UI to present the account options to the user.
@@ -975,8 +983,12 @@ the exception thrown.
 An extension may use the following instead of the [=create identity credential/show accounts=] step, where
     |permissionRequested| is sometimes set:
     1. If |allAccounts| is not [=list/empty=], also add UI to present the account options to the user as follows:
-        1. If |allAccounts|'s size is 1 and <var ignore="">providerMap</var>'s [=map/values=] do not [=map/contain=]
-            "mismatch":
+        1. Let |supportsUseOtherAccount| be `false`.
+        1. If |options|.{{IdentityCredentialRequestOptions/mode}} is `"active"`:
+            1. Assert that there is only one |provider|.
+            1. Set |supportsUseOtherAccount| to the value of that provider's |config|.{{IdentityProviderAPIConfig/supports_use_other_account}}.
+        1. If |allAccounts|'s size is 1, |supportsUseOtherAccount| is `false`, and
+            <var ignore="">providerMap</var>'s [=map/values=] do not [=map/contain=] "mismatch":
             1. Set |selectedAccount| to |allAccounts|[0].
             1. If [=compute the connection status=] of |selectedAccount|, the relevant |provider|,
                 and |globalObject| returns [=compute the connection status/connected=], show a
@@ -989,8 +1001,13 @@ An extension may use the following instead of the [=create identity credential/s
                 and |globalObject|. Also set |permissionRequested| to true if the user agent
                 [=supports showing a permission prompt=].
         1. Otherwise:
-            1. Show UI to allow the user to select an account chooser displaying the options from
+            1. Show <dfn>UI to allow the user to select an account</dfn> displaying the options from
                 <var ignore="">accountsList</var>.
+            1. If |supportsUseOtherAccount| is true, the account chooser SHOULD provide
+                an affordance to use another account. If that affordance is triggered:
+                1. [=Show an IDP login dialog=] with |config|, |provider| and |globalObject|.
+                1. If that returned success, go back to the [=fetch accounts step=].
+                1. Otherwise, go back to the [=UI to allow the user to select an account=].
             1. If the user selects an account, perform the following steps:
                 1. Set |selectedAccount| to the chosen {{IdentityProviderAccount}}.
                 1. If [=compute the connection status=] of |selectedAccount|, the relevant |provider|,
@@ -1175,6 +1192,7 @@ dictionary IdentityProviderAPIConfig {
   required USVString login_url;
   USVString disconnect_endpoint;
   IdentityProviderBranding branding;
+  boolean supports_use_other_account = false;
   USVString account_label;
 };
 </xmp>
