@@ -1461,8 +1461,13 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
                     |errorUrl|.
             1. Set |credential| to the result of [=create an IdentityCredentialError=] with
                 |errorInit|, and |globalObject|.
-        1. Otherwise, if |response|'s [=response/status=] is not an [=ok status=], set |credential|
-            to the result of [=create an IdentityCredentialError=] with {} and |globalObject|.
+        1. Otherwise, if |response|'s [=response/status=] is not an [=ok status=]:
+            1. Set |credential| to the result of [=create an IdentityCredentialError=] with {} and
+                |globalObject|.
+            1. The user agent MAY set |credential|'s {{IdentityCredentialError/error}} based on
+                |response|'s [=response/status=]. For example, it could set it to "server_error" if
+                the [=response/status=] is 500 and it could set it to "temporarily_unavailable" if
+                the [=response/status=] is 503.
         1. Otherwise, if {{IdentityAssertionResponse/token}} was specified, let |tokenString|
             be |token|'s {{IdentityAssertionResponse/token}}.
         1. Otherwise, if {{IdentityAssertionResponse/continue_on}} was specified, run these steps
@@ -2339,7 +2344,9 @@ Every {{IdentityAssertionResponse}} is expected to have members with the followi
     ::  A dictionary containing the error that occurred when the ID assertion was fetched.
 </dl>
 
-Only one of `token`, `continue_on`, and `error` should be specified.
+Only one of `token`, `continue_on`, and `error` should be specified. When multiple are specified,
+the order of processing is [`error`, `token`, `continue_on`], so the first present will be used in
+the response.
 
 The content of the {{IdentityAssertionResponse/token}} is opaque to the user agent and can contain
 anything that the [=IDP=] would like to pass to the
