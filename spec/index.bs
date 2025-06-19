@@ -836,6 +836,12 @@ the exception thrown.
             since these are indepedent.
         1. Let |providerOrigin| be the [=/origin=] of |provider|'s {{IdentityProviderConfig/configURL}}.
         1. If |providerMap| [=map/contains=] |providerOrigin|, return (failure, true).
+        1. If |mediation| is "{{CredentialMediationRequirement/silent}}" and there does not exist an
+            account |account| such that [=connected accounts set=] [=list/contains=] the result of
+            [=compute the connected account key=] given |account|, |provider|, and |globalObject|,
+            [=continue=]. Note that this check can be performed by iterating over the
+            [=connected accounts set=] or by keeping a separate data structure to make this lookup
+            fast.
         1. Let |loginStatus| be the result of [=get the login status=] with |providerOrigin|.
         1. If |loginStatus| is [=unknown=], a user agent MAY set it to [=logged-out=].
         1. If |loginStatus| is [=logged-out=]:
@@ -853,12 +859,13 @@ the exception thrown.
         1. Let |config| be the result of running [=fetch the config file=] with
             |provider| and |globalObject|.
         1. If |config| is failure, [=continue=].
-        1. [=Fetch accounts=] given |config|, |provider|, and |globalObject| and let |accountsList|
+        1. [=Fetch accounts=] given |config|, |provider|, and |globalObject|, and let |accountsList|
             be the result.
         1. If |accountsList| is empty:
-            1. If |loginStatus| is [=logged-in=], set |providerMap|[|providerOrigin|] to "mismatch".
-            1. Otherwise (|loginStatus| is [=unknown=]): set |providerMap|[|providerOrigin|] to
-                "logged-out".
+            1. If |loginStatus| is [=logged-in=] and |mediation| is not
+                {{CredentialMediationRequirement/silent}}, set |providerMap|[|providerOrigin|] to
+                "mismatch".
+            1. Otherwise, set |providerMap|[|providerOrigin|] to "logged-out".
         1. Otherwise, set |providerMap|[|providerOrigin|] to |accountsList|.
     1. If |providerMap| [=map/is empty=], return (failure, false).
     1. Let |registeredAccount| and |numRegisteredAccounts| be null and 0, respectively.
@@ -873,11 +880,12 @@ the exception thrown.
     1. If |mediation| is not "{{CredentialMediationRequirement/required}}", |requiresUserMediation|
         is false, |numRegisteredAccounts| is equal to 1, and |providerMap|'s [=map/values=] do not
         [=map/contain=] "mismatch":
-        1. Set |selectedAccount| to |registeredAccount| and set |permission| and |isAutoSelected| to
+        1. Set |selectedAccount| to |registeredAccount|, and set |permission| and |isAutoSelected| to
             true. When doing this, the user agent MAY show some UI to the user indicating that they
             are being <dfn>auto-reauthenticated</dfn>. Go to the [=wait for user step=].
-    1. Otherwise, if |mediation| is "{{CredentialMediationRequirement/silent}}" and |providerMap|'s
-        [=map/values=] do not [=map/contain=] "mismatch", return (failure, false).
+    1. Otherwise, if |mediation| is "{{CredentialMediationRequirement/silent}}":
+        1. Assert that |providerMap|'s [=map/values=] do not [=map/contain=] "mismatch".
+        1. Return (failure, false).
     1. Let |allAccounts| be an empty [=list=].
     1. Build UI by adding the following for each (|providerOrigin|, |value|) in |providerMap|:
         1. If |value| is "logged-out", the user agent adds one of the following:
@@ -907,7 +915,7 @@ the exception thrown.
                     agent MAY show a dialog to the user before or after
                     returning failure indicating this failure.
                 1. Otherwise, [=fetch accounts=] with the relevant |config|, |provider|, and
-                    |globalObject| and let |accountsList| be the result.
+                    |globalObject|, and let |accountsList| be the result.
                 1. If |accountsList| is empty, show the [=confirm IDP login dialog=] again.
                 1. Otherwise, [=list/Extend=] |allAccounts| with |accountsList| and
                     [=show accounts=].
@@ -944,7 +952,9 @@ the exception thrown.
 </div>
 
 <div algorithm="fetch accounts">
-When asked to <dfn for="create identity credential">fetch accounts</dfn> given an {{IdentityProviderAPIConfig}} |config|, an {{IdentityProviderRequestOptions}} |provider|, and a |globalObject|, run the following steps. This returns a possibly empty list of accounts.
+When asked to <dfn for="create identity credential">fetch accounts</dfn> given an
+{{IdentityProviderAPIConfig}} |config|, an {{IdentityProviderRequestOptions}} |provider|, and a
+|globalObject|, run the following steps. This returns a possibly empty list of accounts.
   1. Let |accountsList| be the result of [=fetch the accounts=] with |config|, |provider|, and
       |globalObject|.
   1. If |accountsList| is failure, or the size of |accountsList| is 0:
@@ -970,21 +980,21 @@ When asked to <dfn for="create identity credential">fetch accounts</dfn> given a
               list so that the identity provider cannot determine what hints were provided
               based on which fetches occurred.
   1. If |provider|'s {{IdentityProviderRequestOptions/loginHint}} is not empty:
-      1. For every |account| in |accountList|, remove |account| from |accountList| if |account|'s
+      1. For every |account| in |accountList|, if |account|'s
           {{IdentityProviderAccount/login_hints}} does not [=list/contain=] |provider|'s
-          {{IdentityProviderRequestOptions/loginHint}}.
+          {{IdentityProviderRequestOptions/loginHint}}, remove |account| from |accountList| .
   1. If |provider|'s {{IdentityProviderRequestOptions/domainHint}} is not empty:
       1. For every |account| in |accountList|:
           1. If {{IdentityProviderRequestOptions/domainHint}} is "any":
               1. If |account|'s {{IdentityProviderAccount/domain_hints}} is empty, remove
                   |account| from |accountList|.
-          1. Otherwise, remove |account| from |accountList| if |account|'s
-              {{IdentityProviderAccount/domain_hints}} does not [=list/contain=] |provider|'s
-              {{IdentityProviderRequestOptions/domainHint}}.
+          1. Otherwise, if |account|'s {{IdentityProviderAccount/domain_hints}} does not
+              [=list/contain=] |provider|'s {{IdentityProviderRequestOptions/domainHint}}, remove
+              |account| from |accountList|.
   1. If |config|.{{IdentityProviderAPIConfig/account_label}} is present:
-      1. For every |account| in |accountList|, remove |account| from |accountList| if |account|'s
+      1. For every |account| in |accountList|, if |account|'s
           {{IdentityProviderAccount/label_hints}} does not [=list/contain=]
-          |config|.{{IdentityProviderAPIConfig/account_label}}.
+          |config|.{{IdentityProviderAPIConfig/account_label}}, remove |account| from |accountList|.
   1. Return |accountsList|.
 
 </div>
