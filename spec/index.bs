@@ -896,14 +896,22 @@ the exception immediately.
             since these are indepedent.
         1. Let |providerOrigin| be the [=/origin=] of |provider|'s {{IdentityProviderConfig/configURL}}.
         1. If |providerMap| [=map/contains=] |providerOrigin|, return (failure, true).
+        1. If |mediation| is "{{CredentialMediationRequirement/silent}}" and there does not exist an
+            account |account| such that [=connected accounts set=] [=list/contains=] the result of
+            [=compute the connected account key=] given |account|, |provider|, and |globalObject|,
+            [=continue=]. Note that this check can be performed by iterating over the
+            [=connected accounts set=] or by keeping a separate data structure to make this lookup
+            fast.
         1. Let |loginStatus| be the result of [=get the login status=] with |providerOrigin|.
         1. If |loginStatus| is [=unknown=], a user agent MAY set it to [=logged-out=].
         1. If |loginStatus| is [=logged-out=]:
-            1. If |mode| is {{IdentityCredentialRequestOptionsMode/active}}:
+            1. If |mode| is {{IdentityCredentialRequestOptionsMode/active}} and |mediation| is not
+                "{{CredentialMediationRequirement/silent}}":
                 1. Let |result| be the result of running
                     [=fetch the config file and show an IDP login dialog=] with
                     |provider| and |globalObject|.
                 1. If |result| is failure, return (failure, true).
+                1. Otherwise, set |loginStatus| to [=logged-in=].
             1. Otherwise, set |providerMap|[|providerOrigin|] to "logged-out" and [=continue=].
         1. Let |requiresUserMediation| be |providerOrigin|'s [=requires user mediation=].
         1. If |requiresUserMediation| is true and |mediation| is
@@ -911,54 +919,14 @@ the exception immediately.
         1. Let |config| be the result of running [=fetch the config file=] with
             |provider| and |globalObject|.
         1. If |config| is failure, [=continue=].
-        1. <dfn>Fetch accounts step</dfn>: Let |accountsList| be the result of
-            [=fetch the accounts=] with |config|, |provider|, and |globalObject|.
-        1. If |accountsList| is failure, or the size of |accountsList| is 0:
-            1. [=Set the login status=] of |providerOrigin| to [=logged-out=].
-                A user agent may decide to skip this step if no credentials were
-                sent to server.
-
-                Note: For example, if the fetch failed due to a DNS error, no
-                    credentials were sent and therefore the [=IDP=] did not learn
-                    the user's identity. In this situation, we do not know whether
-                    the user is signed in or not and so we may not want to reset
-                    the status.
-            1. If |loginStatus| is [=logged-in=], set |providerMap|[|providerOrigin|] to "mismatch"
-                and [=continue=].
-        1. Assert: |accountsList| is not failure and the size of |accountsList| is not 0.
-        1. [=Set the login status=] for |providerOrigin| to [=logged-in=].
-        1. For each |acc| in |accountsList|:
-            1. If |acc|["{{IdentityProviderAccount/picture}}"] is present, [=fetch the account picture=]
-                with |acc| and |globalObject|. If the [=user agent=] displays this picture to
-                the user at any point, it MUST reuse the result of this fetch instead of redownloading
-                the picture.
-
-                Note: We require downloading the pictures here before we potentially filter the account
-                    list so that the identity provider cannot determine what hints were provided
-                    based on which fetches occurred.
-        1. If |provider|'s {{IdentityProviderRequestOptions/loginHint}} is not empty:
-            1. For every |account| in |accountList|, remove |account| from |accountList| if |account|'s
-                {{IdentityProviderAccount/login_hints}} does not [=list/contain=] |provider|'s
-                {{IdentityProviderRequestOptions/loginHint}}.
-            1. If |accountList| is now empty, set |providerMap|[|providerOrigin|] to "mismatch" and
-                continue.
-        1. If |provider|'s {{IdentityProviderRequestOptions/domainHint}} is not empty:
-            1. For every |account| in |accountList|:
-                1. If {{IdentityProviderRequestOptions/domainHint}} is "any":
-                    1. If |account|'s {{IdentityProviderAccount/domain_hints}} is empty, remove
-                        |account| from |accountList|.
-                1. Otherwise, remove |account| from |accountList| if |account|'s
-                    {{IdentityProviderAccount/domain_hints}} does not [=list/contain=] |provider|'s
-                    {{IdentityProviderRequestOptions/domainHint}}.
-            1. If |accountList| is now empty, set |providerMap|[|providerOrigin|] to "mismatch" and
-                continue.
-        1. If |config|.{{IdentityProviderAPIConfig/account_label}} is present:
-            1. For every |account| in |accountList|, remove |account| from |accountList| if |account|'s
-                {{IdentityProviderAccount/label_hints}} does not [=list/contain=]
-                |config|.{{IdentityProviderAPIConfig/account_label}}.
-            1. If |accountList| is now empty, set |providerMap|[|providerOrigin|] to "mismatch" and
-                continue.
-        1. Set |providerMap|[|providerOrigin|] to |accountsList|.
+        1. [=Fetch accounts=] given |config|, |provider|, and |globalObject|, and let |accountsList|
+            be the result.
+        1. If |accountsList| is empty:
+            1. If |loginStatus| is [=logged-in=] and |mediation| is not
+                {{CredentialMediationRequirement/silent}}, set |providerMap|[|providerOrigin|] to
+                "mismatch".
+            1. Otherwise, set |providerMap|[|providerOrigin|] to "logged-out".
+        1. Otherwise, set |providerMap|[|providerOrigin|] to |accountsList|.
     1. If |providerMap| [=map/is empty=], return (failure, false).
     1. Let |registeredAccount| and |numRegisteredAccounts| be null and 0, respectively.
     1. Let |selectedAccount| be null.
@@ -968,31 +936,25 @@ the exception immediately.
             1. If |acc| is [=eligible for auto reauthentication=] given the relevant |provider|, and
                 |globalObject|, set |registeredAccount| to |acc|, increase |numRegisteredAccounts| by 1,
                 and set |requiresUserMediation| be |providerOrigin|'s [=requires user mediation=].
+    1. Let |permission|, |permissionRequested|, and |isAutoSelected| be set to false.
     1. If |mediation| is not "{{CredentialMediationRequirement/required}}", |requiresUserMediation|
         is false, |numRegisteredAccounts| is equal to 1, and |providerMap|'s [=map/values=] do not
         [=map/contain=] "mismatch":
-        1. Set |selectedAccount| to |registeredAccount| and |permission| to true. When doing this, the user
-            agent MAY show some UI to the user indicating that they are being
-            <dfn>auto-reauthenticated</dfn>.
-        1. Set |isAutoSelected| to true.
-    1. Otherwise, if |mediation| is "{{CredentialMediationRequirement/silent}}" and |providerMap|'s
-        [=map/values=] do not [=map/contain=] "mismatch", return (failure, true).
-    1. Let |permission|, |permissionRequested|, and |isAutoSelected| be set to false.
+        1. Set |selectedAccount| to |registeredAccount|, and set |permission| and |isAutoSelected| to
+            true. When doing this, the user agent MAY show some UI to the user indicating that they
+            are being <dfn>auto-reauthenticated</dfn>. Go to the [=wait for user step=].
+    1. Otherwise, if |mediation| is "{{CredentialMediationRequirement/silent}}":
+        1. Assert that |providerMap|'s [=map/values=] do not [=map/contain=] "mismatch".
+        1. Return (failure, false).
     1. Let |allAccounts| be an empty [=list=].
     1. Build UI by adding the following for each (|providerOrigin|, |value|) in |providerMap|:
         1. If |value| is "logged-out", the user agent adds one of the following:
             * Nothing: no UI is shown regarding this [=IDP=].
-            * Prompt to continue with this [=IDP=]. If the user continues, the user
-                agent SHOULD set the login status to [=unknown=]. This MAY include an
             * Return (failure, false).
-            * Prompt the user whether to continue. If the user continues, the user
-                agent SHOULD set |loginStatus| to [=unknown=]. This MAY include an
-                affordance to [=show an IDP login dialog=].
-                * If the user triggers this affordance:
-                    1. Let |result| be the result of running
-                        [=fetch the config file and show an IDP login dialog=]
-                        with the relevant |provider| and |globalObject|.
-                    1. If |result| is failure, return (failure, true).
+            * Prompt the user whether to continue with this [=IDP=]. If the user continues:
+                1. Let |result| be the result of running [=show an IDP login dialog=] with the
+                    relevant |config|, |provider|, and |globalObject|.
+                1. If |result| is failure, return (failure, true).
         1. Otherwise, if |value| is "mismatch", add contents indicating this |providerOrigin|
             to the user. The contents SHOULD provide an affordance for the user to trigger
             the [=show an IDP login dialog=] algorithm with the relevant |config| and |provider|;
@@ -1002,9 +964,9 @@ the exception immediately.
                 to be signed in, but the accounts fetch indicated that the user
                 is signed out.
 
-            Note: This dialog ensures that silent tracking of the user is
-                impossible by always showing UI of some kind when credentials
-                were sent to the server.
+            Note: This dialog ensures that silent tracking of the user is impossible by always
+                showing UI of some kind when credentials were sent to the server and the login
+                status was not [=unknown=].
 
             * If the [=show an IDP login dialog=] algorithm was triggered:
 
@@ -1012,26 +974,35 @@ the exception immediately.
                 1. If |result| is failure, return (failure, true). The user
                     agent MAY show a dialog to the user before or after
                     returning failure indicating this failure.
-                1. Otherwise, go back to the [=fetch accounts step=] to get an updated
-                    value of |providerMap| for this [=IDP=].
+                1. Otherwise, [=fetch accounts=] with the relevant |config|, |provider|, and
+                    |globalObject|, and let |accountsList| be the result.
+                1. If |accountsList| is empty, show the [=confirm IDP login dialog=] again.
+                1. Otherwise, [=list/Extend=] |allAccounts| with |accountsList| and
+                    [=show accounts=].
         1. Otherwise, |value| is a [=list=] of accounts. [=list/Extend=] |allAccounts| with |value|.
         1. If |options|.{{IdentityCredentialRequestOptions/mode}} is `"active"` and the provider's
             |config|.{{IdentityProviderAPIConfig/supports_use_other_account}} is true, add an
             affordance to trigger [=show an IDP login dialog=] to let the user sign in to another
             account. If that affordance is triggered:
                 1. Let |result| be the result of that algorithm.
-                1. If |result| is failure, go to [=show accounts=].
-                1. Otherwise, go back to the [=fetch accounts step=] to get an updated
-                    value of |providerMap| for this [=IDP=].
-    1. Also include a UI affordance to close the dialog. If the user closes this dialog, return (failure,
-        true).
+                1. If |result| is failure, [=show accounts=].
+                1. Otherwise:
+                    1. [=Fetch accounts=] given |config|, |provider|, and |globalObject|, and let
+                        |accountsList| be the result.
+                    1. If |accountsList| is empty, show the [=confirm IDP login dialog=].
+                    1. Otherwise, [=list/extend=] |allAccounts| with |accountsList| and
+                        [=show accounts=].
+    1. Also include a UI affordance to close the dialog. If the user closes this dialog, return
+        (failure, true).
     1. <dfn for="create identity credential">Show accounts</dfn> step: if |allAccounts| is not
         [=list/empty=], also add UI to present the account options to the user. If the user selects
         an account, perform the following steps:
-            1. Set |selectedAccount| to the chosen {{IdentityProviderAccount}}.
+            1. Set |selectedAccount| to the chosen {{IdentityProviderAccount}} and |permission| to
+                true.
             1. Close the dialog.
-    1. If the [=user agent=] created any dialogs requesting user choice or permission in the previous
-        steps, wait until they are closed.
+    1. <dfn for="create identity credential">Wait for user step</dfn>: if the [=user agent=] created
+        any dialogs requesting user choice or permission in the previous steps, wait until they are
+        closed.
     1. If |permission| is false, then return (failure, true).
     1. Assert: |selectedAccount| is not null.
     1. Let |credential| be the result of running the [=fetch an identity assertion=] algorithm with
@@ -1053,6 +1024,54 @@ the exception immediately.
           Note: this wait means the [=user agent=] rejects the call only after the UI has been
               closed by the user.
     1. Return |credential|.
+</div>
+
+<div algorithm="fetch accounts">
+When asked to <dfn for="create identity credential">fetch accounts</dfn> given an
+{{IdentityProviderAPIConfig}} |config|, an {{IdentityProviderRequestOptions}} |provider|, and a
+|globalObject|, run the following steps. This returns a possibly empty list of accounts.
+  1. Let |accountsList| be the result of [=fetch the accounts=] with |config|, |provider|, and
+      |globalObject|.
+  1. If |accountsList| is failure, or the size of |accountsList| is 0:
+      1. [=Set the login status=] of |providerOrigin| to [=logged-out=].
+          A user agent may decide to skip this step if no credentials were
+          sent to server.
+
+          Note: For example, if the fetch failed due to a DNS error, no
+              credentials were sent and therefore the [=IDP=] did not learn
+              the user's identity. In this situation, we do not know whether
+              the user is signed in or not and so we may not want to reset
+              the status.
+      1. Return an empty list.
+  1. Assert: |accountsList| is not failure and the size of |accountsList| is not 0.
+  1. [=Set the login status=] for |providerOrigin| to [=logged-in=].
+  1. For each |acc| in |accountsList|:
+      1. If |acc|["{{IdentityProviderAccount/picture}}"] is present, [=fetch the account picture=]
+          with |acc| and |globalObject|. If the [=user agent=] displays this picture to
+          the user at any point, it MUST reuse the result of this fetch instead of redownloading
+          the picture.
+
+          Note: We require downloading the pictures here before we potentially filter the account
+              list so that the identity provider cannot determine what hints were provided
+              based on which fetches occurred.
+  1. If |provider|'s {{IdentityProviderRequestOptions/loginHint}} is not empty:
+      1. For every |account| in |accountList|, if |account|'s
+          {{IdentityProviderAccount/login_hints}} does not [=list/contain=] |provider|'s
+          {{IdentityProviderRequestOptions/loginHint}}, remove |account| from |accountList| .
+  1. If |provider|'s {{IdentityProviderRequestOptions/domainHint}} is not empty:
+      1. For every |account| in |accountList|:
+          1. If {{IdentityProviderRequestOptions/domainHint}} is "any":
+              1. If |account|'s {{IdentityProviderAccount/domain_hints}} is empty, remove
+                  |account| from |accountList|.
+          1. Otherwise, if |account|'s {{IdentityProviderAccount/domain_hints}} does not
+              [=list/contain=] |provider|'s {{IdentityProviderRequestOptions/domainHint}}, remove
+              |account| from |accountList|.
+  1. If |config|.{{IdentityProviderAPIConfig/account_label}} is present:
+      1. For every |account| in |accountList|, if |account|'s
+          {{IdentityProviderAccount/label_hints}} does not [=list/contain=]
+          |config|.{{IdentityProviderAPIConfig/account_label}}, remove |account| from |accountList|.
+  1. Return |accountsList|.
+
 </div>
 
 <div class="issue" heading="extension">
@@ -1082,7 +1101,12 @@ An extension may use the following instead of the [=create identity credential/s
             1. If |supportsUseOtherAccount| is true, the account chooser SHOULD provide
                 an affordance to use another account. If that affordance is triggered:
                 1. [=Show an IDP login dialog=] with |config|, |provider| and |globalObject|.
-                1. If that returned success, go back to the [=fetch accounts step=].
+                1. If that returned success:
+                    1. [=Fetch accounts=] given |config|, |provider|, and |globalObject|, and let
+                        |accountsList| be the result.
+                    1. If |accountsList| is empty, show the [=confirm IDP login dialog=].
+                    1. Otherwise, [=list/extend=] |allAccounts| with |accountsList| and
+                        [=show accounts=] again.
                 1. Otherwise, go back to the [=UI to allow the user to select an account=].
             1. If the user selects an account, perform the following steps:
                 1. Set |selectedAccount| to the chosen {{IdentityProviderAccount}}.
