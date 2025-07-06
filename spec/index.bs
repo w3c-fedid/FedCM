@@ -2056,9 +2056,15 @@ The file is parsed expecting a {{IdentityProviderWellKnown}} JSON object.
 The {{IdentityProviderWellKnown}} JSON object has the following semantics:
 
 <dl dfn-type="dict-member" dfn-for="IdentityProviderWellKnown">
-    :   <dfn>provider_urls</dfn> (required)
-    ::  A list of URLs that points to valid [[#idp-api-config-file]]s.
+    :   <dfn>provider_urls</dfn> 
+    ::  A list containing exactly one URL pointing to a valid [[#idp-api-config-file]].
+    :   <dfn>accounts_endpoint</dfn>
+    ::  A URL that points to the same location as the {{IdentityProviderAPIConfig/accounts_endpoint}} in the [[#idp-api-config-file]]s.
+    :   <dfn>login_url</dfn>
+    ::  A URL that points to the same location as the {{IdentityProviderAPIConfig/login_url}} in the [[#idp-api-config-file]]s.
 </dl>
+
+Either <b>provider_urls</b> or both <b>accounts_endpoint</b> and <b> login_url </b> are required.
 
 <!-- ============================================================ -->
 ## The config file ## {#idp-api-config-file}
@@ -2091,16 +2097,14 @@ The response body must be a JSON object that can be [=converted to an IDL value|
 The {{IdentityProviderAPIConfig}} object's members have the following semantics:
 
 <dl dfn-type="dict-member" dfn-for="IdentityProviderAPIConfig">
-    :   <dfn>accounts_endpoint</dfn>
+    :   <dfn>accounts_endpoint</dfn> (required)
     ::  A URL that points to an HTTP API that complies with the [[#idp-api-accounts-endpoint]] API.
-    :   <dfn>client_metadata_endpoint</dfn>
-    ::  A URL that points to an HTTP API that complies with the [[#idp-api-client-id-metadata-endpoint]] API.
-    :   <dfn>id_assertion_endpoint</dfn>
+    :   <dfn>id_assertion_endpoint</dfn> (required)
     ::  A URL that points to an HTTP API that complies with the [[#idp-api-id-assertion-endpoint]] API.
     :   <dfn>disconnect_endpoint</dfn>
     ::  A URL that points to an HTTP API that complies with the [[#idp-api-disconnect-endpoint]]
         API.
-    :   <dfn>login_url</dfn>
+    :   <dfn>login_url</dfn> (required)
     ::  A URL that can be used to log in to this IdP. This is a user-facing URL that can be shown in
         a popup window.
     :   <dfn>branding</dfn>
@@ -2108,7 +2112,17 @@ The {{IdentityProviderAPIConfig}} object's members have the following semantics:
     :   <dfn>account_label</dfn>
     ::  An optional string that needs to match the {{IdentityProviderAccount/label_hints}} provided
         by the IdP.
+    :   <dfn>supports_use_other_account</dfn>
+    ::  A boolean determining whether the user should be shown the possibility to log into a different account even if they are alredy logged in.
 </dl>
+
+<div class="issue" heading="extension">
+    An extension may add the following:
+<dl dfn-type="argument" dfn-for="id_assertion_endpoint_request">
+    :   <dfn>client_metadata_endpoint</dfn>
+    ::  A URL that points to an HTTP API that complies with the [[#idp-api-client-id-metadata-endpoint]] API.
+</dl>
+</div>
 
 The {{IdentityProviderBranding}} enables an [=IDP=] to express their branding
 preferences, which may be used by [=user agents=] to customize the permission prompt.
@@ -2164,6 +2178,7 @@ For example:
   "client_metadata_endpoint": "/metadata",
   "id_assertion_endpoint": "/assertion",
   "disconnect_endpoint": "/disconnect",
+  "login_url": "/login",
   "branding": {
     "background_color": "green",
     "color": "#FFEEAA",
@@ -2350,18 +2365,22 @@ It will also contain the following parameters in the request body `application/x
 
 <dl dfn-type="argument" dfn-for="id_assertion_endpoint_request">
     :   <dfn>client_id</dfn>
-    ::  The [=RP=]'s unique identifier from the [=IDP=]
+    ::  The [=RP=]'s unique identifier from the [=IDP=].
     :   <dfn>nonce</dfn>
-    ::  The request nonce
+    ::  The request nonce.
     :   <dfn>account_id</dfn>
     ::  The account identifier that was selected.
-    :   <dfn>fields</dfn>
-    ::  The list of fields that the [=RP=] has requested in {{IdentityProviderRequestOptions/fields}}.
+    :   <dfn>is_auto_selected</dfn>
+    ::  A boolean indicating whether the account was automatically selected as opposed to being actively chosen by the user.
+    :   <dfn>params</dfn>
+    ::  A serialized JSON object that can have an arbitrary structure.
 </dl>
 
 <div class="issue" heading="extension">
     An extension may add the following:
 <dl dfn-type="argument" dfn-for="id_assertion_endpoint_request">
+    :   <dfn>fields</dfn>
+    ::  The list of fields that the [=RP=] has requested in {{IdentityProviderRequestOptions/fields}}.
     :   <dfn>disclosure_text_shown</dfn>
     ::  Whether the user agent has explicitly shown to the user what specific information the
         [=IDP=] intends to share with the [=RP=] (e.g. "idp.example will share your name, email...
