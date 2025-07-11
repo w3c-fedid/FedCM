@@ -1133,7 +1133,7 @@ An extension may use the following instead of the [=create identity credential/s
 The <a>fetch the config file</a> algorithm fetches both the [=well-known file=] and the config file from
 the [=IDP=], checks that the config file is mentioned in the [=well-known file=], and returns the config.
 
-<div algorithm>
+<div algorithm="fetch the config file">
 To <dfn>fetch the config file</dfn> given an {{IdentityProviderConfig}} |provider| and
 |globalObject|, run the following steps. This returns an {{IdentityProviderAPIConfig}}
 or failure.
@@ -1241,7 +1241,8 @@ or failure.
     1. If |skipWellKnown| is true, return |config|.
     1. Wait for |wellKnown| to be set.
     1. If |wellKnown| is failure, return failure.
-    1. If |wellKnown|.{{IdentityProviderWellKnown/accounts_endpoint}} and
+    1. <dfn for="fetch the config file">Check accounts and login url step</dfn>: If
+        |wellKnown|.{{IdentityProviderWellKnown/accounts_endpoint}} and
         |wellKnown|.{{IdentityProviderWellKnown/login_url}} are set:
         1. Let |well_known_accounts_url| be the result of [=computing the manifest URL=] with
             |provider|, |wellKnown|.{{IdentityProviderWellKnown/accounts_endpoint}}, and
@@ -1256,6 +1257,14 @@ or failure.
         1. If |allowed_config_url| is not [=url/equal=] to |configUrl|, return failure.
     1. Return |config|.
 
+</div>
+
+<div class="issue" heading="extension">
+An extension which implements the client metadata endpoint must add the following step right before
+the [=fetch the config file/check accounts and login url step=]:
+    1. If |config|.{{IdentityProviderAPIConfig/client_metadata_endpoint}} is set but either
+        |wellKnown|.{{IdentityProviderWellKnown/accounts_endpoint}} or
+        |wellKnown|.{{IdentityProviderWellKnown/login_url}} is not set, return failure.
 </div>
 
 NOTE: a two-tier file system is used in order to prevent the [=IDP=] from easily determining the [=RP=]
