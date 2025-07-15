@@ -151,7 +151,7 @@ if (credential.objectToken) {
 }
 
 
-## 8. Migration Path
+## 7. Migration Path
 
 For a smooth transition period, both IdPs and RPs should support both token formats:
 
