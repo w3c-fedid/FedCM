@@ -54,6 +54,31 @@ any object_token;
 };
 ```
 
+As an alternative to adding a new objectToken attribute, we could enhance the existing token attribute to use a union type that can represent either a string or an object:
+
+```
+[ Exposed=Window, SecureContext, RuntimeEnabled=FedCm ]
+interface IdentityCredential : Credential {
+    // Use a union type instead of separate attributes
+    [RuntimeEnabled=FedCmObjectToken] readonly attribute (USVString or object) token;
+    
+    // Existing attributes remain unchanged
+    readonly attribute boolean isAutoSelected;
+    [RuntimeEnabled=FedCmMultipleIdentityProviders] readonly attribute USVString configURL;
+    
+    [CallWith=ScriptState, RaisesException, MeasureAs=FedCmDisconnect] 
+    static Promise<undefined> disconnect(IdentityCredentialDisconnectOptions options);
+};
+```
+
+The `IdentityProviderToken` dictionary changes:
+
+```
+dictionary IdentityProviderToken {
+  required (USVString or object) token;
+};
+```
+
 ### 3.2. Network Protocol Changes
 
 The identity assertion endpoint response format is extended to support an `object_token` field:
@@ -95,7 +120,6 @@ The identity assertion endpoint response format is extended to support an `objec
 
 2. For backwards compatibility:
    - When `object_token` is present but `token` is not, the browser MUST generate a string representation of the object and set it as `IdentityCredential.token`
-   - This string representation MUST be valid JSON of the object
 
 3. The browser MUST NOT expose the `objectToken` attribute when the `FedCmObjectToken` feature flag is disabled
 
@@ -104,7 +128,7 @@ The identity assertion endpoint response format is extended to support an `objec
 1. IdPs MAY return either:
    - A `token` property containing a string value
    - An `object_token` property containing a JSON object
-   - Both properties (where `token` might be a string representation of `object_token` or a different value)
+   - Both properties (where `token` might, and might not, be a string representation of `object_token`)
 
 2. If providing an `object_token`:
    - The value MUST be a valid JSON object
