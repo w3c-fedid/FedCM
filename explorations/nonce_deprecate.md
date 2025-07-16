@@ -1,8 +1,8 @@
-# FedCM Nonce Parameter Deprecation Specification
+# FedCM Nonce Parameter Deprecation Proposal
 
 ## 1. Introduction
 
-The Federated Credential Management (FedCM) API currently allows Identity Providers (IdPs) to specify a `nonce` parameter as a top-level field in the provider configuration object. This specification proposes deprecating this top-level parameter and moving it to the `params` object, which is the intended location for all IdP-specific parameters. This change will improve API consistency while maintaining backward compatibility during a transition period.
+The Federated Credential Management (FedCM) API currently allows Identity Providers (IdPs) to specify a `nonce` parameter as a top-level field in the provider configuration object. This proposal proposes deprecating this top-level parameter and moving it to the `params` object, which is the intended location for all IdP-specific parameters. This change will improve API consistency while maintaining backward compatibility during a transition period.
 
 ## 2. Background
 
@@ -61,7 +61,7 @@ The `nonce` parameter should be moved from the top level of the identity provide
   clientId: "1234", 
   configURL: "https://idp.example/fedcm.json", 
   params: { 
-   "nonce": "234234",  // // Moved into params
+   "nonce": "234234",  // Moved into params
    "response_type": "id_token", 
    "scope": "photos:read"
   }
@@ -99,7 +99,7 @@ IdPs are unaffected by this change as the browser will continue to send the `non
 
 ### 5.1. Browser Implementation
 
-The browser should modify the token request generation code to extract the `nonce` from the `params` object when available:
+The browser should modify the token request generation code to extract the `nonce` from the `params` object when available.
 
 ### 5.2. Relying Party Migration
 
