@@ -8,6 +8,7 @@ The Federated Credential Management (FedCM) API currently allows Identity Provid
 
 Currently, when making a FedCM API call, the `nonce` parameter is specified as a direct property of the provider object:
 
+```js
 let {token} = await navigator.credentials.get({
   identity: {
     providers: [{
@@ -31,7 +32,7 @@ let {token} = await navigator.credentials.get({
   // prompt the user.
   mediation: "optional",
 });
-
+```
 
 The `nonce` value is used when constructing token requests to the IdP's assertion endpoint to prevent replay attacks. However, this approach creates inconsistency in the API design, as other IdP-specific parameters are grouped in the `params` object.
 
@@ -42,6 +43,7 @@ The `nonce` value is used when constructing token requests to the IdP's assertio
 The `nonce` parameter should be moved from the top level of the identity provider configuration to the `params` object:
 
 #### Current usage:
+```js
 { 
   clientId: "1234", 
   nonce: "234234",  // Top-level parameter 
@@ -51,9 +53,10 @@ The `nonce` parameter should be moved from the top level of the identity provide
    "scope": "photos:read"
   }
 }
-
+```
 
 #### New usage:
+```js
 { 
   clientId: "1234", 
   configURL: "https://idp.example/fedcm.json", 
@@ -63,14 +66,14 @@ The `nonce` parameter should be moved from the top level of the identity provide
    "scope": "photos:read"
   }
 }
-
+```
 
 ## 4. Behavioral Requirements
 
 ### 4.1. Browser Behavior
 
 1. During a transition period, the browser MUST:
-   - Check for `nonce` in the `params` object first
+   - First, check for `nonce` in the `params` object
    - Fall back to the top-level `nonce` parameter if not found in `params`
    - Show a deprecation warning in developer tools when the top-level parameter is used
 
@@ -103,6 +106,7 @@ The browser should modify the token request generation code to extract the `nonc
 Relying Parties should update their code to use the new parameter location:
 
 // Before 
+```js
 navigator.credentials.get({
   identity: {
     providers: [{
@@ -118,8 +122,10 @@ navigator.credentials.get({
   }
   mediation: "optional",
 });
+```
 
 // After 
+```js
 navigator.credentials.get({
   identity: {
     providers: [{
@@ -134,12 +140,14 @@ navigator.credentials.get({
   }
   mediation: "optional",
 });
+```
  
 ## 6. Examples
 
 ### 6.1. Relying Party Implementation with New Format
 
 // Request with nonce in params object 
+```js
 let credential = await navigator.credentials.get({
   identity: {
     providers: [{
@@ -154,10 +162,11 @@ let credential = await navigator.credentials.get({
   }
   mediation: "optional",
 });
+```
 
 ### 6.2. Identity Provider Implementation (Unchanged)
 
-The IdP implementation remains unchanged as the browser will continue to pass the nonce parameter to the token endpoint in the same format.
+The IdP implementation remains unchanged as the browser will continue to pass the `nonce` parameter to the token endpoint in the same format.
 
 ## 7. Migration Path
 
