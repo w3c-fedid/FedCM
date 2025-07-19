@@ -70,6 +70,7 @@ The `IdentityProviderToken` dictionary changes:
 dictionary IdentityProviderToken {
   (USVString or object) token;
 };
+```
 
 ## 4. Behavioral Requirements
 
