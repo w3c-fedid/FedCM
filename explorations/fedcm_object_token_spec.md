@@ -1,4 +1,4 @@
- FedCM Object Token Enhancement Proposal
+# FedCM Object Token Enhancement Proposal
 
 ## 1. Introduction
 
@@ -30,18 +30,17 @@ With this new enhancement, IdPs can return objects directly:
 
 ## 3. API Changes
 
-### 3.1. IDL Changes
+This specification presents two alternative approaches for implementing object tokens.
+
+### 3.1. Approach 1: Separate Attribute
 
 The `IdentityCredential` interface is extended with a new `objectToken` attribute:
 
 ```
-[ Exposed=Window, SecureContext, RuntimeEnabled=FedCm ]
-interface IdentityCredential : Credential { 
-// Existing attribute for backwards compatibility 
-readonly attribute USVString token;
-
-// New attribute for structured token data
-[RuntimeEnabled=FedCmObjectToken] readonly attribute object? objectToken;
+[ Exposed=Window, SecureContext ]
+partial interface IdentityCredential
+ // attribute for structured token data
+ readonly attribute object? objectToken;
 };
 ```
 
@@ -53,21 +52,15 @@ required USVString token;
 any object_token; 
 };
 ```
+### 3.2. Approach 2: Union Type
 
-As an alternative to adding a new objectToken attribute, we could enhance the existing token attribute to use a union type that can represent either a string or an object:
+As an alternative, the existing token attribute could use a union type:
 
 ```
-[ Exposed=Window, SecureContext, RuntimeEnabled=FedCm ]
+[ Exposed=Window, SecureContext ]
 interface IdentityCredential : Credential {
-    // Use a union type instead of separate attributes
-    [RuntimeEnabled=FedCmObjectToken] readonly attribute (USVString or object) token;
-    
-    // Existing attributes remain unchanged
-    readonly attribute boolean isAutoSelected;
-    [RuntimeEnabled=FedCmMultipleIdentityProviders] readonly attribute USVString configURL;
-    
-    [CallWith=ScriptState, RaisesException, MeasureAs=FedCmDisconnect] 
-    static Promise<undefined> disconnect(IdentityCredentialDisconnectOptions options);
+ // Use a union type instead of separate attributes
+ readonly attribute (USVString or object) token;
 };
 ```
 
@@ -79,38 +72,11 @@ dictionary IdentityProviderToken {
 };
 ```
 
-### 3.2. Network Protocol Changes
-
-The identity assertion endpoint response format is extended to support an `object_token` field:
-
-#### Existing format (maintained for backwards compatibility):
-'{ "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..." }'
-
-
-#### New format (allows direct object return):
-```
-{
-  "object_token": {
-    "sub": "1234567890",
-    "name": "John Doe",
-    "email": "john.doe@example.com",
-    "additional_data": {
-      "permissions": [
-        "read",
-        "write"
-      ],
-      "groups": [
-        "users",
-        "premium"
-      ]
-    }
-  }
-}
-```
-
 ## 4. Behavioral Requirements
 
 ### 4.1. Browser Behavior
+
+#### 4.1.1. For Separate Attribute Approach
 
 1. When processing the identity assertion endpoint response:
    - If `token` is present in the response, set `IdentityCredential.token` to its value
@@ -121,7 +87,16 @@ The identity assertion endpoint response format is extended to support an `objec
 2. For backwards compatibility:
    - When `object_token` is present but `token` is not, the browser MUST generate a string representation of the object and set it as `IdentityCredential.token`
 
-3. The browser MUST NOT expose the `objectToken` attribute when the `FedCmObjectToken` feature flag is disabled
+#### 4.1.2. For Union Type Approach
+
+1. When processing the identity assertion endpoint response:
+   - If `token` is present in the response as a string, set `IdentityCredential.token` to that string value
+   - If `object_token` is present in the response, set `IdentityCredential.token` to the parsed object
+   - If both are present, prefer the object token over the string token
+   - If neither is present but no error is reported, treat as an invalid response
+
+2. For backwards compatibility:
+   - When `object_token` is present but `token` is not, the browser MUST generate a string representation of the object and set it as `IdentityCredential.token`
 
 ### 4.2. Identity Provider Requirements
 
@@ -135,19 +110,23 @@ The identity assertion endpoint response format is extended to support an `objec
    - The object SHOULD follow standard token structures (e.g., JWT claims where applicable)
    - The object MAY contain nested objects and arrays
 
-3. Content Type Requirements:
-   - The response MUST use a JSON-compatible Content-Type (e.g., `application/json`)
-
 ### 4.3. Relying Party Behavior
 
-1. RPs SHOULD check for the existence of `objectToken` before falling back to `token`
-2. RPs SHOULD implement appropriate feature detection:
+#### 4.3.1. For Separate Attribute Approach
 
-`const supportsObjectTokens = 'objectToken' in IdentityCredential.prototype;`
+RPs SHOULD check for the existence of `objectToken` before falling back to `token`
+
+```const supportsObjectTokens = 'objectToken' in IdentityCredential.prototype;```
+
+#### 4.3.2. For Union Type Approach
+
+RPs SHOULD check the type of the token to determine how to handle it:
+
+```const isObjectToken = typeof credential.token === 'object' && credential.token !== null;```
 
 ## 5. Implementation Guidelines
 
-### 5.1. Feature Detection
+### 5.1. Feature Detection (Separate Attribute)
 
 ```
 if ('objectToken' in IdentityCredential.prototype) { 
@@ -157,7 +136,20 @@ if ('objectToken' in IdentityCredential.prototype) {
 }
 ```
 
-### 5.2. Handling Both Token Types
+### 5.2. Feature Detection (Union Type)
+
+```
+async function getCredential() {
+  const credential = await navigator.credentials.get({
+    identity: { providers: [{ configURL: 'https://idp.example/fedcm.json' }] }
+  });
+  
+  const isObjectToken = typeof credential.token === 'object' && credential.token !== null;
+  return { credential, isObjectToken };
+}
+``` 
+
+### 5.3. Handling Both Token Types (Separate Attribute)
 
 ```
 const credential = await navigator.credentials.get({
@@ -182,6 +174,31 @@ if (credential.objectToken) {
     userData = JSON.parse(credential.token);
   } catch {
     // If parsing fails, treat it as an opaque token
+    userData = { token: credential.token };
+  }
+}
+```
+
+### 5.4. Handling Both Token Types (Union Type)
+
+```
+const credential = await navigator.credentials.get({
+  identity: {
+    providers: [{ configURL: 'https://idp.example/fedcm.json' }]
+  }
+});
+
+let userData;
+if (typeof credential.token === 'object' && credential.token !== null) {
+  // Use structured token data directly
+  userData = credential.token;
+} else {
+  try {
+    // Attempt to parse the token as JSON
+    userData = JSON.parse(credential.token);
+  } catch {
+    // If parsing fails, treat it as an opaque token
+    userData = { token: credential.token };
   }
 }
 ```
@@ -190,7 +207,6 @@ if (credential.objectToken) {
 
 ### 6.1. Identity Provider Implementation
 
-// IdP token endpoint handler 
 ```
 app.post('/token', (req, res) => {
   // Authenticate request and generate token data
@@ -212,7 +228,7 @@ app.post('/token', (req, res) => {
 });
 ```
 
-### 6.2. Relying Party Implementation
+### 6.2. Relying Party Implementation (Separate Attribute)
 
 ```
 // Request credentials 
@@ -243,6 +259,36 @@ if (credential.objectToken) {
 }
 ```
 
+### 6.3. Relying Party Implementation (Union Type)
+
+```
+// Request credentials 
+const credential = await navigator.credentials.get({
+  identity: {
+    providers: [
+      {
+        configURL: 'https://idp.example/fedcm.json',
+        clientId: 'client123'
+      }
+    ]
+  }
+});
+
+// Check if we received an object token
+if (typeof credential.token === 'object' && credential.token !== null) {
+  console.log(`Hello ${credential.token.name}!`);
+
+  // Access nested properties directly
+  if (credential.token.groups?.includes('admin')) {
+    showAdminInterface();
+  }
+} else {
+  // Legacy handling with string token
+  const parsedToken = parseJwt(credential.token);
+  console.log(`Hello ${parsedToken.name}!`);
+}
+```
+
 ## 7. Migration Path
 
 For a smooth transition period, both IdPs and RPs should support both token formats:
@@ -250,3 +296,14 @@ For a smooth transition period, both IdPs and RPs should support both token form
 - IdPs should consider providing both `token` and `object_token` properties during the transition
 - RPs should implement graceful degradation when `objectToken` is not available
 - RPs using older browsers should continue to work with IdPs that only provide `object_token`, due to the automatic string representation fallback
+
+## 8. Comparison of Approaches
+
+| **Aspect**               | **Separate Attribute**                                                                 | **Union Type**                                                                 |
+|--------------------------|----------------------------------------------------------------------------------------|--------------------------------------------------------------------------------|
+| **API Design**           | Offers a more explicit and clearly separated structure                                | Provides a more elegant and unified representation                            |
+| **Backward Compatibility** | Safer approach—existing code continues to function without modification               | Riskier—may require changes due to altered property types                     |
+| **Feature Detection**    | Enables simple checks based on the presence of specific properties                    | Requires more complex type checking logic                                     |
+| **Developer Experience** | Developers need to check multiple properties, which may increase complexity           | Simplifies usage by consolidating logic into a single property with type checks |
+| **Future Extensibility** | Easier to introduce additional token formats by adding new properties                 | More challenging to extend due to the constraints of a unified structure      |
+| **Performance**          | Slightly more overhead due to multiple property accesses                              | Potentially more efficient with a single property access                      |
