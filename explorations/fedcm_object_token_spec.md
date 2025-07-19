@@ -48,8 +48,8 @@ The `IdentityProviderToken` dictionary is extended to support object tokens:
 
 ```
 dictionary IdentityProviderToken { 
-required USVString token; 
-any object_token; 
+  USVString token; 
+  any object_token; 
 };
 ```
 ### 3.2. Approach 2: Union Type
@@ -68,9 +68,8 @@ The `IdentityProviderToken` dictionary changes:
 
 ```
 dictionary IdentityProviderToken {
-  required (USVString or object) token;
+  (USVString or object) token;
 };
-```
 
 ## 4. Behavioral Requirements
 
