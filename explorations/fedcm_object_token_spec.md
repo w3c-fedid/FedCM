@@ -301,7 +301,7 @@ For a smooth transition period, both IdPs and RPs should support both token form
 | **Aspect**                | **Separate Attribute**                                                                | **Union Type**                                                                  |
 |---------------------------|---------------------------------------------------------------------------------------|---------------------------------------------------------------------------------|
 | **API Design**            | Offers a more explicit and clearly separated structure                                | Provides a more elegant and unified representation                              |
-| **Backward Compatibility**| Safer approach—existing code continues to function without modification               | Riskier—may require changes due to altered property types                       |
+| **Backward Compatibility**| Safer approach, existing code continues to function without modification              | Riskier, may require changes due to altered property types                      |
 | **Feature Detection**     | Enables simple checks based on the presence of specific properties                    | Requires more complex type checking logic                                       |
 | **Developer Experience**  | Developers need to check multiple properties, which may increase complexity           | Simplifies usage by consolidating logic into a single property with type checks |
 | **Future Extensibility**  | Easier to introduce additional token formats by adding new properties                 | More challenging to extend due to the constraints of a unified structure        |
