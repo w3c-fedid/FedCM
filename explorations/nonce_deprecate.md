@@ -1,4 +1,4 @@
-# FedCM Nonce Parameter Deprecation Proposal
+# FedCM nonce Parameter Deprecation Proposal
 
 ## 1. Introduction
 
