@@ -36,7 +36,7 @@ This specification presents two alternative approaches for implementing object t
 
 The `IdentityCredential` interface is extended with a new `objectToken` attribute:
 
-```
+```webidl 
 [ Exposed=Window, SecureContext ]
 partial interface IdentityCredential
  // attribute for structured token data
@@ -46,7 +46,7 @@ partial interface IdentityCredential
 
 The `IdentityProviderToken` dictionary is extended to support object tokens:
 
-```
+```webidl 
 dictionary IdentityProviderToken { 
   USVString token; 
   any object_token; 
@@ -56,7 +56,7 @@ dictionary IdentityProviderToken {
 
 As an alternative, the existing token attribute could use a union type:
 
-```
+```webidl 
 [ Exposed=Window, SecureContext ]
 interface IdentityCredential : Credential {
  // Use a union type instead of separate attributes
@@ -66,7 +66,7 @@ interface IdentityCredential : Credential {
 
 The `IdentityProviderToken` dictionary changes:
 
-```
+```webidl 
 dictionary IdentityProviderToken {
   (USVString or object) token;
 };
@@ -116,19 +116,23 @@ dictionary IdentityProviderToken {
 
 RPs SHOULD check for the existence of `objectToken` before falling back to `token`
 
-```const supportsObjectTokens = 'objectToken' in IdentityCredential.prototype;```
+```js
+const supportsObjectTokens = 'objectToken' in IdentityCredential.prototype;
+```
 
 #### 4.3.2. For Union Type Approach
 
 RPs SHOULD check the type of the token to determine how to handle it:
 
-```const isObjectToken = typeof credential.token === 'object' && credential.token !== null;```
+```js
+const isObjectToken = typeof credential.token === 'object' && credential.token !== null;
+```
 
 ## 5. Implementation Guidelines
 
 ### 5.1. Feature Detection (Separate Attribute)
 
-```
+```js
 if ('objectToken' in IdentityCredential.prototype) { 
 // Object tokens are supported 
 } else { 
@@ -138,7 +142,7 @@ if ('objectToken' in IdentityCredential.prototype) {
 
 ### 5.2. Feature Detection (Union Type)
 
-```
+```js
 async function getCredential() {
   const credential = await navigator.credentials.get({
     identity: { providers: [{ configURL: 'https://idp.example/fedcm.json' }] }
@@ -151,7 +155,7 @@ async function getCredential() {
 
 ### 5.3. Handling Both Token Types (Separate Attribute)
 
-```
+```js
 const credential = await navigator.credentials.get({
   identity: {
     providers: [
@@ -181,7 +185,7 @@ if (credential.objectToken) {
 
 ### 5.4. Handling Both Token Types (Union Type)
 
-```
+```js
 const credential = await navigator.credentials.get({
   identity: {
     providers: [{ configURL: 'https://idp.example/fedcm.json' }]
@@ -207,7 +211,7 @@ if (typeof credential.token === 'object' && credential.token !== null) {
 
 ### 6.1. Identity Provider Implementation
 
-```
+```js
 app.post('/token', (req, res) => {
   // Authenticate request and generate token data
   const userData = {
@@ -230,7 +234,7 @@ app.post('/token', (req, res) => {
 
 ### 6.2. Relying Party Implementation (Separate Attribute)
 
-```
+```js
 // Request credentials 
 const credential = await navigator.credentials.get({
   identity: {
@@ -261,7 +265,7 @@ if (credential.objectToken) {
 
 ### 6.3. Relying Party Implementation (Union Type)
 
-```
+```js
 // Request credentials 
 const credential = await navigator.credentials.get({
   identity: {
