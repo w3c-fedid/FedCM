@@ -111,7 +111,7 @@ navigator.credentials.get({
   identity: {
     providers: [{
       clientId: "1234",
-      nonce: "234234",    // // Old location
+      nonce: "234234",    // Old location
       loginHint: "previous@user.com",
       configURL: "https://idp.example/fedcm.json",
       // A string with parameters that need to be passed from the
