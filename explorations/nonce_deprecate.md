@@ -105,8 +105,8 @@ The browser should modify the token request generation code to extract the `nonc
 
 Relying Parties should update their code to use the new parameter location:
 
-// Before 
 ```js
+// Before
 navigator.credentials.get({
   identity: {
     providers: [{
@@ -124,8 +124,8 @@ navigator.credentials.get({
 });
 ```
 
-// After 
 ```js
+// After
 navigator.credentials.get({
   identity: {
     providers: [{
@@ -146,8 +146,8 @@ navigator.credentials.get({
 
 ### 6.1. Relying Party Implementation with New Format
 
-// Request with nonce in params object 
 ```js
+// Request with nonce in params object 
 let credential = await navigator.credentials.get({
   identity: {
     providers: [{
