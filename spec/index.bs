@@ -150,12 +150,8 @@ could be implemented.
   <button onclick="login()">Login with idp.example</button>
 
   <script>
-  let nonce;
   async function login() {
     try {
-      // Assume there is a method returning a random number. Store the value in a variable which can
-      // later be used to check against the value in the token returned.
-      nonce = random();
       // Prompt the user to select an account from the IDP to use for
       // federated login within the RP. If resolved successfully, the Promise
       // returns an IdentityCredential object from which the |token| can be
@@ -165,7 +161,6 @@ could be implemented.
           providers: [{
             configURL: "https://idp.example/manifest.json",
             clientId: "123",
-            nonce: nonce,
           }]
         }
       });
@@ -237,7 +232,6 @@ identity federation.
       | "    providers: [{              " |                                 |
       | "      configURL: 'config.json'," |                                 |
       | "      clientId: clientId,      " |                                 |
-      | "      nonce: nonce,            " |                                 |
       | "    }]                         " |                                 |
       | "  }                            " |                                 |
       | "})                             " |                                 |
@@ -687,7 +681,6 @@ const credential = await navigator.credentials.get({
     providers: [{  // sequence<IdentityCredentialRequestOptions>
       configURL: "https://idp.example/manifest.json", // IdentityProviderConfig.configURL
       clientId: "123", // IdentityProviderConfig.clientId
-      nonce: "nonce" // IdentityProviderConfig.nonce
     }]
   }
 });
@@ -741,7 +734,6 @@ dictionary IdentityProviderConfig {
 };
 
 dictionary IdentityProviderRequestOptions : IdentityProviderConfig {
-  USVString nonce;
   DOMString loginHint;
   DOMString domainHint;
   sequence<USVString> fields;
@@ -754,10 +746,6 @@ dictionary IdentityProviderRequestOptions : IdentityProviderConfig {
     ::  The URL of the configuration file for the identity provider.
     :   <b>{{IdentityProviderConfig/clientId}}</b>
     ::  The {{id_assertion_endpoint_request/client_id}} provided to the [=RP=] out of band by the [=IDP=]
-    :   <b>{{IdentityProviderRequestOptions/nonce}}</b>
-    ::  A random number of the choice of the [=RP=]. It is generally used to associate a client
-        session with a {{IdentityAssertionResponse/token}} and to mitigate replay attacks.
-        Therefore, this value should have sufficient entropy such that it would be hard to guess.
     :   <b>{{IdentityProviderRequestOptions/loginHint}}</b>
     ::  A string representing the login hint corresponding to an account which the RP wants the user
         agent to show to the user. If provided, the user agent will not show accounts which do not
@@ -768,6 +756,8 @@ dictionary IdentityProviderRequestOptions : IdentityProviderConfig {
         interested in, or "any" if the [=RP=] wants any account associated with at least one domain
         hint. If provided, the user agent will not show accounts which do not match the domain hint
         value.
+        
+    Note: "nonce" to be passed with-in {{IdentityProviderRequestOptions/params}}
 </dl>
 
 <!-- ============================================================ -->
@@ -1459,7 +1449,6 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
     1. <dfn for="fetch identity assertion">Create a list</dfn>: let |list| be a list with the
         following entries:
         1. ("client_id", |provider|'s {{IdentityProviderConfig/clientId}})
-        1. ("nonce", |provider|'s {{IdentityProviderRequestOptions/nonce}})
         1. ("account_id",  |accountId|)
         1. ("is_auto_selected", |isAutoSelected|)
     1. If |provider|'s {{IdentityProviderRequestOptions/params}} is not empty:
@@ -2379,8 +2368,6 @@ It will also contain the following parameters in the request body `application/x
 <dl dfn-type="argument" dfn-for="id_assertion_endpoint_request">
     :   <dfn>client_id</dfn>
     ::  The [=RP=]'s unique identifier from the [=IDP=].
-    :   <dfn>nonce</dfn>
-    ::  The request nonce.
     :   <dfn>account_id</dfn>
     ::  The account identifier that was selected.
     :   <dfn>is_auto_selected</dfn>
@@ -2417,7 +2404,7 @@ Origin: https://rp.example/
 Content-Type: application/x-www-form-urlencoded
 Cookie: 0x23223
 Sec-Fetch-Dest: webidentity
-account_id=123&client_id=client1234&nonce=Ct60bD&disclosure_text_shown=true&fields=name,email,picture&disclosure_shown_for=name,email,picture
+account_id=123&client_id=client1234&disclosure_text_shown=true&fields=name,email,picture&disclosure_shown_for=name,email,picture
 ```
 </div>
 
