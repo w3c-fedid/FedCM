@@ -164,6 +164,19 @@ could be implemented.
           }]
         }
       });
+      
+      // Handle the token - it could be a string or serialized JSON
+      let token = credential.token;
+      try {
+        // Try to parse as JSON first
+        let tokenData = JSON.parse(token);
+        // Handle structured token (e.g., OAuth response)
+        console.log("Access token:", tokenData.access_token);
+        console.log("Refresh token:", tokenData.refresh_token);
+      } catch (e) {
+        // Handle as string token (e.g., JWT)
+        console.log("JWT token:", token);
+      }
     } catch(e) {
       // The FedCM call was not successful.
     }
@@ -453,7 +466,7 @@ This specification introduces a new type of {{Credential}}, called an {{Identity
   [Exposed=Window, SecureContext]
   interface IdentityCredential : Credential {
     static Promise&lt;undefined&gt; disconnect(IdentityCredentialDisconnectOptions options);
-    readonly attribute USVString? token;
+    readonly attribute any token;
     readonly attribute boolean isAutoSelected;
     readonly attribute USVString configURL;
   };
@@ -465,6 +478,7 @@ This specification introduces a new type of {{Credential}}, called an {{Identity
     :   <b>{{IdentityCredential/token}}</b>
     ::  The {{IdentityCredential/token}}'s attribute getter returns the value it is set to.
         It represents the minted {{IdentityAssertionResponse/token}} provided by the [=IDP=].
+        The token can be either a string (for traditional tokens like JWTs) or a serialized JSON object containing structured authentication data. When the [=IDP=] returns a JSON object as the token, it will be serialized to a string before being made available through this attribute. [=RP=]'s should parse the token value to determine its format and handle it accordingly.
     :   <b>{{IdentityCredential/isAutoSelected}}</b>
     ::  {{IdentityCredential/isAutoSelected}}'s attribute getter returns the value it is
         set to. It represents whether the user's identity credential was automatically selected when
@@ -1517,8 +1531,18 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
                 |response|'s [=response/status=]. For example, if the [=response/status=] is 500, it
                 could set it to "server_error", and if the [=response/status=] is 503, it could set
                 it to "temporarily_unavailable".
-        1. Otherwise, if {{IdentityAssertionResponse/token}} was specified, let |tokenString|
-            be |token|'s {{IdentityAssertionResponse/token}}.
+        1. Otherwise, if {{IdentityAssertionResponse/token}} was specified:
+            1. Let |tokenValue| be |token|'s {{IdentityAssertionResponse/token}}.
+            1. Let |tokenString| be null.
+            1. If Type(|tokenValue|) is String, set |tokenString| to |tokenValue|.
+            1. Otherwise, if Type(|tokenValue|) is Object:
+            1. Let |jsonString| be the result of [=serializing a JavaScript value to a JSON string=]
+                given |tokenValue|.
+            1. If serialization threw an exception, set |credential| to a the result of
+                [=create an IdentityCredentialError=] with {} and |globalObject|, and return.
+            1. Set |tokenString| to |jsonString|.
+            1. Otherwise, set |credential| to a the result of [=create an IdentityCredentialError=]
+                with {} and |globalObject|, and return.
         1. Otherwise, if {{IdentityAssertionResponse/continue_on}} was specified, run these steps
             [=in parallel=]:
             1. Let |continueOnUrl| be the result of running [=parse url=] with |token|'s
@@ -1580,7 +1604,7 @@ An extension may add the following steps after the [=fetch identity assertion/cr
 
 <pre class="idl">
 dictionary IdentityAssertionResponse {
-  USVString token;
+  any token;
   USVString continue_on;
   IdentityCredentialErrorInit error;
 };
@@ -2425,7 +2449,7 @@ Every {{IdentityAssertionResponse}} is expected to have members with the followi
 
 <dl dfn-type="dict-member" dfn-for="IdentityAssertionResponse">
     :   <dfn>token</dfn>
-    ::  The resulting token.
+    ::  The resulting token. Can be either a string (for backward compatibility) or a JSON object containing structured data.
     :   <dfn>continue_on</dfn>
     ::  A URL that the user agent will open in a popup to finish the authentication process.
     :   <dfn>error</dfn>
@@ -2438,7 +2462,8 @@ in the response.
 
 The content of the {{IdentityAssertionResponse/token}} is opaque to the user agent and can contain
 anything that the [=IDP=] would like to pass to the
-[=RP=] to facilitate the login. For this reason the [=RP=]
+[=RP=] to facilitate the login. When the token
+is a JSON object, it will be serialized to a string before being passed to the [=RP=].For this reason the [=RP=]
 is expected to be the party responsible for validating the
 {{IdentityAssertionResponse/token}} passed along from the [=IDP=] using the
 appropriate token validation algorithms defined. One example of how this might
@@ -2450,12 +2475,22 @@ Portability is left entirely up to [=IDPs=], who can choose
 between a variety of different mechanisms to accomplish it
 (e.g. [OIDC's Account Porting](https://openid.net/specs/openid-connect-account-porting-1_0.html)).
 
-For example:
+For example (string token):
 
 <div class=example>
 ```json
 {
   "token" : "eyJC...J9.eyJzdWTE2...MjM5MDIyfQ.SflV_adQssw....5c"
+}
+```
+</div>
+
+For example (JSON object token):
+
+<div class=example>
+```json
+{
+  { "token" : { "access_token": "eyJC...J9.eyJzdWTE2...MjM5MDIyfQ.SflV_adQssw....5c", "token_type": "Bearer", "expires_in": 3600, "scope": "openid profile email", "refresh_token": "eyJC...refresh...token" } }
 }
 ```
 </div>
@@ -2923,6 +2958,26 @@ distinguishing browser-initiated FedCM flows from arbitrary requests.
 
 [=IDP=] and [=RP=] endpoints are implemented correctly and do not contain vulnerabilities that could 
 allow an attacker to bypass the FedCM flow or extract sensitive data.
+
+<!-- ============================================================ -->
+### Token Format and Validation ### {#token-format-validation}
+<!-- ============================================================ -->
+
+**Consideration**
+
+With the support for both string and JSON object tokens, [=RP=]s must be prepared to handle different
+token formats. The token content remains opaque to the user agent, whether it's a string or a 
+serialized JSON object.
+
+**Recommendations**
+
+1. [=RP=]'s should implement robust token parsing logic that can differentiate between traditional
+    string tokens (like JWTs) and serialized JSON objects.
+2. [=RP=]'s should validate tokens according to the format agreed upon with their [=IDP=] partners.
+3. [=IDP=]'s should clearly document the token format they return to help [=RP=]'s implement proper
+    validation.
+4. When returning JSON object tokens, [=IDP=]'s should ensure the structure is consistent and 
+    well-documented.
 
 <!-- ============================================================ -->
 ## Threats and Attacks ## {#security-threats-aattacks}
@@ -3472,6 +3527,19 @@ These schemes have not been adopted by this specification.
   path: img/mock34.svg
   </pre>
 </div>
+
+<!-- ============================================================ -->
+### Token Content Privacy ### {#token-content-privacy}
+<!-- ============================================================ -->
+
+The FedCM API treats token content as opaque data, regardless of whether it's a string or JSON object.
+This design ensures:
+
+1. The user agent does not inspect or validate token contents, maintaining the privacy of the
+    authentication data.
+2. The token format (string vs. JSON) does not affect the privacy properties of the API.
+3. [=IDP=]'s have flexibility in token design without compromising user privacy.
+4. Sensitive information in tokens is only accessible to the [=RP=] after user consent.
 
 <!-- ====================================================================== -->
 # Extensibility # {#extensibility}
