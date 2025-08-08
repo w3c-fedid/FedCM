@@ -473,17 +473,8 @@ This specification introduces a new type of {{Credential}}, called an {{Identity
     :   <b>{{IdentityCredential/token}}</b>
     ::  The {{IdentityCredential/token}}'s attribute getter returns the value it is set to.
         It represents the minted {{IdentityAssertionResponse/token}} provided by the [=IDP=].
-        The token attribute can return either:
-        - A string value (e.g., traditional tokens like JWTs)
-        - A JavaScript object (e.g., structured authentication data with access_token, refresh_token, etc.)
-        
         The type returned depends on what the [=IDP=] provides in its assertion endpoint response.
-        [=RPs=] MUST check the type of the token before processing it.
-        
-        <div class="note">
-        Breaking Change: Previous versions of this specification only supported string tokens.
-        [=RPs=] updating to support this version MUST implement logic to handle both types.
-        </div>
+        [=RP=] MUST check the type of the token before processing it.
     :   <b>{{IdentityCredential/isAutoSelected}}</b>
     ::  {{IdentityCredential/isAutoSelected}}'s attribute getter returns the value it is
         set to. It represents whether the user's identity credential was automatically selected when
@@ -1538,11 +1529,7 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
                 it to "temporarily_unavailable".
         1. Otherwise, if {{IdentityAssertionResponse/token}} was specified:
             1. Let |token| be the result of extracting the token from the response.
-            1. If |token| is a JSON object in the response:
-                1. The [=user agent=] MUST preserve the object structure.
-                1. Set |credential|.{{IdentityCredential/token}} to the JavaScript object representation.
-            1. Otherwise, if |token| is a string:
-                1. Set |credential|.{{IdentityCredential/token}} to the string value.
+            1. Set |credential|.{{IdentityCredential/token}} to |token|.
             1. The [=user agent=] MUST NOT modify or validate the token content.
         1. Otherwise, if {{IdentityAssertionResponse/continue_on}} was specified, run these steps
             [=in parallel=]:
@@ -2450,13 +2437,7 @@ Every {{IdentityAssertionResponse}} is expected to have members with the followi
 
 <dl dfn-type="dict-member" dfn-for="IdentityAssertionResponse">
     :   <dfn>token</dfn>
-    ::  The resulting token. The value can be either:
-        - A string (e.g., a JWT or other opaque token format)
-        - A JSON object containing structured authentication data
-        
-        The [=user agent=] MUST NOT serialize object tokens to strings. The exact
-        structure provided by the [=IDP=] MUST be preserved and passed to the [=RP=].
-        
+    ::  The resulting token. The value can be any.
         See the examples at the end of [[#idp-api-id-assertion-endpoint]] for both string 
         and object token formats.
     :   <dfn>continue_on</dfn>
@@ -2975,16 +2956,16 @@ allow an attacker to bypass the FedCM flow or extract sensitive data.
 
 With the support for both string and JSON object tokens, [=RPs=] must be prepared to handle different
 token formats. The token content remains opaque to the user agent, whether it's a string or a 
-serialized JSON object.
+JSON object.
 
 **Recommendations**
 
 1. [=RPs=] should implement robust token parsing logic that can differentiate between traditional
-    string tokens (like JWTs) and serialized JSON objects.
-2. [=RPs=] should validate tokens according to the format agreed upon with their [=IDP=] partners.
-3. [=IDPs=] should clearly document the token format they return to help [=RPs=] implement proper
+    string tokens (like JWTs) and JSON objects.
+1. [=RPs=] should validate tokens according to the format agreed upon with their [=IDP=] partners.
+1. [=IDPs=] should clearly document the token format they return to help [=RPs=] implement proper
     validation.
-4. When returning JSON object tokens, [=IDPs=] should ensure the structure is consistent and 
+1. When returning JSON object tokens, [=IDPs=] should ensure the structure is consistent and 
     well-documented.
 
 <!-- ============================================================ -->
@@ -3540,19 +3521,13 @@ These schemes have not been adopted by this specification.
 ### Token Content Privacy ### {#token-content-privacy}
 <!-- ============================================================ -->
 
-The FedCM API treats token content as opaque data, regardless of type (string or object).
+The FedCM API treats token content as opaque data, regardless of type.
 This design ensures:
 
 1. The [=user agent=] does not inspect or validate token contents, maintaining the privacy of the
     authentication data.
-2. The token type (string vs. object) does not affect the privacy properties of the API.
-3. [=IDPs=] have flexibility in token design without compromising user privacy.
-4. Sensitive information in tokens is only accessible to the [=RP=] after user consent.
-5. The [=user agent=] MUST pass tokens to the [=RP=] without modification, preserving the exact
-    structure provided by the [=IDP=].
-
-Note: While this version allows object tokens for enhanced functionality, it does not change
-the fundamental privacy guarantees of the API.
+1. The token format flexibility (string vs. object) does not introduce new privacy risks.
+1. [=IDPs=] have flexibility in token design without compromising user privacy.
 
 <!-- ====================================================================== -->
 # Extensibility # {#extensibility}
