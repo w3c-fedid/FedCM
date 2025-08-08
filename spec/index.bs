@@ -167,15 +167,10 @@ could be implemented.
       
       // Handle the token - it could be a string or serialized JSON
       let token = credential.token;
-      try {
-        // Try to parse as JSON first
-        let tokenData = JSON.parse(token);
+      if (typeof token === 'object' && token !== null) {
         // Handle structured token (e.g., OAuth response)
-        console.log("Access token:", tokenData.access_token);
-        console.log("Refresh token:", tokenData.refresh_token);
-      } catch (e) {
-        // Handle as string token (e.g., JWT)
-        console.log("JWT token:", token);
+      } else if (typeof token === 'string') {
+        // Handle string token (e.g., JWT)
       }
     } catch(e) {
       // The FedCM call was not successful.
@@ -478,7 +473,17 @@ This specification introduces a new type of {{Credential}}, called an {{Identity
     :   <b>{{IdentityCredential/token}}</b>
     ::  The {{IdentityCredential/token}}'s attribute getter returns the value it is set to.
         It represents the minted {{IdentityAssertionResponse/token}} provided by the [=IDP=].
-        The token can be either a string (for traditional tokens like JWTs) or a serialized JSON object containing structured authentication data. When the [=IDP=] returns a JSON object as the token, it will be serialized to a string before being made available through this attribute. [=RP=]'s should parse the token value to determine its format and handle it accordingly.
+        The token attribute can return either:
+        - A string value (e.g., traditional tokens like JWTs)
+        - A JavaScript object (e.g., structured authentication data with access_token, refresh_token, etc.)
+        
+        The type returned depends on what the [=IDP=] provides in its assertion endpoint response.
+        [=RP=]s MUST check the type of the token before processing it.
+        
+        <div class="note">
+        Breaking Change: Previous versions of this specification only supported string tokens.
+        [=RP=]s updating to support this version MUST implement logic to handle both types.
+        </div>
     :   <b>{{IdentityCredential/isAutoSelected}}</b>
     ::  {{IdentityCredential/isAutoSelected}}'s attribute getter returns the value it is
         set to. It represents whether the user's identity credential was automatically selected when
@@ -1532,17 +1537,13 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
                 could set it to "server_error", and if the [=response/status=] is 503, it could set
                 it to "temporarily_unavailable".
         1. Otherwise, if {{IdentityAssertionResponse/token}} was specified:
-            1. Let |tokenValue| be |token|'s {{IdentityAssertionResponse/token}}.
-            1. Let |tokenString| be null.
-            1. If Type(|tokenValue|) is String, set |tokenString| to |tokenValue|.
-            1. Otherwise, if Type(|tokenValue|) is Object:
-            1. Let |jsonString| be the result of [=serializing a JavaScript value to a JSON string=]
-                given |tokenValue|.
-            1. If serialization threw an exception, set |credential| to a the result of
-                [=create an IdentityCredentialError=] with {} and |globalObject|, and return.
-            1. Set |tokenString| to |jsonString|.
-            1. Otherwise, set |credential| to a the result of [=create an IdentityCredentialError=]
-                with {} and |globalObject|, and return.
+            1. Let |token| be the result of extracting the token from the response.
+            1. If |token| is a JSON object in the response:
+                1. The [=user agent=] MUST preserve the object structure.
+                1. Set |credential|.{{IdentityCredential/token}} to the JavaScript object representation.
+            1. Otherwise, if |token| is a string:
+                1. Set |credential|.{{IdentityCredential/token}} to the string value.
+            1. The [=user agent=] MUST NOT modify or validate the token content.
         1. Otherwise, if {{IdentityAssertionResponse/continue_on}} was specified, run these steps
             [=in parallel=]:
             1. Let |continueOnUrl| be the result of running [=parse url=] with |token|'s
@@ -2449,7 +2450,34 @@ Every {{IdentityAssertionResponse}} is expected to have members with the followi
 
 <dl dfn-type="dict-member" dfn-for="IdentityAssertionResponse">
     :   <dfn>token</dfn>
-    ::  The resulting token. Can be either a string (for backward compatibility) or a JSON object containing structured data.
+    ::  The resulting token. The value can be either:
+        - A string (e.g., a JWT or other opaque token format)
+        - A JSON object containing structured authentication data
+        
+        <div class="example">
+        String token example:
+        ```json
+        {
+          "token": "eyJC...J9.eyJzdWTE2...MjM5MDIyfQ.SflV_adQssw....5c"
+        }
+        ```
+        
+        Object token example:
+        ```json
+        {
+          "token": {
+            "access_token": "eyJC...J9.eyJzdWDE2...MjM5MDIyfQ.SflV_adQssw....5c",
+            "token_type": "Bearer",
+            "expires_in": 3600,
+            "scope": "openid profile email",
+            "refresh_token": "eyJC...refresh...token"
+          }
+        }
+        ```
+        </div>
+        
+        The [=user agent=] MUST NOT serialize object tokens to strings. The exact
+        structure provided by the [=IDP=] MUST be preserved and passed to the [=RP=].
     :   <dfn>continue_on</dfn>
     ::  A URL that the user agent will open in a popup to finish the authentication process.
     :   <dfn>error</dfn>
@@ -2475,7 +2503,7 @@ Portability is left entirely up to [=IDPs=], who can choose
 between a variety of different mechanisms to accomplish it
 (e.g. [OIDC's Account Porting](https://openid.net/specs/openid-connect-account-porting-1_0.html)).
 
-For example (string token):
+Example (string token):
 
 <div class=example>
 ```json
@@ -2485,7 +2513,7 @@ For example (string token):
 ```
 </div>
 
-For example (JSON object token):
+Example (JSON object token):
 
 <div class=example>
 ```json
@@ -3532,14 +3560,19 @@ These schemes have not been adopted by this specification.
 ### Token Content Privacy ### {#token-content-privacy}
 <!-- ============================================================ -->
 
-The FedCM API treats token content as opaque data, regardless of whether it's a string or JSON object.
+The FedCM API treats token content as opaque data, regardless of type (string or object).
 This design ensures:
 
-1. The user agent does not inspect or validate token contents, maintaining the privacy of the
+1. The [=user agent=] does not inspect or validate token contents, maintaining the privacy of the
     authentication data.
-2. The token format (string vs. JSON) does not affect the privacy properties of the API.
-3. [=IDP=]'s have flexibility in token design without compromising user privacy.
+2. The token type (string vs. object) does not affect the privacy properties of the API.
+3. [=IDP=]s have flexibility in token design without compromising user privacy.
 4. Sensitive information in tokens is only accessible to the [=RP=] after user consent.
+5. The [=user agent=] MUST pass tokens to the [=RP=] without modification, preserving the exact
+    structure provided by the [=IDP=].
+
+Note: While this version allows object tokens for enhanced functionality, it does not change
+the fundamental privacy guarantees of the API.
 
 <!-- ====================================================================== -->
 # Extensibility # {#extensibility}
