@@ -2454,30 +2454,11 @@ Every {{IdentityAssertionResponse}} is expected to have members with the followi
         - A string (e.g., a JWT or other opaque token format)
         - A JSON object containing structured authentication data
         
-        <div class="example">
-        String token example:
-        ```json
-        {
-          "token": "eyJC...J9.eyJzdWTE2...MjM5MDIyfQ.SflV_adQssw....5c"
-        }
-        ```
-        
-        Object token example:
-        ```json
-        {
-          "token": {
-            "access_token": "eyJC...J9.eyJzdWDE2...MjM5MDIyfQ.SflV_adQssw....5c",
-            "token_type": "Bearer",
-            "expires_in": 3600,
-            "scope": "openid profile email",
-            "refresh_token": "eyJC...refresh...token"
-          }
-        }
-        ```
-        </div>
-        
         The [=user agent=] MUST NOT serialize object tokens to strings. The exact
         structure provided by the [=IDP=] MUST be preserved and passed to the [=RP=].
+        
+        See the examples at the end of [[#idp-api-id-assertion-endpoint]] for both string 
+        and object token formats.
     :   <dfn>continue_on</dfn>
     ::  A URL that the user agent will open in a popup to finish the authentication process.
     :   <dfn>error</dfn>
@@ -2490,8 +2471,7 @@ in the response.
 
 The content of the {{IdentityAssertionResponse/token}} is opaque to the user agent and can contain
 anything that the [=IDP=] would like to pass to the
-[=RP=] to facilitate the login. When the token
-is a JSON object, it will be serialized to a string before being passed to the [=RP=].For this reason the [=RP=]
+[=RP=] to facilitate the login. For this reason the [=RP=]
 is expected to be the party responsible for validating the
 {{IdentityAssertionResponse/token}} passed along from the [=IDP=] using the
 appropriate token validation algorithms defined. One example of how this might
@@ -2999,12 +2979,12 @@ serialized JSON object.
 
 **Recommendations**
 
-1. [=RP=]'s should implement robust token parsing logic that can differentiate between traditional
+1. [=RP=]s should implement robust token parsing logic that can differentiate between traditional
     string tokens (like JWTs) and serialized JSON objects.
-2. [=RP=]'s should validate tokens according to the format agreed upon with their [=IDP=] partners.
-3. [=IDP=]'s should clearly document the token format they return to help [=RP=]'s implement proper
+2. [=RP=]s should validate tokens according to the format agreed upon with their [=IDP=] partners.
+3. [=IDP=]s should clearly document the token format they return to help [=RP=]s implement proper
     validation.
-4. When returning JSON object tokens, [=IDP=]'s should ensure the structure is consistent and 
+4. When returning JSON object tokens, [=IDP=]s should ensure the structure is consistent and 
     well-documented.
 
 <!-- ============================================================ -->
