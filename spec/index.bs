@@ -1524,13 +1524,11 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
             1. Set |credential| to the result of [=create an IdentityCredentialError=] with {} and
                 |globalObject|.
             1. The user agent MAY set |credential|'s {{IdentityCredentialError/error}} based on
-                |response|'s [=response/status=]. For example, if the [=response/status=] is 500, it
-                could set it to "server_error", and if the [=response/status=] is 503, it could set
+                |response|'s [=response/status=]. For example, if the [=response/status=] is `500`, it
+                could set it to "server_error", and if the [=response/status=] is `503`, it could set
                 it to "temporarily_unavailable".
         1. Otherwise, if {{IdentityAssertionResponse/token}} was specified:
-            1. Let |token| be the result of extracting the token from the response.
-            1. Set |credential|.{{IdentityCredential/token}} to |token|.
-            1. The [=user agent=] MUST NOT modify or validate the token content.
+            1. Let |tokenValue| be |token|'s {{IdentityAssertionResponse/token}}.
         1. Otherwise, if {{IdentityAssertionResponse/continue_on}} was specified, run these steps
             [=in parallel=]:
             1. Let |continueOnUrl| be the result of running [=parse url=] with |token|'s
@@ -1540,11 +1538,11 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
                 to failure and return.
             1. Let |tokenPair| be the result of [=show a continuation dialog=] with |continueOnUrl|.
             1. If |tokenPair| is failure, set |credential| to failure and return.
-            1. Let |tokenString| be the first entry of |tokenPair|.
+            1. Let |tokenValue| be the first entry of |tokenPair|.
             1. If the second entry of |tokenPair| is not null, set |accountId| to that second entry.
         1. Otherwise, set |credential| to a the result of [=create an IdentityCredentialError=] with
             {} and |globalObject|,
-        1. Wait for |tokenString| or |credential| to be set.
+        1. Wait for |tokenValue| or |credential| to be set.
         1. If |credential| is set:
             1. Assert that |credential| is set to failure.
             1. Return |credential|.
@@ -1552,7 +1550,7 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
             |globalObject|.
         1. Let |credential| be a new {{IdentityCredential}} given |globalObject|'s
             <a for="global object">realm</a>.
-        1. Set |credential|'s {{IdentityCredential/token}} to |tokenString|.
+        1. Set |credential|'s {{IdentityCredential/token}} to |tokenValue|.
         1. Set |credential|'s {{IdentityCredential/isAutoSelected}} to
             |isAutoSelected|.
         1. Set |credential|'s {{IdentityCredential/configURL}} to |provider|'s
@@ -2437,7 +2435,8 @@ Every {{IdentityAssertionResponse}} is expected to have members with the followi
 
 <dl dfn-type="dict-member" dfn-for="IdentityAssertionResponse">
     :   <dfn>token</dfn>
-    ::  The resulting token. The value can be any.
+    ::  The resulting token. The value is of type <a href="https://webidl.spec.whatwg.org/#idl-any">`any`</a>, allowing 
+        [=IDPs=] to return tokens in various formats (string, object, etc.).
         See the examples at the end of [[#idp-api-id-assertion-endpoint]] for both string 
         and object token formats.
     :   <dfn>continue_on</dfn>
@@ -3525,7 +3524,8 @@ These schemes have not been adopted by this specification.
 The FedCM API treats token content as opaque data, regardless of type.
 This design ensures:
 
-1. The [=user agent=] does not inspect or validate token contents, maintaining the privacy of the
+1. The [=user agent=] does not semantically interpret or validate the meaning of token contents, but 
+    may inspect their type and structure for proper handling, while maintaining the privacy of the
     authentication data.
 1. The token format flexibility does not introduce new privacy risks.
 1. [=IDPs=] have flexibility in token design without compromising user privacy.
