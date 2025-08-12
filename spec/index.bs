@@ -155,7 +155,7 @@ could be implemented.
       // Prompt the user to select an account from the IDP to use for
       // federated login within the RP. If resolved successfully, the Promise
       // returns an IdentityCredential object from which the |token| can be
-      // extracted. This is an opaque string passed from the IDP to the RP.
+      // extracted. This is passed from the IDP to the RP and can be any type of value.
       let token = await navigator.credentials.get({
         identity: {
           providers: [{
@@ -1822,7 +1822,7 @@ success or failure.
 
 <div algorithm>
 To <dfn>show a continuation dialog</dfn> given a |continueOnUrl|, run the
-following steps. This returns a failure or a tuple (string, string?) (a token
+following steps. This returns a failure or a tuple (any, string?) (a token
 and an optional account ID).
     1. Assert: these steps are running [=in parallel=].
     1. [=Create a fresh top-level traversable=] with |continueOnUrl|.
@@ -1838,11 +1838,11 @@ and an optional account ID).
         * {{IdentityProvider}}.{{IdentityProvider/resolve()}} is called in
             the context of this new traversable.
             1. Close the traversable.
-            1. Let |token| be the token that was passed to that resolve call.
+            1. Let |tokenValue| be the token that was passed to that resolve call.
             1. If {{IdentityResolveOptions/accountId}} was specified in the
                 resolve call, let |accountId| be that account ID.
             1. Otherwise, let |accountId| be null.
-            1. Return (|token|, |accountId|).
+            1. Return (|tokenValue|, |accountId|).
 
 </div>
 
