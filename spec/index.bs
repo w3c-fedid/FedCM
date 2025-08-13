@@ -155,7 +155,7 @@ could be implemented.
       // Prompt the user to select an account from the IDP to use for
       // federated login within the RP. If resolved successfully, the Promise
       // returns an IdentityCredential object from which the |token| can be
-      // extracted. This is an opaque string passed from the IDP to the RP.
+      // extracted. This is passed from the IDP to the RP and can be any type of value.
       let token = await navigator.credentials.get({
         identity: {
           providers: [{
@@ -164,6 +164,14 @@ could be implemented.
           }]
         }
       });
+      
+      // Handle the token - it could be a string or JSON object
+      let token = credential.token;
+      if (typeof token === 'object' && token !== null) {
+        // Handle structured token (e.g., OAuth response)
+      } else if (typeof token === 'string') {
+        // Handle string token (e.g., JWT)
+      }
     } catch(e) {
       // The FedCM call was not successful.
     }
@@ -453,7 +461,7 @@ This specification introduces a new type of {{Credential}}, called an {{Identity
   [Exposed=Window, SecureContext]
   interface IdentityCredential : Credential {
     static Promise&lt;undefined&gt; disconnect(IdentityCredentialDisconnectOptions options);
-    readonly attribute USVString? token;
+    readonly attribute any token;
     readonly attribute boolean isAutoSelected;
     readonly attribute USVString configURL;
   };
@@ -465,6 +473,8 @@ This specification introduces a new type of {{Credential}}, called an {{Identity
     :   <b>{{IdentityCredential/token}}</b>
     ::  The {{IdentityCredential/token}}'s attribute getter returns the value it is set to.
         It represents the minted {{IdentityAssertionResponse/token}} provided by the [=IDP=].
+        The type returned depends on what the [=IDP=] provides in its assertion endpoint response.
+        [=RP=] MUST check the type of the token before processing it.
     :   <b>{{IdentityCredential/isAutoSelected}}</b>
     ::  {{IdentityCredential/isAutoSelected}}'s attribute getter returns the value it is
         set to. It represents whether the user's identity credential was automatically selected when
@@ -1514,11 +1524,11 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
             1. Set |credential| to the result of [=create an IdentityCredentialError=] with {} and
                 |globalObject|.
             1. The user agent MAY set |credential|'s {{IdentityCredentialError/error}} based on
-                |response|'s [=response/status=]. For example, if the [=response/status=] is 500, it
-                could set it to "server_error", and if the [=response/status=] is 503, it could set
+                |response|'s [=response/status=]. For example, if the [=response/status=] is `500`, it
+                could set it to "server_error", and if the [=response/status=] is `503`, it could set
                 it to "temporarily_unavailable".
-        1. Otherwise, if {{IdentityAssertionResponse/token}} was specified, let |tokenString|
-            be |token|'s {{IdentityAssertionResponse/token}}.
+        1. Otherwise, if {{IdentityAssertionResponse/token}} was specified:
+            1. Let |tokenValue| be |token|'s {{IdentityAssertionResponse/token}}.
         1. Otherwise, if {{IdentityAssertionResponse/continue_on}} was specified, run these steps
             [=in parallel=]:
             1. Let |continueOnUrl| be the result of running [=parse url=] with |token|'s
@@ -1528,11 +1538,11 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
                 to failure and return.
             1. Let |tokenPair| be the result of [=show a continuation dialog=] with |continueOnUrl|.
             1. If |tokenPair| is failure, set |credential| to failure and return.
-            1. Let |tokenString| be the first entry of |tokenPair|.
+            1. Let |tokenValue| be the first entry of |tokenPair|.
             1. If the second entry of |tokenPair| is not null, set |accountId| to that second entry.
         1. Otherwise, set |credential| to a the result of [=create an IdentityCredentialError=] with
             {} and |globalObject|,
-        1. Wait for |tokenString| or |credential| to be set.
+        1. Wait for |tokenValue| or |credential| to be set.
         1. If |credential| is set:
             1. Assert that |credential| is set to failure.
             1. Return |credential|.
@@ -1540,7 +1550,7 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
             |globalObject|.
         1. Let |credential| be a new {{IdentityCredential}} given |globalObject|'s
             <a for="global object">realm</a>.
-        1. Set |credential|'s {{IdentityCredential/token}} to |tokenString|.
+        1. Set |credential|'s {{IdentityCredential/token}} to |tokenValue|.
         1. Set |credential|'s {{IdentityCredential/isAutoSelected}} to
             |isAutoSelected|.
         1. Set |credential|'s {{IdentityCredential/configURL}} to |provider|'s
@@ -1580,7 +1590,7 @@ An extension may add the following steps after the [=fetch identity assertion/cr
 
 <pre class="idl">
 dictionary IdentityAssertionResponse {
-  USVString token;
+  any token;
   USVString continue_on;
   IdentityCredentialErrorInit error;
 };
@@ -1812,7 +1822,7 @@ success or failure.
 
 <div algorithm>
 To <dfn>show a continuation dialog</dfn> given a |continueOnUrl|, run the
-following steps. This returns a failure or a tuple (string, string?) (a token
+following steps. This returns a failure or a tuple (any, string?) (a token
 and an optional account ID).
     1. Assert: these steps are running [=in parallel=].
     1. [=Create a fresh top-level traversable=] with |continueOnUrl|.
@@ -1828,11 +1838,11 @@ and an optional account ID).
         * {{IdentityProvider}}.{{IdentityProvider/resolve()}} is called in
             the context of this new traversable.
             1. Close the traversable.
-            1. Let |token| be the token that was passed to that resolve call.
+            1. Let |tokenValue| be the token that was passed to that resolve call.
             1. If {{IdentityResolveOptions/accountId}} was specified in the
                 resolve call, let |accountId| be that account ID.
             1. Otherwise, let |accountId| be null.
-            1. Return (|token|, |accountId|).
+            1. Return (|tokenValue|, |accountId|).
 
 </div>
 
@@ -1870,7 +1880,7 @@ This specification introduces the {{IdentityUserInfo}} dictionary as well as the
 
   [Exposed=Window, SecureContext] interface IdentityProvider {
       static undefined close();
-      static Promise&lt;undefined&gt; resolve(DOMString token, optional IdentityResolveOptions options = {});
+      static Promise&lt;undefined&gt; resolve(any token, optional IdentityResolveOptions options = {});
       static Promise&lt;sequence&lt;IdentityUserInfo&gt;&gt; getUserInfo(IdentityProviderConfig config);
   };
 </pre>
@@ -2425,7 +2435,10 @@ Every {{IdentityAssertionResponse}} is expected to have members with the followi
 
 <dl dfn-type="dict-member" dfn-for="IdentityAssertionResponse">
     :   <dfn>token</dfn>
-    ::  The resulting token.
+    ::  The resulting token. The value is of type <a href="https://webidl.spec.whatwg.org/#idl-any">`any`</a>, allowing 
+        [=IDPs=] to return tokens in various formats (string, object, etc.).
+        See the examples at the end of [[#idp-api-id-assertion-endpoint]] for both string 
+        and object token formats.
     :   <dfn>continue_on</dfn>
     ::  A URL that the user agent will open in a popup to finish the authentication process.
     :   <dfn>error</dfn>
@@ -2450,12 +2463,22 @@ Portability is left entirely up to [=IDPs=], who can choose
 between a variety of different mechanisms to accomplish it
 (e.g. [OIDC's Account Porting](https://openid.net/specs/openid-connect-account-porting-1_0.html)).
 
-For example:
+Example (string token):
 
 <div class=example>
 ```json
 {
   "token" : "eyJC...J9.eyJzdWTE2...MjM5MDIyfQ.SflV_adQssw....5c"
+}
+```
+</div>
+
+Example (JSON object token):
+
+<div class=example>
+```json
+{
+  { "token" : { "access_token": "eyJC...J9.eyJzdWTE2...MjM5MDIyfQ.SflV_adQssw....5c", "token_type": "Bearer", "expires_in": 3600, "scope": "openid profile email", "refresh_token": "eyJC...refresh...token" } }
 }
 ```
 </div>
@@ -2923,6 +2946,27 @@ distinguishing browser-initiated FedCM flows from arbitrary requests.
 
 [=IDP=] and [=RP=] endpoints are implemented correctly and do not contain vulnerabilities that could 
 allow an attacker to bypass the FedCM flow or extract sensitive data.
+
+<!-- ============================================================ -->
+### Token Format and Validation ### {#token-format-validation}
+<!-- ============================================================ -->
+
+**Consideration**
+
+The FedCM API supports flexible token formats, allowing [=IDPs=] to return tokens in various forms. 
+[=RPs=] must be prepared to handle different token structures as agreed upon with their [=IDP=] 
+partners. The token content remains opaque to the user agent.
+
+**Recommendations**
+
+1. [=RPs=] should implement robust token parsing logic that can handle the specific format agreed 
+    upon with their [=IDP=] partners.
+1. [=RPs=] should validate tokens according to the security requirements and format specifications 
+    established with their [=IDP=].
+1. [=IDPs=] should clearly document their token format and structure to help [=RPs=] implement 
+    proper validation.
+1. [=IDPs=] should ensure their token format is consistent and follows their documented 
+    specification.
 
 <!-- ============================================================ -->
 ## Threats and Attacks ## {#security-threats-aattacks}
@@ -3472,6 +3516,19 @@ These schemes have not been adopted by this specification.
   path: img/mock34.svg
   </pre>
 </div>
+
+<!-- ============================================================ -->
+### Token Content Privacy ### {#token-content-privacy}
+<!-- ============================================================ -->
+
+The FedCM API treats token content as opaque data, regardless of type.
+This design ensures:
+
+1. The [=user agent=] does not semantically interpret or validate the meaning of token contents, but 
+    may inspect their type and structure for proper handling, while maintaining the privacy of the
+    authentication data.
+1. The token format flexibility does not introduce new privacy risks.
+1. [=IDPs=] have flexibility in token design without compromising user privacy.
 
 <!-- ====================================================================== -->
 # Extensibility # {#extensibility}
