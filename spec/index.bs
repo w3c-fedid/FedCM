@@ -1628,6 +1628,10 @@ an {{IdentityProviderAPIConfig}} |config|, an {{IdentityProviderRequestOptions}}
             does not contain the fields required by the IDP. This is to enable user agents that
             do not support showing a permission prompt.
 
+        1. If |metadata| is not null or failure, and |metadata|.
+            {{IdentityProviderClientMetadata/client_matches_top_frame_origin}} is `false`, this dialog
+            MUST show the [=host/registrable domain=] of |globalObject|'s [=associated Document=]'s
+            [=Document/origin=] to the user.
         1. If |fields| is not [=list/empty=]:
             1. If |metadata| is not failure, |metadata|["{{IdentityProviderClientMetadata/privacy_policy_url}}"]
                 is defined, and the |provider|'s {{IdentityProviderConfig/clientId}} is not in the list of
@@ -1667,6 +1671,17 @@ an {{IdentityProviderRequestOptions}} |provider|, run the following steps. This 
     1. Let |clientMetadataUrl| be the result of [=computing the manifest URL=] given |provider|,
         |config|["{{IdentityProviderAPIConfig/client_metadata_endpoint}}"], and |globalObject|.
     1. If |clientMetadataUrl| is failure, return failure.
+    1. Let |embedderOrigin| be the |globalObject|'s [=Window/navigable=]'s
+        [=navigable/top-level traversable=]'s [=navigable/active document=]'s [=Document/origin=].
+    1. Let |rpOrigin| be |globalObject|'s [=associated Document=]'s [=Document/origin=].
+    1. Set the [=URL-query string=] of |clientMetadataUrl| to the [=string/concatenation=] of the
+        following strings:
+        1. `"client_id="`
+        1. |provider|.{{IdentityProviderConfig/clientId}}
+        1. If the [=host/registrable domain=] of |rpOrigin| is different from the
+            [=host/registrable domain=] of |embedderOrigin|:
+            1. `"&top_level_origin="`
+            1. The [=serialization of an origin|serialization=] of |embedderOrigin|
     1. Let |request| be a new <a spec=fetch for=/>request</a> as follows:
 
         :  [=request/url=]
@@ -1709,6 +1724,7 @@ an {{IdentityProviderRequestOptions}} |provider|, run the following steps. This 
 dictionary IdentityProviderClientMetadata {
   USVString privacy_policy_url;
   USVString terms_of_service_url;
+  boolean client_matches_top_frame_origin = true;
 };
 </xmp>
 
