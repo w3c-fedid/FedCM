@@ -89,7 +89,7 @@ This section addresses key design questions and explains how alternative approac
 - IDPs might feel compelled to populate both fields
 - Creates ecosystem fragmentation
 
-**Our Unified Approach:**
+**Proposed Unified Approach:**
 ```json
 {
   "token": {
@@ -122,7 +122,7 @@ This section addresses key design questions and explains how alternative approac
 - Risk of mismatched indicators and actual data
 - JSON is already self-describing
 
-**Our Approach (No indicator needed):**
+**Proposed Approach (No indicator needed):**
 ```javascript
 // Simple runtime detection
 if (typeof credential.token === 'string') {
@@ -179,7 +179,7 @@ if (typeof credential.token === 'string') {
 - Security risks from format confusion
 - Complex validation logic required
 
-**Our Single Format Approach:**
+**Proposed Single Format Approach:**
 ```json
 {
   "token": {
