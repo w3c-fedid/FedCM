@@ -161,48 +161,10 @@ if (typeof credential.token === 'string') {
 }
 ```
 
-### Why Not Support Both Formats Simultaneously?
-
-**Rejected Alternative - Dual Format Support:**
-```json
-{
-  "string_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "structured_token": {
-    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "expires_in": 3600
-  }
-}
-```
-
-**Problems with this approach:**
-- Which format takes precedence?
-- Security risks from format confusion
-- Complex validation logic required
-
-**Proposed Single Format Approach:**
-```json
-{
-  "token": {
-    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "expires_in": 3600
-  }
-}
-```
-
 **Benefits:**
 - Clear semantics with single authoritative value
 - Simpler validation and fewer security risks
 - Better developer experience
-
-### Rejected Alternatives Summary
-
-1. **Do Nothing**: Poor developer ergonomics and competitiveness
-2. **Separate Fields**: API complexity and developer confusion
-3. **Type Indicators**: Unnecessary overhead when JSON is self-describing
-4. **Dual Format Support**: Security risks and validation complexity
-5. **Content Negotiation**: HTTP layer complexity without addressing type system issues
-
-**Recommended compatibility approaches**: Version-based endpoints, client capability detection, or gradual migration strategies.
 
 ## Benefits
 
