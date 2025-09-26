@@ -30,84 +30,169 @@ Allow the `token` field to accept any valid JSON type (`any`) instead of restric
 
 #### 1. ID Assertion Endpoint Response
 
-The `token` field type changes from `string` to `any`, allowing structured JSON objects.
-
-#### 2. IdentityProvider.resolve() Parameter Type
-
-**Before:**
-```typescript
-interface IdentityProvider {
-  resolve(token: string): Promise<IdentityCredential>;
+**Current (String only):**
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
 
-**After:**
-```typescript
-interface IdentityProvider {
-  resolve(token: any): Promise<IdentityCredential>;
+**Proposed (Any JSON type):**
+```json
+{
+  "token": {
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refresh_token": "def50200f3d5b...",
+    "expires_in": 3600,
+    "token_type": "Bearer"
+  }
 }
 ```
 
-#### 3. IdentityCredential.token Property Type
+#### 2. JavaScript API Usage
 
-**Before:**
-```typescript
-interface IdentityCredential {
-  readonly token: string;
-  // ... other properties
-}
+**Current (Manual parsing required):**
+```javascript
+const credential = await navigator.credentials.get({...});
+// Must manually parse string token
+const tokenData = JSON.parse(credential.token);
+const accessToken = tokenData.access_token;
 ```
 
-**After:**
-```typescript
-interface IdentityCredential {
-  readonly token: any;
-  // ... other properties
-}
+**Proposed (Direct access):**
+```javascript
+const credential = await navigator.credentials.get({...});
+// Direct access to structured data
+const accessToken = credential.token.access_token;
+const expiresIn = credential.token.expires_in;
 ```
 
 ## Design Decisions and Alternatives Considered
 
-This section addresses key design questions and explains why alternative approaches were rejected.
+This section addresses key design questions and explains how alternative approaches would look in practice.
 
 ### Why a Unified `any` Type Instead of Separate Fields?
 
-**Rejected Alternative**: Adding a `structured_data` field alongside the existing `token` field.
+**Rejected Alternative - Separate Fields Approach:**
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "structured_data": {
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "expires_in": 3600
+  }
+}
+```
 
-**Decision Rationale**: A unified approach with `any` type is superior because:
-- **Eliminates API complexity**: No confusion about which field to use or precedence rules
-- **Prevents ecosystem fragmentation**: Single token field ensures consistent adoption
-- **Enables seamless migration**: IDPs can evolve from strings to objects naturally
-- **Maintains type system alignment**: `any` encompasses both strings and objects
+**Problems with this approach:**
+- Which field should RPs use? What if both are present?
+- IDPs might feel compelled to populate both fields
+- Creates ecosystem fragmentation
+
+**Proposed Unified Approach:**
+```json
+{
+  "token": {
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "expires_in": 3600
+  }
+}
+```
+
+**Benefits:**
+- Single source of truth eliminates confusion
+- Natural migration path from strings to objects
+- Backward compatible (strings remain valid)
 
 ### Why No Type Indicator Attribute?
 
-**Rejected Alternative**: Adding a `token_format` field to indicate payload type.
+**Rejected Alternative - Type Indicator Approach:**
+```json
+{
+  "token_format": "structured",
+  "token": {
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "expires_in": 3600
+  }
+}
+```
 
-**Decision Rationale**: Type indicators are unnecessary because:
-- **JSON is self-describing**: Runtime type detection via `typeof` is simple and reliable
-- **Avoids additional complexity**: No extra fields to validate or maintain
-- **Reduces fragility**: No risk of mismatched indicators and actual data
+**Problems with this approach:**
+- Adds unnecessary complexity
+- Risk of mismatched indicators and actual data
+- JSON is already self-describing
+
+**Proposed Approach (No indicator needed):**
+```javascript
+// Simple runtime detection
+if (typeof credential.token === 'string') {
+  // Handle string token
+} else {
+  // Handle structured token
+}
+```
 
 ### What About Compatibility with Existing IDPs?
 
-**Compatibility Risk**: Minimal to zero - this change is fully backward compatible.
+**Current IDPs (continue working unchanged):**
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
 
-**Key Points**:
-- String tokens remain valid (strings are valid JSON types)
-- No breaking changes to existing API contracts
-- Zero forced migration required
-- IDPs can adopt structured tokens at their own pace
+**New IDPs can use structured format:**
+```json
+{
+  "token": {
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "expires_in": 3600
+  }
+}
+```
 
-### Why Not Support Both String and Structured Formats Simultaneously?
+**RPs can handle both:**
+```javascript
+let tokenData;
+if (typeof credential.token === 'string') {
+  tokenData = JSON.parse(credential.token);
+} else {
+  tokenData = credential.token;
+}
+```
 
-**Rejected Alternative**: Allowing both formats in the same response.
+### Why Not Support Both Formats Simultaneously?
 
-**Decision Rationale**: Single format approach is better because:
-- **Eliminates precedence ambiguity**: Clear which token value is authoritative
-- **Reduces security risks**: Fewer code paths mean fewer vulnerabilities
-- **Simplifies validation**: Single validation path reduces error opportunities
-- **Improves developer experience**: Cleaner, more predictable API behavior
+**Rejected Alternative - Dual Format Support:**
+```json
+{
+  "string_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "structured_token": {
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "expires_in": 3600
+  }
+}
+```
+
+**Problems with this approach:**
+- Which format takes precedence?
+- Security risks from format confusion
+- Complex validation logic required
+
+**Proposed Single Format Approach:**
+```json
+{
+  "token": {
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "expires_in": 3600
+  }
+}
+```
+
+**Benefits:**
+- Clear semantics with single authoritative value
+- Simpler validation and fewer security risks
+- Better developer experience
 
 ### Rejected Alternatives Summary
 
