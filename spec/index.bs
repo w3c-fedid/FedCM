@@ -164,7 +164,7 @@ could be implemented.
           }]
         }
       });
-      
+
       // Handle the token - it could be a string or JSON object
       let token = credential.token;
       if (typeof token === 'object' && token !== null) {
@@ -587,7 +587,7 @@ perform the following steps. This returns an {{USVString}} or failure.
         :  [=request/client=]
         :: null
         :  [=request/service-workers mode=]
-        :: "none"
+        :: "all"
         :  [=request/destination=]
         :: "webidentity"
         :  [=request/origin=]
@@ -769,7 +769,7 @@ dictionary IdentityProviderRequestOptions : IdentityProviderConfig {
         interested in, or "any" if the [=RP=] wants any account associated with at least one domain
         hint. If provided, the user agent will not show accounts which do not match the domain hint
         value.
-        
+
     Note: "nonce" is to be passed within {{IdentityProviderRequestOptions/params}}.
 </dl>
 
@@ -887,7 +887,7 @@ the exception immediately.
             * Show an identity provider selector and only proceed once
                   the user confirms their desire to use an identity provider.
             * Provide a button in the URL bar and wait for user input
-                  before continuing. 
+                  before continuing.
             * Use previous user behavior to determine not to show any
                   UI to the user and silently reject the request.
         </div>
@@ -1333,7 +1333,7 @@ returns an {{IdentityProviderAccountList}}.
         :  [=request/client=]
         :: null
         :  [=request/service-workers mode=]
-        :: "none"
+        :: "all"
         :  [=request/destination=]
         :: "webidentity"
         :  [=request/origin=]
@@ -1483,7 +1483,7 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
         :  [=request/client=]
         :: null
         :  [=request/service-workers mode=]
-        :: "none"
+        :: "all"
         :  [=request/destination=]
         :: "webidentity"
         :  [=request/origin=]
@@ -1972,11 +1972,11 @@ The <dfn>in parallel steps for getUserInfo</dfn> given a {{Promise}} |promise| a
     1. For each |account| in |accountsList|:
         1. If |account|["{{IdentityProviderAccount/approved_clients}}"] is not empty and it does not
             [=list/contain=] |provider|'s {{IdentityProviderConfig/clientId}}, continue.
-        
+
             Note: this allows the [=IDP=] to override whether an account is a returning account.
             This could be useful for instance in cases where the user has disconnected the
             account out of band.
-        
+
         1. If |account| is [=eligible for auto reauthentication=] given |provider| and
             |globalObject|, set |hasAccountEligibleForAutoReauthentication| to true.
     1. If |hasAccountEligibleForAutoReauthentication| is false, [=queue to reject=] |promise| with
@@ -1986,11 +1986,11 @@ The <dfn>in parallel steps for getUserInfo</dfn> given a {{Promise}} |promise| a
         1. [=list/Append=] an {{IdentityUserInfo}} to |userInfoList| with the following values:
 
             :  {{IdentityUserInfo/email}}
-            :: |account|["{{IdentityProviderAccount/email}}"]   
+            :: |account|["{{IdentityProviderAccount/email}}"]
             :  {{IdentityUserInfo/name}}
-            :: |account|["{{IdentityProviderAccount/name}}"]   
+            :: |account|["{{IdentityProviderAccount/name}}"]
             :  {{IdentityUserInfo/givenName}}
-            :: |account|["{{IdentityProviderAccount/given_name}}"]   
+            :: |account|["{{IdentityProviderAccount/given_name}}"]
             :  {{IdentityUserInfo/picture}}
             :: |account|["{{IdentityProviderAccount/picture}}"]
     1. [=Queue a global task=] on the [=DOM manipulation task source=] given |globalObject| to
@@ -2067,7 +2067,7 @@ The file is parsed expecting a {{IdentityProviderWellKnown}} JSON object.
 The {{IdentityProviderWellKnown}} JSON object has the following semantics:
 
 <dl dfn-type="dict-member" dfn-for="IdentityProviderWellKnown">
-    :   <dfn>provider_urls</dfn> 
+    :   <dfn>provider_urls</dfn>
     ::  A list containing exactly one URL pointing to [[#idp-api-config-file]].
     :   <dfn>accounts_endpoint</dfn>
     ::  A URL that points to the same location as the {{IdentityProviderAPIConfig/accounts_endpoint}} in [[#idp-api-config-file]]s.
@@ -2435,9 +2435,9 @@ Every {{IdentityAssertionResponse}} is expected to have members with the followi
 
 <dl dfn-type="dict-member" dfn-for="IdentityAssertionResponse">
     :   <dfn>token</dfn>
-    ::  The resulting token. The value is of type <a href="https://webidl.spec.whatwg.org/#idl-any">`any`</a>, allowing 
+    ::  The resulting token. The value is of type <a href="https://webidl.spec.whatwg.org/#idl-any">`any`</a>, allowing
         [=IDPs=] to return tokens in various formats (string, object, etc.).
-        See the examples at the end of [[#idp-api-id-assertion-endpoint]] for both string 
+        See the examples at the end of [[#idp-api-id-assertion-endpoint]] for both string
         and object token formats.
     :   <dfn>continue_on</dfn>
     ::  A URL that the user agent will open in a popup to finish the authentication process.
@@ -2919,9 +2919,9 @@ The design of FedCM relies on several key security assumptions:
 ### Trusted User Agent ### {#trusted-user-agent}
 <!-- ============================================================ -->
 
-The user agent (i.e., the browser) is assumed to be a trusted entity. It is expected to faithfully 
-enforce same-origin policies, execute CSP and CORS checks, and present a secure, non-forgeable UI 
-that users can trust, and to not contains or executes malicious third parties scripts. The browser 
+The user agent (i.e., the browser) is assumed to be a trusted entity. It is expected to faithfully
+enforce same-origin policies, execute CSP and CORS checks, and present a secure, non-forgeable UI
+that users can trust, and to not contains or executes malicious third parties scripts. The browser
 is responsible for mediating the flow and preventing unauthorized access to credentials.
 
 <!-- ============================================================ -->
@@ -2929,22 +2929,22 @@ is responsible for mediating the flow and preventing unauthorized access to cred
 <!-- ============================================================ -->
 
 All network requests — especially those carrying sensitive information such as tokens — occur over
-secure channels (e.g. HTTPS). The specification assumes that the transport layer prevents 
+secure channels (e.g. HTTPS). The specification assumes that the transport layer prevents
 man-in-the-middle and other network attacks.
 
 <!-- ============================================================ -->
 ### Proper Implementation of Security Headers ### {#proper-implementation-headers}
 <!-- ============================================================ -->
 
-[=IDP=] and [=RP=] implement and enforce appropriate security headers (such as CSP, CORS, 
-and the mandatory use of the `Sec-Fetch-Dest: webidentity` header). These headers are key to 
+[=IDP=] and [=RP=] implement and enforce appropriate security headers (such as CSP, CORS,
+and the mandatory use of the `Sec-Fetch-Dest: webidentity` header). These headers are key to
 distinguishing browser-initiated FedCM flows from arbitrary requests.
 
 <!-- ============================================================ -->
 ### IDP and RP Integrity ### {#idp-and-rp-integrity}
 <!-- ============================================================ -->
 
-[=IDP=] and [=RP=] endpoints are implemented correctly and do not contain vulnerabilities that could 
+[=IDP=] and [=RP=] endpoints are implemented correctly and do not contain vulnerabilities that could
 allow an attacker to bypass the FedCM flow or extract sensitive data.
 
 <!-- ============================================================ -->
@@ -2953,19 +2953,19 @@ allow an attacker to bypass the FedCM flow or extract sensitive data.
 
 **Consideration**
 
-The FedCM API supports flexible token formats, allowing [=IDPs=] to return tokens in various forms. 
-[=RPs=] must be prepared to handle different token structures as agreed upon with their [=IDP=] 
+The FedCM API supports flexible token formats, allowing [=IDPs=] to return tokens in various forms.
+[=RPs=] must be prepared to handle different token structures as agreed upon with their [=IDP=]
 partners. The token content remains opaque to the user agent.
 
 **Recommendations**
 
-1. [=RPs=] should implement robust token parsing logic that can handle the specific format agreed 
+1. [=RPs=] should implement robust token parsing logic that can handle the specific format agreed
     upon with their [=IDP=] partners.
-1. [=RPs=] should validate tokens according to the security requirements and format specifications 
+1. [=RPs=] should validate tokens according to the security requirements and format specifications
     established with their [=IDP=].
-1. [=IDPs=] should clearly document their token format and structure to help [=RPs=] implement 
+1. [=IDPs=] should clearly document their token format and structure to help [=RPs=] implement
     proper validation.
-1. [=IDPs=] should ensure their token format is consistent and follows their documented 
+1. [=IDPs=] should ensure their token format is consistent and follows their documented
     specification.
 
 <!-- ============================================================ -->
@@ -3259,7 +3259,7 @@ origin of the fetched URLs.
     information required to perform a federated signin/signup. It is not possible for the [=RP=] or
     the [=IDP=] to force the token fetch to happen without user permission, as the user agent cannot be
     spoofed or otherwise tricked.
-    
+
 * The [=disconnect endpoint=] may only be fetched after the user has successfully gone through the
     FedCM flow at least once in the [=RP=]. It sends a credentialed request to the [=IDP=], so it
     is important that the [=user agent=] does not allow unlimited requests of such type, even after
@@ -3524,7 +3524,7 @@ These schemes have not been adopted by this specification.
 The FedCM API treats token content as opaque data, regardless of type.
 This design ensures:
 
-1. The [=user agent=] does not semantically interpret or validate the meaning of token contents, but 
+1. The [=user agent=] does not semantically interpret or validate the meaning of token contents, but
     may inspect their type and structure for proper handling, while maintaining the privacy of the
     authentication data.
 1. The token format flexibility does not introduce new privacy risks.
