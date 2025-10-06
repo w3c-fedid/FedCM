@@ -1081,6 +1081,19 @@ When asked to <dfn for="create identity credential">fetch accounts</dfn> given a
 <div class="issue" heading="extension">
 An extension may use the following instead of the [=create identity credential/show accounts=] step, where
     |permissionRequested| is sometimes set:
+    1. Let |embedderOrigin| be the |globalObject|'s [=Window/navigable=]'s
+        [=navigable/top-level traversable=]'s [=navigable/active document=]'s [=Document/origin=].
+    1. Let |rpOrigin| be |globalObject|'s [=associated Document=]'s [=Document/origin=].
+    1. Let |clientMetadataMap| be a new [=map=].
+    1. For each |provider| in <var ignore="">providerList</var>:
+        1. Let |providerOrigin| be the [=/origin=] of |provider|'s {{IdentityProviderConfig/configURL}}.
+        1. If |fields| is not [=list/empty=], or if |embedderOrigin| is not [=same site=] with
+            |rpOrigin|, set |clientMetadataMap|[|providerOrigin|] to the result of running [=fetch the client metadata=] with
+            |config|, |provider|, and |globalObject|.
+    1. If any entry in |clientMetadataMap| has
+        {{IdentityProviderClientMetadata/client_is_third_party_to_top_frame_origin}} set to true,
+        the dialog MUST show the [=host/registrable domain=] of |globalObject|'s [=associated
+        Document=]'s [=Document/origin=] to the user.
     1. If |allAccounts| is not [=list/empty=], also add UI to present the account options to the user as follows:
         1. Let |supportsUseOtherAccount| be `false`.
         1. If |options|.{{IdentityCredentialRequestOptions/mode}} is `"active"`:
@@ -1123,9 +1136,11 @@ An extension may use the following instead of the [=create identity credential/s
                     Note: The connection would normally be created in the [=request permission to sign-up=]
                         algorithm, but we do not want to show an extra dialog in this case.
                 1. Otherwise:
-                    1. Set |permission| to the result of running the [=request permission to sign-up=]
-                        algorithm with |selectedAccount|, the relevant |config|, the relevant |provider|,
-                        and |globalObject|.
+                    1. Let |providerOrigin| be the [=/origin=] of the relevant
+                        |provider|'s {{IdentityProviderConfig/configURL}}.
+                    1. Set |permission| to the result of running the [=request permission to
+                        sign-up=] algorithm with |selectedAccount|, the relevant |provider|,
+                        |clientMetadataMap|[|providerOrigin|], and |globalObject|.
                     1. Set |permissionRequested| to true.
 </div>
 
@@ -1610,16 +1625,13 @@ granted permission or not.
 
 <div algorithm="request permission to sign-up">
 To <dfn>request permission to sign-up</dfn> the user with a given an {{IdentityProviderAccount}} |account|,
-an {{IdentityProviderAPIConfig}} |config|, an {{IdentityProviderRequestOptions}} |provider|, and a
-|globalObject|, run the following steps. This returns a boolean.
+an {{IdentityProviderRequestOptions}} |provider|, an {{IdentityProviderClientMetadata}} |metadata|,
+and a |globalObject|, run the following steps. This returns a boolean.
     1. Assert: These steps are running [=in parallel=].
     1. Let |fields| be |provider|.{{IdentityProviderRequestOptions/fields}} or, if not present,
         `["name", "email", "picture"]`.
 
         Note: Omitted is different from an explicitly present empty list.
-    1. Let |metadata| be null.
-    1. If |fields| is not [=list/empty=], set |metadata| to the result of running [=fetch the client
-        metadata=] with |config|, |provider|, and |globalObject|.
     1. Prompt the user to gather explicit intent to create an account. The user agent MAY use the
         {{IdentityProviderBranding}} to inform the style choices of its UI. Additionally, if the user agent
         <dfn>supports showing a permission prompt</dfn>:
