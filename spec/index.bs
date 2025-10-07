@@ -1079,6 +1079,7 @@ When asked to <dfn for="create identity credential">fetch accounts</dfn> given a
 </div>
 
 <div class="issue" heading="extension">
+<div algorithm="show accounts extension">
 An extension may use the following instead of the [=create identity credential/show accounts=] step, where
     |permissionRequested| is sometimes set:
     1. Let |embedderOrigin| be the |globalObject|'s [=Window/navigable=]'s
@@ -1086,10 +1087,11 @@ An extension may use the following instead of the [=create identity credential/s
     1. Let |rpOrigin| be |globalObject|'s [=associated Document=]'s [=Document/origin=].
     1. Let |clientMetadataMap| be a new [=map=].
     1. For each |provider| in <var ignore="">providerList</var>:
-        1. Let |providerOrigin| be the [=/origin=] of |provider|'s {{IdentityProviderConfig/configURL}}.
-        1. If |fields| is not [=list/empty=], or if |embedderOrigin| is not [=same site=] with
-            |rpOrigin|, set |clientMetadataMap|[|providerOrigin|] to the result of running [=fetch the client metadata=] with
-            |config|, |provider|, and |globalObject|.
+        1. Let |configURL| be the |provider|'s {{IdentityProviderConfig/configURL}}.
+        1. If |provider|.{{IdentityProviderRequestOptions/fields}} is not [=list/empty=], or if
+            |embedderOrigin| is not [=same site=] with |rpOrigin|, set |clientMetadataMap|[|configURL|]
+            to the result of running [=fetch the client metadata=] with |config|, |provider|, and
+            |globalObject|.
     1. If any entry in |clientMetadataMap| has
         {{IdentityProviderClientMetadata/client_is_third_party_to_top_frame_origin}} set to true,
         the dialog MUST show the [=host/registrable domain=] of |globalObject|'s [=associated
@@ -1131,17 +1133,18 @@ An extension may use the following instead of the [=create identity credential/s
                     and |globalObject| is [=compute the connection status/connected=], set |permission|
                     to true.
                 1. Otherwise, if |provider|.{{IdentityProviderRequestOptions/fields}} is [=list/empty=],
-                    [=create a connection between the RP and the IdP account=] with |provider|, |account|,
-                    and |globalObject|, and set |permission| to true.
+                    [=create a connection between the RP and the IdP account=] with |provider|,
+                    |selectedAccount|, and |globalObject|, and set |permission| to true.
                     Note: The connection would normally be created in the [=request permission to sign-up=]
                         algorithm, but we do not want to show an extra dialog in this case.
                 1. Otherwise:
-                    1. Let |providerOrigin| be the [=/origin=] of the relevant
-                        |provider|'s {{IdentityProviderConfig/configURL}}.
+                    1. Let |configURL| be the the relevant |provider|'s
+                        {{IdentityProviderConfig/configURL}}.
                     1. Set |permission| to the result of running the [=request permission to
                         sign-up=] algorithm with |selectedAccount|, the relevant |provider|,
-                        |clientMetadataMap|[|providerOrigin|], and |globalObject|.
+                        |clientMetadataMap|[|configURL|], and |globalObject|.
                     1. Set |permissionRequested| to true.
+</div>
 </div>
 
 
@@ -1281,8 +1284,8 @@ or failure.
 <div class="issue" heading="extension">
 An extension which implements the client metadata endpoint must add the following step right before
 the [=fetch the config file/check accounts and login url step=]:
-    1. If |config|.{{IdentityProviderAPIConfig/client_metadata_endpoint}} is set but either
-        |wellKnown|.{{IdentityProviderWellKnown/accounts_endpoint}} or
+    1. If <var ignore="">config</var>.{{IdentityProviderAPIConfig/client_metadata_endpoint}} is set
+        but either |wellKnown|.{{IdentityProviderWellKnown/accounts_endpoint}} or
         |wellKnown|.{{IdentityProviderWellKnown/login_url}} is not set, return failure.
 </div>
 
@@ -1583,8 +1586,8 @@ We may modify the spec to include {{IdentityProviderRequestOptions/fields}} in t
 <div class="issue" heading="extension">
 An extension may add the following steps after the [=fetch identity assertion/create a list=] step:
     1. Let |disclosureShownFor| and |fields| be the empty list.
-    1. If |permissionRequested| is true:
-        1. Set |fields| to |provider|.{{IdentityProviderRequestOptions/fields}}.
+    1. If <var ignore="">permissionRequested</var> is true:
+        1. Set |fields| to <var ignore="">provider</var>.{{IdentityProviderRequestOptions/fields}}.
         1. Set |disclosureShownFor| to the subset of strings in |fields| that are
             in the [=list of recognized fields=].
     1. If |fields| is not empty:
