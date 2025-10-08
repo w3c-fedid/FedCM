@@ -66,6 +66,7 @@ spec:webdriver2; type:dfn; text:remote end steps
 spec:fetch; type:dfn; for:/; text:response
 spec:css-color-5; type:type; text:<color>
 spec:html; type:dfn; text:allowed to use
+spec:html; type:dfn; for:/; text:same site
 </pre>
 
 <style>
@@ -1078,8 +1079,23 @@ When asked to <dfn for="create identity credential">fetch accounts</dfn> given a
 </div>
 
 <div class="issue" heading="extension">
+<div algorithm="show accounts extension">
 An extension may use the following instead of the [=create identity credential/show accounts=] step, where
     |permissionRequested| is sometimes set:
+    1. Let |embedderOrigin| be the |globalObject|'s [=Window/navigable=]'s
+        [=navigable/top-level traversable=]'s [=navigable/active document=]'s [=Document/origin=].
+    1. Let |rpOrigin| be |globalObject|'s [=associated Document=]'s [=Document/origin=].
+    1. Let |clientMetadataMap| be a new [=map=].
+    1. For each |provider| in <var ignore="">providerList</var>:
+        1. Let |configURL| be the |provider|'s {{IdentityProviderConfig/configURL}}.
+        1. If |provider|.{{IdentityProviderRequestOptions/fields}} is not [=list/empty=], or if
+            |embedderOrigin| is not [=same site=] with |rpOrigin|, set |clientMetadataMap|[|configURL|]
+            to the result of running [=fetch the client metadata=] with |config|, |provider|, and
+            |globalObject|.
+    1. If any entry in |clientMetadataMap| has
+        {{IdentityProviderClientMetadata/client_is_third_party_to_top_frame_origin}} set to true,
+        the dialog MUST show the [=host/registrable domain=] of |globalObject|'s [=associated
+        Document=]'s [=Document/origin=] to the user.
     1. If |allAccounts| is not [=list/empty=], also add UI to present the account options to the user as follows:
         1. Let |supportsUseOtherAccount| be `false`.
         1. If |options|.{{IdentityCredentialRequestOptions/mode}} is `"active"`:
@@ -1117,15 +1133,18 @@ An extension may use the following instead of the [=create identity credential/s
                     and |globalObject| is [=compute the connection status/connected=], set |permission|
                     to true.
                 1. Otherwise, if |provider|.{{IdentityProviderRequestOptions/fields}} is [=list/empty=],
-                    [=create a connection between the RP and the IdP account=] with |provider|, |account|,
-                    and |globalObject|, and set |permission| to true.
+                    [=create a connection between the RP and the IdP account=] with |provider|,
+                    |selectedAccount|, and |globalObject|, and set |permission| to true.
                     Note: The connection would normally be created in the [=request permission to sign-up=]
                         algorithm, but we do not want to show an extra dialog in this case.
                 1. Otherwise:
-                    1. Set |permission| to the result of running the [=request permission to sign-up=]
-                        algorithm with |selectedAccount|, the relevant |config|, the relevant |provider|,
-                        and |globalObject|.
+                    1. Let |configURL| be the the relevant |provider|'s
+                        {{IdentityProviderConfig/configURL}}.
+                    1. Set |permission| to the result of running the [=request permission to
+                        sign-up=] algorithm with |selectedAccount|, the relevant |provider|,
+                        |clientMetadataMap|[|configURL|], and |globalObject|.
                     1. Set |permissionRequested| to true.
+</div>
 </div>
 
 
@@ -1265,8 +1284,8 @@ or failure.
 <div class="issue" heading="extension">
 An extension which implements the client metadata endpoint must add the following step right before
 the [=fetch the config file/check accounts and login url step=]:
-    1. If |config|.{{IdentityProviderAPIConfig/client_metadata_endpoint}} is set but either
-        |wellKnown|.{{IdentityProviderWellKnown/accounts_endpoint}} or
+    1. If <var ignore="">config</var>.{{IdentityProviderAPIConfig/client_metadata_endpoint}} is set
+        but either |wellKnown|.{{IdentityProviderWellKnown/accounts_endpoint}} or
         |wellKnown|.{{IdentityProviderWellKnown/login_url}} is not set, return failure.
 </div>
 
@@ -1567,8 +1586,8 @@ We may modify the spec to include {{IdentityProviderRequestOptions/fields}} in t
 <div class="issue" heading="extension">
 An extension may add the following steps after the [=fetch identity assertion/create a list=] step:
     1. Let |disclosureShownFor| and |fields| be the empty list.
-    1. If |permissionRequested| is true:
-        1. Set |fields| to |provider|.{{IdentityProviderRequestOptions/fields}}.
+    1. If <var ignore="">permissionRequested</var> is true:
+        1. Set |fields| to <var ignore="">provider</var>.{{IdentityProviderRequestOptions/fields}}.
         1. Set |disclosureShownFor| to the subset of strings in |fields| that are
             in the [=list of recognized fields=].
     1. If |fields| is not empty:
@@ -1609,16 +1628,13 @@ granted permission or not.
 
 <div algorithm="request permission to sign-up">
 To <dfn>request permission to sign-up</dfn> the user with a given an {{IdentityProviderAccount}} |account|,
-an {{IdentityProviderAPIConfig}} |config|, an {{IdentityProviderRequestOptions}} |provider|, and a
-|globalObject|, run the following steps. This returns a boolean.
+an {{IdentityProviderRequestOptions}} |provider|, an {{IdentityProviderClientMetadata}} |metadata|,
+and a |globalObject|, run the following steps. This returns a boolean.
     1. Assert: These steps are running [=in parallel=].
     1. Let |fields| be |provider|.{{IdentityProviderRequestOptions/fields}} or, if not present,
         `["name", "email", "picture"]`.
 
         Note: Omitted is different from an explicitly present empty list.
-    1. Let |metadata| be null.
-    1. If |fields| is not [=list/empty=], set |metadata| to the result of running [=fetch the client
-        metadata=] with |config|, |provider|, and |globalObject|.
     1. Prompt the user to gather explicit intent to create an account. The user agent MAY use the
         {{IdentityProviderBranding}} to inform the style choices of its UI. Additionally, if the user agent
         <dfn>supports showing a permission prompt</dfn>:
@@ -1628,6 +1644,10 @@ an {{IdentityProviderAPIConfig}} |config|, an {{IdentityProviderRequestOptions}}
             does not contain the fields required by the IDP. This is to enable user agents that
             do not support showing a permission prompt.
 
+        1. If |metadata| is not null or failure, and
+            |metadata|.{{IdentityProviderClientMetadata/client_is_third_party_to_top_frame_origin}}
+            is `true`, this dialog MUST show the [=host/registrable domain=] of |globalObject|'s
+            [=associated Document=]'s [=Document/origin=] to the user.
         1. If |fields| is not [=list/empty=]:
             1. If |metadata| is not failure, |metadata|["{{IdentityProviderClientMetadata/privacy_policy_url}}"]
                 is defined, and the |provider|'s {{IdentityProviderConfig/clientId}} is not in the list of
@@ -1667,6 +1687,16 @@ an {{IdentityProviderRequestOptions}} |provider|, run the following steps. This 
     1. Let |clientMetadataUrl| be the result of [=computing the manifest URL=] given |provider|,
         |config|["{{IdentityProviderAPIConfig/client_metadata_endpoint}}"], and |globalObject|.
     1. If |clientMetadataUrl| is failure, return failure.
+    1. Let |embedderOrigin| be the |globalObject|'s [=Window/navigable=]'s
+        [=navigable/top-level traversable=]'s [=navigable/active document=]'s [=Document/origin=].
+    1. Let |rpOrigin| be |globalObject|'s [=associated Document=]'s [=Document/origin=].
+    1. Set the [=URL-query string=] of |clientMetadataUrl| to the [=string/concatenation=] of the
+        following strings:
+        1. `"client_id="`
+        1. |provider|.{{IdentityProviderConfig/clientId}}
+        1. If |rpOrigin| is not [=same site=] with |embedderOrigin|:
+            1. `"&top_level_origin="`
+            1. The [=serialization of an origin|serialization=] of |embedderOrigin|
     1. Let |request| be a new <a spec=fetch for=/>request</a> as follows:
 
         :  [=request/url=]
@@ -1709,6 +1739,7 @@ an {{IdentityProviderRequestOptions}} |provider|, run the following steps. This 
 dictionary IdentityProviderClientMetadata {
   USVString privacy_policy_url;
   USVString terms_of_service_url;
+  boolean client_is_third_party_to_top_frame_origin = false;
 };
 </xmp>
 
