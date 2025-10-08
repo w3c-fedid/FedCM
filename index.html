@@ -6,7 +6,7 @@
   <meta content="ED" name="w3c-status">
   <meta content="Bikeshed version 3f621ba99, updated Mon Jul 28 15:38:36 2025 -0700" name="generator">
   <link href="http://www.w3.org/TR/fedcm/" rel="canonical">
-  <meta content="1bfbf91af2982bac2d7911f373d6c24a38e73701" name="revision">
+  <meta content="3d1f48ba43c26c97a2b608f8765b998ad6f14cfe" name="revision">
   <meta content="dark light" name="color-scheme">
 <style>
 dl.domintro dt {
@@ -771,7 +771,7 @@ var[data-var-color="6"] { --var-vg: #FFBCF2; }
 </p>
    <h1 class="p-name no-ref" id="title">Federated Credential Management API</h1>
    <p id="w3c-state"><a href="https://www.w3.org/standards/types/#ED">Editor’s Draft</a>,
-    <time class="dt-updated" datetime="2025-09-26">26 September 2025</time></p>
+    <time class="dt-updated" datetime="2025-10-08">8 October 2025</time></p>
    <details open>
     <summary>More details about this document</summary>
     <div data-fill-with="spec-metadata">
@@ -2189,102 +2189,128 @@ When asked to <dfn class="dfn-paneled" data-dfn-for="create identity credential"
       <p>Return <var>accountsList</var>.</p>
     </ol>
    </div>
-   <div class="issue no-marker" id="issue-5f361ab0">
-    <a class="self-link" href="#issue-5f361ab0"></a>
+   <div class="issue no-marker" id="issue-72ab6236">
+    <a class="self-link" href="#issue-72ab6236"></a>
     <div class="marker">ISSUE: extension</div>
-    
+    <div class="algorithm" data-algorithm="show accounts extension">
+     
 An extension may use the following instead of the <a data-link-type="dfn" href="#create-identity-credential-show-accounts" id="ref-for-create-identity-credential-show-accounts③">show accounts</a> step, where
     <var>permissionRequested</var> is sometimes set:
 
-    <ol>
-     <li data-md>
-      <p>If <var>allAccounts</var> is not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-empty" id="ref-for-list-empty②">empty</a>, also add UI to present the account options to the user as follows:</p>
-      <ol>
-       <li data-md>
-        <p>Let <var>supportsUseOtherAccount</var> be <code>false</code>.</p>
-       <li data-md>
-        <p>If <var>options</var>.<code class="idl"><a data-link-type="idl" href="#dom-identitycredentialrequestoptions-mode" id="ref-for-dom-identitycredentialrequestoptions-mode②">mode</a></code> is <code>"active"</code>:</p>
-        <ol>
-         <li data-md>
-          <p>Assert that there is only one <var>provider</var>.</p>
-         <li data-md>
-          <p>Set <var>supportsUseOtherAccount</var> to the value of that provider’s <var>config</var>.<code class="idl"><a data-link-type="idl" href="#dom-identityproviderapiconfig-supports_use_other_account" id="ref-for-dom-identityproviderapiconfig-supports_use_other_account①">supports_use_other_account</a></code>.</p>
-        </ol>
-       <li data-md>
-        <p>If <var>allAccounts</var>’s size is 1, <var>supportsUseOtherAccount</var> is <code>false</code>, and
+     <ol>
+      <li data-md>
+       <p>Let <var>embedderOrigin</var> be the <var>globalObject</var>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/nav-history-apis.html#window-navigable" id="ref-for-window-navigable④">navigable</a>’s
+<a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/document-sequences.html#nav-top" id="ref-for-nav-top⑥">top-level traversable</a>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/document-sequences.html#nav-document" id="ref-for-nav-document④">active document</a>’s <a data-link-type="dfn" href="https://dom.spec.whatwg.org/#concept-document-origin" id="ref-for-concept-document-origin⑧">origin</a>.</p>
+      <li data-md>
+       <p>Let <var>rpOrigin</var> be <var>globalObject</var>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/nav-history-apis.html#concept-document-window" id="ref-for-concept-document-window⑤">associated Document</a>’s <a data-link-type="dfn" href="https://dom.spec.whatwg.org/#concept-document-origin" id="ref-for-concept-document-origin⑨">origin</a>.</p>
+      <li data-md>
+       <p>Let <var>clientMetadataMap</var> be a new <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map①">map</a>.</p>
+      <li data-md>
+       <p>For each <var>provider</var> in <var>providerList</var>:</p>
+       <ol>
+        <li data-md>
+         <p>Let <var>configURL</var> be the <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-configurl" id="ref-for-dom-identityproviderconfig-configurl⑤">configURL</a></code>.</p>
+        <li data-md>
+         <p>If <var>provider</var>.<code class="idl"><a data-link-type="idl" href="#dom-identityproviderrequestoptions-fields" id="ref-for-dom-identityproviderrequestoptions-fields">fields</a></code> is not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-empty" id="ref-for-list-empty②">empty</a>, or if
+<var>embedderOrigin</var> is not <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#same-site" id="ref-for-same-site">same site</a> with <var>rpOrigin</var>, set <var>clientMetadataMap</var>[<var>configURL</var>]
+to the result of running <a data-link-type="dfn" href="#fetch-the-client-metadata" id="ref-for-fetch-the-client-metadata">fetch the client metadata</a> with <var>config</var>, <var>provider</var>, and
+<var>globalObject</var>.</p>
+       </ol>
+      <li data-md>
+       <p>If any entry in <var>clientMetadataMap</var> has
+<code class="idl"><a data-link-type="idl" href="#dom-identityproviderclientmetadata-client_is_third_party_to_top_frame_origin" id="ref-for-dom-identityproviderclientmetadata-client_is_third_party_to_top_frame_origin">client_is_third_party_to_top_frame_origin</a></code> set to true,
+the dialog MUST show the <a data-link-type="dfn" href="https://url.spec.whatwg.org/#host-registrable-domain" id="ref-for-host-registrable-domain">registrable domain</a> of <var>globalObject</var>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/nav-history-apis.html#concept-document-window" id="ref-for-concept-document-window⑥">associated Document</a>’s <a data-link-type="dfn" href="https://dom.spec.whatwg.org/#concept-document-origin" id="ref-for-concept-document-origin①⓪">origin</a> to the user.</p>
+      <li data-md>
+       <p>If <var>allAccounts</var> is not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-empty" id="ref-for-list-empty③">empty</a>, also add UI to present the account options to the user as follows:</p>
+       <ol>
+        <li data-md>
+         <p>Let <var>supportsUseOtherAccount</var> be <code>false</code>.</p>
+        <li data-md>
+         <p>If <var>options</var>.<code class="idl"><a data-link-type="idl" href="#dom-identitycredentialrequestoptions-mode" id="ref-for-dom-identitycredentialrequestoptions-mode②">mode</a></code> is <code>"active"</code>:</p>
+         <ol>
+          <li data-md>
+           <p>Assert that there is only one <var>provider</var>.</p>
+          <li data-md>
+           <p>Set <var>supportsUseOtherAccount</var> to the value of that provider’s <var>config</var>.<code class="idl"><a data-link-type="idl" href="#dom-identityproviderapiconfig-supports_use_other_account" id="ref-for-dom-identityproviderapiconfig-supports_use_other_account①">supports_use_other_account</a></code>.</p>
+         </ol>
+        <li data-md>
+         <p>If <var>allAccounts</var>’s size is 1, <var>supportsUseOtherAccount</var> is <code>false</code>, and
 <var>providerMap</var>’s <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-getting-the-values" id="ref-for-map-getting-the-values②">values</a> do not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists⑥">contain</a> "mismatch":</p>
-        <ol>
-         <li data-md>
-          <p>Set <var>selectedAccount</var> to <var>allAccounts</var>[0].</p>
-         <li data-md>
-          <p>If <a data-link-type="dfn" href="#compute-the-connection-status" id="ref-for-compute-the-connection-status">compute the connection status</a> of <var>selectedAccount</var>, the relevant <var>provider</var>,
+         <ol>
+          <li data-md>
+           <p>Set <var>selectedAccount</var> to <var>allAccounts</var>[0].</p>
+          <li data-md>
+           <p>If <a data-link-type="dfn" href="#compute-the-connection-status" id="ref-for-compute-the-connection-status">compute the connection status</a> of <var>selectedAccount</var>, the relevant <var>provider</var>,
 and <var>globalObject</var> returns <a data-link-type="dfn" href="#compute-the-connection-status-connected" id="ref-for-compute-the-connection-status-connected②">connected</a>, show a
 dialog to request user permission to sign in via <var>selectedAccount</var>, and set the
 result in <var>permission</var>. The user agent MAY use <var>options</var>’s
 <code class="idl"><a data-link-type="idl" href="#dom-identitycredentialrequestoptions-context" id="ref-for-dom-identitycredentialrequestoptions-context">context</a></code> and <var>options</var>’s
 <code class="idl"><a data-link-type="idl" href="#dom-identitycredentialrequestoptions-mode" id="ref-for-dom-identitycredentialrequestoptions-mode③">mode</a></code> to customize the dialog.</p>
-         <li data-md>
-          <p>Otherwise, set <var>permission</var> to the result of running <a data-link-type="dfn" href="#request-permission-to-sign-up" id="ref-for-request-permission-to-sign-up">request permission to sign-up</a>
+          <li data-md>
+           <p>Otherwise, set <var>permission</var> to the result of running <a data-link-type="dfn" href="#request-permission-to-sign-up" id="ref-for-request-permission-to-sign-up">request permission to sign-up</a>
 algorithm with <var>selectedAccount</var>, the relevant <var>config</var>, the relevant <var>provider</var>,
 and <var>globalObject</var>. Also set <var>permissionRequested</var> to true if the user agent
 <a data-link-type="dfn" href="#supports-showing-a-permission-prompt" id="ref-for-supports-showing-a-permission-prompt">supports showing a permission prompt</a>.</p>
-        </ol>
-       <li data-md>
-        <p>Otherwise:</p>
-        <ol>
-         <li data-md>
-          <p>Show <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="ui-to-allow-the-user-to-select-an-account">UI to allow the user to select an account</dfn> displaying the options from
+         </ol>
+        <li data-md>
+         <p>Otherwise:</p>
+         <ol>
+          <li data-md>
+           <p>Show <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="ui-to-allow-the-user-to-select-an-account">UI to allow the user to select an account</dfn> displaying the options from
 <var>accountsList</var>.</p>
-         <li data-md>
-          <p>If <var>supportsUseOtherAccount</var> is true, the account chooser SHOULD provide
+          <li data-md>
+           <p>If <var>supportsUseOtherAccount</var> is true, the account chooser SHOULD provide
 an affordance to use another account. If that affordance is triggered:</p>
-          <ol>
-           <li data-md>
-            <p><a data-link-type="dfn" href="#show-an-idp-login-dialog" id="ref-for-show-an-idp-login-dialog④">Show an IDP login dialog</a> with <var>config</var>, <var>provider</var> and <var>globalObject</var>.</p>
-           <li data-md>
-            <p>If that returned success:</p>
-            <ol>
-             <li data-md>
-              <p><a data-link-type="dfn" href="#create-identity-credential-fetch-accounts" id="ref-for-create-identity-credential-fetch-accounts③">Fetch accounts</a> given <var>config</var>, <var>provider</var>, and <var>globalObject</var>, and let
+           <ol>
+            <li data-md>
+             <p><a data-link-type="dfn" href="#show-an-idp-login-dialog" id="ref-for-show-an-idp-login-dialog④">Show an IDP login dialog</a> with <var>config</var>, <var>provider</var> and <var>globalObject</var>.</p>
+            <li data-md>
+             <p>If that returned success:</p>
+             <ol>
+              <li data-md>
+               <p><a data-link-type="dfn" href="#create-identity-credential-fetch-accounts" id="ref-for-create-identity-credential-fetch-accounts③">Fetch accounts</a> given <var>config</var>, <var>provider</var>, and <var>globalObject</var>, and let
 <var>accountsList</var> be the result.</p>
-             <li data-md>
-              <p>If <var>accountsList</var> is empty, show the <a data-link-type="dfn" href="#confirm-idp-login-dialog" id="ref-for-confirm-idp-login-dialog②">confirm IDP login dialog</a>.</p>
-             <li data-md>
-              <p>Otherwise, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-extend" id="ref-for-list-extend③">extend</a> <var>allAccounts</var> with <var>accountsList</var> and
+              <li data-md>
+               <p>If <var>accountsList</var> is empty, show the <a data-link-type="dfn" href="#confirm-idp-login-dialog" id="ref-for-confirm-idp-login-dialog②">confirm IDP login dialog</a>.</p>
+              <li data-md>
+               <p>Otherwise, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-extend" id="ref-for-list-extend③">extend</a> <var>allAccounts</var> with <var>accountsList</var> and
 <a data-link-type="dfn" href="#create-identity-credential-show-accounts" id="ref-for-create-identity-credential-show-accounts④">show accounts</a> again.</p>
-            </ol>
-           <li data-md>
-            <p>Otherwise, go back to the <a data-link-type="dfn" href="#ui-to-allow-the-user-to-select-an-account" id="ref-for-ui-to-allow-the-user-to-select-an-account">UI to allow the user to select an account</a>.</p>
-          </ol>
-         <li data-md>
-          <p>If the user selects an account, perform the following steps:</p>
-          <ol>
-           <li data-md>
-            <p>Set <var>selectedAccount</var> to the chosen <code class="idl"><a data-link-type="idl" href="#dictdef-identityprovideraccount" id="ref-for-dictdef-identityprovideraccount⑥">IdentityProviderAccount</a></code>.</p>
-           <li data-md>
-            <p>If <a data-link-type="dfn" href="#compute-the-connection-status" id="ref-for-compute-the-connection-status①">compute the connection status</a> of <var>selectedAccount</var>, the relevant <var>provider</var>,
+             </ol>
+            <li data-md>
+             <p>Otherwise, go back to the <a data-link-type="dfn" href="#ui-to-allow-the-user-to-select-an-account" id="ref-for-ui-to-allow-the-user-to-select-an-account">UI to allow the user to select an account</a>.</p>
+           </ol>
+          <li data-md>
+           <p>If the user selects an account, perform the following steps:</p>
+           <ol>
+            <li data-md>
+             <p>Set <var>selectedAccount</var> to the chosen <code class="idl"><a data-link-type="idl" href="#dictdef-identityprovideraccount" id="ref-for-dictdef-identityprovideraccount⑥">IdentityProviderAccount</a></code>.</p>
+            <li data-md>
+             <p>If <a data-link-type="dfn" href="#compute-the-connection-status" id="ref-for-compute-the-connection-status①">compute the connection status</a> of <var>selectedAccount</var>, the relevant <var>provider</var>,
 and <var>globalObject</var> is <a data-link-type="dfn" href="#compute-the-connection-status-connected" id="ref-for-compute-the-connection-status-connected③">connected</a>, set <var>permission</var>
 to true.</p>
-           <li data-md>
-            <p>Otherwise, if <var>provider</var>.<code class="idl"><a data-link-type="idl" href="#dom-identityproviderrequestoptions-fields" id="ref-for-dom-identityproviderrequestoptions-fields">fields</a></code> is <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-empty" id="ref-for-list-empty③">empty</a>,
-<a data-link-type="dfn" href="#create-a-connection-between-the-rp-and-the-idp-account" id="ref-for-create-a-connection-between-the-rp-and-the-idp-account">create a connection between the RP and the IdP account</a> with <var>provider</var>, <var>account</var>,
-and <var>globalObject</var>, and set <var>permission</var> to true.
+            <li data-md>
+             <p>Otherwise, if <var>provider</var>.<code class="idl"><a data-link-type="idl" href="#dom-identityproviderrequestoptions-fields" id="ref-for-dom-identityproviderrequestoptions-fields①">fields</a></code> is <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-empty" id="ref-for-list-empty④">empty</a>,
+<a data-link-type="dfn" href="#create-a-connection-between-the-rp-and-the-idp-account" id="ref-for-create-a-connection-between-the-rp-and-the-idp-account">create a connection between the RP and the IdP account</a> with <var>provider</var>,
+<var>selectedAccount</var>, and <var>globalObject</var>, and set <var>permission</var> to true.
 Note: The connection would normally be created in the <a data-link-type="dfn" href="#request-permission-to-sign-up" id="ref-for-request-permission-to-sign-up①">request permission to sign-up</a>
     algorithm, but we do not want to show an extra dialog in this case.</p>
-           <li data-md>
-            <p>Otherwise:</p>
-            <ol>
-             <li data-md>
-              <p>Set <var>permission</var> to the result of running the <a data-link-type="dfn" href="#request-permission-to-sign-up" id="ref-for-request-permission-to-sign-up②">request permission to sign-up</a>
-algorithm with <var>selectedAccount</var>, the relevant <var>config</var>, the relevant <var>provider</var>,
-and <var>globalObject</var>.</p>
-             <li data-md>
-              <p>Set <var>permissionRequested</var> to true.</p>
-            </ol>
-          </ol>
-        </ol>
-      </ol>
-    </ol>
+            <li data-md>
+             <p>Otherwise:</p>
+             <ol>
+              <li data-md>
+               <p>Let <var>configURL</var> be the the relevant <var>provider</var>’s
+<code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-configurl" id="ref-for-dom-identityproviderconfig-configurl⑥">configURL</a></code>.</p>
+              <li data-md>
+               <p>Set <var>permission</var> to the result of running the <a data-link-type="dfn" href="#request-permission-to-sign-up" id="ref-for-request-permission-to-sign-up②">request permission to sign-up</a> algorithm with <var>selectedAccount</var>, the relevant <var>provider</var>,
+<var>clientMetadataMap</var>[<var>configURL</var>], and <var>globalObject</var>.</p>
+              <li data-md>
+               <p>Set <var>permissionRequested</var> to true.</p>
+             </ol>
+           </ol>
+         </ol>
+       </ol>
+     </ol>
+    </div>
    </div>
    <h4 class="heading settled" data-level="2.5.2" id="fetch-config-file"><span class="secno">2.5.2. </span><span class="content">Fetch the config file</span><a class="self-link" href="#fetch-config-file"></a></h4>
    <p>The <a data-link-type="dfn" href="#fetch-the-config-file" id="ref-for-fetch-the-config-file②">fetch the config file</a> algorithm fetches both the <a data-link-type="dfn" href="#well-known-file" id="ref-for-well-known-file">well-known file</a> and the config file from
@@ -2298,7 +2324,7 @@ or failure.
     <ol>
      <li data-md>
       <p>Let <var>configUrl</var> be the result of running <a data-link-type="dfn" href="#parse-url" id="ref-for-parse-url③">parse url</a> with <var>provider</var>’s
-<code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-configurl" id="ref-for-dom-identityproviderconfig-configurl⑤">configURL</a></code> and <var>globalObject</var>.</p>
+<code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-configurl" id="ref-for-dom-identityproviderconfig-configurl⑦">configURL</a></code> and <var>globalObject</var>.</p>
      <li data-md>
       <p>If <var>configUrl</var> is failure, return failure.</p>
      <li data-md>
@@ -2311,7 +2337,7 @@ passed as <var>configUrl</var>. If it fails, return failure.</p>
      <li data-md>
       <p>Set <var>rootUrl</var>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-scheme" id="ref-for-concept-url-scheme">scheme</a> to <var>configUrl</var>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-scheme" id="ref-for-concept-url-scheme①">scheme</a>.</p>
      <li data-md>
-      <p>Set <var>rootUrl</var>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-host" id="ref-for-concept-url-host">host</a> to <var>configUrl</var>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-host" id="ref-for-concept-url-host①">host</a>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#host-registrable-domain" id="ref-for-host-registrable-domain">registrable domain</a>.</p>
+      <p>Set <var>rootUrl</var>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-host" id="ref-for-concept-url-host">host</a> to <var>configUrl</var>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-host" id="ref-for-concept-url-host①">host</a>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#host-registrable-domain" id="ref-for-host-registrable-domain①">registrable domain</a>.</p>
      <li data-md>
       <p>Set <var>rootUrl</var>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-path" id="ref-for-concept-url-path">path</a> to the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list" id="ref-for-list④">list</a> «".well-known", "web-identity"».</p>
      <li data-md>
@@ -2319,10 +2345,10 @@ passed as <var>configUrl</var>. If it fails, return failure.</p>
      <li data-md>
       <p>Let <var>skipWellKnown</var> be false.</p>
      <li data-md>
-      <p>Let <var>rpOrigin</var> be <var>globalObject</var>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/nav-history-apis.html#concept-document-window" id="ref-for-concept-document-window⑤">associated Document</a>’s <a data-link-type="dfn" href="https://dom.spec.whatwg.org/#concept-document-origin" id="ref-for-concept-document-origin⑧">origin</a>.</p>
+      <p>Let <var>rpOrigin</var> be <var>globalObject</var>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/nav-history-apis.html#concept-document-window" id="ref-for-concept-document-window⑦">associated Document</a>’s <a data-link-type="dfn" href="https://dom.spec.whatwg.org/#concept-document-origin" id="ref-for-concept-document-origin①①">origin</a>.</p>
      <li data-md>
       <p>If <var>rpOrigin</var> is not an <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#concept-origin-opaque" id="ref-for-concept-origin-opaque">opaque origin</a>, and <var>rootUrl</var>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-host" id="ref-for-concept-url-host②">host</a> is equal
-to <var>rpOrigin</var>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#host-registrable-domain" id="ref-for-host-registrable-domain①">registrable domain</a>, and <var>rootUrl</var>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-scheme" id="ref-for-concept-url-scheme②">scheme</a> is
+to <var>rpOrigin</var>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#host-registrable-domain" id="ref-for-host-registrable-domain②">registrable domain</a>, and <var>rootUrl</var>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-scheme" id="ref-for-concept-url-scheme②">scheme</a> is
 equal to <var>rpOrigin</var>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#concept-origin-scheme" id="ref-for-concept-origin-scheme">scheme</a>, set <var>skipWellKnown</var> to true.</p>
       <p class="note" role="note"><span class="marker">Note:</span> Because domain cookies are valid across an entire site, there is no privacy
     benefit from doing the well-known check if the RP and IDP are in the same site.</p>
@@ -2490,8 +2516,8 @@ the <a data-link-type="dfn" href="#fetch-the-config-file-check-accounts-and-logi
 
     <ol>
      <li data-md>
-      <p>If <var>config</var>.<code class="idl"><a data-link-type="idl" href="#dom-identityproviderapiconfig-client_metadata_endpoint" id="ref-for-dom-identityproviderapiconfig-client_metadata_endpoint">client_metadata_endpoint</a></code> is set but either
-<var>wellKnown</var>.<code class="idl"><a data-link-type="idl" href="#dom-identityproviderwellknown-accounts_endpoint" id="ref-for-dom-identityproviderwellknown-accounts_endpoint②">accounts_endpoint</a></code> or
+      <p>If <var>config</var>.<code class="idl"><a data-link-type="idl" href="#dom-identityproviderapiconfig-client_metadata_endpoint" id="ref-for-dom-identityproviderapiconfig-client_metadata_endpoint">client_metadata_endpoint</a></code> is set
+but either <var>wellKnown</var>.<code class="idl"><a data-link-type="idl" href="#dom-identityproviderwellknown-accounts_endpoint" id="ref-for-dom-identityproviderwellknown-accounts_endpoint②">accounts_endpoint</a></code> or
 <var>wellKnown</var>.<code class="idl"><a data-link-type="idl" href="#dom-identityproviderwellknown-login_url" id="ref-for-dom-identityproviderwellknown-login_url②">login_url</a></code> is not set, return failure.</p>
     </ol>
    </div>
@@ -2767,7 +2793,7 @@ with <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#do
         <p>"webidentity"</p>
        <dt data-md><a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-request-origin" id="ref-for-concept-request-origin⑤">origin</a>
        <dd data-md>
-        <p><var>globalObject</var>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/nav-history-apis.html#concept-document-window" id="ref-for-concept-document-window⑥">associated document</a>’s <a data-link-type="dfn" href="https://dom.spec.whatwg.org/#concept-document-origin" id="ref-for-concept-document-origin⑨">origin</a></p>
+        <p><var>globalObject</var>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/nav-history-apis.html#concept-document-window" id="ref-for-concept-document-window⑧">associated document</a>’s <a data-link-type="dfn" href="https://dom.spec.whatwg.org/#concept-document-origin" id="ref-for-concept-document-origin①②">origin</a></p>
        <dt data-md><a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-request-header-list" id="ref-for-concept-request-header-list④">header list</a>
        <dd data-md>
         <p>a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list" id="ref-for-list⑧">list</a> containing a single <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-header" id="ref-for-concept-header④">header</a> with <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-header-name" id="ref-for-concept-header-name④">name</a> set to <code>Accept</code> and
@@ -2807,7 +2833,7 @@ set to the following steps given a <a data-link-type="dfn" href="https://fetch.s
 <var>errorInit</var>.<code class="idl"><a data-link-type="idl" href="#dom-identitycredentialerrorinit-url" id="ref-for-dom-identitycredentialerrorinit-url①">url</a></code> (the relative URL),
 <var>globalObject</var>, and <var>tokenUrl</var> (the base URL).</p>
            <li data-md>
-            <p>If <var>errorUrl</var>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-host" id="ref-for-concept-url-host③">host</a>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#host-registrable-domain" id="ref-for-host-registrable-domain②">registrable domain</a>
+            <p>If <var>errorUrl</var>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-host" id="ref-for-concept-url-host③">host</a>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#host-registrable-domain" id="ref-for-host-registrable-domain③">registrable domain</a>
 is not equal to <var>tokenUrl</var>’s, set <var>errorUrl</var> to failure.</p>
            <li data-md>
             <p>If <var>errorUrl</var> is not a <a data-link-type="dfn" href="https://w3c.github.io/webappsec-secure-contexts/#potentially-trustworthy-url" id="ref-for-potentially-trustworthy-url①">potentially trustworthy URL</a>, set set <var>errorUrl</var> to
@@ -2886,7 +2912,7 @@ to failure and return.</p>
 <var>isAutoSelected</var>.</p>
        <li data-md>
         <p>Set <var>credential</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identitycredential-configurl" id="ref-for-dom-identitycredential-configurl②">configURL</a></code> to <var>provider</var>’s
-<code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-configurl" id="ref-for-dom-identityproviderconfig-configurl⑥">configURL</a></code>.</p>
+<code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-configurl" id="ref-for-dom-identityproviderconfig-configurl⑧">configURL</a></code>.</p>
       </ol>
      <li data-md>
       <p>Wait for <var>credential</var> to be set.</p>
@@ -2895,7 +2921,7 @@ to failure and return.</p>
     </ol>
    </div>
    <div class="issue" id="issue-0a46c6cc"><a class="self-link" href="#issue-0a46c6cc"></a>
-We may modify the spec to include <code class="idl"><a data-link-type="idl" href="#dom-identityproviderrequestoptions-fields" id="ref-for-dom-identityproviderrequestoptions-fields①">fields</a></code> in the
+We may modify the spec to include <code class="idl"><a data-link-type="idl" href="#dom-identityproviderrequestoptions-fields" id="ref-for-dom-identityproviderrequestoptions-fields②">fields</a></code> in the
 <a data-link-type="dfn" href="#fetch-identity-assertion-create-a-list" id="ref-for-fetch-identity-assertion-create-a-list">create a list</a> step.
 </div>
    <div class="issue no-marker" id="issue-ca61faf6">
@@ -2911,7 +2937,7 @@ An extension may add the following steps after the <a data-link-type="dfn" href=
       <p>If <var>permissionRequested</var> is true:</p>
       <ol>
        <li data-md>
-        <p>Set <var>fields</var> to <var>provider</var>.<code class="idl"><a data-link-type="idl" href="#dom-identityproviderrequestoptions-fields" id="ref-for-dom-identityproviderrequestoptions-fields②">fields</a></code>.</p>
+        <p>Set <var>fields</var> to <var>provider</var>.<code class="idl"><a data-link-type="idl" href="#dom-identityproviderrequestoptions-fields" id="ref-for-dom-identityproviderrequestoptions-fields③">fields</a></code>.</p>
        <li data-md>
         <p>Set <var>disclosureShownFor</var> to the subset of strings in <var>fields</var> that are
 in the <a data-link-type="dfn" href="#list-of-recognized-fields" id="ref-for-list-of-recognized-fields">list of recognized fields</a>.</p>
@@ -2950,8 +2976,8 @@ with a comma ("<code>,</code>") between elements.</p>
 };
 </pre>
    <h4 class="heading settled" data-level="2.5.5" id="request-permission-signup"><span class="secno">2.5.5. </span><span class="content">Extension: Request permission to sign-up</span><a class="self-link" href="#request-permission-signup"></a></h4>
-   <div class="issue no-marker" id="issue-d727fb93">
-    <a class="self-link" href="#issue-d727fb93"></a>
+   <div class="issue no-marker" id="issue-4a5255bf">
+    <a class="self-link" href="#issue-4a5255bf"></a>
     <div class="marker">ISSUE: extension</div>
     
 The following section may be added to an extension spec.
@@ -2963,20 +2989,16 @@ granted permission or not.</p>
     <div class="algorithm" data-algorithm="request permission to sign-up">
      
 To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="request-permission-to-sign-up">request permission to sign-up</dfn> the user with a given an <code class="idl"><a data-link-type="idl" href="#dictdef-identityprovideraccount" id="ref-for-dictdef-identityprovideraccount⑨">IdentityProviderAccount</a></code> <var>account</var>,
-an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderapiconfig" id="ref-for-dictdef-identityproviderapiconfig⑤">IdentityProviderAPIConfig</a></code> <var>config</var>, an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderrequestoptions" id="ref-for-dictdef-identityproviderrequestoptions⑤">IdentityProviderRequestOptions</a></code> <var>provider</var>, and a
-<var>globalObject</var>, run the following steps. This returns a boolean.
+an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderrequestoptions" id="ref-for-dictdef-identityproviderrequestoptions⑤">IdentityProviderRequestOptions</a></code> <var>provider</var>, an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderclientmetadata" id="ref-for-dictdef-identityproviderclientmetadata">IdentityProviderClientMetadata</a></code> <var>metadata</var>,
+and a <var>globalObject</var>, run the following steps. This returns a boolean.
 
      <ol>
       <li data-md>
        <p class="assertion">Assert: These steps are running <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/infrastructure.html#in-parallel" id="ref-for-in-parallel⑤">in parallel</a>.</p>
       <li data-md>
-       <p>Let <var>fields</var> be <var>provider</var>.<code class="idl"><a data-link-type="idl" href="#dom-identityproviderrequestoptions-fields" id="ref-for-dom-identityproviderrequestoptions-fields③">fields</a></code> or, if not present,
+       <p>Let <var>fields</var> be <var>provider</var>.<code class="idl"><a data-link-type="idl" href="#dom-identityproviderrequestoptions-fields" id="ref-for-dom-identityproviderrequestoptions-fields④">fields</a></code> or, if not present,
 <code>["name", "email", "picture"]</code>.</p>
        <p class="note" role="note"><span class="marker">Note:</span> Omitted is different from an explicitly present empty list.</p>
-      <li data-md>
-       <p>Let <var>metadata</var> be null.</p>
-      <li data-md>
-       <p>If <var>fields</var> is not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-empty" id="ref-for-list-empty④">empty</a>, set <var>metadata</var> to the result of running <a data-link-type="dfn" href="#fetch-the-client-metadata" id="ref-for-fetch-the-client-metadata">fetch the client metadata</a> with <var>config</var>, <var>provider</var>, and <var>globalObject</var>.</p>
       <li data-md>
        <p>Prompt the user to gather explicit intent to create an account. The user agent MAY use the
 <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderbranding" id="ref-for-dictdef-identityproviderbranding①">IdentityProviderBranding</a></code> to inform the style choices of its UI. Additionally, if the user agent
@@ -2986,6 +3008,11 @@ an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderapic
     does not contain the fields required by the IDP. This is to enable user agents that
     do not support showing a permission prompt.</p>
        <ol>
+        <li data-md>
+         <p>If <var>metadata</var> is not null or failure, and
+<var>metadata</var>.<code class="idl"><a data-link-type="idl" href="#dom-identityproviderclientmetadata-client_is_third_party_to_top_frame_origin" id="ref-for-dom-identityproviderclientmetadata-client_is_third_party_to_top_frame_origin①">client_is_third_party_to_top_frame_origin</a></code>
+is <code>true</code>, this dialog MUST show the <a data-link-type="dfn" href="https://url.spec.whatwg.org/#host-registrable-domain" id="ref-for-host-registrable-domain④">registrable domain</a> of <var>globalObject</var>’s
+<a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/nav-history-apis.html#concept-document-window" id="ref-for-concept-document-window⑨">associated Document</a>’s <a data-link-type="dfn" href="https://dom.spec.whatwg.org/#concept-document-origin" id="ref-for-concept-document-origin①③">origin</a> to the user.</p>
         <li data-md>
          <p>If <var>fields</var> is not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-empty" id="ref-for-list-empty⑤">empty</a>:</p>
          <ol>
@@ -3034,9 +3061,9 @@ interpreting the strings in the <dfn class="dfn-paneled" data-dfn-type="dfn" dat
     </div>
     <div class="algorithm" data-algorithm="fetch the client metadata">
      
-To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="fetch-the-client-metadata">fetch the client metadata</dfn> given an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderapiconfig" id="ref-for-dictdef-identityproviderapiconfig⑥">IdentityProviderAPIConfig</a></code> <var>config</var> and
+To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="fetch-the-client-metadata">fetch the client metadata</dfn> given an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderapiconfig" id="ref-for-dictdef-identityproviderapiconfig⑤">IdentityProviderAPIConfig</a></code> <var>config</var> and
 an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderrequestoptions" id="ref-for-dictdef-identityproviderrequestoptions⑥">IdentityProviderRequestOptions</a></code> <var>provider</var>, run the following steps. This returns an
-<code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderclientmetadata" id="ref-for-dictdef-identityproviderclientmetadata">IdentityProviderClientMetadata</a></code> or failure.
+<code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderclientmetadata" id="ref-for-dictdef-identityproviderclientmetadata①">IdentityProviderClientMetadata</a></code> or failure.
 
      <ol>
       <li data-md>
@@ -3047,6 +3074,28 @@ failure.</p>
 <var>config</var>["<code class="idl"><a data-link-type="idl" href="#dom-identityproviderapiconfig-client_metadata_endpoint" id="ref-for-dom-identityproviderapiconfig-client_metadata_endpoint②">client_metadata_endpoint</a></code>"], and <var>globalObject</var>.</p>
       <li data-md>
        <p>If <var>clientMetadataUrl</var> is failure, return failure.</p>
+      <li data-md>
+       <p>Let <var>embedderOrigin</var> be the <var>globalObject</var>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/nav-history-apis.html#window-navigable" id="ref-for-window-navigable⑤">navigable</a>’s
+<a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/document-sequences.html#nav-top" id="ref-for-nav-top⑦">top-level traversable</a>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/document-sequences.html#nav-document" id="ref-for-nav-document⑤">active document</a>’s <a data-link-type="dfn" href="https://dom.spec.whatwg.org/#concept-document-origin" id="ref-for-concept-document-origin①④">origin</a>.</p>
+      <li data-md>
+       <p>Let <var>rpOrigin</var> be <var>globalObject</var>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/nav-history-apis.html#concept-document-window" id="ref-for-concept-document-window①⓪">associated Document</a>’s <a data-link-type="dfn" href="https://dom.spec.whatwg.org/#concept-document-origin" id="ref-for-concept-document-origin①⑤">origin</a>.</p>
+      <li data-md>
+       <p>Set the <a data-link-type="dfn" href="https://url.spec.whatwg.org/#url-query-string" id="ref-for-url-query-string">URL-query string</a> of <var>clientMetadataUrl</var> to the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string-concatenate" id="ref-for-string-concatenate">concatenation</a> of the
+following strings:</p>
+       <ol>
+        <li data-md>
+         <p><code>"client_id="</code></p>
+        <li data-md>
+         <p><var>provider</var>.<code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-clientid" id="ref-for-dom-identityproviderconfig-clientid⑦">clientId</a></code></p>
+        <li data-md>
+         <p>If <var>rpOrigin</var> is not <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#same-site" id="ref-for-same-site①">same site</a> with <var>embedderOrigin</var>:</p>
+         <ol>
+          <li data-md>
+           <p><code>"&amp;top_level_origin="</code></p>
+          <li data-md>
+           <p>The <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#ascii-serialisation-of-an-origin" id="ref-for-ascii-serialisation-of-an-origin">serialization</a> of <var>embedderOrigin</var></p>
+         </ol>
+       </ol>
       <li data-md>
        <p>Let <var>request</var> be a new <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-request" id="ref-for-concept-request①⓪">request</a> as follows:</p>
        <dl>
@@ -3067,7 +3116,7 @@ failure.</p>
          <p>"webidentity"</p>
         <dt data-md><a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-request-origin" id="ref-for-concept-request-origin⑥">origin</a>
         <dd data-md>
-         <p><var>globalObject</var>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/nav-history-apis.html#concept-document-window" id="ref-for-concept-document-window⑦">associated document</a>’s <a data-link-type="dfn" href="https://dom.spec.whatwg.org/#concept-document-origin" id="ref-for-concept-document-origin①⓪">origin</a></p>
+         <p><var>globalObject</var>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/nav-history-apis.html#concept-document-window" id="ref-for-concept-document-window①①">associated document</a>’s <a data-link-type="dfn" href="https://dom.spec.whatwg.org/#concept-document-origin" id="ref-for-concept-document-origin①⑥">origin</a></p>
         <dt data-md><a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-request-header-list" id="ref-for-concept-request-header-list⑤">header list</a>
         <dd data-md>
          <p>a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list" id="ref-for-list⑨">list</a> containing a single <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-header" id="ref-for-concept-header⑤">header</a> with <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-header-name" id="ref-for-concept-header-name⑤">name</a> set to <code>Accept</code> and
@@ -3092,7 +3141,7 @@ set to the following steps given a <a data-link-type="dfn" href="https://fetch.s
          <p>Let <var>json</var> be the result of <a data-link-type="dfn" href="#extract-the-json-fetch-response" id="ref-for-extract-the-json-fetch-response⑤">extract the JSON fetch response</a> from <var>response</var> and
 <var>responseBody</var>.</p>
         <li data-md>
-         <p><a data-link-type="dfn" href="https://webidl.spec.whatwg.org/#dfn-convert-ecmascript-to-idl-value" id="ref-for-dfn-convert-ecmascript-to-idl-value⑤">Convert</a> <var>json</var> to an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderclientmetadata" id="ref-for-dictdef-identityproviderclientmetadata①">IdentityProviderClientMetadata</a></code>,
+         <p><a data-link-type="dfn" href="https://webidl.spec.whatwg.org/#dfn-convert-ecmascript-to-idl-value" id="ref-for-dfn-convert-ecmascript-to-idl-value⑤">Convert</a> <var>json</var> to an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderclientmetadata" id="ref-for-dictdef-identityproviderclientmetadata②">IdentityProviderClientMetadata</a></code>,
 and store the result in <var>metadata</var>.</p>
         <li data-md>
          <p>If one of the previous two steps threw an exception, set <var>metadata</var> to failure.</p>
@@ -3106,6 +3155,7 @@ and store the result in <var>metadata</var>.</p>
 <pre class="idl highlight def"><c- b>dictionary</c-> <dfn class="dfn-paneled idl-code" data-dfn-type="dictionary" data-export id="dictdef-identityproviderclientmetadata"><code><c- g>IdentityProviderClientMetadata</c-></code></dfn> {
   <a class="idl-code" data-link-type="interface" href="https://webidl.spec.whatwg.org/#idl-USVString" id="ref-for-idl-USVString③②"><c- b>USVString</c-></a> <a class="idl-code" data-link-type="dict-member" data-type="USVString" href="#dom-identityproviderclientmetadata-privacy_policy_url" id="ref-for-dom-identityproviderclientmetadata-privacy_policy_url②"><c- g>privacy_policy_url</c-></a>;
   <a class="idl-code" data-link-type="interface" href="https://webidl.spec.whatwg.org/#idl-USVString" id="ref-for-idl-USVString③③"><c- b>USVString</c-></a> <a class="idl-code" data-link-type="dict-member" data-type="USVString" href="#dom-identityproviderclientmetadata-terms_of_service_url" id="ref-for-dom-identityproviderclientmetadata-terms_of_service_url②"><c- g>terms_of_service_url</c-></a>;
+  <a class="idl-code" data-link-type="interface" href="https://webidl.spec.whatwg.org/#idl-boolean" id="ref-for-idl-boolean②"><c- b>boolean</c-></a> <dfn class="dfn-paneled idl-code" data-default="false" data-dfn-for="IdentityProviderClientMetadata" data-dfn-type="dict-member" data-export data-type="boolean" id="dom-identityproviderclientmetadata-client_is_third_party_to_top_frame_origin"><code><c- g>client_is_third_party_to_top_frame_origin</c-></code></dfn> = <c- b>false</c->;
 };
 </pre>
    </div>
@@ -3155,7 +3205,7 @@ When <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="computing-th
     <ol>
      <li data-md>
       <p>Let <var>configUrl</var> be the result of running <a data-link-type="dfn" href="#parse-url" id="ref-for-parse-url⑦">parse url</a> with <var>provider</var>’s
-<code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-configurl" id="ref-for-dom-identityproviderconfig-configurl⑦">configURL</a></code> and <var>globalObject</var>.</p>
+<code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-configurl" id="ref-for-dom-identityproviderconfig-configurl⑨">configURL</a></code> and <var>globalObject</var>.</p>
      <li data-md>
       <p>Let <var>manifestUrl</var> be the result of running <a data-link-type="dfn" href="#parse-url" id="ref-for-parse-url⑧">parse url</a> given <var>manifestString</var> (the relative
 URL), <var>globalObject</var>, and <var>configUrl</var> (the base URL).</p>
@@ -3176,7 +3226,7 @@ allowed.</p>
    <div class="algorithm" data-algorithm="extract the JSON fetch response">
     
 To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="extract-the-json-fetch-response">extract the JSON fetch response</dfn> given a <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-response" id="ref-for-concept-response⑥">response</a> <var>response</var>
-and a <var>responseBody</var>, run the following steps. This returns an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map①">ordered map</a>.
+and a <var>responseBody</var>, run the following steps. This returns an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map②">ordered map</a>.
 
     <ol>
      <li data-md>
@@ -3200,7 +3250,7 @@ throw a new "<code class="idl"><a data-link-type="idl" href="https://webidl.spec
    </div>
    <div class="algorithm" data-algorithm="show an IDP login dialog">
     
-To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="show-an-idp-login-dialog">show an IDP login dialog</dfn> given an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderapiconfig" id="ref-for-dictdef-identityproviderapiconfig⑦">IdentityProviderAPIConfig</a></code> <var>config</var>, an
+To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="show-an-idp-login-dialog">show an IDP login dialog</dfn> given an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderapiconfig" id="ref-for-dictdef-identityproviderapiconfig⑥">IdentityProviderAPIConfig</a></code> <var>config</var>, an
 <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderconfig" id="ref-for-dictdef-identityproviderconfig①⓪">IdentityProviderConfig</a></code> <var>provider</var>, and a <var>globalObject</var>, run the following steps. This returns
 success or failure.
 
@@ -3377,7 +3427,7 @@ exposed when there exists an account <var>account</var> such that the <a data-li
 the tuple (embedder, <a data-link-type="dfn" href="#rp" id="ref-for-rp②⑤">RP</a>, <a data-link-type="dfn" href="#idp" id="ref-for-idp②⑦">IDP</a>, <var>account</var>). The information matches what is received from the
 <a data-link-type="dfn" href="#accounts-endpoint" id="ref-for-accounts-endpoint①">accounts endpoint</a>. The <a data-link-type="dfn" href="#idp" id="ref-for-idp②⑧">IDP</a> can obtain this information by invoking the
 <code class="idl"><a data-link-type="idl" href="#dom-identityprovider-getuserinfo" id="ref-for-dom-identityprovider-getuserinfo①">getUserInfo()</a></code> static method from an iframe matching the <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#concept-origin" id="ref-for-concept-origin⑤">origin</a> of its
-<code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-configurl" id="ref-for-dom-identityproviderconfig-configurl⑧">configURL</a></code>.</p>
+<code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-configurl" id="ref-for-dom-identityproviderconfig-configurl①⓪">configURL</a></code>.</p>
    <div class="example" id="example-f6af7467">
     <a class="self-link" href="#example-f6af7467"></a>
 
@@ -3418,7 +3468,7 @@ The <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="in-parallel-s
 
     <ol>
      <li data-md>
-      <p>Let <var>document</var> be <var>globalObject</var>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/nav-history-apis.html#concept-document-window" id="ref-for-concept-document-window⑧">associated Document</a>.</p>
+      <p>Let <var>document</var> be <var>globalObject</var>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/nav-history-apis.html#concept-document-window" id="ref-for-concept-document-window①②">associated Document</a>.</p>
      <li data-md>
       <p>If <var>document</var> is not <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/iframe-embed-object.html#allowed-to-use" id="ref-for-allowed-to-use①">allowed to use</a> the <a data-link-type="dfn" href="#identity-credentials-get" id="ref-for-identity-credentials-get①">identity-credentials-get</a>
 <a data-link-type="dfn" href="https://w3c.github.io/webappsec-permissions-policy/#policy-controlled-feature" id="ref-for-policy-controlled-feature①">policy-controlled feature</a>, <a data-link-type="dfn" href="#queue-to-reject" id="ref-for-queue-to-reject">queue to reject</a> <var>promise</var> with "<code class="idl"><a data-link-type="idl" href="https://webidl.spec.whatwg.org/#notallowederror" id="ref-for-notallowederror②">NotAllowedError</a></code>"
@@ -3431,23 +3481,23 @@ and return. This check can be performed by iterating over the <a data-link-type=
 by keeping a separate data structure to make this lookup fast.</p>
      <li data-md>
       <p>Let <var>configUrl</var> be the result of running <a data-link-type="dfn" href="#parse-url" id="ref-for-parse-url⑨">parse url</a> with <var>provider</var>’s
-<code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-configurl" id="ref-for-dom-identityproviderconfig-configurl⑨">configURL</a></code> and <var>globalObject</var>.</p>
+<code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-configurl" id="ref-for-dom-identityproviderconfig-configurl①①">configURL</a></code> and <var>globalObject</var>.</p>
      <li data-md>
       <p>If <var>configUrl</var> is failure, <a data-link-type="dfn" href="#queue-to-reject" id="ref-for-queue-to-reject②">queue to reject</a> <var>promise</var> with "<code class="idl"><a data-link-type="idl" href="https://webidl.spec.whatwg.org/#invalidstateerror" id="ref-for-invalidstateerror①">InvalidStateError</a></code>"
 and return.</p>
      <li data-md>
-      <p>If <var>document</var>’s <a data-link-type="dfn" href="https://dom.spec.whatwg.org/#concept-document-origin" id="ref-for-concept-document-origin①①">origin</a> is not <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#same-origin" id="ref-for-same-origin③">same origin</a> as <var>configUrl</var>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-origin" id="ref-for-concept-url-origin③">origin</a>,
+      <p>If <var>document</var>’s <a data-link-type="dfn" href="https://dom.spec.whatwg.org/#concept-document-origin" id="ref-for-concept-document-origin①⑦">origin</a> is not <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#same-origin" id="ref-for-same-origin③">same origin</a> as <var>configUrl</var>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-origin" id="ref-for-concept-url-origin③">origin</a>,
 <a data-link-type="dfn" href="#queue-to-reject" id="ref-for-queue-to-reject③">queue to reject</a> <var>promise</var> with "<code class="idl"><a data-link-type="idl" href="https://webidl.spec.whatwg.org/#invalidstateerror" id="ref-for-invalidstateerror②">InvalidStateError</a></code>" and return.</p>
      <li data-md>
       <p>Run a <a data-link-type="biblio" href="https://w3c.github.io/webappsec-csp/"><cite>Content Security Policy Level 3</cite></a> check with a <a href="https://w3c.github.io/webappsec-csp/#directive-connect-src">connect-src</a> directive on the URL
 passed as <var>configUrl</var>. If it fails, <a data-link-type="dfn" href="#queue-to-reject" id="ref-for-queue-to-reject④">queue to reject</a> <var>promise</var> with "<code class="idl"><a data-link-type="idl" href="https://webidl.spec.whatwg.org/#networkerror" id="ref-for-networkerror①⑤">NetworkError</a></code>"
 and return.</p>
      <li data-md>
-      <p>If <var>globalObject</var>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/nav-history-apis.html#window-navigable" id="ref-for-window-navigable④">navigable</a> is a <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/document-sequences.html#top-level-traversable" id="ref-for-top-level-traversable">top-level traversable</a>, <a data-link-type="dfn" href="#queue-to-reject" id="ref-for-queue-to-reject⑤">queue to reject</a>
+      <p>If <var>globalObject</var>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/nav-history-apis.html#window-navigable" id="ref-for-window-navigable⑥">navigable</a> is a <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/document-sequences.html#top-level-traversable" id="ref-for-top-level-traversable">top-level traversable</a>, <a data-link-type="dfn" href="#queue-to-reject" id="ref-for-queue-to-reject⑤">queue to reject</a>
 <var>promise</var> with "<code class="idl"><a data-link-type="idl" href="https://webidl.spec.whatwg.org/#networkerror" id="ref-for-networkerror①⑥">NetworkError</a></code>" and return.</p>
      <li data-md>
-      <p>If the user has disabled the FedCM API on the <var>globalObject</var>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/nav-history-apis.html#window-navigable" id="ref-for-window-navigable⑤">navigable</a>’s
-<a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/document-sequences.html#nav-top" id="ref-for-nav-top⑥">top-level traversable</a>, <a data-link-type="dfn" href="#queue-to-reject" id="ref-for-queue-to-reject⑥">queue to reject</a> <var>promise</var> with "<code class="idl"><a data-link-type="idl" href="https://webidl.spec.whatwg.org/#networkerror" id="ref-for-networkerror①⑦">NetworkError</a></code>"
+      <p>If the user has disabled the FedCM API on the <var>globalObject</var>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/nav-history-apis.html#window-navigable" id="ref-for-window-navigable⑦">navigable</a>’s
+<a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/document-sequences.html#nav-top" id="ref-for-nav-top⑧">top-level traversable</a>, <a data-link-type="dfn" href="#queue-to-reject" id="ref-for-queue-to-reject⑥">queue to reject</a> <var>promise</var> with "<code class="idl"><a data-link-type="idl" href="https://webidl.spec.whatwg.org/#networkerror" id="ref-for-networkerror①⑦">NetworkError</a></code>"
 and return.</p>
      <li data-md>
       <p>Let <var>config</var> be the result of running <a data-link-type="dfn" href="#fetch-the-config-file" id="ref-for-fetch-the-config-file④">fetch the config file</a> with <var>provider</var> and
@@ -3464,7 +3514,7 @@ and <var>globalObject</var>.</p>
       <ol>
        <li data-md>
         <p>If <var>account</var>["<code class="idl"><a data-link-type="idl" href="#dom-identityprovideraccount-approved_clients" id="ref-for-dom-identityprovideraccount-approved_clients⑦">approved_clients</a></code>"] is not empty and it does not
-<a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-contain" id="ref-for-list-contain①②">contain</a> <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-clientid" id="ref-for-dom-identityproviderconfig-clientid⑦">clientId</a></code>, continue.</p>
+<a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-contain" id="ref-for-list-contain①②">contain</a> <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-clientid" id="ref-for-dom-identityproviderconfig-clientid⑧">clientId</a></code>, continue.</p>
         <p class="note" role="note"><span class="marker">Note:</span> this allows the <a data-link-type="dfn" href="#idp" id="ref-for-idp②⑨">IDP</a> to override whether an account is a returning account.
 This could be useful for instance in cases where the user has disconnected the
 account out of band.</p>
@@ -3627,8 +3677,8 @@ are required.</p>
 <c- e>Sec-Fetch-Dest</c-><c- o>:</c-> <c- l>webidentity</c->
 </pre>
    </div>
-   <p>The response body must be a JSON object that can be <a data-link-type="dfn" href="https://webidl.spec.whatwg.org/#dfn-convert-ecmascript-to-idl-value" id="ref-for-dfn-convert-ecmascript-to-idl-value⑥">converted</a> to an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderapiconfig" id="ref-for-dictdef-identityproviderapiconfig⑧">IdentityProviderAPIConfig</a></code> without an exception.</p>
-   <p>The <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderapiconfig" id="ref-for-dictdef-identityproviderapiconfig⑨">IdentityProviderAPIConfig</a></code> object’s members have the following semantics:</p>
+   <p>The response body must be a JSON object that can be <a data-link-type="dfn" href="https://webidl.spec.whatwg.org/#dfn-convert-ecmascript-to-idl-value" id="ref-for-dfn-convert-ecmascript-to-idl-value⑥">converted</a> to an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderapiconfig" id="ref-for-dictdef-identityproviderapiconfig⑦">IdentityProviderAPIConfig</a></code> without an exception.</p>
+   <p>The <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderapiconfig" id="ref-for-dictdef-identityproviderapiconfig⑧">IdentityProviderAPIConfig</a></code> object’s members have the following semantics:</p>
    <dl>
     <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="IdentityProviderAPIConfig" data-dfn-type="dict-member" data-export id="dom-identityproviderapiconfig-accounts_endpoint"><code>accounts_endpoint</code></dfn> (required), <span> of type <a data-link-type="idl-name" href="https://webidl.spec.whatwg.org/#idl-USVString" id="ref-for-idl-USVString④③">USVString</a></span>
     <dd data-md>
@@ -3647,7 +3697,7 @@ API.</p>
     <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="IdentityProviderAPIConfig" data-dfn-type="dict-member" data-export id="dom-identityproviderapiconfig-branding"><code>branding</code></dfn>, <span> of type <a data-link-type="idl-name" href="#dictdef-identityproviderbranding" id="ref-for-dictdef-identityproviderbranding②">IdentityProviderBranding</a></span>
     <dd data-md>
      <p>A set of <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderbranding" id="ref-for-dictdef-identityproviderbranding③">IdentityProviderBranding</a></code> options.</p>
-    <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="IdentityProviderAPIConfig" data-dfn-type="dict-member" data-export id="dom-identityproviderapiconfig-supports_use_other_account"><code>supports_use_other_account</code></dfn>, <span> of type <a data-link-type="idl-name" href="https://webidl.spec.whatwg.org/#idl-boolean" id="ref-for-idl-boolean②">boolean</a>, defaulting to <code>false</code></span>
+    <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="IdentityProviderAPIConfig" data-dfn-type="dict-member" data-export id="dom-identityproviderapiconfig-supports_use_other_account"><code>supports_use_other_account</code></dfn>, <span> of type <a data-link-type="idl-name" href="https://webidl.spec.whatwg.org/#idl-boolean" id="ref-for-idl-boolean③">boolean</a>, defaulting to <code>false</code></span>
     <dd data-md>
      <p>A boolean determining whether the user should be shown the possibility to log into a different account even if they are already logged in. Only used in active mode calls.</p>
     <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="IdentityProviderAPIConfig" data-dfn-type="dict-member" data-export id="dom-identityproviderapiconfig-account_label"><code>account_label</code></dfn>, <span> of type <a data-link-type="idl-name" href="https://webidl.spec.whatwg.org/#idl-USVString" id="ref-for-idl-USVString④⑦">USVString</a></span>
@@ -3783,7 +3833,7 @@ together.</p>
      <p>URL for the account’s picture.</p>
     <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="IdentityProviderAccount" data-dfn-type="dict-member" data-export id="dom-identityprovideraccount-approved_clients"><code>approved_clients</code></dfn>, <span> of type sequence&lt;<a data-link-type="idl-name" href="https://webidl.spec.whatwg.org/#idl-USVString" id="ref-for-idl-USVString⑤⑨">USVString</a>></span>
     <dd data-md>
-     <p>A list of <a data-link-type="dfn" href="#rp" id="ref-for-rp②⑨">RP</a>s (that gets matched against the requesting <code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-clientid" id="ref-for-dom-identityproviderconfig-clientid⑧">clientId</a></code>) this account is already registered with. Used to <a data-link-type="dfn" href="#compute-the-connection-status" id="ref-for-compute-the-connection-status②">compute the connection status</a> of an account.</p>
+     <p>A list of <a data-link-type="dfn" href="#rp" id="ref-for-rp②⑨">RP</a>s (that gets matched against the requesting <code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-clientid" id="ref-for-dom-identityproviderconfig-clientid⑨">clientId</a></code>) this account is already registered with. Used to <a data-link-type="dfn" href="#compute-the-connection-status" id="ref-for-compute-the-connection-status②">compute the connection status</a> of an account.</p>
      <div class="issue no-marker" id="issue-210d2bdd">
       <a class="self-link" href="#issue-210d2bdd"></a>
       <div class="marker">ISSUE: extension</div>
@@ -3857,8 +3907,8 @@ for a label string.</p>
 <c- e>Sec-Fetch-Dest</c-><c- o>:</c-> <c- l>webidentity</c->
 </pre>
     </div>
-    <p>The response body must be a JSON object that can be <a data-link-type="dfn" href="https://webidl.spec.whatwg.org/#dfn-convert-ecmascript-to-idl-value" id="ref-for-dfn-convert-ecmascript-to-idl-value⑧">converted</a> to an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderclientmetadata" id="ref-for-dictdef-identityproviderclientmetadata②">IdentityProviderClientMetadata</a></code> without an exception.</p>
-    <p>The <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderclientmetadata" id="ref-for-dictdef-identityproviderclientmetadata③">IdentityProviderClientMetadata</a></code> object’s members have the following semantics:</p>
+    <p>The response body must be a JSON object that can be <a data-link-type="dfn" href="https://webidl.spec.whatwg.org/#dfn-convert-ecmascript-to-idl-value" id="ref-for-dfn-convert-ecmascript-to-idl-value⑧">converted</a> to an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderclientmetadata" id="ref-for-dictdef-identityproviderclientmetadata③">IdentityProviderClientMetadata</a></code> without an exception.</p>
+    <p>The <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderclientmetadata" id="ref-for-dictdef-identityproviderclientmetadata④">IdentityProviderClientMetadata</a></code> object’s members have the following semantics:</p>
     <dl>
      <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="IdentityProviderClientMetadata" data-dfn-type="dict-member" data-export id="dom-identityproviderclientmetadata-privacy_policy_url"><code>privacy_policy_url</code></dfn>, <span> of type <a data-link-type="idl-name" href="https://webidl.spec.whatwg.org/#idl-USVString" id="ref-for-idl-USVString⑥⓪">USVString</a></span>
      <dd data-md>
@@ -3910,7 +3960,7 @@ for a label string.</p>
     <dl>
      <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="id_assertion_endpoint_request" data-dfn-type="argument" data-export id="dom-id_assertion_endpoint_request-fields"><code>fields</code></dfn>
      <dd data-md>
-      <p>The list of fields that the <a data-link-type="dfn" href="#rp" id="ref-for-rp③⑧">RP</a> has requested in <code class="idl"><a data-link-type="idl" href="#dom-identityproviderrequestoptions-fields" id="ref-for-dom-identityproviderrequestoptions-fields④">fields</a></code>.</p>
+      <p>The list of fields that the <a data-link-type="dfn" href="#rp" id="ref-for-rp③⑧">RP</a> has requested in <code class="idl"><a data-link-type="idl" href="#dom-identityproviderrequestoptions-fields" id="ref-for-dom-identityproviderrequestoptions-fields⑤">fields</a></code>.</p>
      <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="id_assertion_endpoint_request" data-dfn-type="argument" data-export id="dom-id_assertion_endpoint_request-disclosure_text_shown"><code>disclosure_text_shown</code></dfn>
      <dd data-md>
       <p>Whether the user agent has explicitly shown to the user what specific information the
@@ -3921,7 +3971,7 @@ of service and privacy policy to the user in the cases where it is required to d
      <dt data-md><dfn class="dfn-paneled idl-code" data-dfn-for="id_assertion_endpoint_request" data-dfn-type="argument" data-export id="dom-id_assertion_endpoint_request-disclosure_shown_for"><code>disclosure_shown_for</code></dfn>
      <dd data-md>
       <p>The list of fields that the user was prompted for. This can be a subset of
-<code class="idl"><a data-link-type="idl" href="#dom-identityproviderrequestoptions-fields" id="ref-for-dom-identityproviderrequestoptions-fields⑤">fields</a></code> if a field is requested that is not in the <a data-link-type="dfn" href="#list-of-recognized-fields" id="ref-for-list-of-recognized-fields①">list of recognized fields</a>.</p>
+<code class="idl"><a data-link-type="idl" href="#dom-identityproviderrequestoptions-fields" id="ref-for-dom-identityproviderrequestoptions-fields⑥">fields</a></code> if a field is requested that is not in the <a data-link-type="dfn" href="#list-of-recognized-fields" id="ref-for-list-of-recognized-fields①">list of recognized fields</a>.</p>
     </dl>
    </div>
    <p>For example:</p>
@@ -3941,7 +3991,7 @@ account_id=123&amp;client_id=client1234&amp;disclosure_text_shown=true&amp;field
 An <a data-link-type="dfn" href="#idp" id="ref-for-idp④⑥">IDP</a> MUST check the <a data-link-type="http-header" href="https://fetch.spec.whatwg.org/#http-origin" id="ref-for-http-origin⑤">Origin</a> header to ensure that a malicious <a data-link-type="dfn" href="#rp" id="ref-for-rp④⓪">RP</a> does
 not receive an ID token corresponding to another <a data-link-type="dfn" href="#rp" id="ref-for-rp④①">RP</a>. In other words, the <a data-link-type="dfn" href="#idp" id="ref-for-idp④⑦">IDP</a> MUST check that
 the <a data-link-type="http-header" href="https://fetch.spec.whatwg.org/#http-origin" id="ref-for-http-origin⑥">Origin</a> header value is represented by the
-<code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-clientid" id="ref-for-dom-identityproviderconfig-clientid⑨">clientId</a></code>. As the <code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-clientid" id="ref-for-dom-identityproviderconfig-clientid①⓪">clientId</a></code> are
+<code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-clientid" id="ref-for-dom-identityproviderconfig-clientid①⓪">clientId</a></code>. As the <code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-clientid" id="ref-for-dom-identityproviderconfig-clientid①①">clientId</a></code> are
 <a data-link-type="dfn" href="#idp" id="ref-for-idp④⑧">IDP</a>-specific, the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#user-agent" id="ref-for-user-agent①⑦">user agent</a> cannot perform this check.
 </div>
    <p>The response body must be a JSON object that can be <a data-link-type="dfn" href="https://webidl.spec.whatwg.org/#dfn-convert-ecmascript-to-idl-value" id="ref-for-dfn-convert-ecmascript-to-idl-value⑨">converted</a> to an <code class="idl"><a data-link-type="idl" href="#dictdef-identityassertionresponse" id="ref-for-dictdef-identityassertionresponse①">IdentityAssertionResponse</a></code> without an exception.</p>
@@ -4237,7 +4287,7 @@ if present</p>
          <p><code>pictureUrl</code> set to the account’s <code class="idl"><a data-link-type="idl" href="#dom-identityprovideraccount-picture" id="ref-for-dom-identityprovideraccount-picture⑤">picture</a></code>,
 if present</p>
         <li data-md>
-         <p><code>idpConfigUrl</code> set to the <code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-configurl" id="ref-for-dom-identityproviderconfig-configurl①⓪">configURL</a></code> of the
+         <p><code>idpConfigUrl</code> set to the <code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-configurl" id="ref-for-dom-identityproviderconfig-configurl①②">configURL</a></code> of the
 IDP this account belongs to</p>
         <li data-md>
          <p><code>loginState</code> to <code>"SignUp"</code> if <var>accountState</var> is
@@ -5702,6 +5752,7 @@ Note: The WG has labeled the following issues as critical open issues that must 
    <li><a href="#dom-identityproviderapiconfig-branding">branding</a><span>, in § 3.2</span>
    <li><a href="#fetch-the-config-file-check-accounts-and-login-url-step">Check accounts and login url step</a><span>, in § 2.5.2</span>
    <li><a href="#dom-identityproviderconfig-clientid">clientId</a><span>, in § 2.4</span>
+   <li><a href="#dom-identityproviderclientmetadata-client_is_third_party_to_top_frame_origin">client_is_third_party_to_top_frame_origin</a><span>, in § 2.5.5</span>
    <li><a href="#client-metadata-endpoint">client metadata endpoint</a><span>, in § 3.4</span>
    <li><a href="#dom-identityproviderapiconfig-client_metadata_endpoint">client_metadata_endpoint</a><span>, in § 2.5.2</span>
    <li><a href="#dom-identityprovider-close">close()</a><span>, in § 2.6</span>
@@ -5984,7 +6035,9 @@ Note: The WG has labeled the following issues as critical open issues that must 
      <li><span class="dfn-paneled" id="5991ccfb">relevant realm</span>
      <li><span class="dfn-paneled" id="9c4c1e66">relevant settings object</span>
      <li><span class="dfn-paneled" id="7393da89">same origin</span>
+     <li><span class="dfn-paneled" id="feac4ab3">same site</span>
      <li><span class="dfn-paneled" id="a23d12a9">scheme</span>
+     <li><span class="dfn-paneled" id="dae0bfde">serialization of an origin</span>
      <li><span class="dfn-paneled" id="bd736ec6">top-level traversable</span>
      <li><span class="dfn-paneled" id="30717154">top-level traversable <small>(for navigable)</small></span>
      <li><span class="dfn-paneled" id="47fe679e">transient activation</span>
@@ -5995,6 +6048,7 @@ Note: The WG has labeled the following issues as critical open issues that must 
      <li><span class="dfn-paneled" id="53275e46">append <small>(for list)</small></span>
      <li><span class="dfn-paneled" id="a3b18719">append <small>(for set)</small></span>
      <li><span class="dfn-paneled" id="36858240">boolean</span>
+     <li><span class="dfn-paneled" id="e28ccd60">concatenation</span>
      <li><span class="dfn-paneled" id="ae8def21">contain <small>(for list)</small></span>
      <li><span class="dfn-paneled" id="a326add7">contain <small>(for map)</small></span>
      <li><span class="dfn-paneled" id="f937b7b6">continue</span>
@@ -6053,6 +6107,7 @@ Note: The WG has labeled the following issues as critical open issues that must 
      <li><span class="dfn-paneled" id="3a711be7">scheme</span>
      <li><span class="dfn-paneled" id="dcffbccd">URL</span>
      <li><span class="dfn-paneled" id="ca3ca4ae">URL parser</span>
+     <li><span class="dfn-paneled" id="f3f521fa">URL-query string</span>
      <li><span class="dfn-paneled" id="d7edb843">urlencoded serializer</span>
     </ul>
    <li>
@@ -6286,6 +6341,7 @@ Note: The WG has labeled the following issues as critical open issues that must 
 <c- b>dictionary</c-> <a href="#dictdef-identityproviderclientmetadata"><code><c- g>IdentityProviderClientMetadata</c-></code></a> {
   <a class="idl-code" data-link-type="interface" href="https://webidl.spec.whatwg.org/#idl-USVString"><c- b>USVString</c-></a> <a class="idl-code" data-link-type="dict-member" data-type="USVString" href="#dom-identityproviderclientmetadata-privacy_policy_url"><c- g>privacy_policy_url</c-></a>;
   <a class="idl-code" data-link-type="interface" href="https://webidl.spec.whatwg.org/#idl-USVString"><c- b>USVString</c-></a> <a class="idl-code" data-link-type="dict-member" data-type="USVString" href="#dom-identityproviderclientmetadata-terms_of_service_url"><c- g>terms_of_service_url</c-></a>;
+  <a class="idl-code" data-link-type="interface" href="https://webidl.spec.whatwg.org/#idl-boolean"><c- b>boolean</c-></a> <a data-default="false" data-type="boolean" href="#dom-identityproviderclientmetadata-client_is_third_party_to_top_frame_origin"><code><c- g>client_is_third_party_to_top_frame_origin</c-></code></a> = <c- b>false</c->;
 };
 
 <c- b>dictionary</c-> <a href="#dictdef-identityuserinfo"><code><c- g>IdentityUserInfo</c-></code></a> {
@@ -6347,100 +6403,127 @@ The following could be added to an extension spec:
    </div>
    <div class="issue no-marker">
     <div class="marker">ISSUE: extension</div>
-    
+    <div class="algorithm" data-algorithm="show accounts extension">
+     
 An extension may use the following instead of the <a data-link-type="dfn" href="#create-identity-credential-show-accounts">show accounts</a> step, where
     <var>permissionRequested</var> is sometimes set:
 
-    <ol>
-     <li data-md>
-      <p>If <var>allAccounts</var> is not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-empty">empty</a>, also add UI to present the account options to the user as follows:</p>
-      <ol>
-       <li data-md>
-        <p>Let <var>supportsUseOtherAccount</var> be <code>false</code>.</p>
-       <li data-md>
-        <p>If <var>options</var>.<code class="idl"><a data-link-type="idl" href="#dom-identitycredentialrequestoptions-mode">mode</a></code> is <code>"active"</code>:</p>
-        <ol>
-         <li data-md>
-          <p>Assert that there is only one <var>provider</var>.</p>
-         <li data-md>
-          <p>Set <var>supportsUseOtherAccount</var> to the value of that provider’s <var>config</var>.<code class="idl"><a data-link-type="idl" href="#dom-identityproviderapiconfig-supports_use_other_account">supports_use_other_account</a></code>.</p>
-        </ol>
-       <li data-md>
-        <p>If <var>allAccounts</var>’s size is 1, <var>supportsUseOtherAccount</var> is <code>false</code>, and
+     <ol>
+      <li data-md>
+       <p>Let <var>embedderOrigin</var> be the <var>globalObject</var>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/nav-history-apis.html#window-navigable">navigable</a>’s
+<a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/document-sequences.html#nav-top">top-level traversable</a>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/document-sequences.html#nav-document">active document</a>’s <a data-link-type="dfn" href="https://dom.spec.whatwg.org/#concept-document-origin">origin</a>.</p>
+      <li data-md>
+       <p>Let <var>rpOrigin</var> be <var>globalObject</var>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/nav-history-apis.html#concept-document-window">associated Document</a>’s <a data-link-type="dfn" href="https://dom.spec.whatwg.org/#concept-document-origin">origin</a>.</p>
+      <li data-md>
+       <p>Let <var>clientMetadataMap</var> be a new <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map">map</a>.</p>
+      <li data-md>
+       <p>For each <var>provider</var> in <var>providerList</var>:</p>
+       <ol>
+        <li data-md>
+         <p>Let <var>configURL</var> be the <var>provider</var>’s <code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-configurl">configURL</a></code>.</p>
+        <li data-md>
+         <p>If <var>provider</var>.<code class="idl"><a data-link-type="idl" href="#dom-identityproviderrequestoptions-fields">fields</a></code> is not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-empty">empty</a>, or if
+<var>embedderOrigin</var> is not <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#same-site">same site</a> with <var>rpOrigin</var>, set <var>clientMetadataMap</var>[<var>configURL</var>]
+to the result of running <a data-link-type="dfn" href="#fetch-the-client-metadata">fetch the client metadata</a> with <var>config</var>, <var>provider</var>, and
+<var>globalObject</var>.</p>
+       </ol>
+      <li data-md>
+       <p>If any entry in <var>clientMetadataMap</var> has
+<code class="idl"><a data-link-type="idl" href="#dom-identityproviderclientmetadata-client_is_third_party_to_top_frame_origin">client_is_third_party_to_top_frame_origin</a></code> set to true,
+the dialog MUST show the <a data-link-type="dfn" href="https://url.spec.whatwg.org/#host-registrable-domain">registrable domain</a> of <var>globalObject</var>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/nav-history-apis.html#concept-document-window">associated Document</a>’s <a data-link-type="dfn" href="https://dom.spec.whatwg.org/#concept-document-origin">origin</a> to the user.</p>
+      <li data-md>
+       <p>If <var>allAccounts</var> is not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-empty">empty</a>, also add UI to present the account options to the user as follows:</p>
+       <ol>
+        <li data-md>
+         <p>Let <var>supportsUseOtherAccount</var> be <code>false</code>.</p>
+        <li data-md>
+         <p>If <var>options</var>.<code class="idl"><a data-link-type="idl" href="#dom-identitycredentialrequestoptions-mode">mode</a></code> is <code>"active"</code>:</p>
+         <ol>
+          <li data-md>
+           <p>Assert that there is only one <var>provider</var>.</p>
+          <li data-md>
+           <p>Set <var>supportsUseOtherAccount</var> to the value of that provider’s <var>config</var>.<code class="idl"><a data-link-type="idl" href="#dom-identityproviderapiconfig-supports_use_other_account">supports_use_other_account</a></code>.</p>
+         </ol>
+        <li data-md>
+         <p>If <var>allAccounts</var>’s size is 1, <var>supportsUseOtherAccount</var> is <code>false</code>, and
 <var>providerMap</var>’s <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-getting-the-values">values</a> do not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists">contain</a> "mismatch":</p>
-        <ol>
-         <li data-md>
-          <p>Set <var>selectedAccount</var> to <var>allAccounts</var>[0].</p>
-         <li data-md>
-          <p>If <a data-link-type="dfn" href="#compute-the-connection-status">compute the connection status</a> of <var>selectedAccount</var>, the relevant <var>provider</var>,
+         <ol>
+          <li data-md>
+           <p>Set <var>selectedAccount</var> to <var>allAccounts</var>[0].</p>
+          <li data-md>
+           <p>If <a data-link-type="dfn" href="#compute-the-connection-status">compute the connection status</a> of <var>selectedAccount</var>, the relevant <var>provider</var>,
 and <var>globalObject</var> returns <a data-link-type="dfn" href="#compute-the-connection-status-connected">connected</a>, show a
 dialog to request user permission to sign in via <var>selectedAccount</var>, and set the
 result in <var>permission</var>. The user agent MAY use <var>options</var>’s
 <code class="idl"><a data-link-type="idl" href="#dom-identitycredentialrequestoptions-context">context</a></code> and <var>options</var>’s
 <code class="idl"><a data-link-type="idl" href="#dom-identitycredentialrequestoptions-mode">mode</a></code> to customize the dialog.</p>
-         <li data-md>
-          <p>Otherwise, set <var>permission</var> to the result of running <a data-link-type="dfn" href="#request-permission-to-sign-up">request permission to sign-up</a>
+          <li data-md>
+           <p>Otherwise, set <var>permission</var> to the result of running <a data-link-type="dfn" href="#request-permission-to-sign-up">request permission to sign-up</a>
 algorithm with <var>selectedAccount</var>, the relevant <var>config</var>, the relevant <var>provider</var>,
 and <var>globalObject</var>. Also set <var>permissionRequested</var> to true if the user agent
 <a data-link-type="dfn" href="#supports-showing-a-permission-prompt">supports showing a permission prompt</a>.</p>
-        </ol>
-       <li data-md>
-        <p>Otherwise:</p>
-        <ol>
-         <li data-md>
-          <p>Show <span>UI to allow the user to select an account</span> displaying the options from
+         </ol>
+        <li data-md>
+         <p>Otherwise:</p>
+         <ol>
+          <li data-md>
+           <p>Show <span>UI to allow the user to select an account</span> displaying the options from
 <var>accountsList</var>.</p>
-         <li data-md>
-          <p>If <var>supportsUseOtherAccount</var> is true, the account chooser SHOULD provide
+          <li data-md>
+           <p>If <var>supportsUseOtherAccount</var> is true, the account chooser SHOULD provide
 an affordance to use another account. If that affordance is triggered:</p>
-          <ol>
-           <li data-md>
-            <p><a data-link-type="dfn" href="#show-an-idp-login-dialog">Show an IDP login dialog</a> with <var>config</var>, <var>provider</var> and <var>globalObject</var>.</p>
-           <li data-md>
-            <p>If that returned success:</p>
-            <ol>
-             <li data-md>
-              <p><a data-link-type="dfn" href="#create-identity-credential-fetch-accounts">Fetch accounts</a> given <var>config</var>, <var>provider</var>, and <var>globalObject</var>, and let
+           <ol>
+            <li data-md>
+             <p><a data-link-type="dfn" href="#show-an-idp-login-dialog">Show an IDP login dialog</a> with <var>config</var>, <var>provider</var> and <var>globalObject</var>.</p>
+            <li data-md>
+             <p>If that returned success:</p>
+             <ol>
+              <li data-md>
+               <p><a data-link-type="dfn" href="#create-identity-credential-fetch-accounts">Fetch accounts</a> given <var>config</var>, <var>provider</var>, and <var>globalObject</var>, and let
 <var>accountsList</var> be the result.</p>
-             <li data-md>
-              <p>If <var>accountsList</var> is empty, show the <a data-link-type="dfn" href="#confirm-idp-login-dialog">confirm IDP login dialog</a>.</p>
-             <li data-md>
-              <p>Otherwise, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-extend">extend</a> <var>allAccounts</var> with <var>accountsList</var> and
+              <li data-md>
+               <p>If <var>accountsList</var> is empty, show the <a data-link-type="dfn" href="#confirm-idp-login-dialog">confirm IDP login dialog</a>.</p>
+              <li data-md>
+               <p>Otherwise, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-extend">extend</a> <var>allAccounts</var> with <var>accountsList</var> and
 <a data-link-type="dfn" href="#create-identity-credential-show-accounts">show accounts</a> again.</p>
-            </ol>
-           <li data-md>
-            <p>Otherwise, go back to the <a data-link-type="dfn" href="#ui-to-allow-the-user-to-select-an-account">UI to allow the user to select an account</a>.</p>
-          </ol>
-         <li data-md>
-          <p>If the user selects an account, perform the following steps:</p>
-          <ol>
-           <li data-md>
-            <p>Set <var>selectedAccount</var> to the chosen <code class="idl"><a data-link-type="idl" href="#dictdef-identityprovideraccount">IdentityProviderAccount</a></code>.</p>
-           <li data-md>
-            <p>If <a data-link-type="dfn" href="#compute-the-connection-status">compute the connection status</a> of <var>selectedAccount</var>, the relevant <var>provider</var>,
+             </ol>
+            <li data-md>
+             <p>Otherwise, go back to the <a data-link-type="dfn" href="#ui-to-allow-the-user-to-select-an-account">UI to allow the user to select an account</a>.</p>
+           </ol>
+          <li data-md>
+           <p>If the user selects an account, perform the following steps:</p>
+           <ol>
+            <li data-md>
+             <p>Set <var>selectedAccount</var> to the chosen <code class="idl"><a data-link-type="idl" href="#dictdef-identityprovideraccount">IdentityProviderAccount</a></code>.</p>
+            <li data-md>
+             <p>If <a data-link-type="dfn" href="#compute-the-connection-status">compute the connection status</a> of <var>selectedAccount</var>, the relevant <var>provider</var>,
 and <var>globalObject</var> is <a data-link-type="dfn" href="#compute-the-connection-status-connected">connected</a>, set <var>permission</var>
 to true.</p>
-           <li data-md>
-            <p>Otherwise, if <var>provider</var>.<code class="idl"><a data-link-type="idl" href="#dom-identityproviderrequestoptions-fields">fields</a></code> is <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-empty">empty</a>,
-<a data-link-type="dfn" href="#create-a-connection-between-the-rp-and-the-idp-account">create a connection between the RP and the IdP account</a> with <var>provider</var>, <var>account</var>,
-and <var>globalObject</var>, and set <var>permission</var> to true.
+            <li data-md>
+             <p>Otherwise, if <var>provider</var>.<code class="idl"><a data-link-type="idl" href="#dom-identityproviderrequestoptions-fields">fields</a></code> is <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-empty">empty</a>,
+<a data-link-type="dfn" href="#create-a-connection-between-the-rp-and-the-idp-account">create a connection between the RP and the IdP account</a> with <var>provider</var>,
+<var>selectedAccount</var>, and <var>globalObject</var>, and set <var>permission</var> to true.
 Note: The connection would normally be created in the <a data-link-type="dfn" href="#request-permission-to-sign-up">request permission to sign-up</a>
     algorithm, but we do not want to show an extra dialog in this case.</p>
-           <li data-md>
-            <p>Otherwise:</p>
-            <ol>
-             <li data-md>
-              <p>Set <var>permission</var> to the result of running the <a data-link-type="dfn" href="#request-permission-to-sign-up">request permission to sign-up</a>
-algorithm with <var>selectedAccount</var>, the relevant <var>config</var>, the relevant <var>provider</var>,
-and <var>globalObject</var>.</p>
-             <li data-md>
-              <p>Set <var>permissionRequested</var> to true.</p>
-            </ol>
-          </ol>
-        </ol>
-      </ol>
-    </ol>
-     <a class="issue-return" href="#issue-5f361ab0" title="Jump to section">↵</a>
+            <li data-md>
+             <p>Otherwise:</p>
+             <ol>
+              <li data-md>
+               <p>Let <var>configURL</var> be the the relevant <var>provider</var>’s
+<code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-configurl">configURL</a></code>.</p>
+              <li data-md>
+               <p>Set <var>permission</var> to the result of running the <a data-link-type="dfn" href="#request-permission-to-sign-up">request permission to sign-up</a> algorithm with <var>selectedAccount</var>, the relevant <var>provider</var>,
+<var>clientMetadataMap</var>[<var>configURL</var>], and <var>globalObject</var>.</p>
+              <li data-md>
+               <p>Set <var>permissionRequested</var> to true.</p>
+             </ol>
+           </ol>
+         </ol>
+       </ol>
+     </ol>
+    </div>
+    
+ <a class="issue-return" href="#issue-72ab6236" title="Jump to section">↵</a>
    </div>
    <div class="issue"> The spec is yet to be updated so that all <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-request">requests</a> are created
 with <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-request-mode">mode</a> set to "user-agent-no-cors". See the relevant
@@ -6458,8 +6541,8 @@ the <a data-link-type="dfn" href="#fetch-the-config-file-check-accounts-and-logi
 
     <ol>
      <li data-md>
-      <p>If <var>config</var>.<code class="idl"><a data-link-type="idl" href="#dom-identityproviderapiconfig-client_metadata_endpoint">client_metadata_endpoint</a></code> is set but either
-<var>wellKnown</var>.<code class="idl"><a data-link-type="idl" href="#dom-identityproviderwellknown-accounts_endpoint">accounts_endpoint</a></code> or
+      <p>If <var>config</var>.<code class="idl"><a data-link-type="idl" href="#dom-identityproviderapiconfig-client_metadata_endpoint">client_metadata_endpoint</a></code> is set
+but either <var>wellKnown</var>.<code class="idl"><a data-link-type="idl" href="#dom-identityproviderwellknown-accounts_endpoint">accounts_endpoint</a></code> or
 <var>wellKnown</var>.<code class="idl"><a data-link-type="idl" href="#dom-identityproviderwellknown-login_url">login_url</a></code> is not set, return failure.</p>
     </ol>
      <a class="issue-return" href="#issue-81964997" title="Jump to section">↵</a>
@@ -6536,8 +6619,8 @@ granted permission or not.</p>
     <div class="algorithm" data-algorithm="request permission to sign-up">
      
 To <span>request permission to sign-up</span> the user with a given an <code class="idl"><a data-link-type="idl" href="#dictdef-identityprovideraccount">IdentityProviderAccount</a></code> <var>account</var>,
-an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderapiconfig">IdentityProviderAPIConfig</a></code> <var>config</var>, an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderrequestoptions">IdentityProviderRequestOptions</a></code> <var>provider</var>, and a
-<var>globalObject</var>, run the following steps. This returns a boolean.
+an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderrequestoptions">IdentityProviderRequestOptions</a></code> <var>provider</var>, an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderclientmetadata">IdentityProviderClientMetadata</a></code> <var>metadata</var>,
+and a <var>globalObject</var>, run the following steps. This returns a boolean.
 
      <ol>
       <li data-md>
@@ -6547,10 +6630,6 @@ an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderapic
 <code>["name", "email", "picture"]</code>.</p>
        <p class="note" role="note"><span class="marker">Note:</span> Omitted is different from an explicitly present empty list.</p>
       <li data-md>
-       <p>Let <var>metadata</var> be null.</p>
-      <li data-md>
-       <p>If <var>fields</var> is not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-empty">empty</a>, set <var>metadata</var> to the result of running <a data-link-type="dfn" href="#fetch-the-client-metadata">fetch the client metadata</a> with <var>config</var>, <var>provider</var>, and <var>globalObject</var>.</p>
-      <li data-md>
        <p>Prompt the user to gather explicit intent to create an account. The user agent MAY use the
 <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderbranding">IdentityProviderBranding</a></code> to inform the style choices of its UI. Additionally, if the user agent
 <span>supports showing a permission prompt</span>:</p>
@@ -6559,6 +6638,11 @@ an <code class="idl"><a data-link-type="idl" href="#dictdef-identityproviderapic
     does not contain the fields required by the IDP. This is to enable user agents that
     do not support showing a permission prompt.</p>
        <ol>
+        <li data-md>
+         <p>If <var>metadata</var> is not null or failure, and
+<var>metadata</var>.<code class="idl"><a data-link-type="idl" href="#dom-identityproviderclientmetadata-client_is_third_party_to_top_frame_origin">client_is_third_party_to_top_frame_origin</a></code>
+is <code>true</code>, this dialog MUST show the <a data-link-type="dfn" href="https://url.spec.whatwg.org/#host-registrable-domain">registrable domain</a> of <var>globalObject</var>’s
+<a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/nav-history-apis.html#concept-document-window">associated Document</a>’s <a data-link-type="dfn" href="https://dom.spec.whatwg.org/#concept-document-origin">origin</a> to the user.</p>
         <li data-md>
          <p>If <var>fields</var> is not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-empty">empty</a>:</p>
          <ol>
@@ -6621,6 +6705,28 @@ failure.</p>
       <li data-md>
        <p>If <var>clientMetadataUrl</var> is failure, return failure.</p>
       <li data-md>
+       <p>Let <var>embedderOrigin</var> be the <var>globalObject</var>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/nav-history-apis.html#window-navigable">navigable</a>’s
+<a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/document-sequences.html#nav-top">top-level traversable</a>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/document-sequences.html#nav-document">active document</a>’s <a data-link-type="dfn" href="https://dom.spec.whatwg.org/#concept-document-origin">origin</a>.</p>
+      <li data-md>
+       <p>Let <var>rpOrigin</var> be <var>globalObject</var>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/nav-history-apis.html#concept-document-window">associated Document</a>’s <a data-link-type="dfn" href="https://dom.spec.whatwg.org/#concept-document-origin">origin</a>.</p>
+      <li data-md>
+       <p>Set the <a data-link-type="dfn" href="https://url.spec.whatwg.org/#url-query-string">URL-query string</a> of <var>clientMetadataUrl</var> to the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string-concatenate">concatenation</a> of the
+following strings:</p>
+       <ol>
+        <li data-md>
+         <p><code>"client_id="</code></p>
+        <li data-md>
+         <p><var>provider</var>.<code class="idl"><a data-link-type="idl" href="#dom-identityproviderconfig-clientid">clientId</a></code></p>
+        <li data-md>
+         <p>If <var>rpOrigin</var> is not <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#same-site">same site</a> with <var>embedderOrigin</var>:</p>
+         <ol>
+          <li data-md>
+           <p><code>"&amp;top_level_origin="</code></p>
+          <li data-md>
+           <p>The <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#ascii-serialisation-of-an-origin">serialization</a> of <var>embedderOrigin</var></p>
+         </ol>
+       </ol>
+      <li data-md>
        <p>Let <var>request</var> be a new <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-request">request</a> as follows:</p>
        <dl>
         <dt data-md><a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-request-url">url</a>
@@ -6679,10 +6785,11 @@ and store the result in <var>metadata</var>.</p>
 <pre class="idl highlight def"><c- b>dictionary</c-> <span><code><c- g>IdentityProviderClientMetadata</c-></code></span> {
   <a class="idl-code" data-link-type="interface" href="https://webidl.spec.whatwg.org/#idl-USVString"><c- b>USVString</c-></a> <a class="idl-code" data-link-type="dict-member" data-type="USVString" href="#dom-identityproviderclientmetadata-privacy_policy_url"><c- g>privacy_policy_url</c-></a>;
   <a class="idl-code" data-link-type="interface" href="https://webidl.spec.whatwg.org/#idl-USVString"><c- b>USVString</c-></a> <a class="idl-code" data-link-type="dict-member" data-type="USVString" href="#dom-identityproviderclientmetadata-terms_of_service_url"><c- g>terms_of_service_url</c-></a>;
+  <a class="idl-code" data-link-type="interface" href="https://webidl.spec.whatwg.org/#idl-boolean"><c- b>boolean</c-></a> <span data-default="false" data-type="boolean"><code><c- g>client_is_third_party_to_top_frame_origin</c-></code></span> = <c- b>false</c->;
 };
 </pre>
     
- <a class="issue-return" href="#issue-d727fb93" title="Jump to section">↵</a>
+ <a class="issue-return" href="#issue-4a5255bf" title="Jump to section">↵</a>
    </div>
    <div class="issue"> The spec is yet to be updated so that all <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-request">requests</a> are created
 with <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-request-mode">mode</a> set to "user-agent-no-cors". See the relevant
@@ -7012,7 +7119,7 @@ function parseHTML(markup) {
 let dfnPanelData = {
 "0204d188": {"dfnID":"0204d188","dfnText":"size","external":true,"refSections":[{"refs":[{"id":"ref-for-list-size"}],"title":"2.5.1. Create an IdentityCredential"},{"refs":[{"id":"ref-for-list-size\u2460"}],"title":"2.5.2. Fetch the config file"}],"url":"https://infra.spec.whatwg.org/#list-size"},
 "0303e8e5": {"dfnID":"0303e8e5","dfnText":"UTF-8 encode","external":true,"refSections":[{"refs":[{"id":"ref-for-utf-8-encode"}],"title":"2.2.1.1. Disconnect request"},{"refs":[{"id":"ref-for-utf-8-encode\u2460"}],"title":"2.5.4. Fetch an identity assertion"}],"url":"https://encoding.spec.whatwg.org/#utf-8-encode"},
-"03afaf9c": {"dfnID":"03afaf9c","dfnText":"empty","external":true,"refSections":[{"refs":[{"id":"ref-for-list-empty"}],"title":"2.5. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method"},{"refs":[{"id":"ref-for-list-empty\u2460"},{"id":"ref-for-list-empty\u2461"},{"id":"ref-for-list-empty\u2462"}],"title":"2.5.1. Create an IdentityCredential"},{"refs":[{"id":"ref-for-list-empty\u2463"},{"id":"ref-for-list-empty\u2464"}],"title":"2.5.5. Extension: Request permission to sign-up"},{"refs":[{"id":"ref-for-list-empty\u2465"}],"title":"2.5.6. Helper algorithms"}],"url":"https://infra.spec.whatwg.org/#list-empty"},
+"03afaf9c": {"dfnID":"03afaf9c","dfnText":"empty","external":true,"refSections":[{"refs":[{"id":"ref-for-list-empty"}],"title":"2.5. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method"},{"refs":[{"id":"ref-for-list-empty\u2460"},{"id":"ref-for-list-empty\u2461"},{"id":"ref-for-list-empty\u2462"},{"id":"ref-for-list-empty\u2463"}],"title":"2.5.1. Create an IdentityCredential"},{"refs":[{"id":"ref-for-list-empty\u2464"}],"title":"2.5.5. Extension: Request permission to sign-up"},{"refs":[{"id":"ref-for-list-empty\u2465"}],"title":"2.5.6. Helper algorithms"}],"url":"https://infra.spec.whatwg.org/#list-empty"},
 "0698d556": {"dfnID":"0698d556","dfnText":"string","external":true,"refSections":[{"refs":[{"id":"ref-for-string"}],"title":"2.5.6. Helper algorithms"}],"url":"https://infra.spec.whatwg.org/#string"},
 "07582c28": {"dfnID":"07582c28","dfnText":"referrer policy","external":true,"refSections":[{"refs":[{"id":"ref-for-concept-request-referrer-policy"},{"id":"ref-for-concept-request-referrer-policy\u2460"}],"title":"2.5.2. Fetch the config file"},{"refs":[{"id":"ref-for-concept-request-referrer-policy\u2461"},{"id":"ref-for-concept-request-referrer-policy\u2462"}],"title":"2.5.3. Fetch the accounts"}],"url":"https://fetch.spec.whatwg.org/#concept-request-referrer-policy"},
 "086e3aff": {"dfnID":"086e3aff","dfnText":"origin","external":true,"refSections":[{"refs":[{"id":"ref-for-concept-origin"},{"id":"ref-for-concept-origin\u2460"},{"id":"ref-for-concept-origin\u2461"}],"title":"2.1. The connected accounts set"},{"refs":[{"id":"ref-for-concept-origin\u2462"}],"title":"2.5.1. Create an IdentityCredential"},{"refs":[{"id":"ref-for-concept-origin\u2463"}],"title":"2.5.6. Helper algorithms"},{"refs":[{"id":"ref-for-concept-origin\u2464"}],"title":"2.6. The IdentityProvider Interface"}],"url":"https://html.spec.whatwg.org/multipage/browsers.html#concept-origin"},
@@ -7030,11 +7137,11 @@ let dfnPanelData = {
 "1802ab9b": {"dfnID":"1802ab9b","dfnText":"matching capabilities","external":true,"refSections":[{"refs":[{"id":"ref-for-dfn-matching-capabilities"}],"title":"5.1. Extension capability"}],"url":"https://w3c.github.io/webdriver/#dfn-matching-capabilities"},
 "1c385a8e": {"dfnID":"1c385a8e","dfnText":"message","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-domexception-message"}],"title":"2.3. The IdentityCredentialError Interface"}],"url":"https://webidl.spec.whatwg.org/#dom-domexception-message"},
 "218f0f24": {"dfnID":"218f0f24","dfnText":"hsl()","external":true,"refSections":[{"refs":[{"id":"ref-for-funcdef-hsl"}],"title":"3.2. The config file"}],"url":"https://drafts.csswg.org/css-color-4/#funcdef-hsl"},
-"228be966": {"dfnID":"228be966","dfnText":"navigable","external":true,"refSections":[{"refs":[{"id":"ref-for-window-navigable"},{"id":"ref-for-window-navigable\u2460"}],"title":"2.1. The connected accounts set"},{"refs":[{"id":"ref-for-window-navigable\u2461"}],"title":"2.2.1. The disconnect method"},{"refs":[{"id":"ref-for-window-navigable\u2462"}],"title":"2.5.1. Create an IdentityCredential"},{"refs":[{"id":"ref-for-window-navigable\u2463"},{"id":"ref-for-window-navigable\u2464"}],"title":"2.6. The IdentityProvider Interface"}],"url":"https://html.spec.whatwg.org/multipage/nav-history-apis.html#window-navigable"},
-"30717154": {"dfnID":"30717154","dfnText":"top-level traversable (for navigable)","external":true,"refSections":[{"refs":[{"id":"ref-for-nav-top"},{"id":"ref-for-nav-top\u2460"},{"id":"ref-for-nav-top\u2461"}],"title":"2.1. The connected accounts set"},{"refs":[{"id":"ref-for-nav-top\u2462"},{"id":"ref-for-nav-top\u2463"}],"title":"2.2.1. The disconnect method"},{"refs":[{"id":"ref-for-nav-top\u2464"}],"title":"2.5.1. Create an IdentityCredential"},{"refs":[{"id":"ref-for-nav-top\u2465"}],"title":"2.6. The IdentityProvider Interface"}],"url":"https://html.spec.whatwg.org/multipage/document-sequences.html#nav-top"},
-"3349d69f": {"dfnID":"3349d69f","dfnText":"associated Document","external":true,"refSections":[{"refs":[{"id":"ref-for-concept-document-window"},{"id":"ref-for-concept-document-window\u2460"}],"title":"2.1. The connected accounts set"},{"refs":[{"id":"ref-for-concept-document-window\u2461"},{"id":"ref-for-concept-document-window\u2462"}],"title":"2.2.1. The disconnect method"},{"refs":[{"id":"ref-for-concept-document-window\u2463"}],"title":"2.2.1.1. Disconnect request"},{"refs":[{"id":"ref-for-concept-document-window\u2464"}],"title":"2.5.2. Fetch the config file"},{"refs":[{"id":"ref-for-concept-document-window\u2465"}],"title":"2.5.4. Fetch an identity assertion"},{"refs":[{"id":"ref-for-concept-document-window\u2466"}],"title":"2.5.5. Extension: Request permission to sign-up"},{"refs":[{"id":"ref-for-concept-document-window\u2467"}],"title":"2.6. The IdentityProvider Interface"}],"url":"https://html.spec.whatwg.org/multipage/nav-history-apis.html#concept-document-window"},
+"228be966": {"dfnID":"228be966","dfnText":"navigable","external":true,"refSections":[{"refs":[{"id":"ref-for-window-navigable"},{"id":"ref-for-window-navigable\u2460"}],"title":"2.1. The connected accounts set"},{"refs":[{"id":"ref-for-window-navigable\u2461"}],"title":"2.2.1. The disconnect method"},{"refs":[{"id":"ref-for-window-navigable\u2462"},{"id":"ref-for-window-navigable\u2463"}],"title":"2.5.1. Create an IdentityCredential"},{"refs":[{"id":"ref-for-window-navigable\u2464"}],"title":"2.5.5. Extension: Request permission to sign-up"},{"refs":[{"id":"ref-for-window-navigable\u2465"},{"id":"ref-for-window-navigable\u2466"}],"title":"2.6. The IdentityProvider Interface"}],"url":"https://html.spec.whatwg.org/multipage/nav-history-apis.html#window-navigable"},
+"30717154": {"dfnID":"30717154","dfnText":"top-level traversable (for navigable)","external":true,"refSections":[{"refs":[{"id":"ref-for-nav-top"},{"id":"ref-for-nav-top\u2460"},{"id":"ref-for-nav-top\u2461"}],"title":"2.1. The connected accounts set"},{"refs":[{"id":"ref-for-nav-top\u2462"},{"id":"ref-for-nav-top\u2463"}],"title":"2.2.1. The disconnect method"},{"refs":[{"id":"ref-for-nav-top\u2464"},{"id":"ref-for-nav-top\u2465"}],"title":"2.5.1. Create an IdentityCredential"},{"refs":[{"id":"ref-for-nav-top\u2466"}],"title":"2.5.5. Extension: Request permission to sign-up"},{"refs":[{"id":"ref-for-nav-top\u2467"}],"title":"2.6. The IdentityProvider Interface"}],"url":"https://html.spec.whatwg.org/multipage/document-sequences.html#nav-top"},
+"3349d69f": {"dfnID":"3349d69f","dfnText":"associated Document","external":true,"refSections":[{"refs":[{"id":"ref-for-concept-document-window"},{"id":"ref-for-concept-document-window\u2460"}],"title":"2.1. The connected accounts set"},{"refs":[{"id":"ref-for-concept-document-window\u2461"},{"id":"ref-for-concept-document-window\u2462"}],"title":"2.2.1. The disconnect method"},{"refs":[{"id":"ref-for-concept-document-window\u2463"}],"title":"2.2.1.1. Disconnect request"},{"refs":[{"id":"ref-for-concept-document-window\u2464"},{"id":"ref-for-concept-document-window\u2465"}],"title":"2.5.1. Create an IdentityCredential"},{"refs":[{"id":"ref-for-concept-document-window\u2466"}],"title":"2.5.2. Fetch the config file"},{"refs":[{"id":"ref-for-concept-document-window\u2467"}],"title":"2.5.4. Fetch an identity assertion"},{"refs":[{"id":"ref-for-concept-document-window\u2468"},{"id":"ref-for-concept-document-window\u2460\u24ea"},{"id":"ref-for-concept-document-window\u2460\u2460"}],"title":"2.5.5. Extension: Request permission to sign-up"},{"refs":[{"id":"ref-for-concept-document-window\u2460\u2461"}],"title":"2.6. The IdentityProvider Interface"}],"url":"https://html.spec.whatwg.org/multipage/nav-history-apis.html#concept-document-window"},
 "33e04722": {"dfnID":"33e04722","dfnText":"constructor()","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-domexception-domexception"}],"title":"2.3. The IdentityCredentialError Interface"}],"url":"https://webidl.spec.whatwg.org/#dom-domexception-domexception"},
-"35972864": {"dfnID":"35972864","dfnText":"active document","external":true,"refSections":[{"refs":[{"id":"ref-for-nav-document"},{"id":"ref-for-nav-document\u2460"}],"title":"2.1. The connected accounts set"},{"refs":[{"id":"ref-for-nav-document\u2461"},{"id":"ref-for-nav-document\u2462"}],"title":"2.2.1. The disconnect method"}],"url":"https://html.spec.whatwg.org/multipage/document-sequences.html#nav-document"},
+"35972864": {"dfnID":"35972864","dfnText":"active document","external":true,"refSections":[{"refs":[{"id":"ref-for-nav-document"},{"id":"ref-for-nav-document\u2460"}],"title":"2.1. The connected accounts set"},{"refs":[{"id":"ref-for-nav-document\u2461"},{"id":"ref-for-nav-document\u2462"}],"title":"2.2.1. The disconnect method"},{"refs":[{"id":"ref-for-nav-document\u2463"}],"title":"2.5.1. Create an IdentityCredential"},{"refs":[{"id":"ref-for-nav-document\u2464"}],"title":"2.5.5. Extension: Request permission to sign-up"}],"url":"https://html.spec.whatwg.org/multipage/document-sequences.html#nav-document"},
 "3610bd67": {"dfnID":"3610bd67","dfnText":"allowed to use","external":true,"refSections":[{"refs":[{"id":"ref-for-allowed-to-use"}],"title":"2.2.1. The disconnect method"},{"refs":[{"id":"ref-for-allowed-to-use\u2460"}],"title":"2.6. The IdentityProvider Interface"},{"refs":[{"id":"ref-for-allowed-to-use\u2461"}],"title":"4. Permissions Policy Integration"}],"url":"https://html.spec.whatwg.org/multipage/iframe-embed-object.html#allowed-to-use"},
 "36858240": {"dfnID":"36858240","dfnText":"boolean","external":true,"refSections":[{"refs":[{"id":"ref-for-boolean"}],"title":"5.1. Extension capability"}],"url":"https://infra.spec.whatwg.org/#boolean"},
 "3685aee5": {"dfnID":"3685aee5","dfnText":"serialize a JavaScript value to a JSON string","external":true,"refSections":[{"refs":[{"id":"ref-for-serialize-a-javascript-value-to-a-json-string"}],"title":"2.5.4. Fetch an identity assertion"}],"url":"https://infra.spec.whatwg.org/#serialize-a-javascript-value-to-a-json-string"},
@@ -7046,7 +7153,7 @@ let dfnPanelData = {
 "3b90bdcd": {"dfnID":"3b90bdcd","dfnText":"resolve","external":true,"refSections":[{"refs":[{"id":"ref-for-resolve"}],"title":"2.2.1. The disconnect method"},{"refs":[{"id":"ref-for-resolve\u2460"}],"title":"2.6. The IdentityProvider Interface"}],"url":"https://webidl.spec.whatwg.org/#resolve"},
 "3d4e20bd": {"dfnID":"3d4e20bd","dfnText":"no such alert","external":true,"refSections":[{"refs":[{"id":"ref-for-dfn-no-such-alert"}],"title":"5.2. Cancel dialog"},{"refs":[{"id":"ref-for-dfn-no-such-alert\u2460"}],"title":"5.3. Select account"},{"refs":[{"id":"ref-for-dfn-no-such-alert\u2461"}],"title":"5.4. Click dialog button"},{"refs":[{"id":"ref-for-dfn-no-such-alert\u2462"}],"title":"5.5. Account list"},{"refs":[{"id":"ref-for-dfn-no-such-alert\u2463"}],"title":"5.6. Get title"},{"refs":[{"id":"ref-for-dfn-no-such-alert\u2464"}],"title":"5.7. Get dialog type"}],"url":"https://w3c.github.io/webdriver/#dfn-no-such-alert"},
 "3e12e042": {"dfnID":"3e12e042","dfnText":"environment settings object","external":true,"refSections":[{"refs":[{"id":"ref-for-environment-settings-object"}],"title":"2.5. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method"}],"url":"https://html.spec.whatwg.org/multipage/webappapis.html#environment-settings-object"},
-"3fca5a9e": {"dfnID":"3fca5a9e","dfnText":"map","external":true,"refSections":[{"refs":[{"id":"ref-for-ordered-map"}],"title":"2.5.1. Create an IdentityCredential"},{"refs":[{"id":"ref-for-ordered-map\u2460"}],"title":"2.5.6. Helper algorithms"}],"url":"https://infra.spec.whatwg.org/#ordered-map"},
+"3fca5a9e": {"dfnID":"3fca5a9e","dfnText":"map","external":true,"refSections":[{"refs":[{"id":"ref-for-ordered-map"},{"id":"ref-for-ordered-map\u2460"}],"title":"2.5.1. Create an IdentityCredential"},{"refs":[{"id":"ref-for-ordered-map\u2461"}],"title":"2.5.6. Helper algorithms"}],"url":"https://infra.spec.whatwg.org/#ordered-map"},
 "4013a022": {"dfnID":"4013a022","dfnText":"this","external":true,"refSections":[{"refs":[{"id":"ref-for-this"},{"id":"ref-for-this\u2460"}],"title":"2.3. The IdentityCredentialError Interface"}],"url":"https://webidl.spec.whatwg.org/#this"},
 "43ac8374": {"dfnID":"43ac8374","dfnText":"origin (for environment settings object)","external":true,"refSections":[{"refs":[{"id":"ref-for-concept-settings-object-origin"}],"title":"2.5. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method"}],"url":"https://html.spec.whatwg.org/multipage/webappapis.html#concept-settings-object-origin"},
 "47fe679e": {"dfnID":"47fe679e","dfnText":"transient activation","external":true,"refSections":[{"refs":[{"id":"ref-for-transient-activation"}],"title":"2.5.1. Create an IdentityCredential"}],"url":"https://html.spec.whatwg.org/multipage/interaction.html#transient-activation"},
@@ -7055,7 +7162,7 @@ let dfnPanelData = {
 "4be6272b": {"dfnID":"4be6272b","dfnText":"success","external":true,"refSections":[{"refs":[{"id":"ref-for-dfn-success"}],"title":"5.2. Cancel dialog"},{"refs":[{"id":"ref-for-dfn-success\u2460"}],"title":"5.3. Select account"},{"refs":[{"id":"ref-for-dfn-success\u2461"}],"title":"5.4. Click dialog button"},{"refs":[{"id":"ref-for-dfn-success\u2462"}],"title":"5.5. Account list"},{"refs":[{"id":"ref-for-dfn-success\u2463"}],"title":"5.6. Get title"},{"refs":[{"id":"ref-for-dfn-success\u2464"}],"title":"5.7. Get dialog type"},{"refs":[{"id":"ref-for-dfn-success\u2465"}],"title":"5.8. Set delay enabled"},{"refs":[{"id":"ref-for-dfn-success\u2466"}],"title":"5.9. Reset cooldown"}],"url":"https://w3c.github.io/webdriver/#dfn-success"},
 "50b05fad": {"dfnID":"50b05fad","dfnText":"method","external":true,"refSections":[{"refs":[{"id":"ref-for-concept-request-method"}],"title":"2.2.1.1. Disconnect request"},{"refs":[{"id":"ref-for-concept-request-method\u2460"}],"title":"2.5.4. Fetch an identity assertion"}],"url":"https://fetch.spec.whatwg.org/#concept-request-method"},
 "53275e46": {"dfnID":"53275e46","dfnText":"append (for list)","external":true,"refSections":[{"refs":[{"id":"ref-for-list-append"},{"id":"ref-for-list-append\u2460"}],"title":"2.5.6. Helper algorithms"},{"refs":[{"id":"ref-for-list-append\u2461"}],"title":"2.6. The IdentityProvider Interface"},{"refs":[{"id":"ref-for-list-append\u2462"}],"title":"5.5. Account list"}],"url":"https://infra.spec.whatwg.org/#list-append"},
-"5372cca8": {"dfnID":"5372cca8","dfnText":"boolean","external":true,"refSections":[{"refs":[{"id":"ref-for-idl-boolean"}],"title":"2.2. The IdentityCredential Interface"},{"refs":[{"id":"ref-for-idl-boolean\u2460"}],"title":"2.5.2. Fetch the config file"},{"refs":[{"id":"ref-for-idl-boolean\u2461"}],"title":"3.2. The config file"}],"url":"https://webidl.spec.whatwg.org/#idl-boolean"},
+"5372cca8": {"dfnID":"5372cca8","dfnText":"boolean","external":true,"refSections":[{"refs":[{"id":"ref-for-idl-boolean"}],"title":"2.2. The IdentityCredential Interface"},{"refs":[{"id":"ref-for-idl-boolean\u2460"}],"title":"2.5.2. Fetch the config file"},{"refs":[{"id":"ref-for-idl-boolean\u2461"}],"title":"2.5.5. Extension: Request permission to sign-up"},{"refs":[{"id":"ref-for-idl-boolean\u2462"}],"title":"3.2. The config file"}],"url":"https://webidl.spec.whatwg.org/#idl-boolean"},
 "546b09a7": {"dfnID":"546b09a7","dfnText":"mediation","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-credentialrequestoptions-mediation"}],"title":"2.5.1. Create an IdentityCredential"}],"url":"https://w3c.github.io/webappsec-credential-management/#dom-credentialrequestoptions-mediation"},
 "550fb78a": {"dfnID":"550fb78a","dfnText":"required","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-credentialmediationrequirement-required"}],"title":"2.5.1. Create an IdentityCredential"}],"url":"https://w3c.github.io/webappsec-credential-management/#dom-credentialmediationrequirement-required"},
 "55213b5b": {"dfnID":"55213b5b","dfnText":"request","external":true,"refSections":[{"refs":[{"id":"ref-for-concept-request"}],"title":"2.2.1.1. Disconnect request"},{"refs":[{"id":"ref-for-concept-request\u2460"},{"id":"ref-for-concept-request\u2461"},{"id":"ref-for-concept-request\u2462"},{"id":"ref-for-concept-request\u2463"}],"title":"2.5.2. Fetch the config file"},{"refs":[{"id":"ref-for-concept-request\u2464"},{"id":"ref-for-concept-request\u2465"},{"id":"ref-for-concept-request\u2466"},{"id":"ref-for-concept-request\u2467"}],"title":"2.5.3. Fetch the accounts"},{"refs":[{"id":"ref-for-concept-request\u2468"}],"title":"2.5.4. Fetch an identity assertion"},{"refs":[{"id":"ref-for-concept-request\u2460\u24ea"},{"id":"ref-for-concept-request\u2460\u2460"}],"title":"2.5.5. Extension: Request permission to sign-up"},{"refs":[{"id":"ref-for-concept-request\u2460\u2461"}],"title":"2.5.6. Helper algorithms"}],"url":"https://fetch.spec.whatwg.org/#concept-request"},
@@ -7084,7 +7191,7 @@ let dfnPanelData = {
 "7a29153c": {"dfnID":"7a29153c","dfnText":"<hex-color>","external":true,"refSections":[{"refs":[{"id":"ref-for-typedef-hex-color"}],"title":"3.2. The config file"}],"url":"https://drafts.csswg.org/css-color-4/#typedef-hex-color"},
 "82c23298": {"dfnID":"82c23298","dfnText":"remote end steps","external":true,"refSections":[{"refs":[{"id":"ref-for-dfn-remote-end-steps"}],"title":"5.2. Cancel dialog"},{"refs":[{"id":"ref-for-dfn-remote-end-steps\u2460"}],"title":"5.3. Select account"},{"refs":[{"id":"ref-for-dfn-remote-end-steps\u2461"}],"title":"5.4. Click dialog button"},{"refs":[{"id":"ref-for-dfn-remote-end-steps\u2462"}],"title":"5.5. Account list"},{"refs":[{"id":"ref-for-dfn-remote-end-steps\u2463"}],"title":"5.6. Get title"},{"refs":[{"id":"ref-for-dfn-remote-end-steps\u2464"}],"title":"5.7. Get dialog type"},{"refs":[{"id":"ref-for-dfn-remote-end-steps\u2465"}],"title":"5.8. Set delay enabled"},{"refs":[{"id":"ref-for-dfn-remote-end-steps\u2466"}],"title":"5.9. Reset cooldown"}],"url":"https://w3c.github.io/webdriver/#dfn-remote-end-steps"},
 "83c1dbea": {"dfnID":"83c1dbea","dfnText":"parse JSON bytes to a JavaScript value","external":true,"refSections":[{"refs":[{"id":"ref-for-parse-json-bytes-to-a-javascript-value"}],"title":"2.5.6. Helper algorithms"}],"url":"https://infra.spec.whatwg.org/#parse-json-bytes-to-a-javascript-value"},
-"84b454ff": {"dfnID":"84b454ff","dfnText":"ordered map","external":true,"refSections":[{"refs":[{"id":"ref-for-ordered-map"}],"title":"2.5.1. Create an IdentityCredential"},{"refs":[{"id":"ref-for-ordered-map\u2460"}],"title":"2.5.6. Helper algorithms"}],"url":"https://infra.spec.whatwg.org/#ordered-map"},
+"84b454ff": {"dfnID":"84b454ff","dfnText":"ordered map","external":true,"refSections":[{"refs":[{"id":"ref-for-ordered-map"},{"id":"ref-for-ordered-map\u2460"}],"title":"2.5.1. Create an IdentityCredential"},{"refs":[{"id":"ref-for-ordered-map\u2461"}],"title":"2.5.6. Helper algorithms"}],"url":"https://infra.spec.whatwg.org/#ordered-map"},
 "85394472": {"dfnID":"85394472","dfnText":"Document","external":true,"refSections":[{"refs":[{"id":"ref-for-document"}],"title":"4. Permissions Policy Integration"}],"url":"https://dom.spec.whatwg.org/#document"},
 "857d5516": {"dfnID":"857d5516","dfnText":"client","external":true,"refSections":[{"refs":[{"id":"ref-for-concept-request-client"}],"title":"2.2.1.1. Disconnect request"},{"refs":[{"id":"ref-for-concept-request-client\u2460"},{"id":"ref-for-concept-request-client\u2461"}],"title":"2.5.2. Fetch the config file"},{"refs":[{"id":"ref-for-concept-request-client\u2462"},{"id":"ref-for-concept-request-client\u2463"}],"title":"2.5.3. Fetch the accounts"},{"refs":[{"id":"ref-for-concept-request-client\u2464"}],"title":"2.5.4. Fetch an identity assertion"},{"refs":[{"id":"ref-for-concept-request-client\u2465"}],"title":"2.5.5. Extension: Request permission to sign-up"}],"url":"https://fetch.spec.whatwg.org/#concept-request-client"},
 "8855a9aa": {"dfnID":"8855a9aa","dfnText":"DOMString","external":true,"refSections":[{"refs":[{"id":"ref-for-idl-DOMString"},{"id":"ref-for-idl-DOMString\u2460"},{"id":"ref-for-idl-DOMString\u2461"},{"id":"ref-for-idl-DOMString\u2462"}],"title":"2.3. The IdentityCredentialError Interface"},{"refs":[{"id":"ref-for-idl-DOMString\u2463"},{"id":"ref-for-idl-DOMString\u2464"}],"title":"2.4. The CredentialRequestOptions"},{"refs":[{"id":"ref-for-idl-DOMString\u2465"},{"id":"ref-for-idl-DOMString\u2466"},{"id":"ref-for-idl-DOMString\u2467"}],"title":"2.5.3. Fetch the accounts"},{"refs":[{"id":"ref-for-idl-DOMString\u2468"},{"id":"ref-for-idl-DOMString\u2460\u24ea"},{"id":"ref-for-idl-DOMString\u2460\u2460"}],"title":"3.3. Accounts endpoint"}],"url":"https://webidl.spec.whatwg.org/#idl-DOMString"},
@@ -7130,14 +7237,14 @@ let dfnPanelData = {
 "b85ee3be": {"dfnID":"b85ee3be","dfnText":"host","external":true,"refSections":[{"refs":[{"id":"ref-for-concept-url-host"},{"id":"ref-for-concept-url-host\u2460"},{"id":"ref-for-concept-url-host\u2461"}],"title":"2.5.2. Fetch the config file"},{"refs":[{"id":"ref-for-concept-url-host\u2462"}],"title":"2.5.4. Fetch an identity assertion"}],"url":"https://url.spec.whatwg.org/#concept-url-host"},
 "ba556545": {"dfnID":"ba556545","dfnText":"NotAllowedError","external":true,"refSections":[{"refs":[{"id":"ref-for-notallowederror"}],"title":"2.2.1. The disconnect method"},{"refs":[{"id":"ref-for-notallowederror\u2460"},{"id":"ref-for-notallowederror\u2461"}],"title":"2.6. The IdentityProvider Interface"},{"refs":[{"id":"ref-for-notallowederror\u2462"}],"title":"4. Permissions Policy Integration"}],"url":"https://webidl.spec.whatwg.org/#notallowederror"},
 "bb4c269e": {"dfnID":"bb4c269e","dfnText":"error","external":true,"refSections":[{"refs":[{"id":"ref-for-dfn-error"}],"title":"5.1. Extension capability"},{"refs":[{"id":"ref-for-dfn-error\u2460"}],"title":"5.2. Cancel dialog"},{"refs":[{"id":"ref-for-dfn-error\u2461"},{"id":"ref-for-dfn-error\u2462"},{"id":"ref-for-dfn-error\u2463"}],"title":"5.3. Select account"},{"refs":[{"id":"ref-for-dfn-error\u2464"},{"id":"ref-for-dfn-error\u2465"},{"id":"ref-for-dfn-error\u2466"}],"title":"5.4. Click dialog button"},{"refs":[{"id":"ref-for-dfn-error\u2467"}],"title":"5.5. Account list"},{"refs":[{"id":"ref-for-dfn-error\u2468"}],"title":"5.6. Get title"},{"refs":[{"id":"ref-for-dfn-error\u2460\u24ea"}],"title":"5.7. Get dialog type"},{"refs":[{"id":"ref-for-dfn-error\u2460\u2460"},{"id":"ref-for-dfn-error\u2460\u2461"}],"title":"5.8. Set delay enabled"}],"url":"https://w3c.github.io/webdriver/#dfn-error"},
-"bc9d7803": {"dfnID":"bc9d7803","dfnText":"registrable domain","external":true,"refSections":[{"refs":[{"id":"ref-for-host-registrable-domain"},{"id":"ref-for-host-registrable-domain\u2460"}],"title":"2.5.2. Fetch the config file"},{"refs":[{"id":"ref-for-host-registrable-domain\u2461"}],"title":"2.5.4. Fetch an identity assertion"}],"url":"https://url.spec.whatwg.org/#host-registrable-domain"},
+"bc9d7803": {"dfnID":"bc9d7803","dfnText":"registrable domain","external":true,"refSections":[{"refs":[{"id":"ref-for-host-registrable-domain"}],"title":"2.5.1. Create an IdentityCredential"},{"refs":[{"id":"ref-for-host-registrable-domain\u2460"},{"id":"ref-for-host-registrable-domain\u2461"}],"title":"2.5.2. Fetch the config file"},{"refs":[{"id":"ref-for-host-registrable-domain\u2462"}],"title":"2.5.4. Fetch an identity assertion"},{"refs":[{"id":"ref-for-host-registrable-domain\u2463"}],"title":"2.5.5. Extension: Request permission to sign-up"}],"url":"https://url.spec.whatwg.org/#host-registrable-domain"},
 "bd736ec6": {"dfnID":"bd736ec6","dfnText":"top-level traversable","external":true,"refSections":[{"refs":[{"id":"ref-for-top-level-traversable"}],"title":"2.6. The IdentityProvider Interface"}],"url":"https://html.spec.whatwg.org/multipage/document-sequences.html#top-level-traversable"},
 "bdbd19d1": {"dfnID":"bdbd19d1","dfnText":"Promise","external":true,"refSections":[{"refs":[{"id":"ref-for-idl-promise"}],"title":"2.2. The IdentityCredential Interface"},{"refs":[{"id":"ref-for-idl-promise\u2460"},{"id":"ref-for-idl-promise\u2461"},{"id":"ref-for-idl-promise\u2462"}],"title":"2.2.1. The disconnect method"},{"refs":[{"id":"ref-for-idl-promise\u2463"},{"id":"ref-for-idl-promise\u2464"},{"id":"ref-for-idl-promise\u2465"},{"id":"ref-for-idl-promise\u2466"},{"id":"ref-for-idl-promise\u2467"}],"title":"2.6. The IdentityProvider Interface"}],"url":"https://webidl.spec.whatwg.org/#idl-promise"},
 "bec98d30": {"dfnID":"bec98d30","dfnText":"dictionary","external":true,"refSections":[{"refs":[{"id":"ref-for-dfn-dictionary"}],"title":"5.5. Account list"}],"url":"https://webidl.spec.whatwg.org/#dfn-dictionary"},
 "c0868016": {"dfnID":"c0868016","dfnText":"path","external":true,"refSections":[{"refs":[{"id":"ref-for-concept-url-path"}],"title":"2.5.2. Fetch the config file"}],"url":"https://url.spec.whatwg.org/#concept-url-path"},
 "c1b65051": {"dfnID":"c1b65051","dfnText":"unknown","external":true,"refSections":[{"refs":[{"id":"ref-for-unknown"},{"id":"ref-for-unknown\u2460"}],"title":"2.5.1. Create an IdentityCredential"}],"url":"https://w3c-fedid.github.io/login-status#unknown"},
 "c1eab6d6": {"dfnID":"c1eab6d6","dfnText":"requires user mediation","external":true,"refSections":[{"refs":[{"id":"ref-for-origin-requires-user-mediation"},{"id":"ref-for-origin-requires-user-mediation\u2460"}],"title":"2.5.1. Create an IdentityCredential"}],"url":"https://w3c.github.io/webappsec-credential-management/#origin-requires-user-mediation"},
-"c62cd7cf": {"dfnID":"c62cd7cf","dfnText":"origin","external":true,"refSections":[{"refs":[{"id":"ref-for-concept-document-origin"},{"id":"ref-for-concept-document-origin\u2460"},{"id":"ref-for-concept-document-origin\u2461"},{"id":"ref-for-concept-document-origin\u2462"}],"title":"2.1. The connected accounts set"},{"refs":[{"id":"ref-for-concept-document-origin\u2463"},{"id":"ref-for-concept-document-origin\u2464"},{"id":"ref-for-concept-document-origin\u2465"}],"title":"2.2.1. The disconnect method"},{"refs":[{"id":"ref-for-concept-document-origin\u2466"}],"title":"2.2.1.1. Disconnect request"},{"refs":[{"id":"ref-for-concept-document-origin\u2467"}],"title":"2.5.2. Fetch the config file"},{"refs":[{"id":"ref-for-concept-document-origin\u2468"}],"title":"2.5.4. Fetch an identity assertion"},{"refs":[{"id":"ref-for-concept-document-origin\u2460\u24ea"}],"title":"2.5.5. Extension: Request permission to sign-up"},{"refs":[{"id":"ref-for-concept-document-origin\u2460\u2460"}],"title":"2.6. The IdentityProvider Interface"}],"url":"https://dom.spec.whatwg.org/#concept-document-origin"},
+"c62cd7cf": {"dfnID":"c62cd7cf","dfnText":"origin","external":true,"refSections":[{"refs":[{"id":"ref-for-concept-document-origin"},{"id":"ref-for-concept-document-origin\u2460"},{"id":"ref-for-concept-document-origin\u2461"},{"id":"ref-for-concept-document-origin\u2462"}],"title":"2.1. The connected accounts set"},{"refs":[{"id":"ref-for-concept-document-origin\u2463"},{"id":"ref-for-concept-document-origin\u2464"},{"id":"ref-for-concept-document-origin\u2465"}],"title":"2.2.1. The disconnect method"},{"refs":[{"id":"ref-for-concept-document-origin\u2466"}],"title":"2.2.1.1. Disconnect request"},{"refs":[{"id":"ref-for-concept-document-origin\u2467"},{"id":"ref-for-concept-document-origin\u2468"},{"id":"ref-for-concept-document-origin\u2460\u24ea"}],"title":"2.5.1. Create an IdentityCredential"},{"refs":[{"id":"ref-for-concept-document-origin\u2460\u2460"}],"title":"2.5.2. Fetch the config file"},{"refs":[{"id":"ref-for-concept-document-origin\u2460\u2461"}],"title":"2.5.4. Fetch an identity assertion"},{"refs":[{"id":"ref-for-concept-document-origin\u2460\u2462"},{"id":"ref-for-concept-document-origin\u2460\u2463"},{"id":"ref-for-concept-document-origin\u2460\u2464"},{"id":"ref-for-concept-document-origin\u2460\u2465"}],"title":"2.5.5. Extension: Request permission to sign-up"},{"refs":[{"id":"ref-for-concept-document-origin\u2460\u2466"}],"title":"2.6. The IdentityProvider Interface"}],"url":"https://dom.spec.whatwg.org/#concept-document-origin"},
 "c74f29b9": {"dfnID":"c74f29b9","dfnText":"NetworkError","external":true,"refSections":[{"refs":[{"id":"ref-for-networkerror"},{"id":"ref-for-networkerror\u2460"},{"id":"ref-for-networkerror\u2461"},{"id":"ref-for-networkerror\u2462"},{"id":"ref-for-networkerror\u2463"},{"id":"ref-for-networkerror\u2464"},{"id":"ref-for-networkerror\u2465"},{"id":"ref-for-networkerror\u2466"}],"title":"2.2.1. The disconnect method"},{"refs":[{"id":"ref-for-networkerror\u2467"},{"id":"ref-for-networkerror\u2468"}],"title":"2.5. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method"},{"refs":[{"id":"ref-for-networkerror\u2460\u24ea"}],"title":"2.5.1. Create an IdentityCredential"},{"refs":[{"id":"ref-for-networkerror\u2460\u2460"},{"id":"ref-for-networkerror\u2460\u2461"},{"id":"ref-for-networkerror\u2460\u2462"}],"title":"2.5.6. Helper algorithms"},{"refs":[{"id":"ref-for-networkerror\u2460\u2463"},{"id":"ref-for-networkerror\u2460\u2464"},{"id":"ref-for-networkerror\u2460\u2465"},{"id":"ref-for-networkerror\u2460\u2466"},{"id":"ref-for-networkerror\u2460\u2467"},{"id":"ref-for-networkerror\u2460\u2468"}],"title":"2.6. The IdentityProvider Interface"}],"url":"https://webidl.spec.whatwg.org/#networkerror"},
 "c8ff8493": {"dfnID":"c8ff8493","dfnText":"error code","external":true,"refSections":[{"refs":[{"id":"ref-for-dfn-error-code"}],"title":"5.1. Extension capability"},{"refs":[{"id":"ref-for-dfn-error-code\u2460"}],"title":"5.2. Cancel dialog"},{"refs":[{"id":"ref-for-dfn-error-code\u2461"},{"id":"ref-for-dfn-error-code\u2462"},{"id":"ref-for-dfn-error-code\u2463"}],"title":"5.3. Select account"},{"refs":[{"id":"ref-for-dfn-error-code\u2464"},{"id":"ref-for-dfn-error-code\u2465"},{"id":"ref-for-dfn-error-code\u2466"}],"title":"5.4. Click dialog button"},{"refs":[{"id":"ref-for-dfn-error-code\u2467"}],"title":"5.5. Account list"},{"refs":[{"id":"ref-for-dfn-error-code\u2468"}],"title":"5.6. Get title"},{"refs":[{"id":"ref-for-dfn-error-code\u2460\u24ea"}],"title":"5.7. Get dialog type"},{"refs":[{"id":"ref-for-dfn-error-code\u2460\u2460"},{"id":"ref-for-dfn-error-code\u2460\u2461"}],"title":"5.8. Set delay enabled"}],"url":"https://w3c.github.io/webdriver/#dfn-error-code"},
 "c9e7c11a": {"dfnID":"c9e7c11a","dfnText":"header","external":true,"refSections":[{"refs":[{"id":"ref-for-concept-header"}],"title":"2.2.1.1. Disconnect request"},{"refs":[{"id":"ref-for-concept-header\u2460"},{"id":"ref-for-concept-header\u2461"}],"title":"2.5.2. Fetch the config file"},{"refs":[{"id":"ref-for-concept-header\u2462"}],"title":"2.5.3. Fetch the accounts"},{"refs":[{"id":"ref-for-concept-header\u2463"}],"title":"2.5.4. Fetch an identity assertion"},{"refs":[{"id":"ref-for-concept-header\u2464"}],"title":"2.5.5. Extension: Request permission to sign-up"}],"url":"https://fetch.spec.whatwg.org/#concept-header"},
@@ -7168,6 +7275,7 @@ let dfnPanelData = {
 "d7edb843": {"dfnID":"d7edb843","dfnText":"urlencoded serializer","external":true,"refSections":[{"refs":[{"id":"ref-for-concept-urlencoded-serializer"}],"title":"2.2.1.1. Disconnect request"},{"refs":[{"id":"ref-for-concept-urlencoded-serializer\u2460"}],"title":"2.5.4. Fetch an identity assertion"},{"refs":[{"id":"ref-for-concept-urlencoded-serializer\u2461"}],"title":"2.5.6. Helper algorithms"}],"url":"https://url.spec.whatwg.org/#concept-urlencoded-serializer"},
 "d8f8bd6e": {"dfnID":"d8f8bd6e","dfnText":"extend","external":true,"refSections":[{"refs":[{"id":"ref-for-list-extend"},{"id":"ref-for-list-extend\u2460"},{"id":"ref-for-list-extend\u2461"},{"id":"ref-for-list-extend\u2462"}],"title":"2.5.1. Create an IdentityCredential"}],"url":"https://infra.spec.whatwg.org/#list-extend"},
 "d9070155": {"dfnID":"d9070155","dfnText":"CredentialRequestOptions","external":true,"refSections":[{"refs":[{"id":"ref-for-dictdef-credentialrequestoptions"},{"id":"ref-for-dictdef-credentialrequestoptions\u2460"}],"title":"2.4. The CredentialRequestOptions"},{"refs":[{"id":"ref-for-dictdef-credentialrequestoptions\u2461"}],"title":"2.5. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method"},{"refs":[{"id":"ref-for-dictdef-credentialrequestoptions\u2462"}],"title":"2.5.1. Create an IdentityCredential"}],"url":"https://w3c.github.io/webappsec-credential-management/#dictdef-credentialrequestoptions"},
+"dae0bfde": {"dfnID":"dae0bfde","dfnText":"serialization of an origin","external":true,"refSections":[{"refs":[{"id":"ref-for-ascii-serialisation-of-an-origin"}],"title":"2.5.5. Extension: Request permission to sign-up"}],"url":"https://html.spec.whatwg.org/multipage/browsers.html#ascii-serialisation-of-an-origin"},
 "dc1cd39b": {"dfnID":"dc1cd39b","dfnText":"URL","external":true,"refSections":[{"refs":[{"id":"ref-for-concept-request-url"}],"title":"2.2.1.1. Disconnect request"},{"refs":[{"id":"ref-for-concept-request-url\u2460"},{"id":"ref-for-concept-request-url\u2461"}],"title":"2.5.2. Fetch the config file"},{"refs":[{"id":"ref-for-concept-request-url\u2462"},{"id":"ref-for-concept-request-url\u2463"}],"title":"2.5.3. Fetch the accounts"},{"refs":[{"id":"ref-for-concept-request-url\u2464"}],"title":"2.5.4. Fetch an identity assertion"},{"refs":[{"id":"ref-for-concept-request-url\u2465"}],"title":"2.5.5. Extension: Request permission to sign-up"}],"url":"https://fetch.spec.whatwg.org/#concept-request-url"},
 "dc3369de": {"dfnID":"dc3369de","dfnText":"is empty","external":true,"refSections":[{"refs":[{"id":"ref-for-map-is-empty"}],"title":"2.5.1. Create an IdentityCredential"}],"url":"https://infra.spec.whatwg.org/#map-is-empty"},
 "dca2de17": {"dfnID":"dca2de17","dfnText":"DOMException","external":true,"refSections":[{"refs":[{"id":"ref-for-idl-DOMException"},{"id":"ref-for-idl-DOMException\u2460"},{"id":"ref-for-idl-DOMException\u2461"},{"id":"ref-for-idl-DOMException\u2462"},{"id":"ref-for-idl-DOMException\u2463"},{"id":"ref-for-idl-DOMException\u2464"},{"id":"ref-for-idl-DOMException\u2465"},{"id":"ref-for-idl-DOMException\u2466"},{"id":"ref-for-idl-DOMException\u2467"},{"id":"ref-for-idl-DOMException\u2468"}],"title":"2.2.1. The disconnect method"},{"refs":[{"id":"ref-for-idl-DOMException\u2460\u24ea"},{"id":"ref-for-idl-DOMException\u2460\u2460"},{"id":"ref-for-idl-DOMException\u2460\u2461"}],"title":"2.3. The IdentityCredentialError Interface"},{"refs":[{"id":"ref-for-idl-DOMException\u2460\u2462"},{"id":"ref-for-idl-DOMException\u2460\u2463"}],"title":"2.5. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method"},{"refs":[{"id":"ref-for-idl-DOMException\u2460\u2464"}],"title":"2.5.1. Create an IdentityCredential"},{"refs":[{"id":"ref-for-idl-DOMException\u2460\u2465"},{"id":"ref-for-idl-DOMException\u2460\u2466"},{"id":"ref-for-idl-DOMException\u2460\u2467"}],"title":"2.5.6. Helper algorithms"},{"refs":[{"id":"ref-for-idl-DOMException\u2460\u2468"},{"id":"ref-for-idl-DOMException\u2461\u24ea"}],"title":"2.6. The IdentityProvider Interface"},{"refs":[{"id":"ref-for-idl-DOMException\u2461\u2460"}],"title":"4. Permissions Policy Integration"}],"url":"https://webidl.spec.whatwg.org/#idl-DOMException"},
@@ -7180,9 +7288,9 @@ let dfnPanelData = {
 "dictdef-identitycredentialrequestoptions": {"dfnID":"dictdef-identitycredentialrequestoptions","dfnText":"IdentityCredentialRequestOptions","external":false,"refSections":[{"refs":[{"id":"ref-for-dictdef-identitycredentialrequestoptions"},{"id":"ref-for-dictdef-identitycredentialrequestoptions\u2460"},{"id":"ref-for-dictdef-identitycredentialrequestoptions\u2461"}],"title":"2.4. The CredentialRequestOptions"}],"url":"#dictdef-identitycredentialrequestoptions"},
 "dictdef-identityprovideraccount": {"dfnID":"dictdef-identityprovideraccount","dfnText":"IdentityProviderAccount","external":false,"refSections":[{"refs":[{"id":"ref-for-dictdef-identityprovideraccount"},{"id":"ref-for-dictdef-identityprovideraccount\u2460"},{"id":"ref-for-dictdef-identityprovideraccount\u2461"},{"id":"ref-for-dictdef-identityprovideraccount\u2462"}],"title":"2.1. The connected accounts set"},{"refs":[{"id":"ref-for-dictdef-identityprovideraccount\u2463"}],"title":"2.4. The CredentialRequestOptions"},{"refs":[{"id":"ref-for-dictdef-identityprovideraccount\u2464"},{"id":"ref-for-dictdef-identityprovideraccount\u2465"}],"title":"2.5.1. Create an IdentityCredential"},{"refs":[{"id":"ref-for-dictdef-identityprovideraccount\u2466"},{"id":"ref-for-dictdef-identityprovideraccount\u2467"}],"title":"2.5.3. Fetch the accounts"},{"refs":[{"id":"ref-for-dictdef-identityprovideraccount\u2468"},{"id":"ref-for-dictdef-identityprovideraccount\u2460\u24ea"},{"id":"ref-for-dictdef-identityprovideraccount\u2460\u2460"},{"id":"ref-for-dictdef-identityprovideraccount\u2460\u2461"},{"id":"ref-for-dictdef-identityprovideraccount\u2460\u2462"},{"id":"ref-for-dictdef-identityprovideraccount\u2460\u2463"}],"title":"2.5.5. Extension: Request permission to sign-up"},{"refs":[{"id":"ref-for-dictdef-identityprovideraccount\u2460\u2464"}],"title":"3.3. Accounts endpoint"}],"url":"#dictdef-identityprovideraccount"},
 "dictdef-identityprovideraccountlist": {"dfnID":"dictdef-identityprovideraccountlist","dfnText":"IdentityProviderAccountList","external":false,"refSections":[{"refs":[{"id":"ref-for-dictdef-identityprovideraccountlist"},{"id":"ref-for-dictdef-identityprovideraccountlist\u2460"}],"title":"2.5.3. Fetch the accounts"},{"refs":[{"id":"ref-for-dictdef-identityprovideraccountlist\u2461"}],"title":"3.3. Accounts endpoint"}],"url":"#dictdef-identityprovideraccountlist"},
-"dictdef-identityproviderapiconfig": {"dfnID":"dictdef-identityproviderapiconfig","dfnText":"IdentityProviderAPIConfig","external":false,"refSections":[{"refs":[{"id":"ref-for-dictdef-identityproviderapiconfig"}],"title":"2.5.1. Create an IdentityCredential"},{"refs":[{"id":"ref-for-dictdef-identityproviderapiconfig\u2460"},{"id":"ref-for-dictdef-identityproviderapiconfig\u2461"}],"title":"2.5.2. Fetch the config file"},{"refs":[{"id":"ref-for-dictdef-identityproviderapiconfig\u2462"}],"title":"2.5.3. Fetch the accounts"},{"refs":[{"id":"ref-for-dictdef-identityproviderapiconfig\u2463"}],"title":"2.5.4. Fetch an identity assertion"},{"refs":[{"id":"ref-for-dictdef-identityproviderapiconfig\u2464"},{"id":"ref-for-dictdef-identityproviderapiconfig\u2465"}],"title":"2.5.5. Extension: Request permission to sign-up"},{"refs":[{"id":"ref-for-dictdef-identityproviderapiconfig\u2466"}],"title":"2.5.6. Helper algorithms"},{"refs":[{"id":"ref-for-dictdef-identityproviderapiconfig\u2467"},{"id":"ref-for-dictdef-identityproviderapiconfig\u2468"}],"title":"3.2. The config file"}],"url":"#dictdef-identityproviderapiconfig"},
+"dictdef-identityproviderapiconfig": {"dfnID":"dictdef-identityproviderapiconfig","dfnText":"IdentityProviderAPIConfig","external":false,"refSections":[{"refs":[{"id":"ref-for-dictdef-identityproviderapiconfig"}],"title":"2.5.1. Create an IdentityCredential"},{"refs":[{"id":"ref-for-dictdef-identityproviderapiconfig\u2460"},{"id":"ref-for-dictdef-identityproviderapiconfig\u2461"}],"title":"2.5.2. Fetch the config file"},{"refs":[{"id":"ref-for-dictdef-identityproviderapiconfig\u2462"}],"title":"2.5.3. Fetch the accounts"},{"refs":[{"id":"ref-for-dictdef-identityproviderapiconfig\u2463"}],"title":"2.5.4. Fetch an identity assertion"},{"refs":[{"id":"ref-for-dictdef-identityproviderapiconfig\u2464"}],"title":"2.5.5. Extension: Request permission to sign-up"},{"refs":[{"id":"ref-for-dictdef-identityproviderapiconfig\u2465"}],"title":"2.5.6. Helper algorithms"},{"refs":[{"id":"ref-for-dictdef-identityproviderapiconfig\u2466"},{"id":"ref-for-dictdef-identityproviderapiconfig\u2467"}],"title":"3.2. The config file"}],"url":"#dictdef-identityproviderapiconfig"},
 "dictdef-identityproviderbranding": {"dfnID":"dictdef-identityproviderbranding","dfnText":"IdentityProviderBranding","external":false,"refSections":[{"refs":[{"id":"ref-for-dictdef-identityproviderbranding"}],"title":"2.5.2. Fetch the config file"},{"refs":[{"id":"ref-for-dictdef-identityproviderbranding\u2460"}],"title":"2.5.5. Extension: Request permission to sign-up"},{"refs":[{"id":"ref-for-dictdef-identityproviderbranding\u2461"},{"id":"ref-for-dictdef-identityproviderbranding\u2462"},{"id":"ref-for-dictdef-identityproviderbranding\u2463"}],"title":"3.2. The config file"}],"url":"#dictdef-identityproviderbranding"},
-"dictdef-identityproviderclientmetadata": {"dfnID":"dictdef-identityproviderclientmetadata","dfnText":"IdentityProviderClientMetadata","external":false,"refSections":[{"refs":[{"id":"ref-for-dictdef-identityproviderclientmetadata"},{"id":"ref-for-dictdef-identityproviderclientmetadata\u2460"}],"title":"2.5.5. Extension: Request permission to sign-up"},{"refs":[{"id":"ref-for-dictdef-identityproviderclientmetadata\u2461"},{"id":"ref-for-dictdef-identityproviderclientmetadata\u2462"}],"title":"3.4. Extension: Client Metadata"}],"url":"#dictdef-identityproviderclientmetadata"},
+"dictdef-identityproviderclientmetadata": {"dfnID":"dictdef-identityproviderclientmetadata","dfnText":"IdentityProviderClientMetadata","external":false,"refSections":[{"refs":[{"id":"ref-for-dictdef-identityproviderclientmetadata"},{"id":"ref-for-dictdef-identityproviderclientmetadata\u2460"},{"id":"ref-for-dictdef-identityproviderclientmetadata\u2461"}],"title":"2.5.5. Extension: Request permission to sign-up"},{"refs":[{"id":"ref-for-dictdef-identityproviderclientmetadata\u2462"},{"id":"ref-for-dictdef-identityproviderclientmetadata\u2463"}],"title":"3.4. Extension: Client Metadata"}],"url":"#dictdef-identityproviderclientmetadata"},
 "dictdef-identityproviderconfig": {"dfnID":"dictdef-identityproviderconfig","dfnText":"IdentityProviderConfig","external":false,"refSections":[{"refs":[{"id":"ref-for-dictdef-identityproviderconfig"},{"id":"ref-for-dictdef-identityproviderconfig\u2460"},{"id":"ref-for-dictdef-identityproviderconfig\u2461"},{"id":"ref-for-dictdef-identityproviderconfig\u2462"}],"title":"2.1. The connected accounts set"},{"refs":[{"id":"ref-for-dictdef-identityproviderconfig\u2463"}],"title":"2.2. The IdentityCredential Interface"},{"refs":[{"id":"ref-for-dictdef-identityproviderconfig\u2464"},{"id":"ref-for-dictdef-identityproviderconfig\u2465"},{"id":"ref-for-dictdef-identityproviderconfig\u2466"}],"title":"2.4. The CredentialRequestOptions"},{"refs":[{"id":"ref-for-dictdef-identityproviderconfig\u2467"}],"title":"2.5.2. Fetch the config file"},{"refs":[{"id":"ref-for-dictdef-identityproviderconfig\u2468"},{"id":"ref-for-dictdef-identityproviderconfig\u2460\u24ea"},{"id":"ref-for-dictdef-identityproviderconfig\u2460\u2460"}],"title":"2.5.6. Helper algorithms"},{"refs":[{"id":"ref-for-dictdef-identityproviderconfig\u2460\u2461"},{"id":"ref-for-dictdef-identityproviderconfig\u2460\u2462"},{"id":"ref-for-dictdef-identityproviderconfig\u2460\u2463"}],"title":"2.6. The IdentityProvider Interface"}],"url":"#dictdef-identityproviderconfig"},
 "dictdef-identityprovidericon": {"dfnID":"dictdef-identityprovidericon","dfnText":"IdentityProviderIcon","external":false,"refSections":[{"refs":[{"id":"ref-for-dictdef-identityprovidericon"}],"title":"2.5.2. Fetch the config file"},{"refs":[{"id":"ref-for-dictdef-identityprovidericon\u2460"},{"id":"ref-for-dictdef-identityprovidericon\u2461"},{"id":"ref-for-dictdef-identityprovidericon\u2462"}],"title":"3.2. The config file"}],"url":"#dictdef-identityprovidericon"},
 "dictdef-identityproviderrequestoptions": {"dfnID":"dictdef-identityproviderrequestoptions","dfnText":"IdentityProviderRequestOptions","external":false,"refSections":[{"refs":[{"id":"ref-for-dictdef-identityproviderrequestoptions"}],"title":"2.4. The CredentialRequestOptions"},{"refs":[{"id":"ref-for-dictdef-identityproviderrequestoptions\u2460"},{"id":"ref-for-dictdef-identityproviderrequestoptions\u2461"}],"title":"2.5.1. Create an IdentityCredential"},{"refs":[{"id":"ref-for-dictdef-identityproviderrequestoptions\u2462"}],"title":"2.5.3. Fetch the accounts"},{"refs":[{"id":"ref-for-dictdef-identityproviderrequestoptions\u2463"}],"title":"2.5.4. Fetch an identity assertion"},{"refs":[{"id":"ref-for-dictdef-identityproviderrequestoptions\u2464"},{"id":"ref-for-dictdef-identityproviderrequestoptions\u2465"}],"title":"2.5.5. Extension: Request permission to sign-up"},{"refs":[{"id":"ref-for-dictdef-identityproviderrequestoptions\u2466"}],"title":"5.5. Account list"}],"url":"#dictdef-identityproviderrequestoptions"},
@@ -7261,14 +7369,15 @@ let dfnPanelData = {
 "dom-identityproviderbranding-color": {"dfnID":"dom-identityproviderbranding-color","dfnText":"color","external":false,"refSections":[{"refs":[{"id":"ref-for-dom-identityproviderbranding-color"}],"title":"2.5.2. Fetch the config file"},{"refs":[{"id":"ref-for-dom-identityproviderbranding-color\u2460"}],"title":"3.2. The config file"}],"url":"#dom-identityproviderbranding-color"},
 "dom-identityproviderbranding-icons": {"dfnID":"dom-identityproviderbranding-icons","dfnText":"icons","external":false,"refSections":[{"refs":[{"id":"ref-for-dom-identityproviderbranding-icons"}],"title":"2.5.2. Fetch the config file"}],"url":"#dom-identityproviderbranding-icons"},
 "dom-identityproviderbranding-name": {"dfnID":"dom-identityproviderbranding-name","dfnText":"name","external":false,"refSections":[{"refs":[{"id":"ref-for-dom-identityproviderbranding-name"}],"title":"2.5.2. Fetch the config file"}],"url":"#dom-identityproviderbranding-name"},
+"dom-identityproviderclientmetadata-client_is_third_party_to_top_frame_origin": {"dfnID":"dom-identityproviderclientmetadata-client_is_third_party_to_top_frame_origin","dfnText":"client_is_third_party_to_top_frame_origin","external":false,"refSections":[{"refs":[{"id":"ref-for-dom-identityproviderclientmetadata-client_is_third_party_to_top_frame_origin"}],"title":"2.5.1. Create an IdentityCredential"},{"refs":[{"id":"ref-for-dom-identityproviderclientmetadata-client_is_third_party_to_top_frame_origin\u2460"}],"title":"2.5.5. Extension: Request permission to sign-up"}],"url":"#dom-identityproviderclientmetadata-client_is_third_party_to_top_frame_origin"},
 "dom-identityproviderclientmetadata-privacy_policy_url": {"dfnID":"dom-identityproviderclientmetadata-privacy_policy_url","dfnText":"privacy_policy_url","external":false,"refSections":[{"refs":[{"id":"ref-for-dom-identityproviderclientmetadata-privacy_policy_url"},{"id":"ref-for-dom-identityproviderclientmetadata-privacy_policy_url\u2460"},{"id":"ref-for-dom-identityproviderclientmetadata-privacy_policy_url\u2461"}],"title":"2.5.5. Extension: Request permission to sign-up"},{"refs":[{"id":"ref-for-dom-identityproviderclientmetadata-privacy_policy_url\u2462"}],"title":"5.5. Account list"}],"url":"#dom-identityproviderclientmetadata-privacy_policy_url"},
 "dom-identityproviderclientmetadata-terms_of_service_url": {"dfnID":"dom-identityproviderclientmetadata-terms_of_service_url","dfnText":"terms_of_service_url","external":false,"refSections":[{"refs":[{"id":"ref-for-dom-identityproviderclientmetadata-terms_of_service_url"},{"id":"ref-for-dom-identityproviderclientmetadata-terms_of_service_url\u2460"},{"id":"ref-for-dom-identityproviderclientmetadata-terms_of_service_url\u2461"}],"title":"2.5.5. Extension: Request permission to sign-up"},{"refs":[{"id":"ref-for-dom-identityproviderclientmetadata-terms_of_service_url\u2462"}],"title":"5.5. Account list"}],"url":"#dom-identityproviderclientmetadata-terms_of_service_url"},
-"dom-identityproviderconfig-clientid": {"dfnID":"dom-identityproviderconfig-clientid","dfnText":"clientId","external":false,"refSections":[{"refs":[{"id":"ref-for-dom-identityproviderconfig-clientid"},{"id":"ref-for-dom-identityproviderconfig-clientid\u2460"}],"title":"2.1. The connected accounts set"},{"refs":[{"id":"ref-for-dom-identityproviderconfig-clientid\u2461"}],"title":"2.2.1.1. Disconnect request"},{"refs":[{"id":"ref-for-dom-identityproviderconfig-clientid\u2462"}],"title":"2.4. The CredentialRequestOptions"},{"refs":[{"id":"ref-for-dom-identityproviderconfig-clientid\u2463"}],"title":"2.5.4. Fetch an identity assertion"},{"refs":[{"id":"ref-for-dom-identityproviderconfig-clientid\u2464"},{"id":"ref-for-dom-identityproviderconfig-clientid\u2465"}],"title":"2.5.5. Extension: Request permission to sign-up"},{"refs":[{"id":"ref-for-dom-identityproviderconfig-clientid\u2466"}],"title":"2.6. The IdentityProvider Interface"},{"refs":[{"id":"ref-for-dom-identityproviderconfig-clientid\u2467"}],"title":"3.3. Accounts endpoint"},{"refs":[{"id":"ref-for-dom-identityproviderconfig-clientid\u2468"},{"id":"ref-for-dom-identityproviderconfig-clientid\u2460\u24ea"}],"title":"3.5. Identity assertion endpoint"}],"url":"#dom-identityproviderconfig-clientid"},
-"dom-identityproviderconfig-configurl": {"dfnID":"dom-identityproviderconfig-configurl","dfnText":"configURL","external":false,"refSections":[{"refs":[{"id":"ref-for-dom-identityproviderconfig-configurl"},{"id":"ref-for-dom-identityproviderconfig-configurl\u2460"}],"title":"2.1. The connected accounts set"},{"refs":[{"id":"ref-for-dom-identityproviderconfig-configurl\u2461"}],"title":"2.2.1. The disconnect method"},{"refs":[{"id":"ref-for-dom-identityproviderconfig-configurl\u2462"}],"title":"2.4. The CredentialRequestOptions"},{"refs":[{"id":"ref-for-dom-identityproviderconfig-configurl\u2463"}],"title":"2.5.1. Create an IdentityCredential"},{"refs":[{"id":"ref-for-dom-identityproviderconfig-configurl\u2464"}],"title":"2.5.2. Fetch the config file"},{"refs":[{"id":"ref-for-dom-identityproviderconfig-configurl\u2465"}],"title":"2.5.4. Fetch an identity assertion"},{"refs":[{"id":"ref-for-dom-identityproviderconfig-configurl\u2466"}],"title":"2.5.6. Helper algorithms"},{"refs":[{"id":"ref-for-dom-identityproviderconfig-configurl\u2467"},{"id":"ref-for-dom-identityproviderconfig-configurl\u2468"}],"title":"2.6. The IdentityProvider Interface"},{"refs":[{"id":"ref-for-dom-identityproviderconfig-configurl\u2460\u24ea"}],"title":"5.5. Account list"}],"url":"#dom-identityproviderconfig-configurl"},
+"dom-identityproviderconfig-clientid": {"dfnID":"dom-identityproviderconfig-clientid","dfnText":"clientId","external":false,"refSections":[{"refs":[{"id":"ref-for-dom-identityproviderconfig-clientid"},{"id":"ref-for-dom-identityproviderconfig-clientid\u2460"}],"title":"2.1. The connected accounts set"},{"refs":[{"id":"ref-for-dom-identityproviderconfig-clientid\u2461"}],"title":"2.2.1.1. Disconnect request"},{"refs":[{"id":"ref-for-dom-identityproviderconfig-clientid\u2462"}],"title":"2.4. The CredentialRequestOptions"},{"refs":[{"id":"ref-for-dom-identityproviderconfig-clientid\u2463"}],"title":"2.5.4. Fetch an identity assertion"},{"refs":[{"id":"ref-for-dom-identityproviderconfig-clientid\u2464"},{"id":"ref-for-dom-identityproviderconfig-clientid\u2465"},{"id":"ref-for-dom-identityproviderconfig-clientid\u2466"}],"title":"2.5.5. Extension: Request permission to sign-up"},{"refs":[{"id":"ref-for-dom-identityproviderconfig-clientid\u2467"}],"title":"2.6. The IdentityProvider Interface"},{"refs":[{"id":"ref-for-dom-identityproviderconfig-clientid\u2468"}],"title":"3.3. Accounts endpoint"},{"refs":[{"id":"ref-for-dom-identityproviderconfig-clientid\u2460\u24ea"},{"id":"ref-for-dom-identityproviderconfig-clientid\u2460\u2460"}],"title":"3.5. Identity assertion endpoint"}],"url":"#dom-identityproviderconfig-clientid"},
+"dom-identityproviderconfig-configurl": {"dfnID":"dom-identityproviderconfig-configurl","dfnText":"configURL","external":false,"refSections":[{"refs":[{"id":"ref-for-dom-identityproviderconfig-configurl"},{"id":"ref-for-dom-identityproviderconfig-configurl\u2460"}],"title":"2.1. The connected accounts set"},{"refs":[{"id":"ref-for-dom-identityproviderconfig-configurl\u2461"}],"title":"2.2.1. The disconnect method"},{"refs":[{"id":"ref-for-dom-identityproviderconfig-configurl\u2462"}],"title":"2.4. The CredentialRequestOptions"},{"refs":[{"id":"ref-for-dom-identityproviderconfig-configurl\u2463"},{"id":"ref-for-dom-identityproviderconfig-configurl\u2464"},{"id":"ref-for-dom-identityproviderconfig-configurl\u2465"}],"title":"2.5.1. Create an IdentityCredential"},{"refs":[{"id":"ref-for-dom-identityproviderconfig-configurl\u2466"}],"title":"2.5.2. Fetch the config file"},{"refs":[{"id":"ref-for-dom-identityproviderconfig-configurl\u2467"}],"title":"2.5.4. Fetch an identity assertion"},{"refs":[{"id":"ref-for-dom-identityproviderconfig-configurl\u2468"}],"title":"2.5.6. Helper algorithms"},{"refs":[{"id":"ref-for-dom-identityproviderconfig-configurl\u2460\u24ea"},{"id":"ref-for-dom-identityproviderconfig-configurl\u2460\u2460"}],"title":"2.6. The IdentityProvider Interface"},{"refs":[{"id":"ref-for-dom-identityproviderconfig-configurl\u2460\u2461"}],"title":"5.5. Account list"}],"url":"#dom-identityproviderconfig-configurl"},
 "dom-identityprovidericon-size": {"dfnID":"dom-identityprovidericon-size","dfnText":"size","external":false,"refSections":[{"refs":[{"id":"ref-for-dom-identityprovidericon-size"}],"title":"2.5.2. Fetch the config file"}],"url":"#dom-identityprovidericon-size"},
 "dom-identityprovidericon-url": {"dfnID":"dom-identityprovidericon-url","dfnText":"url","external":false,"refSections":[{"refs":[{"id":"ref-for-dom-identityprovidericon-url"}],"title":"2.5.2. Fetch the config file"}],"url":"#dom-identityprovidericon-url"},
 "dom-identityproviderrequestoptions-domainhint": {"dfnID":"dom-identityproviderrequestoptions-domainhint","dfnText":"domainHint","external":false,"refSections":[{"refs":[{"id":"ref-for-dom-identityproviderrequestoptions-domainhint"}],"title":"2.4. The CredentialRequestOptions"},{"refs":[{"id":"ref-for-dom-identityproviderrequestoptions-domainhint\u2460"},{"id":"ref-for-dom-identityproviderrequestoptions-domainhint\u2461"},{"id":"ref-for-dom-identityproviderrequestoptions-domainhint\u2462"}],"title":"2.5.1. Create an IdentityCredential"},{"refs":[{"id":"ref-for-dom-identityproviderrequestoptions-domainhint\u2463"},{"id":"ref-for-dom-identityproviderrequestoptions-domainhint\u2464"}],"title":"2.5.6. Helper algorithms"},{"refs":[{"id":"ref-for-dom-identityproviderrequestoptions-domainhint\u2465"}],"title":"3.3. Accounts endpoint"}],"url":"#dom-identityproviderrequestoptions-domainhint"},
-"dom-identityproviderrequestoptions-fields": {"dfnID":"dom-identityproviderrequestoptions-fields","dfnText":"fields","external":false,"refSections":[{"refs":[{"id":"ref-for-dom-identityproviderrequestoptions-fields"}],"title":"2.5.1. Create an IdentityCredential"},{"refs":[{"id":"ref-for-dom-identityproviderrequestoptions-fields\u2460"},{"id":"ref-for-dom-identityproviderrequestoptions-fields\u2461"}],"title":"2.5.4. Fetch an identity assertion"},{"refs":[{"id":"ref-for-dom-identityproviderrequestoptions-fields\u2462"}],"title":"2.5.5. Extension: Request permission to sign-up"},{"refs":[{"id":"ref-for-dom-identityproviderrequestoptions-fields\u2463"},{"id":"ref-for-dom-identityproviderrequestoptions-fields\u2464"}],"title":"3.5. Identity assertion endpoint"}],"url":"#dom-identityproviderrequestoptions-fields"},
+"dom-identityproviderrequestoptions-fields": {"dfnID":"dom-identityproviderrequestoptions-fields","dfnText":"fields","external":false,"refSections":[{"refs":[{"id":"ref-for-dom-identityproviderrequestoptions-fields"},{"id":"ref-for-dom-identityproviderrequestoptions-fields\u2460"}],"title":"2.5.1. Create an IdentityCredential"},{"refs":[{"id":"ref-for-dom-identityproviderrequestoptions-fields\u2461"},{"id":"ref-for-dom-identityproviderrequestoptions-fields\u2462"}],"title":"2.5.4. Fetch an identity assertion"},{"refs":[{"id":"ref-for-dom-identityproviderrequestoptions-fields\u2463"}],"title":"2.5.5. Extension: Request permission to sign-up"},{"refs":[{"id":"ref-for-dom-identityproviderrequestoptions-fields\u2464"},{"id":"ref-for-dom-identityproviderrequestoptions-fields\u2465"}],"title":"3.5. Identity assertion endpoint"}],"url":"#dom-identityproviderrequestoptions-fields"},
 "dom-identityproviderrequestoptions-loginhint": {"dfnID":"dom-identityproviderrequestoptions-loginhint","dfnText":"loginHint","external":false,"refSections":[{"refs":[{"id":"ref-for-dom-identityproviderrequestoptions-loginhint"}],"title":"2.4. The CredentialRequestOptions"},{"refs":[{"id":"ref-for-dom-identityproviderrequestoptions-loginhint\u2460"},{"id":"ref-for-dom-identityproviderrequestoptions-loginhint\u2461"}],"title":"2.5.1. Create an IdentityCredential"},{"refs":[{"id":"ref-for-dom-identityproviderrequestoptions-loginhint\u2462"},{"id":"ref-for-dom-identityproviderrequestoptions-loginhint\u2463"}],"title":"2.5.6. Helper algorithms"},{"refs":[{"id":"ref-for-dom-identityproviderrequestoptions-loginhint\u2464"}],"title":"3.3. Accounts endpoint"}],"url":"#dom-identityproviderrequestoptions-loginhint"},
 "dom-identityproviderrequestoptions-params": {"dfnID":"dom-identityproviderrequestoptions-params","dfnText":"params","external":false,"refSections":[{"refs":[{"id":"ref-for-dom-identityproviderrequestoptions-params"}],"title":"2.4. The CredentialRequestOptions"},{"refs":[{"id":"ref-for-dom-identityproviderrequestoptions-params\u2460"},{"id":"ref-for-dom-identityproviderrequestoptions-params\u2461"}],"title":"2.5.4. Fetch an identity assertion"}],"url":"#dom-identityproviderrequestoptions-params"},
 "dom-identityproviderwellknown-accounts_endpoint": {"dfnID":"dom-identityproviderwellknown-accounts_endpoint","dfnText":"accounts_endpoint","external":false,"refSections":[{"refs":[{"id":"ref-for-dom-identityproviderwellknown-accounts_endpoint"},{"id":"ref-for-dom-identityproviderwellknown-accounts_endpoint\u2460"},{"id":"ref-for-dom-identityproviderwellknown-accounts_endpoint\u2461"},{"id":"ref-for-dom-identityproviderwellknown-accounts_endpoint\u2462"}],"title":"2.5.2. Fetch the config file"},{"refs":[{"id":"ref-for-dom-identityproviderwellknown-accounts_endpoint\u2463"},{"id":"ref-for-dom-identityproviderwellknown-accounts_endpoint\u2464"}],"title":"3.1. The Well-Known File"}],"url":"#dom-identityproviderwellknown-accounts_endpoint"},
@@ -7280,6 +7389,7 @@ let dfnPanelData = {
 "dom-identityuserinfo-name": {"dfnID":"dom-identityuserinfo-name","dfnText":"name","external":false,"refSections":[{"refs":[{"id":"ref-for-dom-identityuserinfo-name"}],"title":"2.6. The IdentityProvider Interface"}],"url":"#dom-identityuserinfo-name"},
 "dom-identityuserinfo-picture": {"dfnID":"dom-identityuserinfo-picture","dfnText":"picture","external":false,"refSections":[{"refs":[{"id":"ref-for-dom-identityuserinfo-picture"}],"title":"2.6. The IdentityProvider Interface"}],"url":"#dom-identityuserinfo-picture"},
 "e10e7eb7": {"dfnID":"e10e7eb7","dfnText":"DOM manipulation task source","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-manipulation-task-source"},{"id":"ref-for-dom-manipulation-task-source\u2460"}],"title":"2.5. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method"},{"refs":[{"id":"ref-for-dom-manipulation-task-source\u2461"}],"title":"2.5.4. Fetch an identity assertion"},{"refs":[{"id":"ref-for-dom-manipulation-task-source\u2462"},{"id":"ref-for-dom-manipulation-task-source\u2463"}],"title":"2.5.6. Helper algorithms"},{"refs":[{"id":"ref-for-dom-manipulation-task-source\u2464"},{"id":"ref-for-dom-manipulation-task-source\u2465"}],"title":"2.6. The IdentityProvider Interface"}],"url":"https://html.spec.whatwg.org/multipage/webappapis.html#dom-manipulation-task-source"},
+"e28ccd60": {"dfnID":"e28ccd60","dfnText":"concatenation","external":true,"refSections":[{"refs":[{"id":"ref-for-string-concatenate"}],"title":"2.5.5. Extension: Request permission to sign-up"}],"url":"https://infra.spec.whatwg.org/#string-concatenate"},
 "e97a9688": {"dfnID":"e97a9688","dfnText":"unsigned long","external":true,"refSections":[{"refs":[{"id":"ref-for-idl-unsigned-long"}],"title":"2.5.2. Fetch the config file"},{"refs":[{"id":"ref-for-idl-unsigned-long\u2460"}],"title":"3.2. The config file"}],"url":"https://webidl.spec.whatwg.org/#idl-unsigned-long"},
 "e99bd18e": {"dfnID":"e99bd18e","dfnText":"relevant global object","external":true,"refSections":[{"refs":[{"id":"ref-for-concept-relevant-global"}],"title":"2.6. The IdentityProvider Interface"}],"url":"https://html.spec.whatwg.org/multipage/webappapis.html#concept-relevant-global"},
 "ea9cb8e8": {"dfnID":"ea9cb8e8","dfnText":"signal","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-credentialrequestoptions-signal"}],"title":"2.5. The [[DiscoverFromExternalSource]](origin, options, sameOriginWithAncestors) internal method"}],"url":"https://w3c.github.io/webappsec-credential-management/#dom-credentialrequestoptions-signal"},
@@ -7291,17 +7401,19 @@ let dfnPanelData = {
 "enumdef-identitycredentialrequestoptionscontext": {"dfnID":"enumdef-identitycredentialrequestoptionscontext","dfnText":"IdentityCredentialRequestOptionsContext","external":false,"refSections":[{"refs":[{"id":"ref-for-enumdef-identitycredentialrequestoptionscontext"},{"id":"ref-for-enumdef-identitycredentialrequestoptionscontext\u2460"}],"title":"2.4. The CredentialRequestOptions"}],"url":"#enumdef-identitycredentialrequestoptionscontext"},
 "enumdef-identitycredentialrequestoptionsmode": {"dfnID":"enumdef-identitycredentialrequestoptionsmode","dfnText":"IdentityCredentialRequestOptionsMode","external":false,"refSections":[{"refs":[{"id":"ref-for-enumdef-identitycredentialrequestoptionsmode"},{"id":"ref-for-enumdef-identitycredentialrequestoptionsmode\u2460"}],"title":"2.4. The CredentialRequestOptions"},{"refs":[{"id":"ref-for-enumdef-identitycredentialrequestoptionsmode\u2461"}],"title":"2.5.1. Create an IdentityCredential"}],"url":"#enumdef-identitycredentialrequestoptionsmode"},
 "extract-the-json-fetch-response": {"dfnID":"extract-the-json-fetch-response","dfnText":"extract the JSON fetch response","external":false,"refSections":[{"refs":[{"id":"ref-for-extract-the-json-fetch-response"}],"title":"2.2.1.1. Disconnect request"},{"refs":[{"id":"ref-for-extract-the-json-fetch-response\u2460"},{"id":"ref-for-extract-the-json-fetch-response\u2461"}],"title":"2.5.2. Fetch the config file"},{"refs":[{"id":"ref-for-extract-the-json-fetch-response\u2462"}],"title":"2.5.3. Fetch the accounts"},{"refs":[{"id":"ref-for-extract-the-json-fetch-response\u2463"}],"title":"2.5.4. Fetch an identity assertion"},{"refs":[{"id":"ref-for-extract-the-json-fetch-response\u2464"}],"title":"2.5.5. Extension: Request permission to sign-up"}],"url":"#extract-the-json-fetch-response"},
+"f3f521fa": {"dfnID":"f3f521fa","dfnText":"URL-query string","external":true,"refSections":[{"refs":[{"id":"ref-for-url-query-string"}],"title":"2.5.5. Extension: Request permission to sign-up"}],"url":"https://url.spec.whatwg.org/#url-query-string"},
 "f41069dd": {"dfnID":"f41069dd","dfnText":"[[type]]","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-credential-type-slot"},{"id":"ref-for-dom-credential-type-slot\u2460"}],"title":"2.2. The IdentityCredential Interface"}],"url":"https://w3c.github.io/webappsec-credential-management/#dom-credential-type-slot"},
 "f78d5b5c": {"dfnID":"f78d5b5c","dfnText":"origin (for request)","external":true,"refSections":[{"refs":[{"id":"ref-for-concept-request-origin"}],"title":"2.2.1.1. Disconnect request"},{"refs":[{"id":"ref-for-concept-request-origin\u2460"},{"id":"ref-for-concept-request-origin\u2461"}],"title":"2.5.2. Fetch the config file"},{"refs":[{"id":"ref-for-concept-request-origin\u2462"},{"id":"ref-for-concept-request-origin\u2463"}],"title":"2.5.3. Fetch the accounts"},{"refs":[{"id":"ref-for-concept-request-origin\u2464"}],"title":"2.5.4. Fetch an identity assertion"},{"refs":[{"id":"ref-for-concept-request-origin\u2465"}],"title":"2.5.5. Extension: Request permission to sign-up"}],"url":"https://fetch.spec.whatwg.org/#concept-request-origin"},
 "f7b00a8b": {"dfnID":"f7b00a8b","dfnText":"header list (for response)","external":true,"refSections":[{"refs":[{"id":"ref-for-concept-response-header-list"}],"title":"2.5.6. Helper algorithms"}],"url":"https://fetch.spec.whatwg.org/#concept-response-header-list"},
 "f937b7b6": {"dfnID":"f937b7b6","dfnText":"continue","external":true,"refSections":[{"refs":[{"id":"ref-for-iteration-continue"},{"id":"ref-for-iteration-continue\u2460"},{"id":"ref-for-iteration-continue\u2461"},{"id":"ref-for-iteration-continue\u2462"},{"id":"ref-for-iteration-continue\u2463"}],"title":"2.5.1. Create an IdentityCredential"}],"url":"https://infra.spec.whatwg.org/#iteration-continue"},
+"feac4ab3": {"dfnID":"feac4ab3","dfnText":"same site","external":true,"refSections":[{"refs":[{"id":"ref-for-same-site"}],"title":"2.5.1. Create an IdentityCredential"},{"refs":[{"id":"ref-for-same-site\u2460"}],"title":"2.5.5. Extension: Request permission to sign-up"}],"url":"https://html.spec.whatwg.org/multipage/browsers.html#same-site"},
 "fedcm-webdriver-error-create-dictionary": {"dfnID":"fedcm-webdriver-error-create-dictionary","dfnText":"Create dictionary","external":false,"refSections":[{"refs":[{"id":"ref-for-fedcm-webdriver-error-create-dictionary"}],"title":"5.5. Account list"}],"url":"#fedcm-webdriver-error-create-dictionary"},
 "fetch-an-identity-assertion": {"dfnID":"fetch-an-identity-assertion","dfnText":"fetch an identity assertion","external":false,"refSections":[{"refs":[{"id":"ref-for-fetch-an-identity-assertion"}],"title":"2.5.1. Create an IdentityCredential"},{"refs":[{"id":"ref-for-fetch-an-identity-assertion\u2460"}],"title":"2.5.4. Fetch an identity assertion"},{"refs":[{"id":"ref-for-fetch-an-identity-assertion\u2461"}],"title":"3.5. Identity assertion endpoint"}],"url":"#fetch-an-identity-assertion"},
 "fetch-identity-assertion-create-a-list": {"dfnID":"fetch-identity-assertion-create-a-list","dfnText":"Create a list","external":false,"refSections":[{"refs":[{"id":"ref-for-fetch-identity-assertion-create-a-list"},{"id":"ref-for-fetch-identity-assertion-create-a-list\u2460"}],"title":"2.5.4. Fetch an identity assertion"}],"url":"#fetch-identity-assertion-create-a-list"},
 "fetch-request": {"dfnID":"fetch-request","dfnText":"fetch request","external":false,"refSections":[{"refs":[{"id":"ref-for-fetch-request"}],"title":"2.2.1.1. Disconnect request"},{"refs":[{"id":"ref-for-fetch-request\u2460"},{"id":"ref-for-fetch-request\u2461"}],"title":"2.5.2. Fetch the config file"},{"refs":[{"id":"ref-for-fetch-request\u2462"},{"id":"ref-for-fetch-request\u2463"}],"title":"2.5.3. Fetch the accounts"},{"refs":[{"id":"ref-for-fetch-request\u2464"}],"title":"2.5.4. Fetch an identity assertion"},{"refs":[{"id":"ref-for-fetch-request\u2465"}],"title":"2.5.5. Extension: Request permission to sign-up"}],"url":"#fetch-request"},
 "fetch-the-account-picture": {"dfnID":"fetch-the-account-picture","dfnText":"fetch the account picture","external":false,"refSections":[{"refs":[{"id":"ref-for-fetch-the-account-picture"}],"title":"2.5.1. Create an IdentityCredential"}],"url":"#fetch-the-account-picture"},
 "fetch-the-accounts": {"dfnID":"fetch-the-accounts","dfnText":"fetch the accounts","external":false,"refSections":[{"refs":[{"id":"ref-for-fetch-the-accounts"}],"title":"2.5.1. Create an IdentityCredential"},{"refs":[{"id":"ref-for-fetch-the-accounts\u2460"}],"title":"2.5.3. Fetch the accounts"},{"refs":[{"id":"ref-for-fetch-the-accounts\u2461"}],"title":"2.6. The IdentityProvider Interface"},{"refs":[{"id":"ref-for-fetch-the-accounts\u2462"}],"title":"3.3. Accounts endpoint"}],"url":"#fetch-the-accounts"},
-"fetch-the-client-metadata": {"dfnID":"fetch-the-client-metadata","dfnText":"fetch the client metadata","external":false,"refSections":[{"refs":[{"id":"ref-for-fetch-the-client-metadata"}],"title":"2.5.5. Extension: Request permission to sign-up"},{"refs":[{"id":"ref-for-fetch-the-client-metadata\u2460"}],"title":"3.4. Extension: Client Metadata"}],"url":"#fetch-the-client-metadata"},
+"fetch-the-client-metadata": {"dfnID":"fetch-the-client-metadata","dfnText":"fetch the client metadata","external":false,"refSections":[{"refs":[{"id":"ref-for-fetch-the-client-metadata"}],"title":"2.5.1. Create an IdentityCredential"},{"refs":[{"id":"ref-for-fetch-the-client-metadata\u2460"}],"title":"3.4. Extension: Client Metadata"}],"url":"#fetch-the-client-metadata"},
 "fetch-the-config-file": {"dfnID":"fetch-the-config-file","dfnText":"fetch the config file","external":false,"refSections":[{"refs":[{"id":"ref-for-fetch-the-config-file"}],"title":"2.2.1. The disconnect method"},{"refs":[{"id":"ref-for-fetch-the-config-file\u2460"}],"title":"2.5.1. Create an IdentityCredential"},{"refs":[{"id":"ref-for-fetch-the-config-file\u2461"}],"title":"2.5.2. Fetch the config file"},{"refs":[{"id":"ref-for-fetch-the-config-file\u2462"}],"title":"2.5.6. Helper algorithms"},{"refs":[{"id":"ref-for-fetch-the-config-file\u2463"}],"title":"2.6. The IdentityProvider Interface"},{"refs":[{"id":"ref-for-fetch-the-config-file\u2464"}],"title":"3.1. The Well-Known File"},{"refs":[{"id":"ref-for-fetch-the-config-file\u2465"}],"title":"3.2. The config file"}],"url":"#fetch-the-config-file"},
 "fetch-the-config-file-and-show-an-idp-login-dialog": {"dfnID":"fetch-the-config-file-and-show-an-idp-login-dialog","dfnText":"fetch the config file and show an IDP login dialog","external":false,"refSections":[{"refs":[{"id":"ref-for-fetch-the-config-file-and-show-an-idp-login-dialog"}],"title":"2.5.1. Create an IdentityCredential"}],"url":"#fetch-the-config-file-and-show-an-idp-login-dialog"},
 "fetch-the-config-file-check-accounts-and-login-url-step": {"dfnID":"fetch-the-config-file-check-accounts-and-login-url-step","dfnText":"Check accounts and login url step","external":false,"refSections":[{"refs":[{"id":"ref-for-fetch-the-config-file-check-accounts-and-login-url-step"}],"title":"2.5.2. Fetch the config file"}],"url":"#fetch-the-config-file-check-accounts-and-login-url-step"},
@@ -7817,6 +7929,7 @@ let refsData = {
 "#dom-identityproviderbranding-color": {"displayText":"color","export":true,"for_":["IdentityProviderBranding"],"level":"1","normative":true,"shortname":"fedcm","spec":"fedcm-1","status":"local","text":"color","type":"dict-member","url":"#dom-identityproviderbranding-color"},
 "#dom-identityproviderbranding-icons": {"displayText":"icons","export":true,"for_":["IdentityProviderBranding"],"level":"1","normative":true,"shortname":"fedcm","spec":"fedcm-1","status":"local","text":"icons","type":"dict-member","url":"#dom-identityproviderbranding-icons"},
 "#dom-identityproviderbranding-name": {"displayText":"name","export":true,"for_":["IdentityProviderBranding"],"level":"1","normative":true,"shortname":"fedcm","spec":"fedcm-1","status":"local","text":"name","type":"dict-member","url":"#dom-identityproviderbranding-name"},
+"#dom-identityproviderclientmetadata-client_is_third_party_to_top_frame_origin": {"displayText":"client_is_third_party_to_top_frame_origin","export":true,"for_":["IdentityProviderClientMetadata"],"level":"1","normative":true,"shortname":"fedcm","spec":"fedcm-1","status":"local","text":"client_is_third_party_to_top_frame_origin","type":"dict-member","url":"#dom-identityproviderclientmetadata-client_is_third_party_to_top_frame_origin"},
 "#dom-identityproviderclientmetadata-privacy_policy_url": {"displayText":"privacy_policy_url","export":true,"for_":["IdentityProviderClientMetadata"],"level":"1","normative":true,"shortname":"fedcm","spec":"fedcm-1","status":"local","text":"privacy_policy_url","type":"dict-member","url":"#dom-identityproviderclientmetadata-privacy_policy_url"},
 "#dom-identityproviderclientmetadata-terms_of_service_url": {"displayText":"terms_of_service_url","export":true,"for_":["IdentityProviderClientMetadata"],"level":"1","normative":true,"shortname":"fedcm","spec":"fedcm-1","status":"local","text":"terms_of_service_url","type":"dict-member","url":"#dom-identityproviderclientmetadata-terms_of_service_url"},
 "#dom-identityproviderconfig-clientid": {"displayText":"clientId","export":true,"for_":["IdentityProviderConfig"],"level":"1","normative":true,"shortname":"fedcm","spec":"fedcm-1","status":"local","text":"clientId","type":"dict-member","url":"#dom-identityproviderconfig-clientid"},
@@ -7908,10 +8021,12 @@ let refsData = {
 "https://fetch.spec.whatwg.org/#ok-status": {"displayText":"ok status","export":true,"for_":[],"level":"1","normative":true,"shortname":"fetch","spec":"fetch","status":"current","text":"ok status","type":"dfn","url":"https://fetch.spec.whatwg.org/#ok-status"},
 "https://fetch.spec.whatwg.org/#process-response-end-of-body": {"displayText":"processResponseConsumeBody","export":true,"for_":["fetch"],"level":"1","normative":true,"shortname":"fetch","spec":"fetch","status":"current","text":"processresponseconsumebody","type":"dfn","url":"https://fetch.spec.whatwg.org/#process-response-end-of-body"},
 "https://fetch.spec.whatwg.org/#request-service-workers-mode": {"displayText":"service-workers mode","export":true,"for_":["request"],"level":"1","normative":true,"shortname":"fetch","spec":"fetch","status":"current","text":"service-workers mode","type":"dfn","url":"https://fetch.spec.whatwg.org/#request-service-workers-mode"},
+"https://html.spec.whatwg.org/multipage/browsers.html#ascii-serialisation-of-an-origin": {"displayText":"serialization of an origin","export":true,"for_":[],"level":"1","normative":true,"shortname":"html","spec":"html","status":"current","text":"serialization of an origin","type":"dfn","url":"https://html.spec.whatwg.org/multipage/browsers.html#ascii-serialisation-of-an-origin"},
 "https://html.spec.whatwg.org/multipage/browsers.html#concept-origin": {"displayText":"origin","export":true,"for_":[],"level":"1","normative":true,"shortname":"html","spec":"html","status":"current","text":"origin","type":"dfn","url":"https://html.spec.whatwg.org/multipage/browsers.html#concept-origin"},
 "https://html.spec.whatwg.org/multipage/browsers.html#concept-origin-opaque": {"displayText":"opaque origin","export":true,"for_":[],"level":"1","normative":true,"shortname":"html","spec":"html","status":"current","text":"opaque origin","type":"dfn","url":"https://html.spec.whatwg.org/multipage/browsers.html#concept-origin-opaque"},
 "https://html.spec.whatwg.org/multipage/browsers.html#concept-origin-scheme": {"displayText":"scheme","export":true,"for_":["origin"],"level":"1","normative":true,"shortname":"html","spec":"html","status":"current","text":"scheme","type":"dfn","url":"https://html.spec.whatwg.org/multipage/browsers.html#concept-origin-scheme"},
 "https://html.spec.whatwg.org/multipage/browsers.html#same-origin": {"displayText":"same origin","export":true,"for_":[],"level":"1","normative":true,"shortname":"html","spec":"html","status":"current","text":"same origin","type":"dfn","url":"https://html.spec.whatwg.org/multipage/browsers.html#same-origin"},
+"https://html.spec.whatwg.org/multipage/browsers.html#same-site": {"displayText":"same site","export":true,"for_":[],"level":"1","normative":true,"shortname":"html","spec":"html","status":"current","text":"same site","type":"dfn","url":"https://html.spec.whatwg.org/multipage/browsers.html#same-site"},
 "https://html.spec.whatwg.org/multipage/document-sequences.html#create-a-fresh-top-level-traversable": {"displayText":"create a fresh top-level traversable","export":true,"for_":[],"level":"1","normative":true,"shortname":"html","spec":"html","status":"current","text":"create a fresh top-level traversable","type":"dfn","url":"https://html.spec.whatwg.org/multipage/document-sequences.html#create-a-fresh-top-level-traversable"},
 "https://html.spec.whatwg.org/multipage/document-sequences.html#nav-document": {"displayText":"active document","export":true,"for_":["navigable"],"level":"1","normative":true,"shortname":"html","spec":"html","status":"current","text":"active document","type":"dfn","url":"https://html.spec.whatwg.org/multipage/document-sequences.html#nav-document"},
 "https://html.spec.whatwg.org/multipage/document-sequences.html#nav-top": {"displayText":"top-level traversable","export":true,"for_":["navigable"],"level":"1","normative":true,"shortname":"html","spec":"html","status":"current","text":"top-level traversable","type":"dfn","url":"https://html.spec.whatwg.org/multipage/document-sequences.html#nav-top"},
@@ -7953,6 +8068,7 @@ let refsData = {
 "https://infra.spec.whatwg.org/#serialize-a-javascript-value-to-a-json-string": {"displayText":"serialize a JavaScript value to a JSON string","export":true,"for_":[],"level":"1","normative":true,"shortname":"infra","spec":"infra","status":"current","text":"serialize a javascript value to a json string","type":"dfn","url":"https://infra.spec.whatwg.org/#serialize-a-javascript-value-to-a-json-string"},
 "https://infra.spec.whatwg.org/#set-append": {"displayText":"append","export":true,"for_":["set"],"level":"1","normative":true,"shortname":"infra","spec":"infra","status":"current","text":"append","type":"dfn","url":"https://infra.spec.whatwg.org/#set-append"},
 "https://infra.spec.whatwg.org/#string": {"displayText":"string","export":true,"for_":[],"level":"1","normative":true,"shortname":"infra","spec":"infra","status":"current","text":"string","type":"dfn","url":"https://infra.spec.whatwg.org/#string"},
+"https://infra.spec.whatwg.org/#string-concatenate": {"displayText":"concatenation","export":true,"for_":["string"],"level":"1","normative":true,"shortname":"infra","spec":"infra","status":"current","text":"concatenation","type":"dfn","url":"https://infra.spec.whatwg.org/#string-concatenate"},
 "https://infra.spec.whatwg.org/#user-agent": {"displayText":"user agent","export":true,"for_":[],"level":"1","normative":true,"shortname":"infra","spec":"infra","status":"current","text":"user agent","type":"dfn","url":"https://infra.spec.whatwg.org/#user-agent"},
 "https://mimesniff.spec.whatwg.org/#json-mime-type": {"displayText":"JSON MIME type","export":true,"for_":[],"level":"1","normative":true,"shortname":"mimesniff","spec":"mimesniff","status":"current","text":"json mime type","type":"dfn","url":"https://mimesniff.spec.whatwg.org/#json-mime-type"},
 "https://tc39.github.io/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots": {"displayText":"internal method","export":true,"for_":[],"level":"","normative":true,"shortname":"ecma262","spec":"ecma262","status":"anchor-block","text":"internal method","type":"dfn","url":"https://tc39.github.io/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots"},
@@ -7966,6 +8082,7 @@ let refsData = {
 "https://url.spec.whatwg.org/#concept-url-scheme": {"displayText":"scheme","export":true,"for_":["url"],"level":"1","normative":true,"shortname":"url","spec":"url","status":"current","text":"scheme","type":"dfn","url":"https://url.spec.whatwg.org/#concept-url-scheme"},
 "https://url.spec.whatwg.org/#concept-urlencoded-serializer": {"displayText":"urlencoded serializer","export":true,"for_":[],"level":"1","normative":true,"shortname":"url","spec":"url","status":"current","text":"urlencoded serializer","type":"dfn","url":"https://url.spec.whatwg.org/#concept-urlencoded-serializer"},
 "https://url.spec.whatwg.org/#host-registrable-domain": {"displayText":"registrable domain","export":true,"for_":["host"],"level":"1","normative":true,"shortname":"url","spec":"url","status":"current","text":"registrable domain","type":"dfn","url":"https://url.spec.whatwg.org/#host-registrable-domain"},
+"https://url.spec.whatwg.org/#url-query-string": {"displayText":"URL-query string","export":true,"for_":[],"level":"1","normative":true,"shortname":"url","spec":"url","status":"current","text":"url-query string","type":"dfn","url":"https://url.spec.whatwg.org/#url-query-string"},
 "https://w3c-fedid.github.io/login-status#get-the-login-status": {"displayText":"get the login status","export":true,"for_":[],"level":"","normative":true,"shortname":"login-status","spec":"login-status","status":"anchor-block","text":"get the login status","type":"dfn","url":"https://w3c-fedid.github.io/login-status#get-the-login-status"},
 "https://w3c-fedid.github.io/login-status#logged-in": {"displayText":"logged-in","export":true,"for_":[],"level":"","normative":true,"shortname":"login-status","spec":"login-status","status":"anchor-block","text":"logged-in","type":"dfn","url":"https://w3c-fedid.github.io/login-status#logged-in"},
 "https://w3c-fedid.github.io/login-status#logged-out": {"displayText":"logged-out","export":true,"for_":[],"level":"","normative":true,"shortname":"login-status","spec":"login-status","status":"anchor-block","text":"logged-out","type":"dfn","url":"https://w3c-fedid.github.io/login-status#logged-out"},
