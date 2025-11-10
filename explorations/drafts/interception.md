@@ -2,13 +2,17 @@
 
 ## Problem Statement
 
-The mechanism that enables federation today is largely based on using  top level redirects to allow websites to communicate with one another. As an oversimplification, there is a convention (typically, OAuth and SAML) that allows a requesting website (called a Relying Party) to request the user’s identity from another website (called an identity provider) by redirecting the user to the identity provider’s website (using well-defined URL parameters) and then back to the relying party (using, again, well defined URL parameters) to communicate requests/responses.
+So far, we've managed to deploy FedCM on a series of deployment setups (IdPs that deploy with JS SDKs, small federations and cases where RPs can be deployed at scale), and in doing so, developed a lot of the infrastructure to meet those requirements.
 
-For example, take [chatgpt.com](http://chatgpt.com/) for example: a user clicks on “Continue with Google”, which redirects the user to [google.com](http://accounts.google.com/) (with a well-defined set of URL parameters, including, notably, a “redirect_uri” that tells where to redirect the user at the end of the flow) which asks for the user’s permission to share their identity to [chatgpt.com](http://chatgpt.com/) and then redirects (using the “redirect_uri” specified before) the user back to [chatgpt.com](http://chatgpt.com/) with the user’s identity in it (e.g. with a well-defined URL parameter called “code”).
+However, one deployment pattern (which also happens to be the most widely used) remained out of reach to deploy at scale: federation implemented with top level redirects.
+
+For example, take [chatgpt.com](http://chatgpt.com/): a user clicks on `Continue with Google`, which redirects the user to [google.com](http://accounts.google.com/) (with a well-defined set of URL parameters, including, notably, a `redirect_uri` that tells where to redirect the user at the end of the flow) which asks for the user’s permission to share their identity to [chatgpt.com](http://chatgpt.com/) and then redirects (using the `redirect_uri` specified before) the user back to [chatgpt.com](http://chatgpt.com/) with the user’s identity in it (e.g. with a well-defined URL parameter called `code`).
+
+We could go RP by RP and ask them to reploy and use FedCM instead (for IdPs that support it), but that would be an overwhelming task considering how many Relying Parties exist to any single IdP.
 
 ![Image](https://github.com/user-attachments/assets/815503d7-5c21-4a69-b61f-7802be90428c)
 
-When RPs embed JS SDKs that IdPs can re-deploy, migrating the traffic becomes much easier, because just changing the JS SDK can deploy FedCM to many RPs. 
+As a basis for comparison, consider the case when RPs embed JS SDKs that IdPs can re-deploy: migrating the traffic becomes much easier, because just changing the JS SDK that the IdP controls, the IdP can deploy FedCM to many RPs. 
 
 For example, here is part of the federation traffic migrated to FedCM which isn’t using redirect flows, but rather rely on updating JS SDKs that an Identity Provider controls live on a Relying Party, in this case https://pinterest.com.
 
