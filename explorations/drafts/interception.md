@@ -2,9 +2,11 @@
 
 ## Problem Statement
 
-So far, we've managed to deploy FedCM on a series of deployment setups (IdPs that deploy with JS SDKs, small federations and cases where RPs can be deployed at scale), and in doing so, developed a lot of the infrastructure to meet those requirements.
+There are a series of benefits that we expect to deliver to users when RPs and IdPs use FedCM rather than low level primitives (such as third party cookies and link decoration), such as mitigating tracking and automating flows (e.g. in agentic browsers).
 
-However, one deployment pattern (which also happens to be the most widely used) remained out of reach to deploy at scale: federation implemented with top level redirects.
+However, so far we've only managed to deploy FedCM on a constrained deployment setup (IdPs that deploy with JS SDKs, small federations and cases where RPs can be deployed at scale). 
+
+One deployment pattern (which also happens to be the most widely used, and one of the reasons why it is hard to classify bounce tracking) remained out of reach to deploy at scale: federation implemented with top level redirects.
 
 For example, take [chatgpt.com](http://chatgpt.com/): a user clicks on `Continue with Google`, which redirects the user to [google.com](http://accounts.google.com/) (with a well-defined set of URL parameters, including, notably, a `redirect_uri` that tells where to redirect the user at the end of the flow) which asks for the user’s permission to share their identity to [chatgpt.com](http://chatgpt.com/) and then redirects (using the `redirect_uri` specified before) the user back to [chatgpt.com](http://chatgpt.com/) with the user’s identity in it (e.g. with a well-defined URL parameter called `code`).
 
