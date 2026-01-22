@@ -44,7 +44,12 @@ Service Worker Routing:
 - Result: idp.example's Service Worker intercepts the request
 ```
 
-**This is standard Service Worker behavior**: Just like `<img src="https://cdn.example/logo.png">` is intercepted by `cdn.example`'s Service Worker (not the page's SW), FedCM requests to `idp.example` are intercepted by `idp.example`'s Service Worker.
+**This is standard Service Worker behavior** as defined by the [W3C Service Worker specification](https://w3c.github.io/ServiceWorker/): Just like `<img src="https://cdn.example/logo.png">` is intercepted by `cdn.example`'s Service Worker (not the page's SW), FedCM requests to `idp.example` are intercepted by `idp.example`'s Service Worker.
+
+Per the [Handle Fetch algorithm](https://w3c.github.io/ServiceWorker/#handle-fetch), interception is determined by:
+1. Obtaining a [storage key](https://w3c.github.io/ServiceWorker/#dfn-storage-key) from the request's destination origin
+2. [Matching a service worker registration](https://w3c.github.io/ServiceWorker/#scope-match-algorithm) using that storage key and the request URL
+3. Dispatching a [FetchEvent](https://w3c.github.io/ServiceWorker/#fetchevent-interface) to the matched service worker
 
 #### 2. Selective Endpoint Policy
 
@@ -65,7 +70,7 @@ Not all endpoints can be intercepted. Only authentication-specific endpoints are
 **Important**: The RP's identity is **not** communicated through Service Worker client APIs. Instead, it flows through the FedCM protocol itself:
 
 ```javascript
-// IDP's Service Worker receives:
+// IDP's Service Worker receives FetchEvent per https://w3c.github.io/ServiceWorker/#fetchevent-interface
 self.addEventListener('fetch', async (event) => {
   if (event.request.url.includes('/token')) {
     // RP identity is in the POST body, not event.clientId
@@ -101,7 +106,7 @@ self.addEventListener('fetch', async (event) => {
 
 **With Service Worker**:
 ```javascript
-// IDP's Service Worker
+// IDP's Service Worker handles fetch events per https://w3c.github.io/ServiceWorker/#fetchevent-interface
 self.addEventListener('fetch', (event) => {
   if (event.request.url.includes('/accounts')) {
     event.respondWith(
@@ -145,7 +150,7 @@ self.addEventListener('fetch', (event) => {
 
 **With Service Worker**:
 ```javascript
-// IDP's Service Worker
+// IDP's Service Worker uses Cache API per https://w3c.github.io/ServiceWorker/#cache-interface
 self.addEventListener('fetch', (event) => {
   if (event.request.url.includes('/accounts')) {
     event.respondWith(
@@ -191,7 +196,8 @@ self.addEventListener('fetch', (event) => {
 
 **With Service Worker**:
 ```javascript
-// IDP's Service Worker
+// IDP's Service Worker provides network resilience using fetch event handling
+// Per https://w3c.github.io/ServiceWorker/#on-fetch-request-algorithm
 const BACKUP_ACCOUNTS_ENDPOINT = 'https://backup.idp.example/accounts';
 
 self.addEventListener('fetch', (event) => {
@@ -241,6 +247,7 @@ self.addEventListener('fetch', (event) => {
 **With Service Worker**:
 ```javascript
 // IDP's Service Worker (shared between PWA and FedCM)
+// Registration scoping per https://w3c.github.io/ServiceWorker/#service-worker-registration-concept
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   
@@ -280,7 +287,8 @@ self.addEventListener('fetch', (event) => {
 
 **With Service Worker**:
 ```javascript
-// IDP's Service Worker
+// IDP's Service Worker implements custom logic in fetch event handler
+// Per https://w3c.github.io/ServiceWorker/#fetchevent-interface
 self.addEventListener('fetch', async (event) => {
   if (event.request.url.includes('/token')) {
     event.respondWith(
@@ -333,7 +341,8 @@ self.addEventListener('fetch', async (event) => {
 
 **With Service Worker**:
 ```javascript
-// IDP's Service Worker
+// IDP's Service Worker handles message events and background sync
+// Per https://w3c.github.io/ServiceWorker/#extendablemessageevent-interface
 self.addEventListener('message', (event) => {
   if (event.data.type === 'PREFETCH_ACCOUNTS') {
     // Pre-fetch and cache account data
@@ -465,6 +474,7 @@ resource_request->site_for_cookies = net::SiteForCookies();      // Empty = cros
 
 ```javascript
 // On https://idp.example - register Service Worker
+// Per https://w3c.github.io/ServiceWorker/#navigator-service-worker-register
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/fedcm-sw.js', {
     scope: '/'
@@ -476,6 +486,7 @@ if ('serviceWorker' in navigator) {
 
 ```javascript
 // /fedcm-sw.js
+// Implements fetch event handling per https://w3c.github.io/ServiceWorker/#fetchevent-interface
 const CACHE_NAME = 'fedcm-cache-v1';
 const ACCOUNTS_CACHE_TIME = 5 * 60 * 1000; // 5 minutes
 
@@ -491,6 +502,7 @@ self.addEventListener('install', (event) => {
   );
 });
 
+// Handle fetch events per https://w3c.github.io/ServiceWorker/#on-fetch-request-algorithm
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   
