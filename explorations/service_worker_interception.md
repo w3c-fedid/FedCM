@@ -658,23 +658,7 @@ While FedCM requests are not visible navigations, they are classified as [non-su
 
 **Decision Rationale**: The RP's identity flows through the FedCM protocol itself (via `client_id` in request bodies), not through Service Worker client APIs. This maintains consistency with existing OAuth/OIDC patterns and avoids introducing new cross-origin communication channels.
 
-### Rejected Alternatives Summary
-
-1. **Allow Service Workers for All Endpoints**: Rejected - Configuration endpoints must remain trustworthy and unmodified
-2. **Use WebTransport or WebSockets**: Rejected - Doesn't provide offline support or caching capabilities
-3. **Browser-Managed Cache**: Rejected - Less flexible than Service Worker, harder to customize, no offline logic support
-4. **Require Service Worker to Signal Intent**: Rejected - Adds complexity. Standard Service Worker registration is sufficient
-
 ## Implementation Considerations
-
-### Browser Implementation
-
-1. **Endpoint Classification**: Browser classifies each FedCM request by endpoint type
-2. **Conditional Routing**: 
-   - Config endpoints → Direct to network (SimpleURLLoader)
-   - Auth endpoints → Check for Service Worker → SW or fallback to network
-3. **Fallback**: If Service Worker lookup fails or SW doesn't handle the request, automatically fall back to network
-4. **Async Operations**: All Service Worker lookups and dispatches are asynchronous to avoid blocking
 
 ### Developer Experience
 
