@@ -44,12 +44,16 @@ Service Worker Routing:
 - Result: idp.example's Service Worker intercepts the request
 ```
 
-**This is standard Service Worker behavior** as defined by the [W3C Service Worker specification](https://w3c.github.io/ServiceWorker/): Just like `<img src="https://cdn.example/logo.png">` is intercepted by `cdn.example`'s Service Worker (not the page's SW), FedCM requests to `idp.example` are intercepted by `idp.example`'s Service Worker.
+**This is standard Service Worker behavior** as defined by the [W3C Service Worker specification](https://w3c.github.io/ServiceWorker/): FedCM requests are browser-initiated requests that use destination-based Service Worker matching. While they are not visible navigations, they are classified as non-subresource requests because their destination type is not in the [subresource destination list](https://fetch.spec.whatwg.org/#subresource-request) (audio, image, script, style, etc.).
 
-Per the [Handle Fetch algorithm](https://w3c.github.io/ServiceWorker/#handle-fetch), interception is determined by:
-1. Obtaining a [storage key](https://w3c.github.io/ServiceWorker/#dfn-storage-key) from the request's destination origin
+**Important distinction**: Unlike subresource requests (images, scripts, stylesheets) which are intercepted by the **page's** Service Worker (per [Handle Fetch § 10](https://w3c.github.io/ServiceWorker/#on-fetch-request-algorithm)), FedCM authentication requests are intercepted by the **destination IDP's** Service Worker because they follow the destination-based matching logic ([Handle Fetch § 9](https://w3c.github.io/ServiceWorker/#on-fetch-request-algorithm)).
+
+**Key point**: "Non-subresource" in the Service Worker spec means the request follows destination-based SW matching, NOT that it's a visible navigation. FedCM requests are browser-initiated cross-origin fetches that need IDP-side interception, not page-side interception.
+
+Per the [Handle Fetch algorithm § 9](https://w3c.github.io/ServiceWorker/#on-fetch-request-algorithm), destination-based interception is determined by:
+1. Obtaining a [storage key](https://w3c.github.io/ServiceWorker/#dfn-storage-key) from the request's reserved client (destination context)
 2. [Matching a service worker registration](https://w3c.github.io/ServiceWorker/#scope-match-algorithm) using that storage key and the request URL
-3. Dispatching a [FetchEvent](https://w3c.github.io/ServiceWorker/#fetchevent-interface) to the matched service worker
+3. Dispatching a [FetchEvent](https://w3c.github.io/ServiceWorker/#fetchevent-interface) to the matched service worker at the destination origin
 
 #### 2. Selective Endpoint Policy
 
@@ -646,7 +650,9 @@ console.log('Received token:', credential.token);
 
 ### Why Destination-Based Interception?
 
-**Decision Rationale**: This follows standard Service Worker behavior. Just like `<img src="https://cdn.example/logo.png">` is intercepted by `cdn.example`'s Service Worker, FedCM requests to `idp.example` are intercepted by `idp.example`'s Service Worker. No new concepts are introduced to the platform.
+**Decision Rationale**: FedCM requests are browser-initiated cross-origin fetches that require interception by the destination IDP's Service Worker, not the initiating page's Service Worker. This follows the [W3C Service Worker specification § 9](https://w3c.github.io/ServiceWorker/#on-fetch-request-algorithm) destination-based matching logic, where the storage key is obtained from the request URL's origin (the IDP), not from the initiating page (the RP). 
+
+While FedCM requests are not visible navigations, they are classified as [non-subresource requests](https://fetch.spec.whatwg.org/#subresource-request) because their destination is not a traditional subresource type (not image, script, style, etc.), which causes them to follow the destination-based SW matching code path. This is standard Service Worker behavior and requires no new platform concepts.
 
 ### Why Not Communicate RP Identity via Service Worker APIs?
 
