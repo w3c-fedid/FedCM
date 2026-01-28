@@ -107,36 +107,7 @@ Not all endpoints allow Service Worker interception. This is enforced via `servi
 
 **Why are configuration endpoints protected?** See [Privacy Considerations](#privacy-considerations) below.
 
-#### 3. RP Identity Flow
-
-The RP's identity is communicated through the FedCM protocol itself, not through Service Worker APIs:
-
-```javascript
-// IDP's Service Worker receives FetchEvent
-// Per https://w3c.github.io/ServiceWorker/#fetchevent-interface
-self.addEventListener('fetch', async (event) => {
-  if (event.request.url.includes('/token')) {
-    // Note: event.clientId is empty for FedCM requests (client: null)
-    // RP identity comes from the POST body
-    const formData = await event.request.clone().formData();
-    const clientId = formData.get('client_id');    // RP's client ID
-    const accountId = formData.get('account_id');  // User's account
-
-    // Service Worker can now:
-    // - Validate the RP
-    // - Return cached tokens
-    // - Apply rate limiting
-    // - Handle errors gracefully
-
-    event.respondWith(
-      fetch(event.request)
-        .catch(() => handleOffline(clientId, accountId))
-    );
-  }
-});
-```
-
-**Note**: The `client_id` in the POST body is the OAuth/OIDC client identifier registered with the IDP, not related to `FetchEvent.clientId`.
+> **Developer Note**: FedCM requests are browser-initiated with `client: null`, so `FetchEvent.clientId` will be empty. To identify the RP in your Service Worker, read the `client_id` parameter from the POST body of `/token` or `/disconnect` requests—this is standard OAuth/OIDC behavior, unchanged by this proposal.
 
 ## Benefits
 
@@ -366,13 +337,24 @@ self.addEventListener('fetch', (event) => {
 
 ### IDP Service Worker Sees All RP Requests
 
-The IDP's Service Worker runs in a single instance and sees token requests from all RPs:
+The IDP's Service Worker runs in a single instance and sees all interceptable FedCM requests from all RPs:
 
 ```javascript
-// Single IDP Service Worker instance sees:
-// - POST /token (from rp1.com via client_id in body)
-// - POST /token (from rp2.com via client_id in body)
-// - POST /token (from rp3.com via client_id in body)
+// Single IDP Service Worker instance sees all SW-enabled endpoint requests:
+
+// /accounts requests (GET, no RP identity visible - opaque origin):
+// - GET /accounts (user browsing rp1.com - origin opaque)
+// - GET /accounts (user browsing rp2.com - origin opaque)
+// - GET /accounts (user browsing rp3.com - origin opaque)
+
+// /token requests (POST, RP identity in body):
+// - POST /token { client_id: "rp1.com", account_id: "user123" }
+// - POST /token { client_id: "rp2.com", account_id: "user123" }
+// - POST /token { client_id: "rp3.com", account_id: "user456" }
+
+// /disconnect requests (POST, RP identity in body):
+// - POST /disconnect { client_id: "rp1.com", account_id: "user123" }
+// - POST /disconnect { client_id: "rp2.com", account_id: "user456" }
 ```
 
 **Privacy analysis**:
@@ -620,7 +602,7 @@ console.log('Received token:', credential.token);
 
 **Key point**: RPs don't need to know or care whether the IDP uses Service Workers. The FedCM API contract remains unchanged.
 
-## Design Decisions and Alternatives Considered
+## Design Decisions
 
 ### Why This Approach to SW Matching?
 
@@ -630,10 +612,6 @@ FedCM requests use `client: null` and `service-workers mode: "all"`. This means:
 - Only the IDP's registered SW can intercept
 
 This ensures the IDP controls interception of requests to its own endpoints, which is the appropriate trust model.
-
-### Why Not Communicate RP Identity via Service Worker APIs?
-
-**Decision Rationale**: The RP's identity flows through the FedCM protocol itself (via `client_id` in request bodies), not through Service Worker client APIs. This maintains consistency with existing OAuth/OIDC patterns and avoids introducing new cross-origin communication channels.
 
 ## Implementation Considerations
 
