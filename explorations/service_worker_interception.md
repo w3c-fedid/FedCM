@@ -26,13 +26,19 @@ This explainer documents a **proposed change** to the FedCM specification. The c
 | `/config.json` | `service-workers mode: "none"` | No change |
 | `/client_metadata` | `service-workers mode: "none"` | No change |
 
+> **Important Distinction - IDP vs RP Interception**: Traditional `service-workers mode: "all"` allows the **page's** Service Worker (the RP's SW) to intercept subresource fetches. However, FedCM requests are browser-initiated with `client: null` (no document context), so there is no "page SW" to intercept them. Instead, the browser matches against Service Worker registrations using the **request URL's origin** (the IDP). This means the **IDP's** Service Worker intercepts requests to IDP endpoints—not the RP's.
+
 ## Problem Statement
 
-Identity Providers need to:
-- Provide programmable fallback logic during server outages
-- Implement custom cache strategies for account data
-- Apply client-side rate limiting and fraud detection
-- Pre-fetch and actively manage authentication resources
+Based on IDP feedback documented in [GitHub Issue #80](https://github.com/w3c-fedid/FedCM/issues/80), Identity Providers need programmable control over FedCM requests. Specific use cases raised by Microsoft's Identity team include:
+
+- **Multi-domain failover**: Route requests to backup servers when primary IDP infrastructure fails
+- **Token caching during outages**: Graceful degradation when IDP servers are temporarily unavailable
+- **Geographic routing**: Direct requests to regional/sovereign identity services based on user location
+- **Request signing (DPoP)**: Add proof-of-possession assertions to prevent token theft
+- **Legacy system integration**: Wrap non-FedCM identity services with FedCM-compatible interfaces
+
+The core motivation (from Issue #80): *"Bearer tokens have an inherent problem that they can be stolen - token theft being at the core of so many security incidents."* Service Worker interception enables IDPs to implement stronger security patterns beyond what passive HTTP caching provides.
 
 **Key Question**: Can credentialed requests already be cached?
 
@@ -40,14 +46,21 @@ Identity Providers need to:
 
 **Why Service Workers?** Service Workers add **programmable control** beyond passive HTTP caching:
 
-**Critical limitation of HTTP caching**: Standard browser HTTP cache is **passive** - it won't serve cached responses when the network fails. The cache only works when network succeeds and `Cache-Control` headers allow reuse.
+**Critical limitation of HTTP caching**: Standard browser HTTP cache handles fresh (non-expired) content correctly, but has a gap with stale content during network failures:
+
+| Scenario | HTTP Cache Behavior | Service Worker Can Help? |
+|----------|---------------------|--------------------------|
+| Fresh cache (not expired) | ✅ Serves from cache | Not needed |
+| Stale cache + network available | ✅ Revalidates with server | Not needed |
+| Stale cache + network fails | ❌ Returns network error | ✅ Can serve stale content |
+| No cache + network fails | ❌ Returns network error | ✅ Can return graceful error |
+
+The key gap is the third scenario: when cached content has expired and the browser attempts revalidation, but the network is unavailable, the browser returns a network error rather than serving the stale content. Service Workers enable "stale-if-error" behavior that HTTP caching alone doesn't provide.
 
 **Service Worker capabilities**:
+- **Request signing (DPoP)**: Add proof-of-possession assertions to prevent token theft
 - **Active fallback logic**: Return cached responses when `fetch()` fails (HTTP cache can't do this)
-- **Custom strategies**: Stale-while-revalidate, try backup servers, conditional logic based on error type
-- **Response modification**: Add metadata like `{offline: true, limited_scope: true}` to responses
-- **Active management**: Background sync, pre-fetching, intelligent cache invalidation
-- **Custom logic**: Rate limiting, fraud detection, conditional responses based on network state
+- **Custom strategies**: Retry logic, try backup servers, conditional logic based on error type
 
 Currently, FedCM requests bypass Service Workers entirely (`service-workers mode: "none"`), preventing IDPs from leveraging these programmable capabilities.
 
@@ -77,19 +90,24 @@ Request Properties:
 Service Worker Matching:
 - With service-workers mode: "all" and client: null, the browser
   matches against Service Worker registrations for the request URL's origin
+  (per Handle Fetch [§ 9.5](https://w3c.github.io/ServiceWorker/#handle-fetch)
+  and Match Service Worker Registration [§ 8.4](https://w3c.github.io/ServiceWorker/#scope-match-algorithm))
 - Result: idp.example's Service Worker can intercept the request
 ```
 
-**How this works**: When a FedCM request has `service-workers mode: "all"`, the browser checks if a Service Worker is registered for the request URL's origin (`idp.example`). If found, the SW receives a `FetchEvent`. This is similar to how the browser would handle any fetch to that origin when a SW is registered.
+**How this works**: When a FedCM request has `service-workers mode: "all"` and `client: null`, the browser matches against Service Worker registrations using the request URL's origin (`idp.example`). If a SW is registered for that origin, it receives a `FetchEvent`. This is the standard SW matching behavior for requests without an associated document client.
 
 The same mechanism applies to other SW-enabled endpoints (`/token`, `/disconnect`), each with their specific request properties as defined in the FedCM specification.
 
 **Important**: FedCM requests are browser-initiated with `client: null`. This means:
 - The request has no associated document/window client
 - `FetchEvent.clientId` will be empty
-- The RP's identity comes from the POST body (`client_id` parameter), not from SW APIs
+- For `/token` and `/disconnect` (POST requests), the RP's identity comes from the POST body (`client_id` parameter), not from SW APIs
+- For `/accounts` (GET request), the RP's identity is not available - the IDP intentionally doesn't know which RP is requesting until user consent
 
-Per the [W3C Service Worker specification § 2.1](https://w3c.github.io/ServiceWorker/#service-worker-concept), Service Workers execute within a specific origin. Only `idp.example`'s Service Worker can intercept requests to `idp.example`.
+**Why does the IDP's SW intercept (not the RP's)?** In general, a Service Worker can intercept cross-origin requests made by pages it controls. However, FedCM requests have `client: null` - there's no associated page, so there's no "page's active SW" to intercept. The browser falls back to matching based on the request URL's origin, which is why `idp.example`'s SW intercepts requests to `idp.example`.
+
+> **Note**: If the RP has its own Service Worker registered, it will **not** intercept FedCM requests. The RP's SW only intercepts requests made by pages it controls. Since FedCM requests are browser-initiated (`client: null`), they bypass the RP's SW entirely - there is no conflict between RP and IDP Service Workers.
 
 #### 2. Selective Endpoint Policy
 
@@ -107,7 +125,7 @@ Not all endpoints allow Service Worker interception. This is enforced via `servi
 
 **Why are configuration endpoints protected?** See [Privacy Considerations](#privacy-considerations) below.
 
-> **Developer Note**: FedCM requests are browser-initiated with `client: null`, so `FetchEvent.clientId` will be empty. To identify the RP in your Service Worker, read the `client_id` parameter from the POST body of `/token` or `/disconnect` requests—this is standard OAuth/OIDC behavior, unchanged by this proposal.
+> **Developer Note**: FedCM requests are browser-initiated with `client: null`, so `FetchEvent.clientId` will be empty. To identify the RP in your Service Worker, read the `client_id` parameter from the POST body of `/token` or `/disconnect` requests—this is standard OAuth/OIDC behavior, unchanged by this proposal. Note that the `/accounts` endpoint (GET request) intentionally does not include RP identity—this is a privacy protection so the IDP cannot track which RPs a user visits before the user grants consent.
 
 ## Benefits
 
@@ -116,21 +134,23 @@ Not all endpoints allow Service Worker interception. This is enforced via `servi
 **Scenario**: IDP experiences temporary server issues or undergoes maintenance.
 
 **Without Service Worker**:
-- All authentication requests fail immediately
+- Authentication requests fail if response is not cached or cache has expired
 - Users see error messages
 - RPs cannot function
-- No fallback mechanism
+- No fallback mechanism for expired cache
 
 **With Service Worker**:
 ```javascript
-// IDP's Service Worker provides network resilience
+// IDP's Service Worker provides network resilience for both endpoints
 self.addEventListener('fetch', (event) => {
-  if (event.request.url.includes('/accounts')) {
+  const url = new URL(event.request.url);
+
+  // Handle /accounts - cache for fallback
+  if (url.pathname === '/accounts') {
     event.respondWith(
       fetch(event.request)
         .then(response => {
           if (response.ok) {
-            // Cache successful response for fallback
             caches.open('fedcm-accounts').then(cache => {
               cache.put(event.request, response.clone());
             });
@@ -138,137 +158,42 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(async () => {
-          // Network failed, return cached data with warning header
+          // Network failed, return cached accounts if available
           const cached = await caches.match(event.request);
-          if (cached) {
-            // Clone and add warning header
-            const headers = new Headers(cached.headers);
-            headers.set('X-FedCM-Cached-Fallback', 'true');
-            return new Response(cached.body, {
-              status: cached.status,
-              statusText: cached.statusText,
-              headers: headers
-            });
-          }
-          throw new Error('No cached data available');
+          if (cached) return cached;
+          throw new Error('No cached accounts available');
         })
     );
+    return;
   }
-});
-```
 
-**Result**: Improved authentication availability during partial outages.
-
-### Performance Optimization via Caching
-
-**Scenario**: Popular IDP serves millions of authentication requests daily. Account information rarely changes but is fetched on every sign-in.
-
-**With Service Worker**:
-```javascript
-// IDP's Service Worker uses Cache API
-// Per https://w3c.github.io/ServiceWorker/#cache-interface
-self.addEventListener('fetch', (event) => {
-  if (event.request.url.includes('/accounts')) {
+  // Handle /token - retry logic and graceful error
+  // (Cannot cache tokens due to nonce requirement)
+  if (url.pathname === '/token') {
     event.respondWith(
-      caches.open('fedcm-accounts').then(async (cache) => {
-        const cached = await cache.match(event.request);
-
-        // Stale-while-revalidate pattern
-        if (cached) {
-          // Return cached immediately, update in background
-          fetch(event.request)
-            .then(response => {
-              if (response.ok) {
-                cache.put(event.request, response.clone());
-              }
-            })
-            .catch(() => { /* Ignore background fetch failures */ });
-
-          return cached;
-        }
-
-        // No cache, fetch and cache
-        const response = await fetch(event.request);
-        if (response.ok) {
-          cache.put(event.request, response.clone());
-        }
-        return response;
-      })
-    );
-  }
-});
-```
-
-**Benefits**:
-- Instant account display for returning users
-- Reduced IDP server load
-- Better user experience with faster UI
-
-### Custom Token Handling Logic
-
-**Scenario**: Enterprise IDP needs to apply rate limiting or implement fraud detection.
-
-**With Service Worker**:
-```javascript
-// IDP's Service Worker implements custom logic
-self.addEventListener('fetch', async (event) => {
-  if (event.request.url.includes('/token')) {
-    event.respondWith(
-      (async () => {
-        const formData = await event.request.clone().formData();
-        const clientId = formData.get('client_id');
-        const accountId = formData.get('account_id');
-
-        // Client-side rate limiting using IndexedDB
-        const rateLimitKey = `ratelimit:${clientId}:${accountId}`;
-        const attempts = await getRateLimitCount(rateLimitKey);
-
-        if (attempts > 10) {
+      fetch(event.request)
+        .catch(async () => {
+          // Retry once after short delay
+          await new Promise(r => setTimeout(r, 1000));
+          return fetch(event.request);
+        })
+        .catch(() => {
+          // Both attempts failed - return structured error
           return new Response(JSON.stringify({
             error: 'temporarily_unavailable',
-            error_description: 'Too many requests. Please try again later.'
+            error_description: 'IDP temporarily unavailable. Please try again.'
           }), {
-            status: 429,
+            status: 503,
             headers: { 'Content-Type': 'application/json' }
           });
-        }
-
-        await incrementRateLimitCount(rateLimitKey);
-
-        // Forward to server
-        return fetch(event.request);
-      })()
-    );
-  }
-});
-```
-
-**Result**: Reduced server load, faster fraud detection, improved security through client-side checks.
-
-### Pre-fetching and Background Sync
-
-**Scenario**: IDP wants to pre-fetch account information before user initiates sign-in.
-
-**With Service Worker**:
-```javascript
-// Background sync for account updates
-// Per https://w3c.github.io/ServiceWorker/#sync-event
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'update-accounts') {
-    event.waitUntil(
-      fetch('/accounts', { credentials: 'include' })
-        .then(response => {
-          if (response.ok) {
-            return caches.open('fedcm-accounts')
-              .then(cache => cache.put('/accounts', response));
-          }
         })
     );
+    return;
   }
 });
 ```
 
-**Result**: Faster account selection when user initiates FedCM flow.
+**Result**: Complete resilience story - cached accounts for display, retry logic and graceful errors for token requests. This handles partial outages and transient failures across the full authentication flow.
 
 ## Limitations
 
@@ -278,7 +203,7 @@ self.addEventListener('sync', (event) => {
 
 1. Configuration endpoints (`/.well-known/web-identity`, `/config.json`) still bypass Service Workers
 2. The FedCM flow requires successful config fetch **before** reaching `/accounts` or `/token`
-3. If the network is offline during config fetch, the entire flow fails
+3. If the network is offline during config fetch and the response is not cached or has expired, the entire flow fails
 
 **What SW enables**:
 - Fallback during **partial** outages (auth servers down, but network available)
@@ -296,15 +221,13 @@ For the IDP's Service Worker to intercept FedCM requests:
 2. The SW must be **installed and activated**
 3. Only then can subsequent FedCM requests be intercepted
 
-This means:
-- First-time FedCM flows (user never visited IDP) will not benefit from SW caching
-- Works best for IDPs with direct user relationships (Google, Microsoft, enterprise IDPs)
+In practice, this is not a significant limitation because users must have already visited the IDP to create an account and log in initially. The SW gets registered during that first visit, enabling interception for all subsequent FedCM flows.
 
 ## Privacy Considerations
 
 ### Why Configuration Endpoints Are Protected
 
-Configuration endpoints (`/.well-known`, `/config.json`, `/client_metadata`) bypass Service Workers for **privacy** reasons, not just security:
+Configuration endpoints (`/.well-known`, `/config.json`, `/client_metadata`) bypass Service Workers for **privacy** reasons:
 
 **The Privacy Concern**:
 
@@ -315,20 +238,25 @@ Configuration endpoints are fetched with privacy-preserving properties:
 
 This prevents the IDP from learning which RP is requesting the configuration.
 
-**Example attack**:
+**Example attack** (if config interception were allowed):
 ```javascript
-// Hypothetical malicious SW (if config interception were allowed)
-let configRequestTime = null;
-
+// Hypothetical malicious SW intercepting /client_metadata
 self.addEventListener('fetch', (event) => {
-  if (event.request.url.includes('/config.json')) {
-    configRequestTime = Date.now();  // Track "anonymous" request
-  }
+  if (event.request.url.includes('/client_metadata')) {
+    // client_metadata URL contains RP identity in the client_id parameter
+    const url = new URL(event.request.url);
+    const rpOrigin = url.searchParams.get('client_id');
 
-  if (event.request.url.includes('/token')) {
-    // Token request reveals user identity
-    // Can correlate with earlier config request timing
-    // to track which RPs user visits
+    // Make a NEW credentialed request to IDP's tracking endpoint
+    // This links: user identity (via cookies) + RP they're visiting
+    fetch('https://idp.example/track', {
+      method: 'POST',
+      credentials: 'include',  // Includes user's IDP session cookies
+      body: JSON.stringify({ rp: rpOrigin })
+    });
+
+    // Forward original request normally
+    return fetch(event.request);
   }
 });
 ```
@@ -375,7 +303,7 @@ For FedCM requests (which have `client: null`), the browser matches against Serv
 ❌ rp.com's SW cannot intercept: Requests TO https://idp.example/token
 ```
 
-Note: This is distinct from Service Worker [client control](https://w3c.github.io/ServiceWorker/#control-and-use-window-client), where a SW can only control browsing contexts from its own origin. FedCM requests have no associated browsing context (`client: null`), so client control rules do not apply—only fetch interception based on the request URL's origin.
+Note: For normal page-initiated requests, a SW intercepts fetches made by browsing contexts it controls—and a SW only controls browsing contexts from [its own origin](https://w3c.github.io/ServiceWorker/#control-and-use-window-client) (the client's origin is the browsing context's origin, not the resource's origin). However, FedCM requests have no associated browsing context (`client: null`), so no SW has client control over them. Instead, the browser matches based on the request URL's origin (per [Handle Fetch](https://w3c.github.io/ServiceWorker/#handle-fetch)).
 
 **Security guarantee**: Cross-origin Service Worker interception is architecturally impossible.
 
