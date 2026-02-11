@@ -330,17 +330,19 @@ FedCM requests use different `origin` values depending on the endpoint:
 | `/.well-known` | Opaque origin | IDP cannot identify requesting RP |
 | `/config.json` | Opaque origin | IDP cannot identify requesting RP |
 | `/accounts` | Opaque origin | IDP cannot identify requesting RP |
-| `/token` | RP's document origin | IDP knows which RP is requesting (required for protocol) |
-| `/disconnect` | RP's document origin | IDP knows which RP is requesting |
-| `/client_metadata` | RP's document origin | IDP knows which RP is requesting |
+| `/token` | RP's document origin | IDP must know RP to issue scoped token |
+| `/disconnect` | RP's document origin | IDP must know RP to remove account link |
+| `/client_metadata` | RP's document origin | IDP must know RP to fetch its metadata |
 
 ### Sec-Fetch-Dest Header
 
-FedCM requests include `Sec-Fetch-Dest: webidentity`, a [forbidden request-header](https://fetch.spec.whatwg.org/#forbidden-header-name) that cannot be set by JavaScript:
+FedCM requests include `Sec-Fetch-Dest: webidentity`, a [forbidden request-header](https://fetch.spec.whatwg.org/#forbidden-header-name) that cannot be set by JavaScript, including in Service Workers:
 
 > "The requests initiated by the FedCM API have a `webidentity` value for this header. The value cannot be set by random websites, so the [=IDP=] can be confident that the request was originated by the FedCM browser..."
 
 IDPs can use this header to validate that requests genuinely come from the FedCM API.
+
+> **Spec coordination note**: With this proposal, Service Workers can observe the `webidentity` destination via `event.request.destination`. The [Fetch spec note on destination types](https://fetch.spec.whatwg.org/#ref-for-destination-type) should be updated to reflect that `webidentity` is now exposed to JavaScript in Service Worker context. While SWs can **read** this value, they still cannot **set** it (it remains a forbidden header).
 
 ### SameSite Cookie Filtering
 
@@ -357,7 +359,7 @@ site_for_cookies: (empty)       // Cross-site request
 // - SameSite=None; Secure   -> Allowed
 ```
 
-**Security guarantee**: Service Workers cannot bypass SameSite cookie protections.
+**Note on SW behavior**: When a Service Worker **forwards** the original FedCM request via `fetch(event.request)`, the cross-site context is preserved and SameSite restrictions apply. However, if the SW creates a **new** request to its own origin (e.g., `fetch('https://idp.example/token')`), that request would be same-site and could include SameSite=Strict cookies. This is expected behavior—the SW is making a first-party request to its own origin, which is permitted.
 
 ## Examples
 
@@ -541,18 +543,7 @@ FedCM requests use `client: null` and `service-workers mode: "all"`. This means:
 
 This ensures the IDP controls interception of requests to its own endpoints, which is the appropriate trust model.
 
-## Implementation Considerations
-
-### Browser Implementation
-
-1. **Endpoint Classification**: Browser classifies each FedCM request by endpoint type
-2. **Service-Workers Mode Setting**:
-   - Config endpoints: `service-workers mode: "none"` (bypass SW)
-   - Auth endpoints: `service-workers mode: "all"` (allow SW interception)
-3. **Fallback**: If no SW is registered or SW doesn't call `respondWith()`, request proceeds normally
-4. **Async Operations**: All Service Worker lookups and dispatches are asynchronous
-
-### Developer Experience
+## Developer Experience
 
 **IDP developers** can opt-in by:
 1. Registering a Service Worker with appropriate scope on their origin
