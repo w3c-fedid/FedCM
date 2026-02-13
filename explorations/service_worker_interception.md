@@ -26,7 +26,7 @@ This explainer documents a **proposed change** to the FedCM specification. The c
 | `/config.json` | `service-workers mode: "none"` | No change |
 | `/client_metadata` | `service-workers mode: "none"` | No change |
 
-> **Important Distinction - IDP vs RP Interception**: Traditional `service-workers mode: "all"` allows the **page's** Service Worker (the RP's SW) to intercept subresource fetches. However, FedCM requests are browser-initiated with `client: null` (no document context), so there is no "page SW" to intercept them. Instead, the browser matches against Service Worker registrations using the **request URL's origin** (the IDP). This means the **IDP's** Service Worker intercepts requests to IDP endpoints—not the RP's.
+> **Important Distinction - IDP vs RP Interception**: Traditional `service-workers mode: "all"` allows the **page's** Service Worker (the RP's SW) to intercept subresource fetches. However, FedCM requests are browser-initiated with `client: null` (no document context), so there is no "page SW" to intercept them. Instead, the browser matches against Service Worker registrations using the **request URL's origin** (the IDP). This means the **IDP's** — not the RP's — Service Worker intercepts requests to IDP endpoints.
 
 ## Problem Statement
 
@@ -56,6 +56,8 @@ The core motivation (from Issue #80): *"Bearer tokens have an inherent problem t
 | No cache + network fails | ❌ Returns network error | ✅ Can return graceful error |
 
 The key gap is the third scenario: when cached content has expired and the browser attempts revalidation, but the network is unavailable, the browser returns a network error rather than serving the stale content. Service Workers enable "stale-if-error" behavior that HTTP caching alone doesn't provide.
+
+> **Caveat for FedCM**: The above applies to individual requests. In FedCM, `/.well-known` and `/config.json` are precursor requests that must succeed before `/accounts`, `/token`, or `/disconnect` can be made. Under the current proposal, these config endpoints bypass SW. This means SW only helps with **partial outages** (config servers reachable, auth servers down). To enable true network-failure resilience, SW interception would need to be allowed on `/.well-known` and `/config.json` as well—while keeping `/client_metadata` blocked to preserve privacy (since it contains RP identity).
 
 **Service Worker capabilities**:
 - **Request signing (DPoP)**: Add proof-of-possession assertions to prevent token theft
@@ -95,7 +97,7 @@ Service Worker Matching:
 - Result: idp.example's Service Worker can intercept the request
 ```
 
-**How this works**: When a FedCM request has `service-workers mode: "all"` and `client: null`, the browser matches against Service Worker registrations using the request URL's origin (`idp.example`). If a SW is registered for that origin, it receives a `FetchEvent`. This is the standard SW matching behavior for requests without an associated document client.
+**How this works**: When a FedCM request has `service-workers mode: "all"` and `client: null`, the browser matches against Service Worker registrations using the request URL's origin (`idp.example`). If a SW is registered for that origin, it receives a `FetchEvent`. (See [Spec coordination note](#spec-coordination-note) below regarding required changes to the Handle Fetch algorithm.)
 
 The same mechanism applies to other SW-enabled endpoints (`/token`, `/disconnect`), each with their specific request properties as defined in the FedCM specification.
 
@@ -103,9 +105,11 @@ The same mechanism applies to other SW-enabled endpoints (`/token`, `/disconnect
 - The request has no associated document/window client
 - `FetchEvent.clientId` will be empty
 - For `/token` and `/disconnect` (POST requests), the RP's identity comes from the POST body (`client_id` parameter), not from SW APIs
-- For `/accounts` (GET request), the RP's identity is not available - the IDP intentionally doesn't know which RP is requesting until user consent
+- For `/accounts` (GET request), the RP's identity is not available — the IDP intentionally doesn't know which RP is requesting until user consent
 
-**Why does the IDP's SW intercept (not the RP's)?** In general, a Service Worker can intercept cross-origin requests made by pages it controls. However, FedCM requests have `client: null` - there's no associated page, so there's no "page's active SW" to intercept. The browser falls back to matching based on the request URL's origin, which is why `idp.example`'s SW intercepts requests to `idp.example`.
+**Why does the IDP's SW intercept (not the RP's)?** In general, a Service Worker can intercept cross-origin requests made by pages it controls. However, FedCM requests have `client: null` — there's no associated page, so there's no "page's active SW" to intercept. This proposal specifies that the browser matches based on the request URL's origin, which is why `idp.example`'s SW intercepts requests to `idp.example`.
+
+> <a id="spec-coordination-note"></a>**Spec coordination note**: The current SW spec's [Handle Fetch algorithm](https://w3c.github.io/ServiceWorker/#handle-fetch) defines SW matching for navigations (match by request URL's origin) and subresource requests (use client's active SW). FedCM requests are neither—they are browser-initiated with `client: null` but are not navigations. This proposal requires the Handle Fetch algorithm to be extended with a new category that matches non-navigation requests with `client: null` and `service-workers mode: "all"` based on the request URL's origin.
 
 > **Note**: If the RP has its own Service Worker registered, it will **not** intercept FedCM requests. The RP's SW only intercepts requests made by pages it controls. Since FedCM requests are browser-initiated (`client: null`), they bypass the RP's SW entirely - there is no conflict between RP and IDP Service Workers.
 
@@ -125,7 +129,7 @@ Not all endpoints allow Service Worker interception. This is enforced via `servi
 
 **Why are configuration endpoints protected?** See [Privacy Considerations](#privacy-considerations) below.
 
-> **Developer Note**: FedCM requests are browser-initiated with `client: null`, so `FetchEvent.clientId` will be empty. To identify the RP in your Service Worker, read the `client_id` parameter from the POST body of `/token` or `/disconnect` requests—this is standard OAuth/OIDC behavior, unchanged by this proposal. Note that the `/accounts` endpoint (GET request) intentionally does not include RP identity—this is a privacy protection so the IDP cannot track which RPs a user visits before the user grants consent.
+> **Developer Note**: FedCM requests are browser-initiated with `client: null`, so `FetchEvent.clientId` will be empty. To identify the RP in your Service Worker, read the `client_id` parameter from the POST body of `/token` or `/disconnect` requests — this is standard OAuth/OIDC behavior, unchanged by this proposal. Note that the `/accounts` endpoint (GET request) intentionally does not include RP identity — this is a privacy protection so the IDP cannot track which RPs a user visits before the user grants consent.
 
 ## Benefits
 
@@ -295,7 +299,7 @@ The IDP's Service Worker runs in a single instance and sees all interceptable Fe
 
 ### Origin Isolation
 
-For FedCM requests (which have `client: null`), the browser matches against Service Worker registrations using the **request URL's origin**. Since FedCM requests to `idp.example` target that origin, only `idp.example`'s registered Service Worker can intercept them.
+For FedCM requests (which have `client: null`), this proposal specifies that the browser matches against Service Worker registrations using the **request URL's origin**. Since FedCM requests to `idp.example` target that origin, only `idp.example`'s registered Service Worker can intercept them. (This requires extending the Handle Fetch algorithm—see [Spec coordination note](#spec-coordination-note) above.)
 
 ```
 ✅ idp.example's SW can intercept: Requests TO https://idp.example/token
@@ -303,7 +307,7 @@ For FedCM requests (which have `client: null`), the browser matches against Serv
 ❌ rp.com's SW cannot intercept: Requests TO https://idp.example/token
 ```
 
-Note: For normal page-initiated requests, a SW intercepts fetches made by browsing contexts it controls—and a SW only controls browsing contexts from [its own origin](https://w3c.github.io/ServiceWorker/#control-and-use-window-client) (the client's origin is the browsing context's origin, not the resource's origin). However, FedCM requests have no associated browsing context (`client: null`), so no SW has client control over them. Instead, the browser matches based on the request URL's origin (per [Handle Fetch](https://w3c.github.io/ServiceWorker/#handle-fetch)).
+Note: For normal page-initiated requests, a SW intercepts fetches made by browsing contexts it controls—and a SW only controls browsing contexts from [its own origin](https://w3c.github.io/ServiceWorker/#control-and-use-window-client) (the client's origin is the browsing context's origin, not the resource's origin). However, FedCM requests have no associated browsing context (`client: null`), so no SW has client control over them. This proposal specifies that for such requests, the browser matches based on the request URL's origin.
 
 **Security guarantee**: Cross-origin Service Worker interception is architecturally impossible.
 
@@ -536,9 +540,9 @@ console.log('Received token:', credential.token);
 
 ### Why This Approach to SW Matching?
 
-FedCM requests use `client: null` and `service-workers mode: "all"`. This means:
+FedCM requests use `client: null` and `service-workers mode: "all"`. This proposal specifies:
 - The request has no associated page/document client
-- SW matching uses the request URL's origin
+- SW matching uses the request URL's origin (requires Handle Fetch algorithm extension—see [Spec coordination note](#spec-coordination-note))
 - Only the IDP's registered SW can intercept
 
 This ensures the IDP controls interception of requests to its own endpoints, which is the appropriate trust model.
