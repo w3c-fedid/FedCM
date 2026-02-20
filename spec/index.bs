@@ -2739,14 +2739,26 @@ The [=remote end steps=] are:
 1. If |dialogButton| is not a string that is "`ConfirmIdpLoginContinue`", return
     a [=error|WebDriver error=] with [=error code=] [=invalid argument=].
 
-1. If no FedCM dialog is currently open or the dialog is not a [=confirm IDP
-    login dialog=], return a [=error|WebDriver error=] with [=error code=] [=no
-    such alert=].
+1. If no FedCM dialog is currently open, return a [=error|WebDriver error=]
+    with [=error code=] [=no such alert=].
 
-1. Act as if the user had clicked the "continue" button in the [=confirm IDP
-    login dialog=] and initiate the login flow.
+1. If the dialog is a [=confirm IDP login dialog=]:
+    1. Act as if the user had clicked the "continue" button in the [=confirm IDP
+        login dialog=] and initiate the login flow.
+    1. Return [=success=] with data `null`.
 
-1. Return [=success=] with data `null`.
+1. If the dialog is [=UI to allow the user to select an account=] and it
+    has an affordance to use another account:
+    1. Act as if the user had triggered the "Use another account" affordance
+        and initiate the [=IDP=] login flow as described above.
+
+        Note: Because multiple IDPs are only supported in passive mode, and
+            {{IdentityProviderAPIConfig/supports_use_other_account}} is only
+            supported in active mode, there is only one [=IDP=] in this case.
+    1. Return [=success=] with data `null`.
+
+1. Return a [=error|WebDriver error=] with [=error code=] [=no such alert=].
+
 
 ## Account list ## {#webdriver-accountlist}
 
