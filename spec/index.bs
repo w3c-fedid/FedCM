@@ -2736,7 +2736,32 @@ The [=remote end steps=] are:
 1. Let |dialogButton| be the result of [=getting a property=] named
     `"dialogButton"` from |parameters|.
 
-1. If |dialogButton| is not a string that is "`ConfirmIdpLoginContinue`", return
+1. If |dialogButton| is not a string, return
+    a [=error|WebDriver error=] with [=error code=] [=invalid argument=].
+
+1. If |dialogButton| is "`TermsOfService`" or "`PrivacyPolicy`":
+    1. If no FedCM dialog is currently open or the dialog is not a dialog that
+        lets a user select an account, return a [=error|WebDriver error=] with
+        [=error code=] [=no such alert=].
+    1. Let |index| be the result of [=getting a property=] named
+        `"index"` from |parameters|.
+    1. If |index| is not an integer, or is less than zero or greater than
+        or equal to the number of accounts that the user can choose from in the
+        current flow, return a [=error|WebDriver error=] with [=error code=]
+        [=invalid argument=].
+    1. If the account at |index| does not have a terms of service or privacy
+        policy URL, either because none was provided in the [=client metadata
+        endpoint=] or because [=compute the connection status=] for the account
+        returned [=compute the connection status/connected=], return a
+        [=error|WebDriver error=] with [=error code=] [=invalid selector=].
+    1. Otherwise, if |dialogButton| is "`TermsOfService`", open the account's
+        {{IdentityProviderClientMetadata/terms_of_service_url}}, or if
+        |dialogButton| is "`PrivacyPolicy`", open the account's
+        {{IdentityProviderClientMetadata/privacy_policy_url}}, as if the user
+        had clicked the corresponding link in the account.
+    1. Return [=success=] with data `null`.
+
+1. If |dialogButton| is not "`ConfirmIdpLoginContinue`", return
     a [=error|WebDriver error=] with [=error code=] [=invalid argument=].
 
 1. If no FedCM dialog is currently open or the dialog is not a [=confirm IDP
