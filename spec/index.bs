@@ -54,6 +54,14 @@ spec: login-status; urlPrefix: https://w3c-fedid.github.io/login-status
         text: unknown; url: unknown
         text: get the login status; url: get-the-login-status
         text: set the login status; url: set-the-login-status
+spec: service-workers; urlPrefix: https://w3c.github.io/ServiceWorker/
+    type: dfn
+        text: fire functional event; url: fire-functional-event
+        text: service worker registration; url: dfn-service-worker-registration
+        text: active worker; url: dfn-active-worker
+        text: scope url; url: dfn-scope-url
+    type: interface
+        text: ExtendableEvent; url: extendableevent-interface
 </pre>
 
 <pre class=link-defaults>
@@ -542,7 +550,7 @@ When asked to <dfn>attempt to disconnect</dfn> given an {{IdentityCredentialDisc
         |config|.{{IdentityProviderAPIConfig/disconnect_endpoint}}, and |globalObject|.
     1. If |disconnectUrl| is failure, [=reject=] |promise| with a "{{NetworkError}}"
         {{DOMException}}.
-    1. [=Send a disconnect request=] with |disconnectUrl|, |options|, and |globalObject|, and let
+    1. [=Send a disconnect request=] with |disconnectUrl|, |options|, |config|, and |globalObject|, and let
         |result| be the result.
     1. Let |idpOrigin| be the [=url/origin=] corresponding to |configUrl|.
     1. Let |rpOrigin| be |globalObject|'s [=associated Document=]'s [=Document/origin=].
@@ -570,12 +578,23 @@ previously been used for federated login in the [=RP=].
 
 <div algorithm>
 When asked to <dfn>send a disconnect request</dfn>, given a <a spec=url for=/>URL</a>
-|disconnectUrl|, and {{IdentityCredentialDisconnectOptions}} |options|, and a |globalObject|,
+|disconnectUrl|, {{IdentityCredentialDisconnectOptions}} |options|, an
+{{IdentityProviderAPIConfig}} |config|, and a |globalObject|,
 perform the following steps. This returns an {{USVString}} or failure.
 
     1. Let |requestBody| be the result of running [=urlencoded serializer=] with a list containing:
         1. ("client_id", |options|'s {{IdentityProviderConfig/clientId}})
         1. ("account_hint",  |options|'s {{IdentityCredentialDisconnectOptions/accountHint}})
+    1. Let |swResponse| be the result of [=dispatch identity handler=] given |config|, |options|,
+        "`disconnect`", |disconnectUrl|, |requestBody|, |globalObject|, and
+        |options|'s {{IdentityCredentialDisconnectOptions/accountHint}}.
+    1. If |swResponse| is not null:
+        1. Let |swResponseBody| be the result of [=reading the body=] of |swResponse|.
+        1. Let |swJson| be the result of [=extract the JSON fetch response=] from |swResponse|
+            and |swResponseBody|.
+        1. [=converted to an IDL value|Convert=] |swJson| to a {{DisconnectedAccount}}, |swAccount|.
+        1. If one of the previous two steps threw an exception, set |swResponse| to null.
+        1. Otherwise, return |swAccount|'s {{DisconnectedAccount/account_id}}.
     1. Let |request| be a new <a spec=fetch for=/>request</a> as follows:
 
         :  [=request/url=]
@@ -1259,6 +1278,14 @@ or failure.
         1. Set |accounts_url| to the result of [=computing the manifest URL=] with |provider|,
             |config|.{{IdentityProviderAPIConfig/accounts_endpoint}}, and |globalObject|.
         1. If |login_url| or |accounts_url| is failure, set |config| to failure.
+        1. If |config| is not failure and
+            |config|.{{IdentityProviderAPIConfig/identity_handler}} is present:
+            1. Let |swUrl| be the result of [=computing the manifest URL=] with |provider|,
+                |config|.{{IdentityProviderAPIConfig/identity_handler}}.{{IdentityHandlerConfig/service_worker}},
+                and |globalObject|.
+            1. If |swUrl| is not failure, register a [=service worker registration=] under the
+                [=IDP=]'s [=/origin=] with script URL |swUrl| and scope set to the directory of
+                |swUrl|, following [[!SERVICE-WORKERS]].
     1. Wait for |config| to be set.
     1. If |config| is failure, return failure.
     1. If |skipWellKnown| is true, return |config|.
@@ -1326,6 +1353,32 @@ dictionary IdentityProviderAPIConfig {
   IdentityProviderBranding branding;
   boolean supports_use_other_account = false;
   USVString account_label;
+  IdentityHandlerConfig identity_handler;
+};
+
+dictionary IdentityHandlerConfig {
+  required USVString service_worker;
+};
+
+[Exposed=ServiceWorker]
+interface IdentityRequestEvent : ExtendableEvent {
+  constructor(DOMString type, IdentityRequestEventInit eventInitDict);
+  readonly attribute USVString endpoint;
+  readonly attribute USVString requestURL;
+  readonly attribute USVString? body;
+  readonly attribute USVString rpClientId;
+  readonly attribute USVString? nonce;
+  readonly attribute USVString? accountId;
+  undefined respondWith(Promise<Response> response);
+};
+
+dictionary IdentityRequestEventInit : ExtendableEventInit {
+  required USVString endpoint;
+  required USVString requestURL;
+  USVString? body = null;
+  required USVString rpClientId;
+  USVString? nonce = null;
+  USVString? accountId = null;
 };
 </xmp>
 
@@ -1344,6 +1397,19 @@ returns an {{IdentityProviderAccountList}}.
     1. Let |accountsUrl| be the result of [=computing the manifest URL=] given |provider|,
         |config|["{{IdentityProviderAPIConfig/accounts_endpoint}}"], and |globalObject|.
     1. If |accountsUrl| is failure, return an empty list.
+    1. Let |swResponse| be the result of [=dispatch identity handler=] given |config|, |provider|,
+        "`accounts`", |accountsUrl|, null, and |globalObject|.
+    1. If |swResponse| is not null:
+        1. Let |swResponseBody| be the result of [=reading the body=] of |swResponse|.
+        1. Let |swJson| be the result of [=extract the JSON fetch response=] from |swResponse|
+            and |swResponseBody|.
+        1. [=converted to an IDL value|Convert=] |swJson| to an {{IdentityProviderAccountList}},
+            and store the result in |swAccountsList|.
+        1. If one of the previous two steps threw an exception, or if there is an account in
+            |swAccountsList| that has neither {{IdentityProviderAccount/email}},
+            {{IdentityProviderAccount/name}}, {{IdentityProviderAccount/tel}}, nor
+            {{IdentityProviderAccount/username}} set, set |swAccountsList| to failure.
+        1. If |swAccountsList| is not failure, return |swAccountsList|.
     1. Let |request| be a new <a spec=fetch for=/>request</a> as follows:
 
         :  [=request/url=]
@@ -1490,6 +1556,17 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
         1. If serializing threw an exception, return failure.
         1. Append ("params", |json|) to |list|.
     1. Let |requestBody| be the result of running [=urlencoded serializer=] with |list|.
+    1. Let |swResponse| be the result of [=dispatch identity handler=] given |config|, |provider|,
+        "`id_assertion`", |tokenUrl|, |requestBody|, |globalObject|, and |accountId|.
+    1. If |swResponse| is not null:
+        1. Let |swResponseBody| be the result of [=reading the body=] of |swResponse|.
+        1. If |swResponseBody| is null or failure, set |swResponse| to null.
+        1. Otherwise:
+            1. Let |swJson| be the result of [=extract the JSON fetch response=] from
+                |swResponse| and |swResponseBody|.
+            1. [=converted to an IDL value|Convert=] |swJson| to an
+                {{IdentityAssertionResponse}}, |swToken|.
+            1. If one of the previous two steps threw an exception, set |swResponse| to null.
     1. Let |request| be a new <a spec=fetch for=/>request</a> as follows:
 
         :  [=request/url=]
@@ -1517,8 +1594,8 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
         :: "cors"
 
     1. Let |credential| be null.
-    1. [=Fetch request=] with |request| and |globalObject|, and with <var ignore>processResponseConsumeBody</var>
-        set to the following steps given a <a spec=fetch for=/>response</a> |response| and |responseBody|:
+    1. Let |processResponse| be the following steps given a <a spec=fetch for=/>response</a>
+        |response| and |responseBody|:
         1. If |responseBody| is null or failure, set |credential| to the result of
             [=create an IdentityCredentialError=] with {} and |globalObject|, and return.
         1. Let |json| be the result of [=extract the JSON fetch response=] from |response| and
@@ -1575,6 +1652,9 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
             |isAutoSelected|.
         1. Set |credential|'s {{IdentityCredential/configURL}} to |provider|'s
             {{IdentityProviderConfig/configURL}}.
+    1. If |swResponse| is not null, run |processResponse| with |swResponse| and |swResponseBody|.
+    1. Otherwise, [=Fetch request=] with |request| and |globalObject|, and with
+        <var ignore>processResponseConsumeBody</var> set to |processResponse|.
     1. Wait for |credential| to be set.
     1. Return |credential|.
 </div>
@@ -1808,6 +1888,57 @@ and a |responseBody|, run the following steps. This returns an [=ordered map=].
     1. Let |json| be the result of [=parse JSON bytes to a JavaScript value=] passing |responseBody|.
     1. If |json| is a parsing exception, throw a new "{{NetworkError}}" {{DOMException}}.
     1. Return |json|.
+</div>
+
+<div algorithm>
+To <dfn>dispatch identity handler</dfn> given an {{IdentityProviderAPIConfig}} |config|,
+an {{IdentityProviderConfig}} |provider|, a [=string=] |endpoint|, a [=/URL=] |requestUrl|,
+a [=string=] or null |requestBody|, a |globalObject|, and an optional [=string=] or null
+|accountId| (default null), run the following steps. This returns a [=/response=] or null.
+
+    1. If |config|.{{IdentityProviderAPIConfig/identity_handler}} is not present, return null.
+    1. Let |swUrl| be the result of [=computing the manifest URL=] with |provider|,
+        |config|.{{IdentityProviderAPIConfig/identity_handler}}.{{IdentityHandlerConfig/service_worker}},
+        and |globalObject|.
+    1. If |swUrl| is failure, return null.
+    1. Let |registration| be the [=service worker registration=] under the [=IDP=]'s [=/origin=]
+        whose [=scope url=] covers |requestUrl|.
+    1. If |registration| is null, return null.
+    1. Let |activeWorker| be |registration|'s [=active worker=].
+    1. If |activeWorker| is null, return null.
+    1. Let |rpClientId| be |provider|'s {{IdentityProviderConfig/clientId}}.
+    1. Let |nonce| be null.
+    1. Let |eventInit| be a new {{IdentityRequestEventInit}} with:
+        : {{IdentityRequestEventInit/endpoint}}
+        :: |endpoint|
+        : {{IdentityRequestEventInit/requestURL}}
+        :: The [=URL serializer|serialization=] of |requestUrl|
+        : {{IdentityRequestEventInit/body}}
+        :: |requestBody|
+        : {{IdentityRequestEventInit/rpClientId}}
+        :: |rpClientId|
+        : {{IdentityRequestEventInit/nonce}}
+        :: |nonce|
+        : {{IdentityRequestEventInit/accountId}}
+        :: |accountId|
+    1. Let |event| be a new {{IdentityRequestEvent}} with type "`identityrequest`" and
+        |eventInit|.
+    1. Let |respondWithPromise| be null.
+    1. Set |event|'s {{IdentityRequestEvent/respondWith()}} to an algorithm that, when invoked
+        with a {{Promise}} |promise|, sets |respondWithPromise| to |promise|.
+    1. [=Fire functional event=] "`identityrequest`" using |event| on |registration|.
+    1. If |respondWithPromise| is null, return null.
+    1. Wait for |respondWithPromise| to settle, or until 10 seconds have elapsed, whichever
+        comes first.
+    1. If |respondWithPromise| did not settle within 10 seconds, return null.
+    1. If |respondWithPromise| rejected, return null.
+    1. Let |response| be the result of |respondWithPromise|.
+    1. If |response| is not a {{Response}} object, return null.
+    1. If |response|'s [=response/status=] is not an [=ok status=], return null.
+    1. Let |mimeType| be the result of <a>extracting a MIME TYPE</a> from |response|'s
+        <a for=response>header list</a>.
+    1. If |mimeType| is failure or is not a [=JSON MIME Type=], return null.
+    1. Return |response|.
 </div>
 
 <div algorithm>
@@ -2161,6 +2292,17 @@ The {{IdentityProviderAPIConfig}} object's members have the following semantics:
     :   <dfn>account_label</dfn>
     ::  An optional string that needs to match the {{IdentityProviderAccount/label_hints}} provided
         by the IdP.
+    :   <dfn>identity_handler</dfn>
+    ::  An optional {{IdentityHandlerConfig}} that declares a [=service worker=] capable of
+        intercepting credentialed FedCM requests.
+</dl>
+
+The {{IdentityHandlerConfig}} has the following member:
+<dl dfn-type="dict-member" dfn-for="IdentityHandlerConfig">
+    :   <dfn>service_worker</dfn> (required)
+    ::  A URL pointing to the service worker script, resolved relative to the [=config file=] URL.
+        The service worker's [=scope url=] defaults to the directory of this URL per
+        [[!SERVICE-WORKERS]].
 </dl>
 
 <div class="issue" heading="extension">
@@ -2997,8 +3139,53 @@ partners. The token content remains opaque to the user agent.
     established with their [=IDP=].
 1. [=IDPs=] should clearly document their token format and structure to help [=RPs=] implement 
     proper validation.
-1. [=IDPs=] should ensure their token format is consistent and follows their documented 
+1. [=IDPs=] should ensure their token format is consistent and follows their documented
     specification.
+
+<!-- ============================================================ -->
+### Identity Handler ### {#identity-handler-trust}
+<!-- ============================================================ -->
+
+**Consideration**
+
+When an [=IDP=] declares an {{IdentityProviderAPIConfig/identity_handler}} in its [=config file=],
+the [=user agent=] dispatches credentialed FedCM requests to the [=IDP=]'s [=service worker=] before
+making network calls.
+
+The service worker runs under the [=IDP=]'s own [=/origin=] and is authored by the [=IDP=].
+It operates under the same trust boundary as the [=IDP=]'s server-side endpoints — no new
+trust relationship is introduced.
+
+The {{IdentityRequestEvent}} does not expose `Cookie` or `Authorization` headers to the
+service worker. These are opaquely attached by the [=user agent=] when the service worker
+calls `fetch()` with `credentials: "include"`. The service worker cannot read or modify
+cookie values.
+
+The [=user agent=] enforces a 10-second timeout on the {{IdentityRequestEvent/respondWith()}}
+promise. If the service worker is not registered, does not call
+{{IdentityRequestEvent/respondWith()}}, times out, rejects, or returns an invalid response,
+the [=user agent=] falls back to the normal credentialed fetch.
+
+The [=user agent=] uses the existing service worker update lifecycle ([[!SERVICE-WORKERS]]).
+A stale service worker that does not handle `identityrequest` falls through to the normal
+fetch.
+
+A single `identityrequest` event type is used for all credentialed endpoints (accounts,
+id_assertion, disconnect). The service worker determines which endpoints to handle by
+inspecting {{IdentityRequestEvent/endpoint}} and calling {{IdentityRequestEvent/respondWith()}}
+only for the endpoints it wants to intercept. For endpoints where the service worker does not
+call {{IdentityRequestEvent/respondWith()}}, the [=user agent=] falls back to the normal
+credentialed fetch. This means the [=user agent=] activates the service worker for all
+credentialed requests even if the service worker only handles a subset; the [[!SERVICE-WORKERS]]
+[=fire functional event|Should Skip Event=] optimization does not apply at the per-endpoint
+level. The activation cost is minimal because the service worker returns without calling
+{{IdentityRequestEvent/respondWith()}} for unhandled endpoints.
+
+**Recommendations**
+
+1. [=User agents=] SHOULD log developer warnings when identity handler dispatch fails.
+1. Site isolation reviewers should confirm that enabling service worker interception for
+    browser-initiated FedCM requests does not create novel cross-process information leaks.
 
 <!-- ============================================================ -->
 ## Threats and Attacks ## {#security-threats-aattacks}
@@ -3300,6 +3487,16 @@ origin of the fetched URLs.
     this endpoint does not introduce a way for the [=RP=] to send requests to the [=IDP=] containing
     the [=IDP=] cookies forever.
 
+* The [=identity handler=] is only dispatched for credentialed endpoints (accounts, id_assertion,
+    disconnect). These endpoints already receive [=IDP=] cookies and operate within the [=IDP=]'s
+    existing trust context. The service worker sees no information beyond what the [=IDP=]'s server
+    would receive. Uncredentialed endpoints (well-known, config, client_metadata) are not
+    dispatched to the identity handler. Because the identity handler runs under the [=IDP=]'s
+    origin and only intercepts requests that already carry the [=IDP=]'s cookies, it cannot create
+    new (user, [=RP=]) correlation vectors. The service worker cannot read cookie values from the
+    {{IdentityRequestEvent}} — they flow through transparently via `fetch()` with
+    `credentials: "include"`.
+
 <!-- ============================================================ -->
 ## Attack Scenarios ## {#attack-scenarios}
 <!-- ============================================================ -->
@@ -3599,6 +3796,10 @@ Note: write down the Acknowledgements section.
   "RFC7258": {
     "href": "https://datatracker.ietf.org/doc/html/rfc7258",
     "title": "Pervasive Monitoring Is an Attack"
+  },
+  "SERVICE-WORKERS": {
+    "href": "https://w3c.github.io/ServiceWorker/",
+    "title": "Service Workers"
   }
 }
 </pre>
