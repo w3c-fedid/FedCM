@@ -54,14 +54,6 @@ spec: login-status; urlPrefix: https://w3c-fedid.github.io/login-status
         text: unknown; url: unknown
         text: get the login status; url: get-the-login-status
         text: set the login status; url: set-the-login-status
-spec: service-workers; urlPrefix: https://w3c.github.io/ServiceWorker/
-    type: dfn
-        text: fire functional event; url: fire-functional-event
-        text: service worker registration; url: dfn-service-worker-registration
-        text: active worker; url: dfn-active-worker
-        text: scope url; url: dfn-scope-url
-    type: interface
-        text: ExtendableEvent; url: extendableevent-interface
 </pre>
 
 <pre class=link-defaults>
@@ -1284,8 +1276,9 @@ or failure.
                 |config|.{{IdentityProviderAPIConfig/identity_handler}}.{{IdentityHandlerConfig/service_worker}},
                 and |globalObject|.
             1. If |swUrl| is not failure, register a [=service worker registration=] under the
-                [=IDP=]'s [=/origin=] with script URL |swUrl| and scope set to the directory of
-                |swUrl|, following [[!SERVICE-WORKERS]].
+                [=IDP=]'s [=/origin=] with script URL |swUrl|, following [[!SERVICE-WORKERS]],
+                and associate the registration with |provider|'s
+                {{IdentityProviderConfig/configURL}}.
     1. Wait for |config| to be set.
     1. If |config| is failure, return failure.
     1. If |skipWellKnown| is true, return |config|.
@@ -1901,8 +1894,8 @@ a [=string=] or null |requestBody|, a |globalObject|, and an optional [=string=]
         |config|.{{IdentityProviderAPIConfig/identity_handler}}.{{IdentityHandlerConfig/service_worker}},
         and |globalObject|.
     1. If |swUrl| is failure, return null.
-    1. Let |registration| be the [=service worker registration=] under the [=IDP=]'s [=/origin=]
-        whose [=scope url=] covers |requestUrl|.
+    1. Let |registration| be the [=service worker registration=] corresponding to
+        |provider|'s {{IdentityProviderConfig/configURL}}.
     1. If |registration| is null, return null.
     1. Let |activeWorker| be |registration|'s [=active worker=].
     1. If |activeWorker| is null, return null.
@@ -1924,13 +1917,17 @@ a [=string=] or null |requestBody|, a |globalObject|, and an optional [=string=]
     1. Let |event| be a new {{IdentityRequestEvent}} with type "`identityrequest`" and
         |eventInit|.
     1. Let |respondWithPromise| be null.
+    1. Let |respondWithEntered| be false.
     1. Set |event|'s {{IdentityRequestEvent/respondWith()}} to an algorithm that, when invoked
-        with a {{Promise}} |promise|, sets |respondWithPromise| to |promise|.
+        with a {{Promise}} |promise|:
+        1. If |respondWithEntered| is true, [=throw=] an "{{InvalidStateError}}" {{DOMException}}.
+        1. Set |respondWithEntered| to true.
+        1. Set |respondWithPromise| to |promise|.
     1. [=Fire functional event=] "`identityrequest`" using |event| on |registration|.
     1. If |respondWithPromise| is null, return null.
-    1. Wait for |respondWithPromise| to settle, or until 10 seconds have elapsed, whichever
-        comes first.
-    1. If |respondWithPromise| did not settle within 10 seconds, return null.
+    1. Wait for |respondWithPromise| to settle. The [=user agent=] MAY impose an
+        implementation-defined timeout.
+    1. If |respondWithPromise| did not settle before the timeout, return null.
     1. If |respondWithPromise| rejected, return null.
     1. Let |response| be the result of |respondWithPromise|.
     1. If |response| is not a {{Response}} object, return null.
@@ -3161,8 +3158,8 @@ service worker. These are opaquely attached by the [=user agent=] when the servi
 calls `fetch()` with `credentials: "include"`. The service worker cannot read or modify
 cookie values.
 
-The [=user agent=] enforces a 10-second timeout on the {{IdentityRequestEvent/respondWith()}}
-promise. If the service worker is not registered, does not call
+The [=user agent=] MAY enforce an implementation-defined timeout on the
+{{IdentityRequestEvent/respondWith()}} promise. If the service worker is not registered, does not call
 {{IdentityRequestEvent/respondWith()}}, times out, rejects, or returns an invalid response,
 the [=user agent=] falls back to the normal credentialed fetch.
 
