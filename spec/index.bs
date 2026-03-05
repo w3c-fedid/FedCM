@@ -542,7 +542,7 @@ When asked to <dfn>attempt to disconnect</dfn> given an {{IdentityCredentialDisc
         |config|.{{IdentityProviderAPIConfig/disconnect_endpoint}}, and |globalObject|.
     1. If |disconnectUrl| is failure, [=reject=] |promise| with a "{{NetworkError}}"
         {{DOMException}}.
-    1. [=Send a disconnect request=] with |disconnectUrl|, |options|, |config|, and |globalObject|, and let
+    1. [=Send a disconnect request=] with |disconnectUrl|, |options|, |config|, and |globalObject|. Let
         |result| be the result.
     1. Let |idpOrigin| be the [=url/origin=] corresponding to |configUrl|.
     1. Let |rpOrigin| be |globalObject|'s [=associated Document=]'s [=Document/origin=].
@@ -582,8 +582,8 @@ perform the following steps. This returns an {{USVString}} or failure.
         |options|'s {{IdentityCredentialDisconnectOptions/accountHint}}.
     1. If |swResponse| is not null:
         1. Let |swResponseBody| be the result of [=reading the body=] of |swResponse|.
-        1. Let |swJson| be the result of [=extract the JSON fetch response=] from |swResponse|
-            and |swResponseBody|.
+        1. Let |swJson| be the result of [=extract the JSON fetch response|extracting the JSON fetch 
+            response=] from |swResponse| and |swResponseBody|.
         1. [=converted to an IDL value|Convert=] |swJson| to a {{DisconnectedAccount}}, |swAccount|.
         1. If one of the previous two steps threw an exception, set |swResponse| to null.
         1. Otherwise, return |swAccount|'s {{DisconnectedAccount/account_id}}.
@@ -1275,7 +1275,7 @@ or failure.
             1. Let |swUrl| be the result of [=computing the manifest URL=] with |provider|,
                 |config|.{{IdentityProviderAPIConfig/identity_handler}}.{{IdentityHandlerConfig/service_worker}},
                 and |globalObject|.
-            1. If |swUrl| is not failure, register a [=service worker registration=] under the
+            1. If |swUrl| is not failure, register a [=service worker registration|register a service worker=] under the
                 [=IDP=]'s [=/origin=] with script URL |swUrl|, following [[!SERVICE-WORKERS]],
                 and associate the registration with |provider|'s
                 {{IdentityProviderConfig/configURL}}.
@@ -1394,8 +1394,8 @@ returns an {{IdentityProviderAccountList}}.
         "`accounts`", |accountsUrl|, null, and |globalObject|.
     1. If |swResponse| is not null:
         1. Let |swResponseBody| be the result of [=reading the body=] of |swResponse|.
-        1. Let |swJson| be the result of [=extract the JSON fetch response=] from |swResponse|
-            and |swResponseBody|.
+        1. Let |swJson| be the result of [=extract the JSON fetch response|extracting the JSON
+            fetch response=] from |swResponse| and |swResponseBody|.
         1. [=converted to an IDL value|Convert=] |swJson| to an {{IdentityProviderAccountList}},
             and store the result in |swAccountsList|.
         1. If one of the previous two steps threw an exception, or if there is an account in
@@ -1549,17 +1549,17 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
         1. If serializing threw an exception, return failure.
         1. Append ("params", |json|) to |list|.
     1. Let |requestBody| be the result of running [=urlencoded serializer=] with |list|.
-    1. Let |swResponse| be the result of [=dispatch identity handler=] given |config|, |provider|,
-        "`id_assertion`", |tokenUrl|, |requestBody|, |globalObject|, and |accountId|.
+    1. Let |swResponse| be the result of [=dispatch identity handler|dispatching identity handler=]
+        given |config|, |provider|, "`id_assertion`", |tokenUrl|, |requestBody|, |globalObject|, and |accountId|.
     1. If |swResponse| is not null:
         1. Let |swResponseBody| be the result of [=reading the body=] of |swResponse|.
         1. If |swResponseBody| is null or failure, set |swResponse| to null.
         1. Otherwise:
-            1. Let |swJson| be the result of [=extract the JSON fetch response=] from
-                |swResponse| and |swResponseBody|.
+            1. Let |swJson| be the result of [=extract the JSON fetch response|extracting the JSON fetch response=]
+                from |swResponse| and |swResponseBody|.
             1. [=converted to an IDL value|Convert=] |swJson| to an
-                {{IdentityAssertionResponse}}, |swToken|.
-            1. If one of the previous two steps threw an exception, set |swResponse| to null.
+                {{IdentityAssertionResponse}} and |swToken|.
+            1. If either of the previous two steps threw an exception, set |swResponse| to null.
     1. Let |request| be a new <a spec=fetch for=/>request</a> as follows:
 
         :  [=request/url=]
@@ -1587,8 +1587,8 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
         :: "cors"
 
     1. Let |credential| be null.
-    1. Let |processResponse| be the following steps given a <a spec=fetch for=/>response</a>
-        |response| and |responseBody|:
+    1. Let |processResponse| be the result of the following steps given a
+        <a spec=fetch for=/>response</a> |response| and |responseBody|:
         1. If |responseBody| is null or failure, set |credential| to the result of
             [=create an IdentityCredentialError=] with {} and |globalObject|, and return.
         1. Let |json| be the result of [=extract the JSON fetch response=] from |response| and
@@ -1646,7 +1646,7 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
         1. Set |credential|'s {{IdentityCredential/configURL}} to |provider|'s
             {{IdentityProviderConfig/configURL}}.
     1. If |swResponse| is not null, run |processResponse| with |swResponse| and |swResponseBody|.
-    1. Otherwise, [=Fetch request=] with |request| and |globalObject|, and with
+    1. Otherwise, [=fetch request=] with |request| and |globalObject|, and with
         <var ignore>processResponseConsumeBody</var> set to |processResponse|.
     1. Wait for |credential| to be set.
     1. Return |credential|.
