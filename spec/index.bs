@@ -578,7 +578,7 @@ perform the following steps. This returns an {{USVString}} or failure.
         1. ("client_id", |options|'s {{IdentityProviderConfig/clientId}})
         1. ("account_hint",  |options|'s {{IdentityCredentialDisconnectOptions/accountHint}})
     1. Let |swResponse| be the result of [=dispatch identity handler=] given |config|, |options|,
-        "`disconnect`", |disconnectUrl|, |requestBody|, |globalObject|, and
+        "`disconnect`", |disconnectUrl|, |requestBody|, and
         |options|'s {{IdentityCredentialDisconnectOptions/accountHint}}.
     1. If |swResponse| is not null:
         1. Let |swResponseBody| be the result of [=reading the body=] of |swResponse|.
@@ -1275,7 +1275,7 @@ or failure.
             1. Let |swUrl| be the result of [=computing the manifest URL=] with |provider|,
                 |config|.{{IdentityProviderAPIConfig/identity_handler}}.{{IdentityHandlerConfig/service_worker}},
                 and |globalObject|.
-            1. If |swUrl| is not failure, [=service worker registration|register a service worker=] under the
+            1. If |swUrl| is not failure, register a service worker under the
                 [=IDP=]'s [=/origin=] with script URL |swUrl|, following [[!SERVICE-WORKERS]],
                 and associate the registration with |provider|'s
                 {{IdentityProviderConfig/configURL}}.
@@ -1375,6 +1375,27 @@ dictionary IdentityRequestEventInit : ExtendableEventInit {
 };
 </xmp>
 
+<div class="note">
+The {{IdentityRequestEvent}} uses a single event type ("`identityrequest`") for all
+credentialed endpoints (accounts, id_assertion, disconnect), distinguished by the
+{{IdentityRequestEvent/endpoint}} attribute. An alternative design would define separate event
+types per operation (e.g., "`identityaccounts`", "`identityassertion`",
+"`identitydisconnect`"). The single-event design was chosen for the following reasons:
+
+* **Simpler API surface:** IdPs register one event handler rather than three, reducing
+    boilerplate and the potential for inconsistencies between handlers.
+* **Extensibility:** New endpoints can be supported without introducing new event types or
+    requiring IdPs to register additional handlers.
+* **Uniform request shape:** All credentialed FedCM requests share the same fundamental
+    structure — a URL, an optional body, and a response — making a single event type a
+    natural fit.
+
+A trade-off of this design is that the service worker is dispatched even for endpoints it does
+not intend to handle; in such cases, the handler simply does not call
+{{IdentityRequestEvent/respondWith()}} and the [=user agent=] falls back to the default fetch
+behavior.
+</div>
+
 <!-- ============================================================ -->
 ### Fetch the accounts ### {#fetch-accounts}
 <!-- ============================================================ -->
@@ -1391,7 +1412,7 @@ returns an {{IdentityProviderAccountList}}.
         |config|["{{IdentityProviderAPIConfig/accounts_endpoint}}"], and |globalObject|.
     1. If |accountsUrl| is failure, return an empty list.
     1. Let |swResponse| be the result of [=dispatch identity handler=] given |config|, |provider|,
-        "`accounts`", |accountsUrl|, null, and |globalObject|.
+        "`accounts`", |accountsUrl|, and null.
     1. If |swResponse| is not null:
         1. Let |swResponseBody| be the result of [=reading the body=] of |swResponse|.
         1. Let |swJson| be the result of [=extract the JSON fetch response|extracting the JSON
@@ -1550,7 +1571,7 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
         1. Append ("params", |json|) to |list|.
     1. Let |requestBody| be the result of running [=urlencoded serializer=] with |list|.
     1. Let |swResponse| be the result of [=dispatch identity handler|dispatching identity handler=]
-        given |config|, |provider|, "`id_assertion`", |tokenUrl|, |requestBody|, |globalObject|, and |accountId|.
+        given |config|, |provider|, "`id_assertion`", |tokenUrl|, |requestBody|, and |accountId|.
     1. If |swResponse| is not null:
         1. Let |swResponseBody| be the result of [=reading the body=] of |swResponse|.
         1. If |swResponseBody| is null or failure, set |swResponse| to null.
@@ -1887,56 +1908,48 @@ and a |responseBody|, run the following steps. This returns an [=ordered map=].
 <div algorithm>
 To <dfn>dispatch identity handler</dfn> given an {{IdentityProviderAPIConfig}} |config|,
 an {{IdentityProviderConfig}} |provider|, a [=string=] |endpoint|, a [=/URL=] |requestUrl|,
-a [=string=] or null |requestBody|, a |globalObject|, and an optional [=string=] or null
+a [=string=] or null |requestBody|, and an optional [=string=] or null
 |accountId| (default null), run the following steps. This returns a [=/response=] or null.
 
     1. If |config|.{{IdentityProviderAPIConfig/identity_handler}} is not present, return null.
-    1. Let |swUrl| be the result of [=computing the manifest URL=] with |provider|,
-        |config|.{{IdentityProviderAPIConfig/identity_handler}}.{{IdentityHandlerConfig/service_worker}},
-        and |globalObject|.
-    1. If |swUrl| is failure, return null.
-    1. Let |registration| be the [=service worker registration=] corresponding to
-        |provider|'s {{IdentityProviderConfig/configURL}}.
+    1. Let |registration| be the [=service worker registration=] associated with |provider|'s
+        {{IdentityProviderConfig/configURL}}.
     1. If |registration| is null, return null.
     1. Let |activeWorker| be |registration|'s [=active worker=].
     1. If |activeWorker| is null, return null.
     1. Let |rpClientId| be |provider|'s {{IdentityProviderConfig/clientId}}.
     1. Let |nonce| be null.
-    1. Let |eventInit| be a new {{IdentityRequestEventInit}} with:
-        : {{IdentityRequestEventInit/endpoint}}
-        :: |endpoint|
-        : {{IdentityRequestEventInit/requestURL}}
-        :: The [=URL serializer|serialization=] of |requestUrl|
-        : {{IdentityRequestEventInit/body}}
-        :: |requestBody|
-        : {{IdentityRequestEventInit/rpClientId}}
-        :: |rpClientId|
-        : {{IdentityRequestEventInit/nonce}}
-        :: |nonce|
-        : {{IdentityRequestEventInit/accountId}}
-        :: |accountId|
-    1. Let |event| be a new {{IdentityRequestEvent}} with type "`identityrequest`" and
-        |eventInit|.
     1. Let |respondWithPromise| be null.
     1. Let |respondWithEntered| be false.
-    1. Set |event|'s {{IdentityRequestEvent/respondWith()}} to an algorithm that, when invoked
-        with a {{Promise}} |promise|:
-        1. If |respondWithEntered| is true, [=throw=] an "{{InvalidStateError}}" {{DOMException}}.
-        1. Set |respondWithEntered| to true.
-        1. Set |respondWithPromise| to |promise|.
-    1. [=Fire functional event=] "`identityrequest`" using |event| on |registration|.
+    1. [=Fire functional event=] "`identityrequest`" using {{IdentityRequestEvent}} on
+        |registration| with the following properties:
+        : {{IdentityRequestEvent/endpoint}}
+        :: |endpoint|
+        : {{IdentityRequestEvent/requestURL}}
+        :: The [=URL serializer|serialization=] of |requestUrl|
+        : {{IdentityRequestEvent/body}}
+        :: |requestBody|
+        : {{IdentityRequestEvent/rpClientId}}
+        :: |rpClientId|
+        : {{IdentityRequestEvent/nonce}}
+        :: |nonce|
+        : {{IdentityRequestEvent/accountId}}
+        :: |accountId|
+        : {{IdentityRequestEvent/respondWith()}}
+        :: An algorithm that, when invoked with a {{Promise}} |promise|:
+            1. If |respondWithEntered| is true, [=throw=] an "{{InvalidStateError}}"
+                {{DOMException}}.
+            1. Set |respondWithEntered| to true.
+            1. Set |respondWithPromise| to |promise|.
     1. If |respondWithPromise| is null, return null.
-    1. Wait for |respondWithPromise| to settle. The [=user agent=] MAY impose an
-        implementation-defined timeout.
-    1. If |respondWithPromise| did not settle before the timeout, return null.
-    1. If |respondWithPromise| rejected, return null.
-    1. Let |response| be the result of |respondWithPromise|.
-    1. If |response| is not a {{Response}} object, return null.
-    1. If |response|'s [=response/status=] is not an [=ok status=], return null.
-    1. Let |mimeType| be the result of <a>extracting a MIME TYPE</a> from |response|'s
-        <a for=response>header list</a>.
-    1. If |mimeType| is failure or is not a [=JSON MIME Type=], return null.
-    1. Return |response|.
+    1. [=Upon rejection=] of |respondWithPromise|, return null.
+    1. [=Upon fulfillment=] of |respondWithPromise| with |response|:
+        1. If |response| is not a {{Response}} object, return null.
+        1. If |response|'s [=response/status=] is not an [=ok status=], return null.
+        1. Let |mimeType| be the result of <a>extracting a MIME TYPE</a> from |response|'s
+            <a for=response>header list</a>.
+        1. If |mimeType| is failure or is not a [=JSON MIME Type=], return null.
+        1. Return |response|.
 </div>
 
 <div algorithm>
