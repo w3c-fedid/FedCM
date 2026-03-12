@@ -1279,6 +1279,21 @@ or failure.
                 [=IDP=]'s [=/origin=] with script URL |swUrl|, following [[!SERVICE-WORKERS]],
                 and associate the registration with |provider|'s
                 {{IdentityProviderConfig/configURL}}.
+        1. Otherwise, if |config| is not failure and
+            |config|.{{IdentityProviderAPIConfig/identity_handler}} is not present:
+            1. If there is a [=service worker registration=] associated with |provider|'s
+                {{IdentityProviderConfig/configURL}}, [=unregister=] it.
+
+                Note: This ensures that when an [=IDP=] removes the
+                {{IdentityProviderAPIConfig/identity_handler}} from its [=config file=],
+                the previously registered [=service worker=] is cleaned up on the next
+                FedCM request.
+
+        Note: The [=service worker registration=] created here is also subject to the
+        normal [=service worker=] lifecycle and storage management. In particular,
+        `Clear-Site-Data: "storage"` sent by the [=IDP=]'s origin will unregister
+        all [=service workers=] for that origin, including identity handlers,
+        per [[!SERVICE-WORKERS]].
     1. Wait for |config| to be set.
     1. If |config| is failure, return failure.
     1. If |skipWellKnown| is true, return |config|.
