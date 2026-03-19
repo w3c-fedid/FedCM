@@ -603,15 +603,12 @@ perform the following steps. This returns an {{USVString}} or failure.
         :  [=request/mode=]
         :: "cors"
 
-    1. Let |swResponse| be the result of [=dispatch identity handler=] given |config|, |options|,
+    1. Let |swJson| be the result of [=dispatch identity handler=] given |config|, |options|,
         "`disconnect`", |request|, and
         |options|'s {{IdentityCredentialDisconnectOptions/accountHint}}.
-    1. If |swResponse| is not null:
-        1. Let |swResponseBody| be the result of [=reading the body=] of |swResponse|.
-        1. Let |swJson| be the result of [=extract the JSON fetch response|extracting the JSON fetch
-            response=] from |swResponse| and |swResponseBody|.
+    1. If |swJson| is not null:
         1. [=converted to an IDL value|Convert=] |swJson| to a {{DisconnectedAccount}}, |swAccount|.
-        1. If one of the previous two steps threw an exception, set |swResponse| to null.
+        1. If the previous step threw an exception, set |swJson| to null.
         1. Otherwise, return |swAccount|'s {{DisconnectedAccount/account_id}}.
     1. Let |accountId| be null.
     1. [=Fetch request=] with |request| and |globalObject|, and with
@@ -1281,7 +1278,7 @@ or failure.
                 {{IdentityProviderConfig/configURL}}.
         1. Otherwise, if |config| is not failure and
             |config|.{{IdentityProviderAPIConfig/identity_handler}} is not present:
-            1. If there is a [=service worker registration=] associated with |provider|'s
+            1. If there is a [=/service worker registration=] associated with |provider|'s
                 {{IdentityProviderConfig/configURL}}, [=unregister=] it.
 
                 Note: This ensures that when an [=IDP=] removes the
@@ -1289,7 +1286,7 @@ or failure.
                 the previously registered [=service worker=] is cleaned up on the next
                 FedCM request.
 
-        Note: The [=service worker registration=] created here is also subject to the
+        Note: The [=/service worker registration=] created here is also subject to the
         normal [=service worker=] lifecycle and storage management. In particular,
         `Clear-Site-Data: "storage"` sent by the [=IDP=]'s origin will unregister
         all [=service workers=] for that origin, including identity handlers,
@@ -1374,7 +1371,6 @@ interface IdentityRequestEvent : ExtendableEvent {
   readonly attribute USVString endpoint;
   readonly attribute Request request;
   readonly attribute USVString rpClientId;
-  readonly attribute USVString? nonce;
   readonly attribute USVString? accountId;
   undefined respondWith(Promise<Response> response);
 };
@@ -1383,7 +1379,6 @@ dictionary IdentityRequestEventInit : ExtendableEventInit {
   required USVString endpoint;
   required Request request;
   required USVString rpClientId;
-  USVString? nonce = null;
   USVString? accountId = null;
 };
 </xmp>
@@ -1403,8 +1398,6 @@ dictionary IdentityRequestEventInit : ExtendableEventInit {
     :   <b>{{IdentityRequestEvent/rpClientId}}</b>
     ::  Returns the {{IdentityProviderConfig/clientId}} of the [=RP=] that initiated the FedCM
         request.
-    :   <b>{{IdentityRequestEvent/nonce}}</b>
-    ::  Returns the nonce provided by the [=RP=], if any.
     :   <b>{{IdentityRequestEvent/accountId}}</b>
     ::  Returns the account identifier, if the request is scoped to a specific account (e.g.,
         for the `id_assertion` or `disconnect` endpoints). Returns null for endpoints that are
@@ -1486,15 +1479,12 @@ returns an {{IdentityProviderAccountList}}.
         Note: This fetch should only send Same-Site=None cookies. Specifying this will require
         [cookie layering](https://github.com/httpwg/http-extensions/issues/2084).
 
-    1. Let |swResponse| be the result of [=dispatch identity handler=] given |config|, |provider|,
+    1. Let |swJson| be the result of [=dispatch identity handler=] given |config|, |provider|,
         "`accounts`", |request|.
-    1. If |swResponse| is not null:
-        1. Let |swResponseBody| be the result of [=reading the body=] of |swResponse|.
-        1. Let |swJson| be the result of [=extract the JSON fetch response|extracting the JSON
-            fetch response=] from |swResponse| and |swResponseBody|.
+    1. If |swJson| is not null:
         1. [=converted to an IDL value|Convert=] |swJson| to an {{IdentityProviderAccountList}},
             and store the result in |swAccountsList|.
-        1. If one of the previous two steps threw an exception, or if there is an account in
+        1. If the previous step threw an exception, or if there is an account in
             |swAccountsList| that has neither {{IdentityProviderAccount/email}},
             {{IdentityProviderAccount/name}}, {{IdentityProviderAccount/tel}}, nor
             {{IdentityProviderAccount/username}} set, set |swAccountsList| to failure.
@@ -1636,28 +1626,14 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
         :  [=request/mode=]
         :: "cors"
 
-    1. Let |swResponse| be the result of [=dispatch identity handler|dispatching identity handler=]
+    1. Let |swJson| be the result of [=dispatch identity handler|dispatching identity handler=]
         given |config|, |provider|, "`id_assertion`", |request|, and |accountId|.
-    1. If |swResponse| is not null:
-        1. Let |swResponseBody| be the result of [=reading the body=] of |swResponse|.
-        1. If |swResponseBody| is null or failure, set |swResponse| to null.
-        1. Otherwise:
-            1. Let |swJson| be the result of [=extract the JSON fetch response|extracting the JSON fetch response=]
-                from |swResponse| and |swResponseBody|.
-            1. [=converted to an IDL value|Convert=] |swJson| to an
-                {{IdentityAssertionResponse}} and |swToken|.
-            1. If either of the previous two steps threw an exception, set |swResponse| to null.
+    1. If |swJson| is not null:
+        1. [=converted to an IDL value|Convert=] |swJson| to an
+            {{IdentityAssertionResponse}} and |swToken|.
+        1. If the previous step threw an exception, set |swJson| to null.
     1. Let |credential| be null.
-    1. Let |processResponse| be the result of the following steps given a
-        <a spec=fetch for=/>response</a> |response| and |responseBody|:
-        1. If |responseBody| is null or failure, set |credential| to the result of
-            [=create an IdentityCredentialError|creating an IdentityCredentialError=] with {}
-            and |globalObject|, and return.
-        1. Let |json| be the result of [=extract the JSON fetch response|extracting the JSON fetch response=]
-            from |response| and |responseBody|.
-        1. [=converted to an IDL value|Convert=] |json| to an {{IdentityAssertionResponse}}, |token|.
-        1. If one of the previous two steps threw an exception, set |credential| to the result of
-            [=create an IdentityCredentialError=] with {} and |globalObject|, and return.
+    1. Let |processToken| be an algorithm that given an {{IdentityAssertionResponse}} |token|:
         1. If {{IdentityAssertionResponse/error}} was specified, let |errorInit| be the value and:
             1. If |errorInit|.{{IdentityCredentialErrorInit/url}} is present:
                 1. Let |errorUrl| be the result of running [=parse url=] given
@@ -1672,13 +1648,6 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
                     |errorUrl|.
             1. Set |credential| to the result of [=create an IdentityCredentialError=] with
                 |errorInit|, and |globalObject|.
-        1. Otherwise, if |response|'s [=response/status=] is not an [=ok status=]:
-            1. Set |credential| to the result of [=create an IdentityCredentialError=] with {} and
-                |globalObject|.
-            1. The user agent MAY set |credential|'s {{IdentityCredentialError/error}} based on
-                |response|'s [=response/status=]. For example, if the [=response/status=] is `500`, it
-                could set it to "server_error", and if the [=response/status=] is `503`, it could set
-                it to "temporarily_unavailable".
         1. Otherwise, if {{IdentityAssertionResponse/token}} was specified:
             1. Let |tokenValue| be |token|'s {{IdentityAssertionResponse/token}}.
         1. Otherwise, if {{IdentityAssertionResponse/continue_on}} was specified, run these steps
@@ -1707,9 +1676,29 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
             |isAutoSelected|.
         1. Set |credential|'s {{IdentityCredential/configURL}} to |provider|'s
             {{IdentityProviderConfig/configURL}}.
-    1. If |swResponse| is not null, run |processResponse| with |swResponse| and |swResponseBody|.
-    1. Otherwise, [=fetch request=] with |request| and |globalObject|, and with
-        <var ignore>processResponseConsumeBody</var> set to |processResponse|.
+    1. If |swJson| is not null:
+        1. Run |processToken| with |swToken|.
+    1. Otherwise:
+        1. [=Fetch request=] with |request| and |globalObject|, and with
+            <var ignore>processResponseConsumeBody</var> set to the following steps given a
+            <a spec=fetch for=/>response</a> |response| and |responseBody|:
+            1. If |responseBody| is null or failure, set |credential| to the result of
+                [=create an IdentityCredentialError|creating an IdentityCredentialError=] with {}
+                and |globalObject|, and return.
+            1. Let |json| be the result of [=extract the JSON fetch response|extracting the JSON fetch response=]
+                from |response| and |responseBody|.
+            1. [=converted to an IDL value|Convert=] |json| to an {{IdentityAssertionResponse}}, |token|.
+            1. If one of the previous two steps threw an exception, set |credential| to the result of
+                [=create an IdentityCredentialError=] with {} and |globalObject|, and return.
+            1. If |response|'s [=response/status=] is not an [=ok status=]:
+                1. Set |credential| to the result of [=create an IdentityCredentialError=] with {} and
+                    |globalObject|.
+                1. The user agent MAY set |credential|'s {{IdentityCredentialError/error}} based on
+                    |response|'s [=response/status=]. For example, if the [=response/status=] is `500`, it
+                    could set it to "server_error", and if the [=response/status=] is `503`, it could set
+                    it to "temporarily_unavailable".
+                1. Return.
+            1. Run |processToken| with |token|.
     1. Wait for |credential| to be set.
     1. Return |credential|.
 </div>
@@ -1949,16 +1938,15 @@ and a |responseBody|, run the following steps. This returns an [=ordered map=].
 To <dfn>dispatch identity handler</dfn> given an {{IdentityProviderAPIConfig}} |config|,
 an {{IdentityProviderConfig}} |provider|, a [=string=] |endpoint|, a [=/request=] |request|,
 and an optional [=string=] or null
-|accountId| (default null), run the following steps. This returns a [=/response=] or null.
+|accountId| (default null), run the following steps. This returns a JSON [=object=] or null.
 
     1. If |config|.{{IdentityProviderAPIConfig/identity_handler}} is not present, return null.
-    1. Let |registration| be the [=service worker registration=] associated with |provider|'s
+    1. Let |registration| be the [=/service worker registration=] associated with |provider|'s
         {{IdentityProviderConfig/configURL}}.
     1. If |registration| is null, return null.
     1. Let |activeWorker| be |registration|'s [=active worker=].
     1. If |activeWorker| is null, return null.
     1. Let |rpClientId| be |provider|'s {{IdentityProviderConfig/clientId}}.
-    1. Let |nonce| be null.
     1. Let |respondWithPromise| be null.
     1. Let |respondWithEntered| be false.
     1. [=Fire functional event=] "`identityrequest`" using {{IdentityRequestEvent}} on
@@ -1969,8 +1957,6 @@ and an optional [=string=] or null
         :: |request|
         : {{IdentityRequestEvent/rpClientId}}
         :: |rpClientId|
-        : {{IdentityRequestEvent/nonce}}
-        :: |nonce|
         : {{IdentityRequestEvent/accountId}}
         :: |accountId|
         : {{IdentityRequestEvent/respondWith()}}
@@ -1987,7 +1973,12 @@ and an optional [=string=] or null
         1. Let |mimeType| be the result of <a>extracting a MIME TYPE</a> from |response|'s
             <a for=response>header list</a>.
         1. If |mimeType| is failure or is not a [=JSON MIME Type=], return null.
-        1. Return |response|.
+        1. Let |responseBody| be the result of [=reading the body=] of |response|.
+        1. If |responseBody| is null or failure, return null.
+        1. Let |json| be the result of [=extract the JSON fetch response|extracting the JSON
+            fetch response=] from |response| and |responseBody|.
+        1. If the previous step threw an exception, return null.
+        1. Return |json|.
 </div>
 
 <div algorithm>
