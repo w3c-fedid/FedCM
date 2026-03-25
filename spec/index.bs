@@ -1148,6 +1148,96 @@ An extension may use the following instead of the [=create identity credential/s
 </div>
 </div>
 
+<!-- ============================================================ -->
+### Resolve the well-known host ### {#resolve-well-known-host}
+<!-- ============================================================ -->
+
+The <a>resolve the well-known host</a> algorithm determines the host from which the [=well-known
+file=] should be fetched. It does so by querying a DNS TXT record at a well-known subdomain, which
+allows [=IDPs=] to delegate [=well-known file=] hosting to a subdomain other than the
+[=host/registrable domain=].
+
+<div algorithm="resolve the well-known host">
+To <dfn>resolve the well-known host</dfn> given a [=host=] |registrableDomain|, run the following
+steps. This returns a [=host=] or failure.
+    1. Let |queryName| be the [=string/concatenation=] of «"_fedcm.", |registrableDomain|».
+    1. Let |result| be the result of resolving |queryName| as a DNS TXT record type.
+    1. If the resolution returned a response indicating that no records exist (e.g., NXDOMAIN or
+        an empty answer section), return |registrableDomain|.
+    1. If the resolution failed due to a network or DNS infrastructure error (e.g., SERVFAIL,
+        timeout, or connection failure), return failure.
+    1. Let |records| be |result|.
+    1. For each |record| in |records|:
+        1. Let |params| be the result of parsing |record|'s text content as a set of
+            key=value pairs separated by semicolons (";"), where keys and values are
+            stripped of leading and trailing [=ASCII whitespace=].
+        1. If |params| contains a key "sub" whose value is not empty:
+            1. Let |sub| be the value associated with "sub".
+            1. Return the [=string/concatenation=] of «|sub|, ".", |registrableDomain|».
+    1. Return |registrableDomain|.
+
+    Note: The DNS TXT record format follows the convention used by other DNS-based discovery
+        mechanisms (e.g., DMARC's `_dmarc` records). An [=IDP=] whose authentication service
+        runs on `login.idp.example` can set a TXT record at `_fedcm.idp.example` with value
+        `sub=login`, causing the user agent to fetch the [=well-known file=] from
+        `login.idp.example` instead of `idp.example`. If no `_fedcm` record exists, the
+        [=host/registrable domain=] is used directly. If DNS resolution fails due to a
+        network error, the algorithm returns failure rather than silently falling back,
+        to avoid intermittent behavior.
+
+</div>
+
+<!-- ============================================================ -->
+### Fetch a well-known resource ### {#fetch-well-known-resource}
+<!-- ============================================================ -->
+
+<div algorithm="fetch a well-known resource">
+To <dfn>fetch a well-known resource</dfn> given a [=/URL=] |url| and |globalObject|,
+run the following steps. This returns an {{IdentityProviderWellKnown}} or failure.
+    1. Let |result| be null.
+    1. Let |wellKnownRequest| be a new [=/request=] as follows:
+
+        :  [=request/URL=]
+        :: |url|
+        :  [=request/client=]
+        :: null
+        :  [=request/service-workers mode=]
+        :: "none"
+        :  [=request/destination=]
+        :: "webidentity"
+        :  [=request/origin=]
+        :: a unique [=opaque origin=]
+        :  [=request/header list=]
+        :: a [=list=] containing a single [=header=] with [=header/name=] set to `Accept` and
+            [=header/value=] set to `application/json`
+        :  [=request/referrer policy=]
+        :: "no-referrer"
+        :  [=request/credentials mode=]
+        :: "omit"
+        :  [=request/mode=]
+        :: "no-cors"
+
+        Issue: The spec is yet to be updated so that all <a spec=fetch for=/>requests</a> are created
+        with [=request/mode=] set to "user-agent-no-cors". See the relevant
+        [pull request](https://github.com/whatwg/fetch/pull/1533) for details.
+
+    1. [=Fetch request=] with |wellKnownRequest| and |globalObject|, and with <var ignore>processResponseConsumeBody</var>
+        set to the following steps, given a <a spec=fetch for=/>response</a> |response| and |responseBody|:
+        1. Let |json| be the result of [=extract the JSON fetch response=] from |response| and
+            |responseBody|.
+        1. Set |result| to the result of [=converted to an IDL value|converting=] |json|
+            to an {{IdentityProviderWellKnown}}.
+        1. If one of the previous two steps threw an exception, or if the
+            [=list/size=] of |result|["{{IdentityProviderWellKnown/provider_urls}}"] is
+            greater than 1, set |result| to failure.
+
+            Issue: [relax](https://github.com/fedidcg/FedCM/issues/333) the size of the
+            provider_urls array.
+
+    1. Wait for |result| to be set.
+    1. Return |result|.
+
+</div>
 
 <!-- ============================================================ -->
 ### Fetch the config file ### {#fetch-config-file}
@@ -1166,58 +1256,26 @@ or failure.
     1. Run a [[!CSP]] check with a [[CSP#directive-connect-src|connect-src]] directive on the URL
         passed as |configUrl|. If it fails, return failure.
     1. If |configUrl| is not a [=potentially trustworthy URL=], return failure.
+    1. Let |registrableDomain| be |configUrl|'s [=url/host=]'s [=host/registrable domain=].
+    1. Let |wellKnownHost| be the result of [=resolve the well-known host=] given
+        |registrableDomain|.
+    1. If |wellKnownHost| is failure, return failure.
     1. Let |rootUrl| be a new [=/URL=].
     1. Set |rootUrl|'s [=url/scheme=] to |configUrl|'s [=url/scheme=].
-    1. Set |rootUrl|'s [=url/host=] to |configUrl|'s [=url/host=]'s [=host/registrable domain=].
+    1. Set |rootUrl|'s [=url/host=] to |wellKnownHost|.
     1. Set |rootUrl|'s [=url/path=] to the <a>list</a> «".well-known", "web-identity"».
     1. Let |config|, |wellKnown|, |accounts_url|, and |login_url| be null.
     1. Let |skipWellKnown| be false.
     1. Let |rpOrigin| be |globalObject|'s [=associated Document=]'s [=Document/origin=].
-    1. If |rpOrigin| is not an [=opaque origin=], and |rootUrl|'s [=url/host=] is equal
-        to |rpOrigin|'s [=host/registrable domain=], and |rootUrl|'s [=url/scheme=] is
+    1. If |rpOrigin| is not an [=opaque origin=], and |registrableDomain| is equal
+        to |rpOrigin|'s [=host/registrable domain=], and |configUrl|'s [=url/scheme=] is
         equal to |rpOrigin|'s [=origin/scheme=], set |skipWellKnown| to true.
 
         Note: Because domain cookies are valid across an entire site, there is no privacy
             benefit from doing the well-known check if the RP and IDP are in the same site.
     1. Otherwise:
-        1. Let |wellKnownRequest| be a new [=/request=] as follows:
-
-            :  [=request/URL=]
-            :: |rootUrl|
-            :  [=request/client=]
-            :: null
-            :  [=request/service-workers mode=]
-            :: "none"
-            :  [=request/destination=]
-            :: "webidentity"
-            :  [=request/origin=]
-            :: a unique [=opaque origin=]
-            :  [=request/header list=]
-            :: a [=list=] containing a single [=header=] with [=header/name=] set to `Accept` and
-                [=header/value=] set to `application/json`
-            :  [=request/referrer policy=]
-            :: "no-referrer"
-            :  [=request/credentials mode=]
-            :: "omit"
-            :  [=request/mode=]
-            :: "no-cors"
-
-            Issue: The spec is yet to be updated so that all <a spec=fetch for=/>requests</a> are created
-            with [=request/mode=] set to "user-agent-no-cors". See the relevant
-            [pull request](https://github.com/whatwg/fetch/pull/1533) for details.
-
-        1. [=Fetch request=] with |wellKnownRequest| and |globalObject|, and with <var ignore>processResponseConsumeBody</var>
-            set to the following steps, given a <a spec=fetch for=/>response</a> |response| and |responseBody|:
-            1. Let |json| be the result of [=extract the JSON fetch response=] from |response| and
-                |responseBody|.
-            1. Set |wellKnown| to the result of [=converted to an IDL value|converting=] |json|
-                to an {{IdentityProviderWellKnown}}.
-            1. If one of the previous two steps threw an exception, or if the
-                [=list/size=] of |wellKnown|["{{IdentityProviderWellKnown/provider_urls}}"] is
-                greater than 1, set |wellKnown| to failure.
-
-                Issue: [relax](https://github.com/fedidcg/FedCM/issues/333) the size of the
-                provider_urls array.
+        1. Set |wellKnown| to the result of [=fetch a well-known resource=] given
+            |rootUrl| and |globalObject|.
 
     1. Let |configRequest| be a new <a spec=fetch for=/>request</a> as follows:
 
@@ -1292,11 +1350,12 @@ the [=fetch the config file/check accounts and login url step=]:
 
 NOTE: a two-tier file system is used in order to prevent the [=IDP=] from easily determining the [=RP=]
 that a user is visiting by encoding the information in the config file path. This issue is solved by
-requiring a [=well-known file=] to be on the root of the [=IDP=]. The config file itself can be anywhere, but
-it will not be used if the user agent does not find it in the [=well-known file=]. This allows the [=IDP=]
-to keep their actual config files on an arbitary path while allowing the user agent to prevent config file
-path manipulation to fingerprint (for instance, by including the RP in the path). See
-[[#manifest-fingerprinting]].
+requiring a [=well-known file=] to be on the [=IDP=]'s [=host/registrable domain=], or on a
+subdomain indicated by a DNS TXT record at `_fedcm` under the [=host/registrable domain=]. The
+config file itself can be anywhere, but it will not be used if the user agent does not find it in
+the [=well-known file=]. This allows the [=IDP=] to keep their actual config files on an arbitary
+path while allowing the user agent to prevent config file path manipulation to fingerprint (for
+instance, by including the RP in the path). See [[#manifest-fingerprinting]].
 
 <xmp class="idl">
 dictionary IdentityProviderWellKnown {
@@ -2004,11 +2063,11 @@ The <dfn>in parallel steps for getUserInfo</dfn> given a {{Promise}} |promise| a
     1. For each |account| in |accountsList|:
         1. If |account|["{{IdentityProviderAccount/approved_clients}}"] is not empty and it does not
             [=list/contain=] |provider|'s {{IdentityProviderConfig/clientId}}, continue.
-        
+
             Note: this allows the [=IDP=] to override whether an account is a returning account.
             This could be useful for instance in cases where the user has disconnected the
             account out of band.
-        
+
         1. If |account| is [=eligible for auto reauthentication=] given |provider| and
             |globalObject|, set |hasAccountEligibleForAutoReauthentication| to true.
     1. If |hasAccountEligibleForAutoReauthentication| is false, [=queue to reject=] |promise| with
@@ -2018,11 +2077,11 @@ The <dfn>in parallel steps for getUserInfo</dfn> given a {{Promise}} |promise| a
         1. [=list/Append=] an {{IdentityUserInfo}} to |userInfoList| with the following values:
 
             :  {{IdentityUserInfo/email}}
-            :: |account|["{{IdentityProviderAccount/email}}"]   
+            :: |account|["{{IdentityProviderAccount/email}}"]
             :  {{IdentityUserInfo/name}}
-            :: |account|["{{IdentityProviderAccount/name}}"]   
+            :: |account|["{{IdentityProviderAccount/name}}"]
             :  {{IdentityUserInfo/givenName}}
-            :: |account|["{{IdentityProviderAccount/given_name}}"]   
+            :: |account|["{{IdentityProviderAccount/given_name}}"]
             :  {{IdentityUserInfo/picture}}
             :: |account|["{{IdentityProviderAccount/picture}}"]
     1. [=Queue a global task=] on the [=DOM manipulation task source=] given |globalObject| to
@@ -2074,7 +2133,7 @@ network requests performed:
 
 NOTE: The browser uses the [=well-known file=] to prevent [[#manifest-fingerprinting]].
 
-The [=IDP=] exposes a <dfn>well-known file</dfn> in a pre-defined location, specifically at the "web-identity" file at the [=IDPs=]'s path ".well-known".
+The [=IDP=] exposes a <dfn>well-known file</dfn> in a pre-defined location, specifically at the "web-identity" file at the path ".well-known". The host from which the [=well-known file=] is fetched is determined by the [=resolve the well-known host=] algorithm: the user agent first checks for a DNS TXT record at `_fedcm` under the [=IDP=]'s [=host/registrable domain=]. If a record is found with a `sub` parameter (e.g., `sub=login`), the [=well-known file=] is fetched from the indicated subdomain (e.g., `login.idp.example`). Otherwise, the [=well-known file=] is fetched from the [=host/registrable domain=] directly (e.g., `idp.example`).
 
 The [=well-known file=] is fetched in the [=fetch the config file=] algorithm:
 
@@ -2083,7 +2142,8 @@ The [=well-known file=] is fetched in the [=fetch the config file=] algorithm:
 (c) **without** revealing the [=RP=] in the <a http-header>Origin</a> or
     [[RFC9110#field.referer|Referer]] headers.
 
-For example:
+For example, if the [=IDP=]'s [=host/registrable domain=] is `idp.example` and no `_fedcm` DNS TXT
+record is present, the user agent fetches the [=well-known file=] from the [=host/registrable domain=]:
 
 <div class=example>
 ```http
@@ -2094,12 +2154,28 @@ Sec-Fetch-Dest: webidentity
 ```
 </div>
 
+Alternatively, if the DNS TXT record `_fedcm.idp.example` contains `sub=login`, the user agent
+fetches the [=well-known file=] from the indicated subdomain instead:
+
+<div class=example>
+```http
+GET /.well-known/web-identity HTTP/1.1
+Host: login.idp.example
+Accept: application/json
+Sec-Fetch-Dest: webidentity
+```
+</div>
+
+This allows [=IDPs=] whose [=host/registrable domain=] (apex domain) is operated by a different
+service to delegate [=well-known file=] hosting to a subdomain via a DNS record, without requiring
+changes to the apex domain's web server.
+
 The file is parsed expecting a {{IdentityProviderWellKnown}} JSON object.
 
 The {{IdentityProviderWellKnown}} JSON object has the following semantics:
 
 <dl dfn-type="dict-member" dfn-for="IdentityProviderWellKnown">
-    :   <dfn>provider_urls</dfn> 
+    :   <dfn>provider_urls</dfn>
     ::  A list containing exactly one URL pointing to [[#idp-api-config-file]].
     :   <dfn>accounts_endpoint</dfn>
     ::  A URL that points to the same location as the {{IdentityProviderAPIConfig/accounts_endpoint}} in [[#idp-api-config-file]]s.
@@ -2467,9 +2543,9 @@ Every {{IdentityAssertionResponse}} is expected to have members with the followi
 
 <dl dfn-type="dict-member" dfn-for="IdentityAssertionResponse">
     :   <dfn>token</dfn>
-    ::  The resulting token. The value is of type <a href="https://webidl.spec.whatwg.org/#idl-any">`any`</a>, allowing 
+    ::  The resulting token. The value is of type <a href="https://webidl.spec.whatwg.org/#idl-any">`any`</a>, allowing
         [=IDPs=] to return tokens in various formats (string, object, etc.).
-        See the examples at the end of [[#idp-api-id-assertion-endpoint]] for both string 
+        See the examples at the end of [[#idp-api-id-assertion-endpoint]] for both string
         and object token formats.
     :   <dfn>continue_on</dfn>
     ::  A URL that the user agent will open in a popup to finish the authentication process.
@@ -2951,9 +3027,9 @@ The design of FedCM relies on several key security assumptions:
 ### Trusted User Agent ### {#trusted-user-agent}
 <!-- ============================================================ -->
 
-The user agent (i.e., the browser) is assumed to be a trusted entity. It is expected to faithfully 
-enforce same-origin policies, execute CSP and CORS checks, and present a secure, non-forgeable UI 
-that users can trust, and to not contains or executes malicious third parties scripts. The browser 
+The user agent (i.e., the browser) is assumed to be a trusted entity. It is expected to faithfully
+enforce same-origin policies, execute CSP and CORS checks, and present a secure, non-forgeable UI
+that users can trust, and to not contains or executes malicious third parties scripts. The browser
 is responsible for mediating the flow and preventing unauthorized access to credentials.
 
 <!-- ============================================================ -->
@@ -2961,22 +3037,22 @@ is responsible for mediating the flow and preventing unauthorized access to cred
 <!-- ============================================================ -->
 
 All network requests — especially those carrying sensitive information such as tokens — occur over
-secure channels (e.g. HTTPS). The specification assumes that the transport layer prevents 
+secure channels (e.g. HTTPS). The specification assumes that the transport layer prevents
 man-in-the-middle and other network attacks.
 
 <!-- ============================================================ -->
 ### Proper Implementation of Security Headers ### {#proper-implementation-headers}
 <!-- ============================================================ -->
 
-[=IDP=] and [=RP=] implement and enforce appropriate security headers (such as CSP, CORS, 
-and the mandatory use of the `Sec-Fetch-Dest: webidentity` header). These headers are key to 
+[=IDP=] and [=RP=] implement and enforce appropriate security headers (such as CSP, CORS,
+and the mandatory use of the `Sec-Fetch-Dest: webidentity` header). These headers are key to
 distinguishing browser-initiated FedCM flows from arbitrary requests.
 
 <!-- ============================================================ -->
 ### IDP and RP Integrity ### {#idp-and-rp-integrity}
 <!-- ============================================================ -->
 
-[=IDP=] and [=RP=] endpoints are implemented correctly and do not contain vulnerabilities that could 
+[=IDP=] and [=RP=] endpoints are implemented correctly and do not contain vulnerabilities that could
 allow an attacker to bypass the FedCM flow or extract sensitive data.
 
 <!-- ============================================================ -->
@@ -2985,19 +3061,19 @@ allow an attacker to bypass the FedCM flow or extract sensitive data.
 
 **Consideration**
 
-The FedCM API supports flexible token formats, allowing [=IDPs=] to return tokens in various forms. 
-[=RPs=] must be prepared to handle different token structures as agreed upon with their [=IDP=] 
+The FedCM API supports flexible token formats, allowing [=IDPs=] to return tokens in various forms.
+[=RPs=] must be prepared to handle different token structures as agreed upon with their [=IDP=]
 partners. The token content remains opaque to the user agent.
 
 **Recommendations**
 
-1. [=RPs=] should implement robust token parsing logic that can handle the specific format agreed 
+1. [=RPs=] should implement robust token parsing logic that can handle the specific format agreed
     upon with their [=IDP=] partners.
-1. [=RPs=] should validate tokens according to the security requirements and format specifications 
+1. [=RPs=] should validate tokens according to the security requirements and format specifications
     established with their [=IDP=].
-1. [=IDPs=] should clearly document their token format and structure to help [=RPs=] implement 
+1. [=IDPs=] should clearly document their token format and structure to help [=RPs=] implement
     proper validation.
-1. [=IDPs=] should ensure their token format is consistent and follows their documented 
+1. [=IDPs=] should ensure their token format is consistent and follows their documented
     specification.
 
 <!-- ============================================================ -->
@@ -3291,7 +3367,7 @@ origin of the fetched URLs.
     information required to perform a federated signin/signup. It is not possible for the [=RP=] or
     the [=IDP=] to force the token fetch to happen without user permission, as the user agent cannot be
     spoofed or otherwise tricked.
-    
+
 * The [=disconnect endpoint=] may only be fetched after the user has successfully gone through the
     FedCM flow at least once in the [=RP=]. It sends a credentialed request to the [=IDP=], so it
     is important that the [=user agent=] does not allow unlimited requests of such type, even after
@@ -3556,11 +3632,69 @@ These schemes have not been adopted by this specification.
 The FedCM API treats token content as opaque data, regardless of type.
 This design ensures:
 
-1. The [=user agent=] does not semantically interpret or validate the meaning of token contents, but 
+1. The [=user agent=] does not semantically interpret or validate the meaning of token contents, but
     may inspect their type and structure for proper handling, while maintaining the privacy of the
     authentication data.
 1. The token format flexibility does not introduce new privacy risks.
 1. [=IDPs=] have flexibility in token design without compromising user privacy.
+
+<!-- ====================================================================== -->
+# Deployment Considerations # {#deployment}
+<!-- ====================================================================== -->
+
+*This section is non-normative.*
+
+<!-- ============================================================ -->
+## Well-Known File and Apex Domain Challenges ## {#deployment-well-known}
+<!-- ============================================================ -->
+
+The FedCM API requires a [=well-known file=] to be hosted at the [=IDP=]'s [=host/registrable
+domain=]. This serves as a critical anti-fingerprinting measure (see [[#manifest-fingerprinting]]).
+However, requiring the [=well-known file=] to be hosted at the [=host/registrable domain=]
+(typically the apex domain) can pose operational challenges for some organizations.
+
+**Apex domain limitations.** Apex domains (e.g., `idp.example` as opposed to `login.idp.example`)
+cannot use DNS CNAME records because they must hold NS and SOA records. This makes it difficult to
+route apex domains to modern cloud services that rely on CNAMEs for load balancing, failover, and
+geographic affinity. Some DNS providers offer workarounds such as ALIAS or ANAME records, but
+these are not universally supported and can degrade certain DNS features.
+
+**Split domain ownership.** It is common for different subdomains of a [=host/registrable domain=]
+to be operated by different teams or services within an organization. For example,
+`login.idp.example` might be operated by an authentication service, while `idp.example` (the apex)
+might be operated by a marketing team or point to an entirely different web application. Requiring
+the [=well-known file=] at the apex creates a runtime dependency between the authentication service
+and whichever service operates the apex domain.
+
+**White-label identity providers.** Organizations that delegate authentication to a white-label
+identity provider (such as Okta or Microsoft Entra B2C) typically CNAME a subdomain like
+`login.idp.example` to the provider's infrastructure. In this setup, the identity provider has no
+control over the apex domain and cannot host a file there on behalf of their customer.
+
+To address these challenges, the [=resolve the well-known host=] algorithm allows [=IDPs=] to set a
+DNS TXT record at `_fedcm.<registrable domain>` indicating which subdomain should host the
+[=well-known file=]. This approach:
+
+- **Preserves the privacy properties** of the [=well-known file=] system, since the subdomain must
+    still be under the same [=host/registrable domain=] and the TXT record is publicly visible.
+- **Uses existing DNS infrastructure** that domain administrators are already familiar with, following
+    the convention established by protocols such as DMARC (`_dmarc`), DKIM (`_domainkey`), and
+    MTA-STS (`_mta-sts`).
+- **Avoids adding a runtime dependency** on the apex domain's web server, since DNS records are
+    typically static and managed independently of any particular web service.
+- **Enables delegation** to white-label identity providers: the domain owner sets a TXT record
+    pointing to the subdomain they have already CNAMEd to the provider, and the provider hosts the
+    [=well-known file=] on that subdomain.
+
+For example, an organization that uses `login.idp.example` for authentication can set the following
+DNS record:
+
+```
+_fedcm.idp.example.  TXT  "sub=login"
+```
+
+The user agent will then fetch the [=well-known file=] from `login.idp.example` instead of
+`idp.example`, without any changes needed to the apex domain's web server.
 
 <!-- ====================================================================== -->
 # Extensibility # {#extensibility}
