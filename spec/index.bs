@@ -1157,6 +1157,17 @@ file=] should be fetched. It does so by querying a DNS TXT record at a well-know
 allows [=IDPs=] to delegate [=well-known file=] hosting to a subdomain other than the
 [=host/registrable domain=].
 
+Note: The DNS TXT record format follows the convention used by other DNS-based discovery
+    mechanisms (e.g., DMARC's `_dmarc` records). An [=IDP=] whose authentication service
+    runs on `login.idp.example` can set a TXT record at `_web-identity.idp.example` with value
+    `sub=login`, causing the user agent to fetch the [=well-known file=] from
+    `login.idp.example` instead of `idp.example`. If no `_web-identity` record exists, the
+    [=host/registrable domain=] is used directly. If DNS resolution fails due to a
+    network error, the algorithm returns failure rather than silently falling back,
+    to avoid intermittent behavior. Because the lookup is always performed against
+    the [=host/registrable domain=], there is at most one such DNS delegation per
+    registrable domain. See [[#manifest-fingerprinting]].
+
 <div algorithm="resolve the well-known host">
 To <dfn>resolve the well-known host</dfn> given a [=host=] |registrableDomain|, run the following
 steps. This returns a [=host=] or failure.
@@ -1175,17 +1186,6 @@ steps. This returns a [=host=] or failure.
             1. Let |sub| be the value associated with "sub".
             1. Return the [=string/concatenation=] of «|sub|, ".", |registrableDomain|».
     1. Return |registrableDomain|.
-
-    Note: The DNS TXT record format follows the convention used by other DNS-based discovery
-        mechanisms (e.g., DMARC's `_dmarc` records). An [=IDP=] whose authentication service
-        runs on `login.idp.example` can set a TXT record at `_web-identity.idp.example` with value
-        `sub=login`, causing the user agent to fetch the [=well-known file=] from
-        `login.idp.example` instead of `idp.example`. If no `_web-identity` record exists, the
-        [=host/registrable domain=] is used directly. If DNS resolution fails due to a
-        network error, the algorithm returns failure rather than silently falling back,
-        to avoid intermittent behavior. Because the lookup is always performed against
-        the [=host/registrable domain=], there is at most one such DNS delegation per
-        registrable domain. See [[#manifest-fingerprinting]].
 
     Note: The DNS TXT lookup adds a query to the [=well-known file=] fetch path, including
         for [=IDPs=] that do not use DNS delegation. In practice, when no `_web-identity`
