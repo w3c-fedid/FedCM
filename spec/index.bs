@@ -1160,7 +1160,7 @@ allows [=IDPs=] to delegate [=well-known file=] hosting to a subdomain other tha
 <div algorithm="resolve the well-known host">
 To <dfn>resolve the well-known host</dfn> given a [=host=] |registrableDomain|, run the following
 steps. This returns a [=host=] or failure.
-    1. Let |queryName| be the [=string/concatenation=] of «"_fedcm.", |registrableDomain|».
+    1. Let |queryName| be the [=string/concatenation=] of «"_web-identity.", |registrableDomain|».
     1. Let |result| be the result of resolving |queryName| as a DNS TXT record type.
     1. If the resolution returned a response indicating that no records exist (e.g., NXDOMAIN or
         an empty answer section), return |registrableDomain|.
@@ -1178,12 +1178,20 @@ steps. This returns a [=host=] or failure.
 
     Note: The DNS TXT record format follows the convention used by other DNS-based discovery
         mechanisms (e.g., DMARC's `_dmarc` records). An [=IDP=] whose authentication service
-        runs on `login.idp.example` can set a TXT record at `_fedcm.idp.example` with value
+        runs on `login.idp.example` can set a TXT record at `_web-identity.idp.example` with value
         `sub=login`, causing the user agent to fetch the [=well-known file=] from
-        `login.idp.example` instead of `idp.example`. If no `_fedcm` record exists, the
+        `login.idp.example` instead of `idp.example`. If no `_web-identity` record exists, the
         [=host/registrable domain=] is used directly. If DNS resolution fails due to a
         network error, the algorithm returns failure rather than silently falling back,
-        to avoid intermittent behavior.
+        to avoid intermittent behavior. Because the lookup is always performed against
+        the [=host/registrable domain=], there is at most one such DNS delegation per
+        registrable domain. See [[#manifest-fingerprinting]].
+
+    Note: The DNS TXT lookup adds a query to the [=well-known file=] fetch path, including
+        for [=IDPs=] that do not use DNS delegation. In practice, when no `_web-identity`
+        record exists, DNS resolvers return NXDOMAIN and cache the negative response
+        (typically for the duration of the SOA MINIMUM TTL), so repeated lookups for the
+        same [=host/registrable domain=] do not incur additional network round-trips.
 
 </div>
 
@@ -1351,7 +1359,7 @@ the [=fetch the config file/check accounts and login url step=]:
 NOTE: a two-tier file system is used in order to prevent the [=IDP=] from easily determining the [=RP=]
 that a user is visiting by encoding the information in the config file path. This issue is solved by
 requiring a [=well-known file=] to be on the [=IDP=]'s [=host/registrable domain=], or on a
-subdomain indicated by a DNS TXT record at `_fedcm` under the [=host/registrable domain=]. The
+subdomain indicated by a DNS TXT record at `_web-identity` under the [=host/registrable domain=]. The
 config file itself can be anywhere, but it will not be used if the user agent does not find it in
 the [=well-known file=]. This allows the [=IDP=] to keep their actual config files on an arbitary
 path while allowing the user agent to prevent config file path manipulation to fingerprint (for
@@ -2133,7 +2141,7 @@ network requests performed:
 
 NOTE: The browser uses the [=well-known file=] to prevent [[#manifest-fingerprinting]].
 
-The [=IDP=] exposes a <dfn>well-known file</dfn> in a pre-defined location, specifically at the "web-identity" file at the path ".well-known". The host from which the [=well-known file=] is fetched is determined by the [=resolve the well-known host=] algorithm: the user agent first checks for a DNS TXT record at `_fedcm` under the [=IDP=]'s [=host/registrable domain=]. If a record is found with a `sub` parameter (e.g., `sub=login`), the [=well-known file=] is fetched from the indicated subdomain (e.g., `login.idp.example`). Otherwise, the [=well-known file=] is fetched from the [=host/registrable domain=] directly (e.g., `idp.example`).
+The [=IDP=] exposes a <dfn>well-known file</dfn> in a pre-defined location, specifically at the "web-identity" file at the path ".well-known". The host from which the [=well-known file=] is fetched is determined by the [=resolve the well-known host=] algorithm: the user agent first checks for a DNS TXT record at `_web-identity` under the [=IDP=]'s [=host/registrable domain=]. If a record is found with a `sub` parameter (e.g., `sub=login`), the [=well-known file=] is fetched from the indicated subdomain (e.g., `login.idp.example`). Otherwise, the [=well-known file=] is fetched from the [=host/registrable domain=] directly (e.g., `idp.example`).
 
 The [=well-known file=] is fetched in the [=fetch the config file=] algorithm:
 
@@ -2142,7 +2150,7 @@ The [=well-known file=] is fetched in the [=fetch the config file=] algorithm:
 (c) **without** revealing the [=RP=] in the <a http-header>Origin</a> or
     [[RFC9110#field.referer|Referer]] headers.
 
-For example, if the [=IDP=]'s [=host/registrable domain=] is `idp.example` and no `_fedcm` DNS TXT
+For example, if the [=IDP=]'s [=host/registrable domain=] is `idp.example` and no `_web-identity` DNS TXT
 record is present, the user agent fetches the [=well-known file=] from the [=host/registrable domain=]:
 
 <div class=example>
@@ -2154,7 +2162,7 @@ Sec-Fetch-Dest: webidentity
 ```
 </div>
 
-Alternatively, if the DNS TXT record `_fedcm.idp.example` contains `sub=login`, the user agent
+Alternatively, if the DNS TXT record `_web-identity.idp.example` contains `sub=login`, the user agent
 fetches the [=well-known file=] from the indicated subdomain instead:
 
 <div class=example>
@@ -3672,7 +3680,7 @@ identity provider (such as Okta or Microsoft Entra B2C) typically CNAME a subdom
 control over the apex domain and cannot host a file there on behalf of their customer.
 
 To address these challenges, the [=resolve the well-known host=] algorithm allows [=IDPs=] to set a
-DNS TXT record at `_fedcm.<registrable domain>` indicating which subdomain should host the
+DNS TXT record at `_web-identity.<registrable domain>` indicating which subdomain should host the
 [=well-known file=]. This approach:
 
 - **Preserves the privacy properties** of the [=well-known file=] system, since the subdomain must
@@ -3690,7 +3698,7 @@ For example, an organization that uses `login.idp.example` for authentication ca
 DNS record:
 
 ```
-_fedcm.idp.example.  TXT  "sub=login"
+_web-identity.idp.example.  TXT  "sub=login"
 ```
 
 The user agent will then fetch the [=well-known file=] from `login.idp.example` instead of
