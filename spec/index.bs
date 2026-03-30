@@ -603,9 +603,9 @@ perform the following steps. This returns an {{USVString}} or failure.
         :  [=request/mode=]
         :: "cors"
 
-    1. Let |swJson| be the result of [=dispatch identity handler=] given |config|, |options|,
-        "`disconnect`", |request|, and
-        |options|'s {{IdentityCredentialDisconnectOptions/accountHint}}.
+    1. Let |swJsonPromise| be the result of [=dispatch identity handler=] given |config|, |options|,
+        "`disconnect`", and |request|.
+    1. Let |swJson| be the result of [=awaiting=] |swJsonPromise|.
     1. If |swJson| is not null:
         1. [=converted to an IDL value|Convert=] |swJson| to a {{DisconnectedAccount}}, |swAccount|.
         1. If the previous step threw an exception, set |swJson| to null.
@@ -1268,16 +1268,16 @@ or failure.
             |config|.{{IdentityProviderAPIConfig/accounts_endpoint}}, and |globalObject|.
         1. If |login_url| or |accounts_url| is failure, set |config| to failure.
         1. If |config| is not failure and
-            |config|.{{IdentityProviderAPIConfig/identity_handler}} is present:
+            |config|'s {{IdentityProviderAPIConfig/identity_handler}} is present:
             1. Let |swUrl| be the result of [=computing the manifest URL=] with |provider|,
-                |config|.{{IdentityProviderAPIConfig/identity_handler}}.{{IdentityHandlerConfig/service_worker}},
+                |config|'s {{IdentityProviderAPIConfig/identity_handler}}'s {{IdentityHandlerConfig/service_worker}},
                 and |globalObject|.
             1. If |swUrl| is not failure, register a service worker under the
                 [=IDP=]'s [=/origin=] with script URL |swUrl|, following [[!SERVICE-WORKERS]],
                 and associate the registration with |provider|'s
                 {{IdentityProviderConfig/configURL}}.
         1. Otherwise, if |config| is not failure and
-            |config|.{{IdentityProviderAPIConfig/identity_handler}} is not present:
+            |config|'s {{IdentityProviderAPIConfig/identity_handler}} is not present:
             1. If there is a [=/service worker registration=] associated with |provider|'s
                 {{IdentityProviderConfig/configURL}}, [=unregister=] it.
 
@@ -1371,7 +1371,6 @@ interface IdentityRequestEvent : ExtendableEvent {
   readonly attribute USVString endpoint;
   readonly attribute Request request;
   readonly attribute USVString rpClientId;
-  readonly attribute USVString? accountId;
   undefined respondWith(Promise<Response> response);
 };
 
@@ -1379,9 +1378,19 @@ dictionary IdentityRequestEventInit : ExtendableEventInit {
   required USVString endpoint;
   required Request request;
   required USVString rpClientId;
-  USVString? accountId = null;
 };
 </xmp>
+
+An {{IdentityRequestEvent}} has the following internal slots:
+
+<dl>
+    :   <b>\[[respondWithCalled]]</b>
+    ::  A boolean, initially false. Set to true when {{IdentityRequestEvent/respondWith()}} is
+        called. Prevents multiple invocations.
+    :   <b>\[[respondWithPromise]]</b>
+    ::  A {{Promise}} or null, initially null. Stores the promise passed to
+        {{IdentityRequestEvent/respondWith()}}.
+</dl>
 
 <dl>
     :   <b>{{IdentityRequestEvent/endpoint}}</b>
@@ -1398,15 +1407,44 @@ dictionary IdentityRequestEventInit : ExtendableEventInit {
     :   <b>{{IdentityRequestEvent/rpClientId}}</b>
     ::  Returns the {{IdentityProviderConfig/clientId}} of the [=RP=] that initiated the FedCM
         request.
-    :   <b>{{IdentityRequestEvent/accountId}}</b>
-    ::  Returns the account identifier, if the request is scoped to a specific account (e.g.,
-        for the `id_assertion` or `disconnect` endpoints). Returns null for endpoints that are
-        not account-specific (e.g., `accounts`).
     :   <b>{{IdentityRequestEvent/respondWith()}}</b>
     ::  Provides a {{Promise}} that resolves to a {{Response}} for the [=user agent=] to use
-        instead of performing the default credentialed fetch. Can only be called once per event;
-        subsequent calls throw an "{{InvalidStateError}}" {{DOMException}}.
+        instead of performing the default credentialed fetch. Must be called during event
+        dispatch; throws an "{{InvalidStateError}}" {{DOMException}} if the event is not
+        trusted, is not being dispatched, or has already had {{IdentityRequestEvent/respondWith()}}
+        called. See the [=respond to identity request=] algorithm.
 </dl>
+
+The <dfn for="IdentityRequestEvent">endpoint</dfn> attribute getter steps are to return the value
+it was initialized to.
+
+The <dfn for="IdentityRequestEvent">request</dfn> attribute getter steps are to return the value
+it was initialized to.
+
+The <dfn for="IdentityRequestEvent">rpClientId</dfn> attribute getter steps are to return the value
+it was initialized to.
+
+<div algorithm>
+The <dfn for="IdentityRequestEvent">respondWith(|promise|)</dfn> method, when invoked, must run
+the <a>respond to identity request</a> algorithm with [=this=] and |promise|.
+</div>
+
+<div algorithm>
+To <dfn>respond to identity request</dfn> given an {{IdentityRequestEvent}} |event| and a
+{{Promise}} |promise|, run the following steps:
+
+    1. If |event|'s {{Event/isTrusted}} attribute is false, [=throw=] an "{{InvalidStateError}}"
+        {{DOMException}}.
+    1. If |event|'s [=Event/dispatch flag=] is not set, [=throw=] an "{{InvalidStateError}}"
+        {{DOMException}}.
+    1. If |event|.\[[respondWithCalled]] is true, [=throw=] an "{{InvalidStateError}}"
+        {{DOMException}}.
+    1. Set |event|.\[[respondWithCalled]] to true.
+    1. Set |event|'s [=Event/stop propagation flag=].
+    1. Set |event|'s [=Event/stop immediate propagation flag=].
+    1. Set |event|.\[[respondWithPromise]] to |promise|.
+    1. Add |promise| to |event|'s [=ExtendableEvent/extend lifetime promises=].
+</div>
 
 <div class="note">
 The {{IdentityRequestEvent}} uses a single event type ("`identityrequest`") for all
@@ -1479,8 +1517,9 @@ returns an {{IdentityProviderAccountList}}.
         Note: This fetch should only send Same-Site=None cookies. Specifying this will require
         [cookie layering](https://github.com/httpwg/http-extensions/issues/2084).
 
-    1. Let |swJson| be the result of [=dispatch identity handler=] given |config|, |provider|,
-        "`accounts`", |request|.
+    1. Let |swJsonPromise| be the result of [=dispatch identity handler=] given |config|, |provider|,
+        "`accounts`", and |request|.
+    1. Let |swJson| be the result of [=awaiting=] |swJsonPromise|.
     1. If |swJson| is not null:
         1. [=converted to an IDL value|Convert=] |swJson| to an {{IdentityProviderAccountList}},
             and store the result in |swAccountsList|.
@@ -1626,8 +1665,9 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
         :  [=request/mode=]
         :: "cors"
 
-    1. Let |swJson| be the result of [=dispatch identity handler|dispatching identity handler=]
-        given |config|, |provider|, "`id_assertion`", |request|, and |accountId|.
+    1. Let |swJsonPromise| be the result of [=dispatch identity handler|dispatching identity handler=]
+        given |config|, |provider|, "`id_assertion`", and |request|.
+    1. Let |swJson| be the result of [=awaiting=] |swJsonPromise|.
     1. If |swJson| is not null:
         1. [=converted to an IDL value|Convert=] |swJson| to an
             {{IdentityAssertionResponse}} and |swToken|.
@@ -1936,49 +1976,42 @@ and a |responseBody|, run the following steps. This returns an [=ordered map=].
 
 <div algorithm>
 To <dfn>dispatch identity handler</dfn> given an {{IdentityProviderAPIConfig}} |config|,
-an {{IdentityProviderConfig}} |provider|, a [=string=] |endpoint|, a [=/request=] |request|,
-and an optional [=string=] or null
-|accountId| (default null), run the following steps. This returns a JSON [=object=] or null.
+an {{IdentityProviderConfig}} |provider|, a [=string=] |endpoint|, and a [=/request=] |request|,
+run the following steps. This returns a {{Promise}} that resolves with a JSON [=object=] or null.
 
-    1. If |config|.{{IdentityProviderAPIConfig/identity_handler}} is not present, return null.
+    1. If |config|'s {{IdentityProviderAPIConfig/identity_handler}} is not present, return
+        [=a promise resolved with=] null.
     1. Let |registration| be the [=/service worker registration=] associated with |provider|'s
         {{IdentityProviderConfig/configURL}}.
-    1. If |registration| is null, return null.
+    1. If |registration| is null, return [=a promise resolved with=] null.
     1. Let |activeWorker| be |registration|'s [=active worker=].
-    1. If |activeWorker| is null, return null.
+    1. If |activeWorker| is null, return [=a promise resolved with=] null.
     1. Let |rpClientId| be |provider|'s {{IdentityProviderConfig/clientId}}.
-    1. Let |respondWithPromise| be null.
-    1. Let |respondWithEntered| be false.
-    1. [=Fire functional event=] "`identityrequest`" using {{IdentityRequestEvent}} on
-        |registration| with the following properties:
-        : {{IdentityRequestEvent/endpoint}}
-        :: |endpoint|
-        : {{IdentityRequestEvent/request}}
-        :: |request|
-        : {{IdentityRequestEvent/rpClientId}}
-        :: |rpClientId|
-        : {{IdentityRequestEvent/accountId}}
-        :: |accountId|
-        : {{IdentityRequestEvent/respondWith()}}
-        :: An algorithm that, when invoked with a {{Promise}} |promise|:
-            1. If |respondWithEntered| is true, [=throw=] an "{{InvalidStateError}}"
-                {{DOMException}}.
-            1. Set |respondWithEntered| to true.
-            1. Set |respondWithPromise| to |promise|.
-    1. If |respondWithPromise| is null, return null.
-    1. [=Upon rejection=] of |respondWithPromise|, return null.
-    1. [=Upon fulfillment=] of |respondWithPromise| with |response|:
-        1. If |response| is not a {{Response}} object, return null.
-        1. If |response|'s [=response/status=] is not an [=ok status=], return null.
+    1. Let |event| be a new {{IdentityRequestEvent}}.
+    1. Set |event|'s {{IdentityRequestEvent/endpoint}} to |endpoint|.
+    1. Set |event|'s {{IdentityRequestEvent/request}} to |request|.
+    1. Set |event|'s {{IdentityRequestEvent/rpClientId}} to |rpClientId|.
+    1. [=Fire functional event=] "`identityrequest`" using |event| on |registration|.
+    1. If |event|.\[[respondWithPromise]] is null, return [=a promise resolved with=] null.
+    1. Let |p| be [=a new promise=].
+    1. [=Upon rejection=] of |event|.\[[respondWithPromise]]:
+        1. [=Resolve=] |p| with null.
+    1. [=Upon fulfillment=] of |event|.\[[respondWithPromise]] with |response|:
+        1. If |response| is not a {{Response}} object, [=resolve=] |p| with null and return.
+        1. If |response|'s [=response/status=] is not an [=ok status=], [=resolve=] |p| with null
+            and return.
         1. Let |mimeType| be the result of <a>extracting a MIME TYPE</a> from |response|'s
             <a for=response>header list</a>.
-        1. If |mimeType| is failure or is not a [=JSON MIME Type=], return null.
-        1. Let |responseBody| be the result of [=reading the body=] of |response|.
-        1. If |responseBody| is null or failure, return null.
-        1. Let |json| be the result of [=extract the JSON fetch response|extracting the JSON
-            fetch response=] from |response| and |responseBody|.
-        1. If the previous step threw an exception, return null.
-        1. Return |json|.
+        1. If |mimeType| is failure or is not a [=JSON MIME Type=], [=resolve=] |p| with null
+            and return.
+        1. [=Fully read=] |response|'s [=Response/body=] given |processBody| set to the following
+            steps given a [=byte sequence=] |responseBody|:
+            1. Let |json| be the result of [=extract the JSON fetch response|extracting the JSON
+                fetch response=] from |response| and |responseBody|.
+            1. If the previous step threw an exception, [=resolve=] |p| with null and return.
+            1. [=Resolve=] |p| with |json|.
+        1. If reading the body fails, [=resolve=] |p| with null.
+    1. Return |p|.
 </div>
 
 <div algorithm>
