@@ -605,7 +605,7 @@ perform the following steps. This returns an {{USVString}} or failure.
 
     1. Let |swJsonPromise| be the result of [=dispatch identity handler=] given |config|, |options|,
         "`disconnect`", and |request|.
-    1. Let |swJson| be the result of [=awaiting=] |swJsonPromise|.
+    1. Let |swJson| be the result of [=await=] |swJsonPromise|.
     1. If |swJson| is not null:
         1. [=converted to an IDL value|Convert=] |swJson| to a {{DisconnectedAccount}}, |swAccount|.
         1. If the previous step threw an exception, set |swJson| to null.
@@ -1283,13 +1283,13 @@ or failure.
 
                 Note: This ensures that when an [=IDP=] removes the
                 {{IdentityProviderAPIConfig/identity_handler}} from its [=config file=],
-                the previously registered [=service worker=] is cleaned up on the next
+                the previously registered [=/service worker=] is cleaned up on the next
                 FedCM request.
 
         Note: The [=/service worker registration=] created here is also subject to the
-        normal [=service worker=] lifecycle and storage management. In particular,
+        normal [=/service worker=] lifecycle and storage management. In particular,
         `Clear-Site-Data: "storage"` sent by the [=IDP=]'s origin will unregister
-        all [=service workers=] for that origin, including identity handlers,
+        all [=/service workers=] for that origin, including identity handlers,
         per [[!SERVICE-WORKERS]].
     1. Wait for |config| to be set.
     1. If |config| is failure, return failure.
@@ -1370,14 +1370,12 @@ interface IdentityRequestEvent : ExtendableEvent {
   constructor(DOMString type, IdentityRequestEventInit eventInitDict);
   readonly attribute USVString endpoint;
   readonly attribute Request request;
-  readonly attribute USVString rpClientId;
   undefined respondWith(Promise<Response> response);
 };
 
 dictionary IdentityRequestEventInit : ExtendableEventInit {
   required USVString endpoint;
   required Request request;
-  required USVString rpClientId;
 };
 </xmp>
 
@@ -1404,9 +1402,6 @@ An {{IdentityRequestEvent}} has the following internal slots:
         to include the `Sec-Fetch-Dest: webidentity` [=forbidden request-header=]. The service
         worker can forward this request via `fetch(event.request)` to preserve the header, which
         the [=IDP=] server can use to verify the request originated from the FedCM API.
-    :   <b>{{IdentityRequestEvent/rpClientId}}</b>
-    ::  Returns the {{IdentityProviderConfig/clientId}} of the [=RP=] that initiated the FedCM
-        request.
     :   <b>{{IdentityRequestEvent/respondWith()}}</b>
     ::  Provides a {{Promise}} that resolves to a {{Response}} for the [=user agent=] to use
         instead of performing the default credentialed fetch. Must be called during event
@@ -1415,17 +1410,14 @@ An {{IdentityRequestEvent}} has the following internal slots:
         called. See the [=respond to identity request=] algorithm.
 </dl>
 
-The <dfn for="IdentityRequestEvent">endpoint</dfn> attribute getter steps are to return the value
+The <dfn for="IdentityRequestEvent" export>endpoint</dfn> attribute getter steps are to return the value
 to which it was initialized.
 
-The <dfn for="IdentityRequestEvent">request</dfn> attribute getter steps are to return the value
-to which it was initialized.
-
-The <dfn for="IdentityRequestEvent">rpClientId</dfn> attribute getter steps are to return the value
+The <dfn for="IdentityRequestEvent" export>request</dfn> attribute getter steps are to return the value
 to which it was initialized.
 
 <div algorithm>
-The <dfn for="IdentityRequestEvent">respondWith(|promise|)</dfn> method, when invoked, must run
+The <dfn for="IdentityRequestEvent" export>respondWith(|promise|)</dfn> method, when invoked, must run
 the <a>respond to identity request</a> algorithm with [=this=] and |promise|.
 </div>
 
@@ -1519,7 +1511,7 @@ returns an {{IdentityProviderAccountList}}.
 
     1. Let |swJsonPromise| be the result of [=dispatch identity handler=] given |config|, |provider|,
         "`accounts`", and |request|.
-    1. Let |swJson| be the result of [=awaiting=] |swJsonPromise|.
+    1. Let |swJson| be the result of [=await=] |swJsonPromise|.
     1. If |swJson| is not null:
         1. [=converted to an IDL value|Convert=] |swJson| to an {{IdentityProviderAccountList}},
             and store the result in |swAccountsList|.
@@ -1667,7 +1659,7 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
 
     1. Let |swJsonPromise| be the result of [=dispatch identity handler|dispatching identity handler=]
         given |config|, |provider|, "`id_assertion`", and |request|.
-    1. Let |swJson| be the result of [=awaiting=] |swJsonPromise|.
+    1. Let |swJson| be the result of [=await=] |swJsonPromise|.
     1. If |swJson| is not null:
         1. [=converted to an IDL value|Convert=] |swJson| to an
             {{IdentityAssertionResponse}} and |swToken|.
@@ -1992,17 +1984,17 @@ run the following steps. This returns a {{Promise}} that resolves with a JSON [=
         1. The user agent SHOULD [=report a warning to the console=] that the identity handler
             service worker has no active worker.
         1. Return [=a promise resolved with=] null.
-    1. Let |rpClientId| be |provider|'s {{IdentityProviderConfig/clientId}}.
     1. Let |event| be a new {{IdentityRequestEvent}}.
     1. Set |event|'s {{IdentityRequestEvent/endpoint}} to |endpoint|.
     1. Set |event|'s {{IdentityRequestEvent/request}} to |request|.
-    1. Set |event|'s {{IdentityRequestEvent/rpClientId}} to |rpClientId|.
     1. [=Fire functional event=] "`identityrequest`" using |event| on |registration|.
-    1. If |event|.\[[respondWithPromise]] is null, then:
-        1. The user agent SHOULD [=report a warning to the console=] that the identity handler
-            service worker did not call {{IdentityRequestEvent/respondWith()}} for the
-            |endpoint| endpoint.
-        1. Return [=a promise resolved with=] null.
+    1. If |event|.\[[respondWithPromise]] is null, return [=a promise resolved with=] null.
+
+        Note: If the [=/service worker=] does not call {{IdentityRequestEvent/respondWith()}},
+        the [=user agent=] silently falls back to the default credentialed fetch. This is the
+        expected behavior when the [=/service worker=] does not wish to handle a particular
+        {{IdentityRequestEvent/endpoint}}.
+
     1. Let |p| be [=a new promise=].
     1. [=Upon rejection=] of |event|.\[[respondWithPromise]]:
         1. The user agent SHOULD [=report a warning to the console=] that the identity handler
@@ -2024,7 +2016,7 @@ run the following steps. This returns a {{Promise}} that resolves with a JSON [=
             1. The user agent SHOULD [=report a warning to the console=] that the identity
                 handler response did not have a JSON MIME type.
             1. [=Resolve=] |p| with null and return.
-        1. [=Fully read=] |response|'s [=Response/body=] given |processBody| set to the following
+        1. [=Fully read=] |response|'s [=response/body=] given |processBody| set to the following
             steps given a [=byte sequence=] |responseBody|:
             1. Let |json| be the result of [=extract the JSON fetch response|extracting the JSON
                 fetch response=] from |response| and |responseBody|.
@@ -2386,7 +2378,7 @@ The {{IdentityProviderAPIConfig}} object's members have the following semantics:
     ::  An optional string that needs to match the {{IdentityProviderAccount/label_hints}} provided
         by the IdP.
     :   <dfn>identity_handler</dfn>
-    ::  An optional {{IdentityHandlerConfig}} that declares a [=service worker=] capable of
+    ::  An optional {{IdentityHandlerConfig}} that declares a [=/service worker=] capable of
         intercepting credentialed FedCM requests.
 </dl>
 
@@ -3242,7 +3234,7 @@ partners. The token content remains opaque to the user agent.
 **Consideration**
 
 When an [=IDP=] declares an {{IdentityProviderAPIConfig/identity_handler}} in its [=config file=],
-the [=user agent=] dispatches credentialed FedCM requests to the [=IDP=]'s [=service worker=] before
+the [=user agent=] dispatches credentialed FedCM requests to the [=IDP=]'s [=/service worker=] before
 making network calls.
 
 The service worker runs under the [=IDP=]'s own [=/origin=] and is authored by the [=IDP=].
@@ -3575,7 +3567,7 @@ origin of the fetched URLs.
     this endpoint does not introduce a way for the [=RP=] to send requests to the [=IDP=] containing
     the [=IDP=] cookies forever.
 
-* The [=identity handler=] is only dispatched for credentialed endpoints (accounts, id_assertion,
+* The [=dispatch identity handler|identity handler=] is only dispatched for credentialed endpoints (accounts, id_assertion,
     disconnect). These endpoints already receive [=IDP=] cookies and operate within the [=IDP=]'s
     existing trust context. The service worker sees no information beyond what the [=IDP=]'s server
     would receive. Uncredentialed endpoints (well-known, config, client_metadata) are not
