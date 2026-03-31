@@ -1983,27 +1983,47 @@ run the following steps. This returns a {{Promise}} that resolves with a JSON [=
         [=a promise resolved with=] null.
     1. Let |registration| be the [=/service worker registration=] associated with |provider|'s
         {{IdentityProviderConfig/configURL}}.
-    1. If |registration| is null, return [=a promise resolved with=] null.
+    1. If |registration| is null, then:
+        1. The user agent SHOULD [=report a warning to the console=] that no service worker
+            registration was found for the identity handler.
+        1. Return [=a promise resolved with=] null.
     1. Let |activeWorker| be |registration|'s [=active worker=].
-    1. If |activeWorker| is null, return [=a promise resolved with=] null.
+    1. If |activeWorker| is null, then:
+        1. The user agent SHOULD [=report a warning to the console=] that the identity handler
+            service worker has no active worker.
+        1. Return [=a promise resolved with=] null.
     1. Let |rpClientId| be |provider|'s {{IdentityProviderConfig/clientId}}.
     1. Let |event| be a new {{IdentityRequestEvent}}.
     1. Set |event|'s {{IdentityRequestEvent/endpoint}} to |endpoint|.
     1. Set |event|'s {{IdentityRequestEvent/request}} to |request|.
     1. Set |event|'s {{IdentityRequestEvent/rpClientId}} to |rpClientId|.
     1. [=Fire functional event=] "`identityrequest`" using |event| on |registration|.
-    1. If |event|.\[[respondWithPromise]] is null, return [=a promise resolved with=] null.
+    1. If |event|.\[[respondWithPromise]] is null, then:
+        1. The user agent SHOULD [=report a warning to the console=] that the identity handler
+            service worker did not call {{IdentityRequestEvent/respondWith()}} for the
+            |endpoint| endpoint.
+        1. Return [=a promise resolved with=] null.
     1. Let |p| be [=a new promise=].
     1. [=Upon rejection=] of |event|.\[[respondWithPromise]]:
+        1. The user agent SHOULD [=report a warning to the console=] that the identity handler
+            {{IdentityRequestEvent/respondWith()}} promise was rejected.
         1. [=Resolve=] |p| with null.
     1. [=Upon fulfillment=] of |event|.\[[respondWithPromise]] with |response|:
-        1. If |response| is not a {{Response}} object, [=resolve=] |p| with null and return.
-        1. If |response|'s [=response/status=] is not an [=ok status=], [=resolve=] |p| with null
-            and return.
+        1. If |response| is not a {{Response}} object:
+            1. The user agent SHOULD [=report a warning to the console=] that the identity
+                handler {{IdentityRequestEvent/respondWith()}} promise resolved with a
+                non-Response value.
+            1. [=Resolve=] |p| with null and return.
+        1. If |response|'s [=response/status=] is not an [=ok status=]:
+            1. The user agent SHOULD [=report a warning to the console=] that the identity
+                handler response had a non-ok status.
+            1. [=Resolve=] |p| with null and return.
         1. Let |mimeType| be the result of <a>extracting a MIME TYPE</a> from |response|'s
             <a for=response>header list</a>.
-        1. If |mimeType| is failure or is not a [=JSON MIME Type=], [=resolve=] |p| with null
-            and return.
+        1. If |mimeType| is failure or is not a [=JSON MIME Type=]:
+            1. The user agent SHOULD [=report a warning to the console=] that the identity
+                handler response did not have a JSON MIME type.
+            1. [=Resolve=] |p| with null and return.
         1. [=Fully read=] |response|'s [=Response/body=] given |processBody| set to the following
             steps given a [=byte sequence=] |responseBody|:
             1. Let |json| be the result of [=extract the JSON fetch response|extracting the JSON
@@ -3254,12 +3274,6 @@ credentialed requests even if the service worker only handles a subset; the [[!S
 [=fire functional event|Should Skip Event=] optimization does not apply at the per-endpoint
 level. The activation cost is minimal because the service worker returns without calling
 {{IdentityRequestEvent/respondWith()}} for unhandled endpoints.
-
-**Recommendations**
-
-1. [=User agents=] SHOULD log developer warnings when identity handler dispatch fails.
-1. Site isolation reviewers should confirm that enabling service worker interception for
-    browser-initiated FedCM requests does not create novel cross-process information leaks.
 
 <!-- ============================================================ -->
 ## Threats and Attacks ## {#security-threats-aattacks}
