@@ -542,7 +542,7 @@ When asked to <dfn>attempt to disconnect</dfn> given an {{IdentityCredentialDisc
         |config|.{{IdentityProviderAPIConfig/disconnect_endpoint}}, and |globalObject|.
     1. If |disconnectUrl| is failure, [=reject=] |promise| with a "{{NetworkError}}"
         {{DOMException}}.
-    1. [=Send a disconnect request=] with |disconnectUrl|, |options|, and |globalObject|, and let
+    1. [=Send a disconnect request=] with |disconnectUrl|, |options|, |config|, and |globalObject|. Let
         |result| be the result.
     1. Let |idpOrigin| be the [=url/origin=] corresponding to |configUrl|.
     1. Let |rpOrigin| be |globalObject|'s [=associated Document=]'s [=Document/origin=].
@@ -570,7 +570,8 @@ previously been used for federated login in the [=RP=].
 
 <div algorithm>
 When asked to <dfn>send a disconnect request</dfn>, given a <a spec=url for=/>URL</a>
-|disconnectUrl|, and {{IdentityCredentialDisconnectOptions}} |options|, and a |globalObject|,
+|disconnectUrl|, {{IdentityCredentialDisconnectOptions}} |options|, an
+{{IdentityProviderAPIConfig}} |config|, and a |globalObject|,
 perform the following steps. This returns an {{USVString}} or failure.
 
     1. Let |requestBody| be the result of running [=urlencoded serializer=] with a list containing:
@@ -602,6 +603,13 @@ perform the following steps. This returns an {{USVString}} or failure.
         :  [=request/mode=]
         :: "cors"
 
+    1. Let |swJsonPromise| be the result of [=dispatch identity handler=] given |config|, |options|,
+        "`disconnect`", and |request|.
+    1. Let |swJson| be the result of [=await=] |swJsonPromise|.
+    1. If |swJson| is not null:
+        1. [=converted to an IDL value|Convert=] |swJson| to a {{DisconnectedAccount}}, |swAccount|.
+        1. If the previous step threw an exception, set |swJson| to null.
+        1. Otherwise, return |swAccount|'s {{DisconnectedAccount/account_id}}.
     1. Let |accountId| be null.
     1. [=Fetch request=] with |request| and |globalObject|, and with
         <var ignore>processResponseConsumeBody</var> set to the following steps given a
@@ -1259,6 +1267,30 @@ or failure.
         1. Set |accounts_url| to the result of [=computing the manifest URL=] with |provider|,
             |config|.{{IdentityProviderAPIConfig/accounts_endpoint}}, and |globalObject|.
         1. If |login_url| or |accounts_url| is failure, set |config| to failure.
+        1. If |config| is not failure and
+            |config|'s {{IdentityProviderAPIConfig/identity_handler}} is present:
+            1. Let |swUrl| be the result of [=computing the manifest URL=] with |provider|,
+                |config|'s {{IdentityProviderAPIConfig/identity_handler}}'s {{IdentityHandlerConfig/service_worker}},
+                and |globalObject|.
+            1. If |swUrl| is not failure, register a service worker under the
+                [=IDP=]'s [=/origin=] with script URL |swUrl|, following [[!SERVICE-WORKERS]],
+                and associate the registration with |provider|'s
+                {{IdentityProviderConfig/configURL}}.
+        1. Otherwise, if |config| is not failure and
+            |config|'s {{IdentityProviderAPIConfig/identity_handler}} is not present:
+            1. If there is a [=/service worker registration=] associated with |provider|'s
+                {{IdentityProviderConfig/configURL}}, [=unregister=] it.
+
+                Note: This ensures that when an [=IDP=] removes the
+                {{IdentityProviderAPIConfig/identity_handler}} from its [=config file=],
+                the previously registered [=/service worker=] is cleaned up on the next
+                FedCM request.
+
+        Note: The [=/service worker registration=] created here is also subject to the
+        normal [=/service worker=] lifecycle and storage management. In particular,
+        `Clear-Site-Data: "storage"` sent by the [=IDP=]'s origin will unregister
+        all [=/service workers=] for that origin, including identity handlers,
+        per [[!SERVICE-WORKERS]].
     1. Wait for |config| to be set.
     1. If |config| is failure, return failure.
     1. If |skipWellKnown| is true, return |config|.
@@ -1326,8 +1358,96 @@ dictionary IdentityProviderAPIConfig {
   IdentityProviderBranding branding;
   boolean supports_use_other_account = false;
   USVString account_label;
+  IdentityHandlerConfig identity_handler;
+};
+
+dictionary IdentityHandlerConfig {
+  required USVString service_worker;
+};
+
+enum IdentityRequestEndpoint {
+  "accounts",
+  "id_assertion",
+  "disconnect"
+};
+
+[Exposed=ServiceWorker]
+interface IdentityRequestEvent : ExtendableEvent {
+  constructor(DOMString type, IdentityRequestEventInit eventInitDict);
+  readonly attribute IdentityRequestEndpoint endpoint;
+  readonly attribute Request request;
+  undefined respondWith(Promise<Response> response);
+};
+
+dictionary IdentityRequestEventInit : ExtendableEventInit {
+  required IdentityRequestEndpoint endpoint;
+  required Request request;
 };
 </xmp>
+
+Each {{IdentityRequestEvent}} has a
+<dfn for="IdentityRequestEvent">respond with called</dfn> flag, which is a boolean,
+initially false. It is set to true when {{IdentityRequestEvent/respondWith()}} is called,
+to prevent multiple invocations.
+
+Each {{IdentityRequestEvent}} has a
+<dfn for="IdentityRequestEvent">respond with promise</dfn>, which is a {{Promise}} or null,
+initially null. It stores the promise passed to {{IdentityRequestEvent/respondWith()}}.
+
+The <dfn for="IdentityRequestEvent" attribute export>endpoint</dfn> attribute getter steps are to return the value
+to which it was initialized. Its value indicates which [=IDP=] endpoint is being requested. The
+service worker uses this to determine whether to handle the request or let the [=user agent=] fall
+back to the default fetch.
+
+The <dfn for="IdentityRequestEvent" attribute export>request</dfn> attribute getter steps are to return the value
+to which it was initialized. Its value is a browser-constructed {{Request}} object for the [=IDP=]
+endpoint. The request has its [=request/destination=] set to "`webidentity`", which causes the
+[=user agent=] to include the `Sec-Fetch-Dest: webidentity` [=forbidden request-header=]. The
+service worker can forward this request via <a href="https://fetch.spec.whatwg.org/#dom-global-fetch">`fetch(event.request)`</a> to preserve the header, which the
+[=IDP=] server can use to verify the request originated from the FedCM API.
+
+<div algorithm>
+The <dfn for="IdentityRequestEvent" method export>respondWith(|response|)</dfn> method steps are:
+
+    1. If [=this=]'s {{Event/isTrusted}} attribute is false, [=throw=] an "{{InvalidStateError}}"
+        {{DOMException}}.
+    1. If [=this=]'s [=Event/dispatch flag=] is not set, [=throw=] an "{{InvalidStateError}}"
+        {{DOMException}}.
+    1. If [=this=]'s [=IdentityRequestEvent/respond with called=] is true, [=throw=] an "{{InvalidStateError}}"
+        {{DOMException}}.
+    1. Set [=this=]'s [=IdentityRequestEvent/respond with called=] to true.
+    1. Set [=this=]'s [=Event/stop propagation flag=].
+    1. Set [=this=]'s [=Event/stop immediate propagation flag=].
+    1. Set [=this=]'s [=IdentityRequestEvent/respond with promise=] to |response|.
+    1. Add |response| to [=this=]'s [=ExtendableEvent/extend lifetime promises=].
+</div>
+
+The {{IdentityRequestEvent/respondWith()}} method provides a {{Promise}} that resolves to a
+{{Response}} for the [=user agent=] to use instead of performing the default credentialed fetch. It
+must be called during event dispatch; it throws an "{{InvalidStateError}}" {{DOMException}} if the
+event is not trusted, is not being dispatched, or has already had
+{{IdentityRequestEvent/respondWith()}} called.
+
+<div class="note">
+The {{IdentityRequestEvent}} uses a single event type ("`identityrequest`") for all
+credentialed endpoints (accounts, id_assertion, disconnect), distinguished by the
+{{IdentityRequestEvent/endpoint}} attribute. An alternative design would define separate event
+types per operation (e.g., "`identityaccounts`", "`identityassertion`",
+"`identitydisconnect`"). The single-event design was chosen for the following reasons:
+
+* **Simpler API surface:** IdPs register one event handler rather than three, reducing
+    boilerplate and the potential for inconsistencies between handlers.
+* **Extensibility:** New endpoints can be supported without introducing new event types or
+    requiring IdPs to register additional handlers.
+* **Uniform request shape:** All credentialed FedCM requests share the same fundamental
+    structure — a URL, an optional body, and a response — making a single event type a
+    natural fit.
+
+A trade-off of this design is that the service worker is dispatched even for endpoints it does
+not intend to handle; in such cases, the handler simply does not call
+{{IdentityRequestEvent/respondWith()}} and the [=user agent=] falls back to the default fetch
+behavior.
+</div>
 
 <!-- ============================================================ -->
 ### Fetch the accounts ### {#fetch-accounts}
@@ -1379,6 +1499,17 @@ returns an {{IdentityProviderAccountList}}.
         Note: This fetch should only send Same-Site=None cookies. Specifying this will require
         [cookie layering](https://github.com/httpwg/http-extensions/issues/2084).
 
+    1. Let |swJsonPromise| be the result of [=dispatch identity handler=] given |config|, |provider|,
+        "`accounts`", and |request|.
+    1. Let |swJson| be the result of [=await=] |swJsonPromise|.
+    1. If |swJson| is not null:
+        1. [=converted to an IDL value|Convert=] |swJson| to an {{IdentityProviderAccountList}},
+            and store the result in |swAccountsList|.
+        1. If the previous step threw an exception, or if there is an account in
+            |swAccountsList| that has neither {{IdentityProviderAccount/email}},
+            {{IdentityProviderAccount/name}}, {{IdentityProviderAccount/tel}}, nor
+            {{IdentityProviderAccount/username}} set, set |swAccountsList| to failure.
+        1. If |swAccountsList| is not failure, return |swAccountsList|.
     1. Let |accountsList| be null.
     1. [=Fetch request=] with |request| and |globalObject|, and with <var ignore>processResponseConsumeBody</var>
         set to the following steps given a <a spec=fetch for=/>response</a> |response| and |responseBody|:
@@ -1516,16 +1647,15 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
         :  [=request/mode=]
         :: "cors"
 
+    1. Let |swJsonPromise| be the result of [=dispatch identity handler|dispatching identity handler=]
+        given |config|, |provider|, "`id_assertion`", and |request|.
+    1. Let |swJson| be the result of [=await=] |swJsonPromise|.
+    1. If |swJson| is not null:
+        1. [=converted to an IDL value|Convert=] |swJson| to an
+            {{IdentityAssertionResponse}} and |swToken|.
+        1. If the previous step threw an exception, set |swJson| to null.
     1. Let |credential| be null.
-    1. [=Fetch request=] with |request| and |globalObject|, and with <var ignore>processResponseConsumeBody</var>
-        set to the following steps given a <a spec=fetch for=/>response</a> |response| and |responseBody|:
-        1. If |responseBody| is null or failure, set |credential| to the result of
-            [=create an IdentityCredentialError=] with {} and |globalObject|, and return.
-        1. Let |json| be the result of [=extract the JSON fetch response=] from |response| and
-            |responseBody|.
-        1. [=converted to an IDL value|Convert=] |json| to an {{IdentityAssertionResponse}}, |token|.
-        1. If one of the previous two steps threw an exception, set |credential| to the result of
-            [=create an IdentityCredentialError=] with {} and |globalObject|, and return.
+    1. Let |processToken| be an algorithm that given an {{IdentityAssertionResponse}} |token|:
         1. If {{IdentityAssertionResponse/error}} was specified, let |errorInit| be the value and:
             1. If |errorInit|.{{IdentityCredentialErrorInit/url}} is present:
                 1. Let |errorUrl| be the result of running [=parse url=] given
@@ -1540,13 +1670,6 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
                     |errorUrl|.
             1. Set |credential| to the result of [=create an IdentityCredentialError=] with
                 |errorInit|, and |globalObject|.
-        1. Otherwise, if |response|'s [=response/status=] is not an [=ok status=]:
-            1. Set |credential| to the result of [=create an IdentityCredentialError=] with {} and
-                |globalObject|.
-            1. The user agent MAY set |credential|'s {{IdentityCredentialError/error}} based on
-                |response|'s [=response/status=]. For example, if the [=response/status=] is `500`, it
-                could set it to "server_error", and if the [=response/status=] is `503`, it could set
-                it to "temporarily_unavailable".
         1. Otherwise, if {{IdentityAssertionResponse/token}} was specified:
             1. Let |tokenValue| be |token|'s {{IdentityAssertionResponse/token}}.
         1. Otherwise, if {{IdentityAssertionResponse/continue_on}} was specified, run these steps
@@ -1575,6 +1698,29 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
             |isAutoSelected|.
         1. Set |credential|'s {{IdentityCredential/configURL}} to |provider|'s
             {{IdentityProviderConfig/configURL}}.
+    1. If |swJson| is not null:
+        1. Run |processToken| with |swToken|.
+    1. Otherwise:
+        1. [=Fetch request=] with |request| and |globalObject|, and with
+            <var ignore>processResponseConsumeBody</var> set to the following steps given a
+            <a spec=fetch for=/>response</a> |response| and |responseBody|:
+            1. If |responseBody| is null or failure, set |credential| to the result of
+                [=create an IdentityCredentialError|creating an IdentityCredentialError=] with {}
+                and |globalObject|, and return.
+            1. Let |json| be the result of [=extract the JSON fetch response|extracting the JSON fetch response=]
+                from |response| and |responseBody|.
+            1. [=converted to an IDL value|Convert=] |json| to an {{IdentityAssertionResponse}}, |token|.
+            1. If one of the previous two steps threw an exception, set |credential| to the result of
+                [=create an IdentityCredentialError=] with {} and |globalObject|, and return.
+            1. If |response|'s [=response/status=] is not an [=ok status=]:
+                1. Set |credential| to the result of [=create an IdentityCredentialError=] with {} and
+                    |globalObject|.
+                1. The user agent MAY set |credential|'s {{IdentityCredentialError/error}} based on
+                    |response|'s [=response/status=]. For example, if the [=response/status=] is `500`, it
+                    could set it to "server_error", and if the [=response/status=] is `503`, it could set
+                    it to "temporarily_unavailable".
+                1. Return.
+            1. Run |processToken| with |token|.
     1. Wait for |credential| to be set.
     1. Return |credential|.
 </div>
@@ -1808,6 +1954,66 @@ and a |responseBody|, run the following steps. This returns an [=ordered map=].
     1. Let |json| be the result of [=parse JSON bytes to a JavaScript value=] passing |responseBody|.
     1. If |json| is a parsing exception, throw a new "{{NetworkError}}" {{DOMException}}.
     1. Return |json|.
+</div>
+
+<div algorithm>
+To <dfn>dispatch identity handler</dfn> given an {{IdentityProviderAPIConfig}} |config|,
+an {{IdentityProviderConfig}} |provider|, a [=string=] |endpoint|, and a [=/request=] |request|,
+run the following steps. This returns a {{Promise}} that resolves with a JSON [=object=] or null.
+
+    1. If |config|'s {{IdentityProviderAPIConfig/identity_handler}} is not present, return
+        [=a promise resolved with=] null.
+    1. Let |registration| be the [=/service worker registration=] associated with |provider|'s
+        {{IdentityProviderConfig/configURL}}.
+    1. If |registration| is null, then:
+        1. The user agent SHOULD [=report a warning to the console=] that no service worker
+            registration was found for the identity handler.
+        1. Return [=a promise resolved with=] null.
+    1. Let |activeWorker| be |registration|'s [=active worker=].
+    1. If |activeWorker| is null, then:
+        1. The user agent SHOULD [=report a warning to the console=] that the identity handler
+            service worker has no active worker.
+        1. Return [=a promise resolved with=] null.
+    1. Let |event| be the result of [=creating an event=] using {{IdentityRequestEvent}}.
+    1. Set |event|'s {{IdentityRequestEvent/endpoint}} to |endpoint|.
+    1. Set |event|'s {{IdentityRequestEvent/request}} to |request|.
+    1. [=Fire functional event=] "`identityrequest`" using |event| on |registration|.
+    1. If |event|'s [=IdentityRequestEvent/respond with promise=] is null, return [=a promise resolved with=] null.
+
+        Note: If the [=/service worker=] does not call {{IdentityRequestEvent/respondWith()}},
+        the [=user agent=] silently falls back to the default credentialed fetch. This is the
+        expected behavior when the [=/service worker=] does not wish to handle a particular
+        {{IdentityRequestEvent/endpoint}}.
+
+    1. Let |p| be [=a new promise=].
+    1. [=Upon rejection=] of |event|'s [=IdentityRequestEvent/respond with promise=]:
+        1. The user agent SHOULD [=report a warning to the console=] that the identity handler
+            {{IdentityRequestEvent/respondWith()}} promise was rejected.
+        1. [=Resolve=] |p| with null.
+    1. [=Upon fulfillment=] of |event|'s [=IdentityRequestEvent/respond with promise=] with |response|:
+        1. If |response| is not a {{Response}} object:
+            1. The user agent SHOULD [=report a warning to the console=] that the identity
+                handler {{IdentityRequestEvent/respondWith()}} promise resolved with a
+                non-Response value.
+            1. [=Resolve=] |p| with null and return.
+        1. If |response|'s [=response/status=] is not an [=ok status=]:
+            1. The user agent SHOULD [=report a warning to the console=] that the identity
+                handler response had a non-ok status.
+            1. [=Resolve=] |p| with null and return.
+        1. Let |mimeType| be the result of <a>extracting a MIME TYPE</a> from |response|'s
+            <a for=response>header list</a>.
+        1. If |mimeType| is failure or is not a [=JSON MIME Type=]:
+            1. The user agent SHOULD [=report a warning to the console=] that the identity
+                handler response did not have a JSON MIME type.
+            1. [=Resolve=] |p| with null and return.
+        1. [=Fully read=] |response|'s [=response/body=] given |processBody| set to the following
+            steps given a [=byte sequence=] |responseBody|:
+            1. Let |json| be the result of [=extract the JSON fetch response|extracting the JSON
+                fetch response=] from |response| and |responseBody|.
+            1. If the previous step threw an exception, [=resolve=] |p| with null and return.
+            1. [=Resolve=] |p| with |json|.
+        1. If reading the body fails, [=resolve=] |p| with null.
+    1. Return |p|.
 </div>
 
 <div algorithm>
@@ -2161,6 +2367,17 @@ The {{IdentityProviderAPIConfig}} object's members have the following semantics:
     :   <dfn>account_label</dfn>
     ::  An optional string that needs to match the {{IdentityProviderAccount/label_hints}} provided
         by the IdP.
+    :   <dfn>identity_handler</dfn>
+    ::  An optional {{IdentityHandlerConfig}} that declares a [=/service worker=] capable of
+        intercepting credentialed FedCM requests.
+</dl>
+
+The {{IdentityHandlerConfig}} has the following member:
+<dl dfn-type="dict-member" dfn-for="IdentityHandlerConfig">
+    :   <dfn>service_worker</dfn> (required)
+    ::  A URL pointing to the service worker script, resolved relative to the [=config file=] URL.
+        The service worker's [=scope url=] defaults to the directory of this URL per
+        [[!SERVICE-WORKERS]].
 </dl>
 
 <div class="issue" heading="extension">
@@ -2997,8 +3214,48 @@ partners. The token content remains opaque to the user agent.
     established with their [=IDP=].
 1. [=IDPs=] should clearly document their token format and structure to help [=RPs=] implement 
     proper validation.
-1. [=IDPs=] should ensure their token format is consistent and follows their documented 
+1. [=IDPs=] should ensure their token format is consistent and follows their documented
     specification.
+
+<!-- ============================================================ -->
+### Identity Handler ### {#identity-handler-trust}
+<!-- ============================================================ -->
+
+**Consideration**
+
+When an [=IDP=] declares an {{IdentityProviderAPIConfig/identity_handler}} in its [=config file=],
+the [=user agent=] dispatches credentialed FedCM requests to the [=IDP=]'s [=/service worker=] before
+making network calls.
+
+The service worker runs under the [=IDP=]'s own [=/origin=] and is authored by the [=IDP=].
+It operates under the same trust boundary as the [=IDP=]'s server-side endpoints — no new
+trust relationship is introduced.
+
+The {{IdentityRequestEvent}} provides a {{IdentityRequestEvent/request}} member containing a
+browser-constructed {{Request}} with [=request/destination=] set to "`webidentity`". This
+causes the [=user agent=] to set the `Sec-Fetch-Dest: webidentity` [=forbidden request-header=]
+on the request, which the [=IDP=] server can use to verify that the request originated from
+the FedCM API. The service worker can forward this request via <a href="https://fetch.spec.whatwg.org/#dom-global-fetch">`fetch(event.request)`</a>. The
+{{IdentityRequestEvent}} does not expose `Cookie` or `Authorization` headers to the
+service worker. These are opaquely attached by the [=user agent=] when the service worker
+calls <a href="https://fetch.spec.whatwg.org/#dom-global-fetch">`fetch()`</a> with [=request/credentials mode=] set to "`include`". The service worker cannot read or modify
+cookie values.
+
+The [=user agent=] MAY enforce an implementation-defined timeout on the
+{{IdentityRequestEvent/respondWith()}} promise. If the service worker is not registered, does not call
+{{IdentityRequestEvent/respondWith()}}, times out, rejects, or returns an invalid response,
+the [=user agent=] falls back to the normal credentialed fetch.
+
+A single `identityrequest` event type is used for all credentialed endpoints (accounts,
+id_assertion, disconnect). The service worker determines which endpoints to handle by
+inspecting {{IdentityRequestEvent/endpoint}} and calling {{IdentityRequestEvent/respondWith()}}
+only for the endpoints it wants to intercept. For endpoints where the service worker does not
+call {{IdentityRequestEvent/respondWith()}}, the [=user agent=] falls back to the normal
+credentialed fetch. This means the [=user agent=] activates the service worker for all
+credentialed requests even if the service worker only handles a subset; the [[!SERVICE-WORKERS]]
+[=fire functional event|Should Skip Event=] optimization does not apply at the per-endpoint
+level. The activation cost is minimal because the service worker returns without calling
+{{IdentityRequestEvent/respondWith()}} for unhandled endpoints.
 
 <!-- ============================================================ -->
 ## Threats and Attacks ## {#security-threats-aattacks}
@@ -3300,6 +3557,16 @@ origin of the fetched URLs.
     this endpoint does not introduce a way for the [=RP=] to send requests to the [=IDP=] containing
     the [=IDP=] cookies forever.
 
+* The [=dispatch identity handler|identity handler=] is only dispatched for credentialed endpoints (accounts, id_assertion,
+    disconnect). These endpoints already receive [=IDP=] cookies and operate within the [=IDP=]'s
+    existing trust context. The service worker sees no information beyond what the [=IDP=]'s server
+    would receive. Uncredentialed endpoints (well-known, config, client_metadata) are not
+    dispatched to the identity handler. Because the identity handler runs under the [=IDP=]'s
+    origin and only intercepts requests that already carry the [=IDP=]'s cookies, it cannot create
+    new (user, [=RP=]) correlation vectors. The service worker cannot read cookie values from the
+    {{IdentityRequestEvent}} — they flow through transparently via `fetch()` with
+    `credentials: "include"`.
+
 <!-- ============================================================ -->
 ## Attack Scenarios ## {#attack-scenarios}
 <!-- ============================================================ -->
@@ -3599,6 +3866,10 @@ Note: write down the Acknowledgements section.
   "RFC7258": {
     "href": "https://datatracker.ietf.org/doc/html/rfc7258",
     "title": "Pervasive Monitoring Is an Attack"
+  },
+  "SERVICE-WORKERS": {
+    "href": "https://w3c.github.io/ServiceWorker/",
+    "title": "Service Workers"
   }
 }
 </pre>
