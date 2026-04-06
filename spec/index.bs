@@ -1149,32 +1149,209 @@ An extension may use the following instead of the [=create identity credential/s
 </div>
 
 <!-- ============================================================ -->
-### Resolve the well-known host ### {#resolve-well-known-host}
+### Well-known discovery mechanism ### {#well-known-discovery}
 <!-- ============================================================ -->
 
-The <a>resolve the well-known host</a> algorithm determines the host from which the [=well-known
-file=] should be fetched. It does so by querying a DNS TXT record at a well-known subdomain, which
-allows [=IDPs=] to delegate [=well-known file=] hosting to a subdomain other than the
-[=host/registrable domain=].
+Issue: This section presents options for how the user agent discovers the [=well-known file=]
+    data when it is not hosted at the [=host/registrable domain=]. There are two independent
+    dimensions of choice: (1) the mechanism used to obtain well-known data from a new source
+    ([[#discovery-mechanism-options]]), and (2) how the new mechanism interacts with the existing
+    [=well-known file=] fetch at the [=host/registrable domain=]
+    ([[#processing-order-options]]). After the group chooses one option from each dimension,
+    the unchosen options will be removed. See [[#deployment-well-known]] for the motivation.
 
-Note: The DNS TXT record format follows the convention used by other DNS-based discovery
-    mechanisms (e.g., DMARC's `_dmarc` records). An [=IDP=] whose authentication service
-    runs on `login.idp.example` can set a TXT record at `_web-identity.idp.example` with value
-    `sub=login`, causing the user agent to fetch the [=well-known file=] from
-    `login.idp.example` instead of `idp.example`. If no `_web-identity` record exists, the
-    [=host/registrable domain=] is used directly. If DNS resolution fails due to a
-    network error, the algorithm returns failure rather than silently falling back,
-    to avoid intermittent behavior. Because the lookup is always performed against
-    the [=host/registrable domain=], there is at most one such DNS delegation per
-    registrable domain. See [[#manifest-fingerprinting]].
+<!-- ============================================================ -->
+#### Dimension 1: New discovery mechanism #### {#discovery-mechanism-options}
+<!-- ============================================================ -->
 
-<div algorithm="resolve the well-known host">
-To <dfn>resolve the well-known host</dfn> given a [=host=] |registrableDomain|, run the following
-steps. This returns a [=host=] or failure.
+The following options describe alternative mechanisms for obtaining [=well-known file=] data
+from a source other than the [=host/registrable domain=]. Each algorithm takes a [=host=]
+|registrableDomain|, a |scheme|, and a |globalObject|, and returns an
+{{IdentityProviderWellKnown}} or failure.
+
+<!-- BEGIN OPTION 1A (PREFERRED) -->
+
+##### Option 1A: SVCB record with embedded data (Preferred) ##### {#option-1a}
+
+In this option, the user agent queries a DNS [[RFC9460]] SVCB record at
+`_web-identity.<registrable domain>`. The SVCB record's SvcParams encode the
+[=well-known file=] data directly, eliminating the need for an HTTP fetch of the
+[=well-known file=] entirely.
+
+Note: This option provides the best latency because the well-known data is obtained from
+    a single DNS query with no subsequent HTTP round-trip. DNS responses are cached by
+    resolvers, so repeated lookups are fast. However, SVCB records are not yet universally
+    supported by all DNS registrars (see
+    [discussion](https://github.com/w3c-fedid/FedCM/pull/821#issuecomment-samuelgoto)),
+    and the data size is constrained by DNS response limits. The specific SvcParamKeys
+    would need to be registered with IANA per [[RFC9460]]. Consult the
+    [DNSOP WG](https://datatracker.ietf.org/wg/dnsop/about/) for guidance on DNS
+    record type selection.
+
+<div algorithm="fetch well-known via SVCB data">
+To <dfn>fetch well-known via SVCB data</dfn> given a [=host=] |registrableDomain|, a |scheme|,
+and |globalObject|, run the following steps. This returns an {{IdentityProviderWellKnown}} or
+failure.
+    1. Let |queryName| be the [=string/concatenation=] of «"_web-identity.", |registrableDomain|».
+    1. Let |result| be the result of resolving |queryName| as a DNS SVCB record type.
+    1. If the resolution returned a response indicating that no records exist (e.g., NXDOMAIN
+        or an empty answer section), return failure.
+    1. If the resolution failed due to a network or DNS infrastructure error (e.g., SERVFAIL,
+        timeout, or connection failure), return failure.
+    1. Let |records| be |result|.
+    1. If the [=list/size=] of |records| is not 1, return failure.
+    1. Let |record| be |records|[0].
+    1. Let |target| be |record|'s TargetName.
+    1. If |target| is empty or |target| is ".", set |target| to |registrableDomain|.
+    1. If |target|'s [=host/registrable domain=] is not equal to |registrableDomain|,
+        return failure.
+    1. Let |params| be |record|'s SvcParams.
+    1. If |params| contains both an `accounts-endpoint` key and a `login-url`
+        key, and neither value is empty:
+        1. Let |accountsUrl| be a new [=/URL=] with [=url/scheme=] set to |scheme|,
+            [=url/host=] set to |target|, and [=url/path=] parsed from the
+            `accounts-endpoint` value.
+        1. Let |loginUrl| be a new [=/URL=] with [=url/scheme=] set to |scheme|,
+            [=url/host=] set to |target|, and [=url/path=] parsed from the
+            `login-url` value.
+        1. Let |wellKnown| be a new {{IdentityProviderWellKnown}}.
+        1. Set |wellKnown|["{{IdentityProviderWellKnown/accounts_endpoint}}"] to the
+            [=URL serializer|serialization=] of |accountsUrl|.
+        1. Set |wellKnown|["{{IdentityProviderWellKnown/login_url}}"] to the
+            [=URL serializer|serialization=] of |loginUrl|.
+        1. Return |wellKnown|.
+    1. If |params| contains a `provider-url` key whose value is not empty:
+        1. Let |providerUrl| be a new [=/URL=] with [=url/scheme=] set to |scheme|,
+            [=url/host=] set to |target|, and [=url/path=] parsed from the
+            `provider-url` value.
+        1. Let |wellKnown| be a new {{IdentityProviderWellKnown}}.
+        1. Set |wellKnown|["{{IdentityProviderWellKnown/provider_urls}}"] to a [=list=]
+            containing the [=URL serializer|serialization=] of |providerUrl|.
+        1. Return |wellKnown|.
+    1. Return failure.
+
+    Issue: The specific SvcParamKey numbers and value formats need to be defined and
+        registered with IANA per [[RFC9460]].
+
+</div>
+
+Example DNS record:
+
+```
+_web-identity.idp.example.  SVCB  1 login.idp.example. accounts-endpoint="/accounts" login-url="/login"
+```
+
+This produces `https://login.idp.example/accounts` and `https://login.idp.example/login`.
+
+<!-- END OPTION 1A -->
+
+<!-- BEGIN OPTION 1B -->
+
+##### Option 1B: SVCB record pointing to subdomain ##### {#option-1b}
+
+In this option, the user agent queries a DNS [[RFC9460]] SVCB record at
+`_web-identity.<registrable domain>`. The SVCB record's TargetName indicates
+which subdomain hosts the [=well-known file=], which is then fetched via HTTPS.
+
+Note: This option uses SVCB's TargetName for delegation, then performs a standard HTTP
+    fetch. It provides infrastructure benefits of SVCB (e.g., ALPN hints, ECH) but
+    requires both a DNS query and an HTTP round-trip. Like Option 1A, SVCB support
+    among DNS registrars is not yet universal.
+
+<div algorithm="fetch well-known via SVCB host">
+To <dfn>fetch well-known via SVCB host</dfn> given a [=host=] |registrableDomain|, a |scheme|,
+and |globalObject|, run the following steps. This returns an {{IdentityProviderWellKnown}} or
+failure.
+    1. Let |queryName| be the [=string/concatenation=] of «"_web-identity.", |registrableDomain|».
+    1. Let |result| be the result of resolving |queryName| as a DNS SVCB record type.
+    1. If the resolution returned a response indicating that no records exist (e.g., NXDOMAIN
+        or an empty answer section), return failure.
+    1. If the resolution failed due to a network or DNS infrastructure error (e.g., SERVFAIL,
+        timeout, or connection failure), return failure.
+    1. Let |records| be |result|.
+    1. For each |record| in |records|:
+        1. Let |target| be |record|'s TargetName.
+        1. If |target| is not empty and |target| is not ".":
+            1. If |target|'s [=host/registrable domain=] is not equal to |registrableDomain|,
+                continue.
+            1. Let |url| be a new [=/URL=].
+            1. Set |url|'s [=url/scheme=] to |scheme|.
+            1. Set |url|'s [=url/host=] to |target|.
+            1. Set |url|'s [=url/path=] to the <a>list</a> «".well-known", "web-identity"».
+            1. Return the result of [=fetch a well-known resource=] given |url| and
+                |globalObject|.
+    1. Return failure.
+
+</div>
+
+Example DNS record:
+
+```
+_web-identity.idp.example.  SVCB  1 login.idp.example.
+```
+
+The user agent fetches `https://login.idp.example/.well-known/web-identity`.
+
+<!-- END OPTION 1B -->
+
+<!-- BEGIN OPTION 1C -->
+
+##### Option 1C: Fixed `web-identity.` subdomain ##### {#option-1c}
+
+In this option, the user agent fetches the [=well-known file=] from a fixed subdomain
+`web-identity.<registrable domain>` without any DNS record lookup. The [=IDP=]
+configures this subdomain (e.g., via CNAME) to point to their infrastructure.
+
+Note: This option requires no special DNS record type support beyond standard A/AAAA/CNAME
+    records, making it the most broadly deployable. However, it requires the [=IDP=] to
+    configure a specific `web-identity.` subdomain. The subdomain name is fixed and cannot
+    vary per deployment.
+
+<div algorithm="fetch well-known via fixed subdomain">
+To <dfn>fetch well-known via fixed subdomain</dfn> given a [=host=] |registrableDomain|,
+a |scheme|, and |globalObject|, run the following steps. This returns an
+{{IdentityProviderWellKnown}} or failure.
+    1. Let |host| be the [=string/concatenation=] of «"web-identity.", |registrableDomain|».
+    1. Let |url| be a new [=/URL=].
+    1. Set |url|'s [=url/scheme=] to |scheme|.
+    1. Set |url|'s [=url/host=] to |host|.
+    1. Set |url|'s [=url/path=] to the <a>list</a> «".well-known", "web-identity"».
+    1. Return the result of [=fetch a well-known resource=] given |url| and |globalObject|.
+
+</div>
+
+Example: the [=IDP=] sets a DNS CNAME record:
+
+```
+web-identity.idp.example.  CNAME  login.idp.example.
+```
+
+The user agent fetches `https://web-identity.idp.example/.well-known/web-identity`.
+
+<!-- END OPTION 1C -->
+
+<!-- BEGIN OPTION 1D -->
+
+##### Option 1D: TXT record pointing to subdomain ##### {#option-1d}
+
+In this option, the user agent queries a DNS TXT record at
+`_web-identity.<registrable domain>`. The TXT record contains a `sub=`
+parameter indicating which subdomain hosts the [=well-known file=], which is then
+fetched via HTTPS.
+
+Note: TXT records are universally supported by DNS registrars. This approach follows
+    conventions established by DMARC (`_dmarc`), DKIM (`_domainkey`), and MTA-STS
+    (`_mta-sts`). However, it requires both a DNS query and an HTTP round-trip, and
+    TXT records lack the structured semantics of SVCB.
+
+<div algorithm="fetch well-known via TXT host">
+To <dfn>fetch well-known via TXT host</dfn> given a [=host=] |registrableDomain|,
+a |scheme|, and |globalObject|, run the following steps. This returns an
+{{IdentityProviderWellKnown}} or failure.
     1. Let |queryName| be the [=string/concatenation=] of «"_web-identity.", |registrableDomain|».
     1. Let |result| be the result of resolving |queryName| as a DNS TXT record type.
-    1. If the resolution returned a response indicating that no records exist (e.g., NXDOMAIN or
-        an empty answer section), return |registrableDomain|.
+    1. If the resolution returned a response indicating that no records exist (e.g., NXDOMAIN
+        or an empty answer section), return failure.
     1. If the resolution failed due to a network or DNS infrastructure error (e.g., SERVFAIL,
         timeout, or connection failure), return failure.
     1. Let |records| be |result|.
@@ -1184,16 +1361,176 @@ steps. This returns a [=host=] or failure.
             stripped of leading and trailing [=ASCII whitespace=].
         1. If |params| contains a key "sub" whose value is not empty:
             1. Let |sub| be the value associated with "sub".
-            1. Return the [=string/concatenation=] of «|sub|, ".", |registrableDomain|».
-    1. Return |registrableDomain|.
-
-    Note: The DNS TXT lookup adds a query to the [=well-known file=] fetch path, including
-        for [=IDPs=] that do not use DNS delegation. In practice, when no `_web-identity`
-        record exists, DNS resolvers return NXDOMAIN and cache the negative response
-        (typically for the duration of the SOA MINIMUM TTL), so repeated lookups for the
-        same [=host/registrable domain=] do not incur additional network round-trips.
+            1. Let |host| be the [=string/concatenation=] of «|sub|, ".", |registrableDomain|».
+            1. Let |url| be a new [=/URL=].
+            1. Set |url|'s [=url/scheme=] to |scheme|.
+            1. Set |url|'s [=url/host=] to |host|.
+            1. Set |url|'s [=url/path=] to the <a>list</a> «".well-known", "web-identity"».
+            1. Return the result of [=fetch a well-known resource=] given |url| and
+                |globalObject|.
+    1. Return failure.
 
 </div>
+
+Example DNS record:
+
+```
+_web-identity.idp.example.  TXT  "sub=login"
+```
+
+The user agent fetches `https://login.idp.example/.well-known/web-identity`.
+
+<!-- END OPTION 1D -->
+
+<!-- ============================================================ -->
+#### Dimension 2: Processing order #### {#processing-order-options}
+<!-- ============================================================ -->
+
+The following options describe how the user agent combines the existing [=well-known file=]
+fetch at the [=host/registrable domain=] (the "existing method") with the new discovery
+mechanism from [[#discovery-mechanism-options]] (the "new method").
+
+In all options below, |rootUrl| is the [=/URL=] for the [=well-known file=] at the
+[=host/registrable domain=], and the "chosen Dimension 1 algorithm" refers to whichever
+option is selected from [[#discovery-mechanism-options]].
+
+<!-- BEGIN OPTION 2A -->
+
+##### Option 2A: Existing fetch first, new as fallback ##### {#option-2a}
+
+Run the existing [=well-known file=] fetch at the [=host/registrable domain=]. If it fails,
+run the new discovery mechanism as a fallback.
+
+Note: This option has no latency regression for [=IDPs=] that already host the
+    [=well-known file=] at their [=host/registrable domain=]. [=IDPs=] that need
+    delegation experience the latency of two sequential attempts. This is the most
+    conservative option for existing deployments.
+
+<div algorithm="obtain well-known data (option 2A)">
+To <dfn>obtain well-known data (option 2A)</dfn> given a [=/URL=] |rootUrl|, a [=host=]
+|registrableDomain|, a |scheme|, and |globalObject|, run the following steps. This returns an
+{{IdentityProviderWellKnown}} or failure.
+    1. Let |existingResult| be the result of [=fetch a well-known resource=] given |rootUrl|
+        and |globalObject|.
+    1. If |existingResult| is not failure, return |existingResult|.
+    1. Return the result of the chosen Dimension 1 algorithm given |registrableDomain|,
+        |scheme|, and |globalObject|.
+
+</div>
+
+<!-- END OPTION 2A -->
+
+<!-- BEGIN OPTION 2B -->
+
+##### Option 2B: New mechanism first, existing as fallback ##### {#option-2b}
+
+Run the new discovery mechanism first. If it fails, fall back to the existing
+[=well-known file=] fetch at the [=host/registrable domain=].
+
+Note: This option optimizes for new deployments that use delegation. Existing [=IDPs=] that
+    don't use it experience the latency of a failed new-mechanism attempt before falling
+    back. For DNS-based mechanisms, the failure case (NXDOMAIN) is typically fast due to
+    negative caching. Browser implementors may choose to run both in parallel during a
+    transition period to avoid latency regression.
+
+<div algorithm="obtain well-known data (option 2B)">
+To <dfn>obtain well-known data (option 2B)</dfn> given a [=/URL=] |rootUrl|, a [=host=]
+|registrableDomain|, a |scheme|, and |globalObject|, run the following steps. This returns an
+{{IdentityProviderWellKnown}} or failure.
+    1. Let |newResult| be the result of the chosen Dimension 1 algorithm given
+        |registrableDomain|, |scheme|, and |globalObject|.
+    1. If |newResult| is not failure, return |newResult|.
+    1. Return the result of [=fetch a well-known resource=] given |rootUrl| and
+        |globalObject|.
+
+</div>
+
+<!-- END OPTION 2B -->
+
+<!-- BEGIN OPTION 2C (PREFERRED) -->
+
+##### Option 2C: Both in parallel, first success wins (Preferred) ##### {#option-2c}
+
+Run both the existing [=well-known file=] fetch and the new discovery mechanism in parallel.
+Use whichever succeeds first.
+
+Note: This option provides the best latency in all cases: existing [=IDPs=] succeed via the
+    existing path as fast as today, and [=IDPs=] using delegation succeed via the new
+    mechanism without waiting for the existing path to fail. The trade-off is that both
+    paths always execute, increasing DNS and HTTP load. In practice, the additional DNS
+    query (for DNS-based mechanisms) returns NXDOMAIN for existing [=IDPs=] and is cached
+    by resolvers (typically for the duration of the SOA MINIMUM TTL), and the additional
+    HTTP fetch (for the existing path) fails quickly for [=IDPs=] whose apex domain does
+    not serve the file. If both paths succeed with different data during a migration, the
+    first response is used, which may cause intermittent behavior; in steady state, only
+    one path should succeed.
+
+<div algorithm="obtain well-known data (option 2C)">
+To <dfn>obtain well-known data (option 2C)</dfn> given a [=/URL=] |rootUrl|, a [=host=]
+|registrableDomain|, a |scheme|, and |globalObject|, run the following steps. This returns an
+{{IdentityProviderWellKnown}} or failure.
+    1. Let |existingResult| and |newResult| be null.
+    1. [=In parallel=]:
+        1. Set |existingResult| to the result of [=fetch a well-known resource=] given
+            |rootUrl| and |globalObject|.
+    1. [=In parallel=]:
+        1. Set |newResult| to the result of the chosen Dimension 1 algorithm given
+            |registrableDomain|, |scheme|, and |globalObject|.
+    1. Wait until |existingResult| is set and is not failure, or |newResult| is set and is
+        not failure, or both are set.
+    1. If |existingResult| is not null and |existingResult| is not failure, return
+        |existingResult|.
+    1. If |newResult| is not null and |newResult| is not failure, return |newResult|.
+    1. Return failure.
+
+</div>
+
+<!-- END OPTION 2C -->
+
+<!-- BEGIN OPTION 2D -->
+
+##### Option 2D: Both in parallel, results must match ##### {#option-2d}
+
+Run both the existing [=well-known file=] fetch and the new discovery mechanism in parallel.
+If both succeed, the results must be consistent. If one succeeds and one fails, use the
+successful result.
+
+Note: This option provides strong consistency guarantees during migration: if an [=IDP=]
+    configures both the existing [=well-known file=] and the new mechanism, any disagreement
+    between them is treated as an error, preventing silent misconfigurations. The trade-off
+    is increased latency (must wait for both results before returning) and stricter
+    deployment requirements.
+
+<div algorithm="obtain well-known data (option 2D)">
+To <dfn>obtain well-known data (option 2D)</dfn> given a [=/URL=] |rootUrl|, a [=host=]
+|registrableDomain|, a |scheme|, and |globalObject|, run the following steps. This returns an
+{{IdentityProviderWellKnown}} or failure.
+    1. Let |existingResult| and |newResult| be null.
+    1. [=In parallel=]:
+        1. Set |existingResult| to the result of [=fetch a well-known resource=] given
+            |rootUrl| and |globalObject|.
+    1. [=In parallel=]:
+        1. Set |newResult| to the result of the chosen Dimension 1 algorithm given
+            |registrableDomain|, |scheme|, and |globalObject|.
+    1. Wait until both |existingResult| and |newResult| are set.
+    1. If |existingResult| is not failure and |newResult| is not failure:
+        1. If |existingResult|["{{IdentityProviderWellKnown/provider_urls}}"] is set and
+            |newResult|["{{IdentityProviderWellKnown/provider_urls}}"] is set and they
+            are not equal, return failure.
+        1. If |existingResult|["{{IdentityProviderWellKnown/accounts_endpoint}}"] is set and
+            |newResult|["{{IdentityProviderWellKnown/accounts_endpoint}}"] is set and they
+            are not equal, return failure.
+        1. If |existingResult|["{{IdentityProviderWellKnown/login_url}}"] is set and
+            |newResult|["{{IdentityProviderWellKnown/login_url}}"] is set and they
+            are not equal, return failure.
+        1. Return |existingResult|.
+    1. If |existingResult| is not failure, return |existingResult|.
+    1. If |newResult| is not failure, return |newResult|.
+    1. Return failure.
+
+</div>
+
+<!-- END OPTION 2D -->
 
 <!-- ============================================================ -->
 ### Fetch a well-known resource ### {#fetch-well-known-resource}
@@ -1265,12 +1602,9 @@ or failure.
         passed as |configUrl|. If it fails, return failure.
     1. If |configUrl| is not a [=potentially trustworthy URL=], return failure.
     1. Let |registrableDomain| be |configUrl|'s [=url/host=]'s [=host/registrable domain=].
-    1. Let |wellKnownHost| be the result of [=resolve the well-known host=] given
-        |registrableDomain|.
-    1. If |wellKnownHost| is failure, return failure.
     1. Let |rootUrl| be a new [=/URL=].
     1. Set |rootUrl|'s [=url/scheme=] to |configUrl|'s [=url/scheme=].
-    1. Set |rootUrl|'s [=url/host=] to |wellKnownHost|.
+    1. Set |rootUrl|'s [=url/host=] to |registrableDomain|.
     1. Set |rootUrl|'s [=url/path=] to the <a>list</a> «".well-known", "web-identity"».
     1. Let |config|, |wellKnown|, |accounts_url|, and |login_url| be null.
     1. Let |skipWellKnown| be false.
@@ -1282,8 +1616,15 @@ or failure.
         Note: Because domain cookies are valid across an entire site, there is no privacy
             benefit from doing the well-known check if the RP and IDP are in the same site.
     1. Otherwise:
-        1. Set |wellKnown| to the result of [=fetch a well-known resource=] given
-            |rootUrl| and |globalObject|.
+
+        Issue: The following step uses the chosen processing order from
+            [[#processing-order-options]] combined with the chosen discovery mechanism
+            from [[#discovery-mechanism-options]]. See [[#well-known-discovery]] for the
+            full set of options under consideration.
+
+        1. Set |wellKnown| to the result of the chosen processing order algorithm from
+            [[#processing-order-options]] given |rootUrl|, |registrableDomain|,
+            |configUrl|'s [=url/scheme=], and |globalObject|.
 
     1. Let |configRequest| be a new <a spec=fetch for=/>request</a> as follows:
 
@@ -1358,12 +1699,13 @@ the [=fetch the config file/check accounts and login url step=]:
 
 NOTE: a two-tier file system is used in order to prevent the [=IDP=] from easily determining the [=RP=]
 that a user is visiting by encoding the information in the config file path. This issue is solved by
-requiring a [=well-known file=] to be on the [=IDP=]'s [=host/registrable domain=], or on a
-subdomain indicated by a DNS TXT record at `_web-identity` under the [=host/registrable domain=]. The
-config file itself can be anywhere, but it will not be used if the user agent does not find it in
-the [=well-known file=]. This allows the [=IDP=] to keep their actual config files on an arbitary
-path while allowing the user agent to prevent config file path manipulation to fingerprint (for
-instance, by including the RP in the path). See [[#manifest-fingerprinting]].
+requiring a [=well-known file=] to be hosted at a location controlled by the [=IDP=]'s
+[=host/registrable domain=] — either at the [=host/registrable domain=] itself or via one of the
+discovery mechanisms described in [[#well-known-discovery]]. The config file itself can be anywhere,
+but it will not be used if the user agent does not find it in the [=well-known file=]. This allows
+the [=IDP=] to keep their actual config files on an arbitary path while allowing the user agent to
+prevent config file path manipulation to fingerprint (for instance, by including the RP in the
+path). See [[#manifest-fingerprinting]].
 
 <xmp class="idl">
 dictionary IdentityProviderWellKnown {
@@ -2071,11 +2413,11 @@ The <dfn>in parallel steps for getUserInfo</dfn> given a {{Promise}} |promise| a
     1. For each |account| in |accountsList|:
         1. If |account|["{{IdentityProviderAccount/approved_clients}}"] is not empty and it does not
             [=list/contain=] |provider|'s {{IdentityProviderConfig/clientId}}, continue.
-
+        
             Note: this allows the [=IDP=] to override whether an account is a returning account.
             This could be useful for instance in cases where the user has disconnected the
             account out of band.
-
+        
         1. If |account| is [=eligible for auto reauthentication=] given |provider| and
             |globalObject|, set |hasAccountEligibleForAutoReauthentication| to true.
     1. If |hasAccountEligibleForAutoReauthentication| is false, [=queue to reject=] |promise| with
@@ -2085,11 +2427,11 @@ The <dfn>in parallel steps for getUserInfo</dfn> given a {{Promise}} |promise| a
         1. [=list/Append=] an {{IdentityUserInfo}} to |userInfoList| with the following values:
 
             :  {{IdentityUserInfo/email}}
-            :: |account|["{{IdentityProviderAccount/email}}"]
+            :: |account|["{{IdentityProviderAccount/email}}"]   
             :  {{IdentityUserInfo/name}}
-            :: |account|["{{IdentityProviderAccount/name}}"]
+            :: |account|["{{IdentityProviderAccount/name}}"]   
             :  {{IdentityUserInfo/givenName}}
-            :: |account|["{{IdentityProviderAccount/given_name}}"]
+            :: |account|["{{IdentityProviderAccount/given_name}}"]   
             :  {{IdentityUserInfo/picture}}
             :: |account|["{{IdentityProviderAccount/picture}}"]
     1. [=Queue a global task=] on the [=DOM manipulation task source=] given |globalObject| to
@@ -2141,7 +2483,7 @@ network requests performed:
 
 NOTE: The browser uses the [=well-known file=] to prevent [[#manifest-fingerprinting]].
 
-The [=IDP=] exposes a <dfn>well-known file</dfn> in a pre-defined location, specifically at the "web-identity" file at the path ".well-known". The host from which the [=well-known file=] is fetched is determined by the [=resolve the well-known host=] algorithm: the user agent first checks for a DNS TXT record at `_web-identity` under the [=IDP=]'s [=host/registrable domain=]. If a record is found with a `sub` parameter (e.g., `sub=login`), the [=well-known file=] is fetched from the indicated subdomain (e.g., `login.idp.example`). Otherwise, the [=well-known file=] is fetched from the [=host/registrable domain=] directly (e.g., `idp.example`).
+The [=IDP=] exposes a <dfn>well-known file</dfn> in a pre-defined location, specifically at the "web-identity" file at the path ".well-known". By default, the [=well-known file=] is fetched from the [=IDP=]'s [=host/registrable domain=] (e.g., `idp.example`). Alternative discovery mechanisms (see [[#well-known-discovery]]) allow [=IDPs=] to host the [=well-known file=] on a subdomain or embed the data directly in DNS, addressing operational challenges where the [=host/registrable domain=] is not operated by the authentication service.
 
 The [=well-known file=] is fetched in the [=fetch the config file=] algorithm:
 
@@ -2150,8 +2492,8 @@ The [=well-known file=] is fetched in the [=fetch the config file=] algorithm:
 (c) **without** revealing the [=RP=] in the <a http-header>Origin</a> or
     [[RFC9110#field.referer|Referer]] headers.
 
-For example, if the [=IDP=]'s [=host/registrable domain=] is `idp.example` and no `_web-identity` DNS TXT
-record is present, the user agent fetches the [=well-known file=] from the [=host/registrable domain=]:
+For example, if the [=IDP=]'s [=host/registrable domain=] is `idp.example`, the user agent fetches
+the [=well-known file=] from the [=host/registrable domain=]:
 
 <div class=example>
 ```http
@@ -2162,8 +2504,9 @@ Sec-Fetch-Dest: webidentity
 ```
 </div>
 
-Alternatively, if the DNS TXT record `_web-identity.idp.example` contains `sub=login`, the user agent
-fetches the [=well-known file=] from the indicated subdomain instead:
+Alternative discovery mechanisms (see [[#well-known-discovery]]) may direct the user agent to fetch
+the [=well-known file=] from a different host (e.g., a subdomain like `login.idp.example`) or obtain
+the data directly from DNS without an HTTP fetch:
 
 <div class=example>
 ```http
@@ -2175,15 +2518,15 @@ Sec-Fetch-Dest: webidentity
 </div>
 
 This allows [=IDPs=] whose [=host/registrable domain=] (apex domain) is operated by a different
-service to delegate [=well-known file=] hosting to a subdomain via a DNS record, without requiring
-changes to the apex domain's web server.
+service to host the [=well-known file=] data via an alternative mechanism, without requiring
+changes to the apex domain's web server. See [[#deployment-well-known]] for details.
 
 The file is parsed expecting a {{IdentityProviderWellKnown}} JSON object.
 
 The {{IdentityProviderWellKnown}} JSON object has the following semantics:
 
 <dl dfn-type="dict-member" dfn-for="IdentityProviderWellKnown">
-    :   <dfn>provider_urls</dfn>
+    :   <dfn>provider_urls</dfn> 
     ::  A list containing exactly one URL pointing to [[#idp-api-config-file]].
     :   <dfn>accounts_endpoint</dfn>
     ::  A URL that points to the same location as the {{IdentityProviderAPIConfig/accounts_endpoint}} in [[#idp-api-config-file]]s.
@@ -2551,9 +2894,9 @@ Every {{IdentityAssertionResponse}} is expected to have members with the followi
 
 <dl dfn-type="dict-member" dfn-for="IdentityAssertionResponse">
     :   <dfn>token</dfn>
-    ::  The resulting token. The value is of type <a href="https://webidl.spec.whatwg.org/#idl-any">`any`</a>, allowing
+    ::  The resulting token. The value is of type <a href="https://webidl.spec.whatwg.org/#idl-any">`any`</a>, allowing 
         [=IDPs=] to return tokens in various formats (string, object, etc.).
-        See the examples at the end of [[#idp-api-id-assertion-endpoint]] for both string
+        See the examples at the end of [[#idp-api-id-assertion-endpoint]] for both string 
         and object token formats.
     :   <dfn>continue_on</dfn>
     ::  A URL that the user agent will open in a popup to finish the authentication process.
@@ -3035,9 +3378,9 @@ The design of FedCM relies on several key security assumptions:
 ### Trusted User Agent ### {#trusted-user-agent}
 <!-- ============================================================ -->
 
-The user agent (i.e., the browser) is assumed to be a trusted entity. It is expected to faithfully
-enforce same-origin policies, execute CSP and CORS checks, and present a secure, non-forgeable UI
-that users can trust, and to not contains or executes malicious third parties scripts. The browser
+The user agent (i.e., the browser) is assumed to be a trusted entity. It is expected to faithfully 
+enforce same-origin policies, execute CSP and CORS checks, and present a secure, non-forgeable UI 
+that users can trust, and to not contains or executes malicious third parties scripts. The browser 
 is responsible for mediating the flow and preventing unauthorized access to credentials.
 
 <!-- ============================================================ -->
@@ -3045,22 +3388,22 @@ is responsible for mediating the flow and preventing unauthorized access to cred
 <!-- ============================================================ -->
 
 All network requests — especially those carrying sensitive information such as tokens — occur over
-secure channels (e.g. HTTPS). The specification assumes that the transport layer prevents
+secure channels (e.g. HTTPS). The specification assumes that the transport layer prevents 
 man-in-the-middle and other network attacks.
 
 <!-- ============================================================ -->
 ### Proper Implementation of Security Headers ### {#proper-implementation-headers}
 <!-- ============================================================ -->
 
-[=IDP=] and [=RP=] implement and enforce appropriate security headers (such as CSP, CORS,
-and the mandatory use of the `Sec-Fetch-Dest: webidentity` header). These headers are key to
+[=IDP=] and [=RP=] implement and enforce appropriate security headers (such as CSP, CORS, 
+and the mandatory use of the `Sec-Fetch-Dest: webidentity` header). These headers are key to 
 distinguishing browser-initiated FedCM flows from arbitrary requests.
 
 <!-- ============================================================ -->
 ### IDP and RP Integrity ### {#idp-and-rp-integrity}
 <!-- ============================================================ -->
 
-[=IDP=] and [=RP=] endpoints are implemented correctly and do not contain vulnerabilities that could
+[=IDP=] and [=RP=] endpoints are implemented correctly and do not contain vulnerabilities that could 
 allow an attacker to bypass the FedCM flow or extract sensitive data.
 
 <!-- ============================================================ -->
@@ -3069,19 +3412,19 @@ allow an attacker to bypass the FedCM flow or extract sensitive data.
 
 **Consideration**
 
-The FedCM API supports flexible token formats, allowing [=IDPs=] to return tokens in various forms.
-[=RPs=] must be prepared to handle different token structures as agreed upon with their [=IDP=]
+The FedCM API supports flexible token formats, allowing [=IDPs=] to return tokens in various forms. 
+[=RPs=] must be prepared to handle different token structures as agreed upon with their [=IDP=] 
 partners. The token content remains opaque to the user agent.
 
 **Recommendations**
 
-1. [=RPs=] should implement robust token parsing logic that can handle the specific format agreed
+1. [=RPs=] should implement robust token parsing logic that can handle the specific format agreed 
     upon with their [=IDP=] partners.
-1. [=RPs=] should validate tokens according to the security requirements and format specifications
+1. [=RPs=] should validate tokens according to the security requirements and format specifications 
     established with their [=IDP=].
-1. [=IDPs=] should clearly document their token format and structure to help [=RPs=] implement
+1. [=IDPs=] should clearly document their token format and structure to help [=RPs=] implement 
     proper validation.
-1. [=IDPs=] should ensure their token format is consistent and follows their documented
+1. [=IDPs=] should ensure their token format is consistent and follows their documented 
     specification.
 
 <!-- ============================================================ -->
@@ -3375,7 +3718,7 @@ origin of the fetched URLs.
     information required to perform a federated signin/signup. It is not possible for the [=RP=] or
     the [=IDP=] to force the token fetch to happen without user permission, as the user agent cannot be
     spoofed or otherwise tricked.
-
+    
 * The [=disconnect endpoint=] may only be fetched after the user has successfully gone through the
     FedCM flow at least once in the [=RP=]. It sends a credentialed request to the [=IDP=], so it
     is important that the [=user agent=] does not allow unlimited requests of such type, even after
@@ -3640,7 +3983,7 @@ These schemes have not been adopted by this specification.
 The FedCM API treats token content as opaque data, regardless of type.
 This design ensures:
 
-1. The [=user agent=] does not semantically interpret or validate the meaning of token contents, but
+1. The [=user agent=] does not semantically interpret or validate the meaning of token contents, but 
     may inspect their type and structure for proper handling, while maintaining the privacy of the
     authentication data.
 1. The token format flexibility does not introduce new privacy risks.
@@ -3679,30 +4022,22 @@ identity provider (such as Okta or Microsoft Entra B2C) typically CNAME a subdom
 `login.idp.example` to the provider's infrastructure. In this setup, the identity provider has no
 control over the apex domain and cannot host a file there on behalf of their customer.
 
-To address these challenges, the [=resolve the well-known host=] algorithm allows [=IDPs=] to set a
-DNS TXT record at `_web-identity.<registrable domain>` indicating which subdomain should host the
-[=well-known file=]. This approach:
+To address these challenges, several alternative discovery mechanisms are under consideration
+(see [[#well-known-discovery]]). All proposed options share these design goals:
 
-- **Preserves the privacy properties** of the [=well-known file=] system, since the subdomain must
-    still be under the same [=host/registrable domain=] and the TXT record is publicly visible.
-- **Uses existing DNS infrastructure** that domain administrators are already familiar with, following
-    the convention established by protocols such as DMARC (`_dmarc`), DKIM (`_domainkey`), and
-    MTA-STS (`_mta-sts`).
-- **Avoids adding a runtime dependency** on the apex domain's web server, since DNS records are
-    typically static and managed independently of any particular web service.
-- **Enables delegation** to white-label identity providers: the domain owner sets a TXT record
-    pointing to the subdomain they have already CNAMEd to the provider, and the provider hosts the
-    [=well-known file=] on that subdomain.
+- **Preserve the privacy properties** of the [=well-known file=] system, since the data source
+    remains under the control of the same [=host/registrable domain=].
+- **Avoid adding a runtime dependency** on the apex domain's web server.
+- **Enable delegation** to white-label identity providers.
 
-For example, an organization that uses `login.idp.example` for authentication can set the following
-DNS record:
+The mechanisms differ in their use of DNS record types (SVCB per [[RFC9460]] vs. TXT), whether the
+well-known data is embedded directly in DNS or fetched via HTTPS from a subdomain, and whether a
+fixed subdomain convention (`web-identity.`) is used. See [[#discovery-mechanism-options]] for a
+comparison of the four options.
 
-```
-_web-identity.idp.example.  TXT  "sub=login"
-```
-
-The user agent will then fetch the [=well-known file=] from `login.idp.example` instead of
-`idp.example`, without any changes needed to the apex domain's web server.
+Additionally, several options for how the new mechanism interacts with the existing [=well-known
+file=] fetch are under consideration, ranging from sequential fallback to parallel execution.
+See [[#processing-order-options]] for details.
 
 <!-- ====================================================================== -->
 # Extensibility # {#extensibility}
