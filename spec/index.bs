@@ -1148,13 +1148,49 @@ An extension may use the following instead of the [=create identity credential/s
 </div>
 </div>
 
+<!-- ============================================================ -->
+### Well-known discovery via DNS TXT hash ### {#well-known-discovery}
+<!-- ============================================================ -->
+
+As an alternative to hosting the [=well-known file=] at the [=host/registrable domain=],
+an [=IDP=] may publish a DNS TXT record at `_web-identity.<registrable domain>` containing
+a cryptographic hash of the [=well-known file=] data. This allows the user agent to verify
+that the [=IDP=]'s config file endpoints are authorized by the [=host/registrable domain=]
+without requiring an HTTP server at the apex domain.
+
+The TXT record format follows conventions established by DMARC ([[RFC7489]]) and ACME DNS
+challenges ([[RFC8555]]). The underscore-prefixed name follows [[RFC8552]]. To avoid
+confusion with wildcard TXT records, the record value uses a static `webident;` prefix.
+The hash is computed over the JSON Canonicalization Scheme ([[RFC8785]]) serialization of
+the [=well-known file=] data, using SHA-256 and encoded as base64url
+([[RFC4648]] Section 5) without padding. There MUST be exactly one TXT record with the
+`webident;` prefix at the queried name; if there are zero or more than one, the DNS
+path is not usable and the user agent falls back to the HTTP well-known fetch.
+
+See [[#deployment-well-known]] for the motivation.
+
+The DNS TXT resolution, hash computation, and verification are performed inline within
+the [=fetch the config file=] algorithm in order to run the DNS query and HTTP well-known
+fallback in parallel with the config file fetch.
+
+Example DNS record:
+
+```
+_web-identity.idp.example.  TXT  "webident;token=abc123..."
+```
+
+Where the token value is `base64url(sha256(jcs(wellKnownData)))`.
+
+Issue: The `_web-identity` name should be registered in the Underscored and Globally
+    Scoped DNS Node Names registry per [[RFC8552]].
 
 <!-- ============================================================ -->
 ### Fetch the config file ### {#fetch-config-file}
 <!-- ============================================================ -->
 
-The <a>fetch the config file</a> algorithm fetches both the [=well-known file=] and the config file from
-the [=IDP=], checks that the config file is mentioned in the [=well-known file=], and returns the config.
+The <a>fetch the config file</a> algorithm fetches the config file from the [=IDP=], verifies
+that the config file's endpoints are authorized by the [=host/registrable domain=] (either via
+a DNS TXT hash or by fetching the [=well-known file=] over HTTP), and returns the config.
 
 <div algorithm="fetch the config file">
 To <dfn>fetch the config file</dfn> given an {{IdentityProviderConfig}} |provider| and
@@ -1166,59 +1202,20 @@ or failure.
     1. Run a [[!CSP]] check with a [[CSP#directive-connect-src|connect-src]] directive on the URL
         passed as |configUrl|. If it fails, return failure.
     1. If |configUrl| is not a [=potentially trustworthy URL=], return failure.
-    1. Let |rootUrl| be a new [=/URL=].
-    1. Set |rootUrl|'s [=url/scheme=] to |configUrl|'s [=url/scheme=].
-    1. Set |rootUrl|'s [=url/host=] to |configUrl|'s [=url/host=]'s [=host/registrable domain=].
-    1. Set |rootUrl|'s [=url/path=] to the <a>list</a> «".well-known", "web-identity"».
+    1. Let |registrableDomain| be |configUrl|'s [=url/host=]'s [=host/registrable domain=].
     1. Let |config|, |wellKnown|, |accounts_url|, and |login_url| be null.
     1. Let |skipWellKnown| be false.
     1. Let |rpOrigin| be |globalObject|'s [=associated Document=]'s [=Document/origin=].
-    1. If |rpOrigin| is not an [=opaque origin=], and |rootUrl|'s [=url/host=] is equal
-        to |rpOrigin|'s [=host/registrable domain=], and |rootUrl|'s [=url/scheme=] is
+    1. If |rpOrigin| is not an [=opaque origin=], and |registrableDomain| is equal
+        to |rpOrigin|'s [=host/registrable domain=], and |configUrl|'s [=url/scheme=] is
         equal to |rpOrigin|'s [=origin/scheme=], set |skipWellKnown| to true.
 
         Note: Because domain cookies are valid across an entire site, there is no privacy
             benefit from doing the well-known check if the RP and IDP are in the same site.
-    1. Otherwise:
-        1. Let |wellKnownRequest| be a new [=/request=] as follows:
-
-            :  [=request/URL=]
-            :: |rootUrl|
-            :  [=request/client=]
-            :: null
-            :  [=request/service-workers mode=]
-            :: "none"
-            :  [=request/destination=]
-            :: "webidentity"
-            :  [=request/origin=]
-            :: a unique [=opaque origin=]
-            :  [=request/header list=]
-            :: a [=list=] containing a single [=header=] with [=header/name=] set to `Accept` and
-                [=header/value=] set to `application/json`
-            :  [=request/referrer policy=]
-            :: "no-referrer"
-            :  [=request/credentials mode=]
-            :: "omit"
-            :  [=request/mode=]
-            :: "no-cors"
-
-            Issue: The spec is yet to be updated so that all <a spec=fetch for=/>requests</a> are created
-            with [=request/mode=] set to "user-agent-no-cors". See the relevant
-            [pull request](https://github.com/whatwg/fetch/pull/1533) for details.
-
-        1. [=Fetch request=] with |wellKnownRequest| and |globalObject|, and with <var ignore>processResponseConsumeBody</var>
-            set to the following steps, given a <a spec=fetch for=/>response</a> |response| and |responseBody|:
-            1. Let |json| be the result of [=extract the JSON fetch response=] from |response| and
-                |responseBody|.
-            1. Set |wellKnown| to the result of [=converted to an IDL value|converting=] |json|
-                to an {{IdentityProviderWellKnown}}.
-            1. If one of the previous two steps threw an exception, or if the
-                [=list/size=] of |wellKnown|["{{IdentityProviderWellKnown/provider_urls}}"] is
-                greater than 1, set |wellKnown| to failure.
-
-                Issue: [relax](https://github.com/fedidcg/FedCM/issues/333) the size of the
-                provider_urls array.
-
+    1. Let |rootUrl| be a new [=/URL=].
+    1. Set |rootUrl|'s [=url/scheme=] to |configUrl|'s [=url/scheme=].
+    1. Set |rootUrl|'s [=url/host=] to |registrableDomain|.
+    1. Set |rootUrl|'s [=url/path=] to the <a>list</a> «".well-known", "web-identity"».
     1. Let |configRequest| be a new <a spec=fetch for=/>request</a> as follows:
 
         :  [=request/url=]
@@ -1259,9 +1256,102 @@ or failure.
         1. Set |accounts_url| to the result of [=computing the manifest URL=] with |provider|,
             |config|.{{IdentityProviderAPIConfig/accounts_endpoint}}, and |globalObject|.
         1. If |login_url| or |accounts_url| is failure, set |config| to failure.
+    1. Let |dnsRecord| be null.
+    1. If |skipWellKnown| is false:
+        1. Let |queryName| be the [=string/concatenation=] of
+            «"_web-identity.", |registrableDomain|».
+        1. Let |dnsResult| be the result of resolving |queryName| as a DNS TXT
+            record type.
+        1. If the resolution was successful (i.e., not NXDOMAIN, empty answer,
+            SERVFAIL, timeout, or connection failure):
+            1. Let |matchingRecords| be a new [=list=].
+            1. For each |record| in |dnsResult|:
+                1. If |record|'s text content [=ASCII case-insensitive=] starts with
+                    "webident;", [=list/append=] |record| to |matchingRecords|.
+            1. If the [=list/size=] of |matchingRecords| is 1, set |dnsRecord| to
+                |matchingRecords|[0].
+
+                Note: There must be exactly one TXT record with the `webident;` prefix
+                    to ensure a unique, unambiguous result. If there are zero matching
+                    records or more than one, the DNS path is not usable.
+        1. If |dnsRecord| is null:
+            1. Let |wellKnownRequest| be a new [=/request=] as follows:
+
+                Note: During a transition period, user agents MAY start this HTTP
+                    well-known fetch in parallel with the DNS TXT query (i.e., before
+                    the DNS result is known) to avoid latency regression for existing
+                    [=IDPs=] that do not yet publish a DNS TXT record. If the DNS
+                    query subsequently succeeds and the hash matches, the HTTP fetch
+                    result can be discarded.
+
+                :  [=request/URL=]
+                :: |rootUrl|
+                :  [=request/client=]
+                :: null
+                :  [=request/service-workers mode=]
+                :: "none"
+                :  [=request/destination=]
+                :: "webidentity"
+                :  [=request/origin=]
+                :: a unique [=opaque origin=]
+                :  [=request/header list=]
+                :: a [=list=] containing a single [=header=] with [=header/name=] set to `Accept` and
+                    [=header/value=] set to `application/json`
+                :  [=request/referrer policy=]
+                :: "no-referrer"
+                :  [=request/credentials mode=]
+                :: "omit"
+                :  [=request/mode=]
+                :: "no-cors"
+
+                Issue: The spec is yet to be updated so that all <a spec=fetch for=/>requests</a> are created
+                with [=request/mode=] set to "user-agent-no-cors". See the relevant
+                [pull request](https://github.com/whatwg/fetch/pull/1533) for details.
+
+            1. [=Fetch request=] with |wellKnownRequest| and |globalObject|, and with <var ignore>processResponseConsumeBody</var>
+                set to the following steps, given a <a spec=fetch for=/>response</a> |response| and |responseBody|:
+                1. Let |json| be the result of [=extract the JSON fetch response=] from |response| and
+                    |responseBody|.
+                1. Set |wellKnown| to the result of [=converted to an IDL value|converting=] |json|
+                    to an {{IdentityProviderWellKnown}}.
+                1. If one of the previous two steps threw an exception, or if the
+                    [=list/size=] of |wellKnown|["{{IdentityProviderWellKnown/provider_urls}}"] is
+                    greater than 1, set |wellKnown| to failure.
+
+                    Issue: [relax](https://github.com/fedidcg/FedCM/issues/333) the size of the
+                    provider_urls array.
+
     1. Wait for |config| to be set.
     1. If |config| is failure, return failure.
     1. If |skipWellKnown| is true, return |config|.
+    1. If |dnsRecord| is not null:
+        1. Let |configWellKnown| be a new {{IdentityProviderWellKnown}}.
+        1. Set |configWellKnown|["{{IdentityProviderWellKnown/accounts_endpoint}}"] to
+            |config|.{{IdentityProviderAPIConfig/accounts_endpoint}}.
+        1. Set |configWellKnown|["{{IdentityProviderWellKnown/login_url}}"] to
+            |config|.{{IdentityProviderAPIConfig/login_url}}.
+        1. Let |text| be |dnsRecord|'s text content.
+        1. Let |params| be the result of parsing the portion of |text| after
+            "webident;" as a set of key=value pairs separated by semicolons (";"),
+            where keys and values are stripped of leading and trailing
+            [=ASCII whitespace=].
+        1. Let |canonicalJson| be the result of serializing |configWellKnown| using the JSON
+            Canonicalization Scheme ([[RFC8785]]).
+        1. Let |digest| be the SHA-256 digest of |canonicalJson|.
+        1. Let |expectedToken| be the base64url encoding of |digest| without padding
+            ([[RFC4648]] Section 5).
+        1. If |params| contains a key "token" whose value is equal to
+            |expectedToken|, return |config|.
+
+            Note: The DNS TXT hash verified successfully, so the [=IDP=]'s
+                [=host/registrable domain=] has authorized these endpoints. No HTTP
+                well-known fetch is needed.
+
+        1. Return failure.
+
+            Note: The DNS TXT record existed but the hash did not match. This is
+                treated as a hard failure — the [=IDP=] has opted into DNS-based
+                verification but the config does not match the published hash.
     1. Wait for |wellKnown| to be set.
     1. If |wellKnown| is failure, return failure.
     1. <dfn for="fetch the config file">Check accounts and login url step</dfn>: If
@@ -1292,11 +1382,13 @@ the [=fetch the config file/check accounts and login url step=]:
 
 NOTE: a two-tier file system is used in order to prevent the [=IDP=] from easily determining the [=RP=]
 that a user is visiting by encoding the information in the config file path. This issue is solved by
-requiring a [=well-known file=] to be on the root of the [=IDP=]. The config file itself can be anywhere, but
-it will not be used if the user agent does not find it in the [=well-known file=]. This allows the [=IDP=]
-to keep their actual config files on an arbitary path while allowing the user agent to prevent config file
-path manipulation to fingerprint (for instance, by including the RP in the path). See
-[[#manifest-fingerprinting]].
+requiring a [=well-known file=] to be hosted at a location controlled by the [=IDP=]'s
+[=host/registrable domain=] — either at the [=host/registrable domain=] itself or via the
+DNS TXT hash mechanism described in [[#well-known-discovery]]. The config file itself can be
+anywhere, but it will not be used if the user agent cannot verify it against the [=well-known file=]
+(either via DNS hash or HTTP fetch). This allows the [=IDP=] to keep their actual config files on an
+arbitary path while allowing the user agent to prevent config file path manipulation to fingerprint
+(for instance, by including the RP in the path). See [[#manifest-fingerprinting]].
 
 <xmp class="idl">
 dictionary IdentityProviderWellKnown {
@@ -2074,7 +2166,7 @@ network requests performed:
 
 NOTE: The browser uses the [=well-known file=] to prevent [[#manifest-fingerprinting]].
 
-The [=IDP=] exposes a <dfn>well-known file</dfn> in a pre-defined location, specifically at the "web-identity" file at the [=IDPs=]'s path ".well-known".
+The [=IDP=] exposes a <dfn>well-known file</dfn> in a pre-defined location, specifically at the "web-identity" file at the path ".well-known". By default, the [=well-known file=] is fetched from the [=IDP=]'s [=host/registrable domain=] (e.g., `idp.example`). As an alternative, an [=IDP=] may publish a DNS TXT record containing a hash of the well-known data (see [[#well-known-discovery]]), allowing the user agent to verify the config file endpoints without fetching the [=well-known file=] over HTTP. This addresses operational challenges where the [=host/registrable domain=] is not operated by the authentication service.
 
 The [=well-known file=] is fetched in the [=fetch the config file=] algorithm:
 
@@ -2083,7 +2175,8 @@ The [=well-known file=] is fetched in the [=fetch the config file=] algorithm:
 (c) **without** revealing the [=RP=] in the <a http-header>Origin</a> or
     [[RFC9110#field.referer|Referer]] headers.
 
-For example:
+For example, if the [=IDP=]'s [=host/registrable domain=] is `idp.example`, the user agent fetches
+the [=well-known file=] from the [=host/registrable domain=]:
 
 <div class=example>
 ```http
@@ -2093,6 +2186,13 @@ Accept: application/json
 Sec-Fetch-Dest: webidentity
 ```
 </div>
+
+Alternatively, the [=IDP=] may publish a DNS TXT record at `_web-identity.<registrable domain>`
+containing a hash of the well-known data (see [[#well-known-discovery]]). When this record is
+present and valid, the user agent skips the HTTP well-known fetch entirely.
+This allows [=IDPs=] whose [=host/registrable domain=] (apex domain) is operated by a different
+service to authorize their config file endpoints without requiring changes to the apex domain's
+web server. See [[#deployment-well-known]] for details.
 
 The file is parsed expecting a {{IdentityProviderWellKnown}} JSON object.
 
@@ -3201,6 +3301,25 @@ the attacker's [=RP=] might also not be trusted by the [=IDP=], so the flow woul
 {{id_assertion_endpoint_request/client_id}} or CORS checks.
 
 <!-- ============================================================ -->
+## DNS-Based Discovery Security ## {#dns-discovery-security}
+<!-- ============================================================ -->
+
+When the DNS TXT-based discovery mechanism ([[#well-known-discovery]]) is used, the user agent
+resolves a DNS TXT record to obtain a hash of the expected [=well-known file=] data. DNS
+responses are not authenticated unless DNSSEC is deployed, and DNSSEC adoption remains
+low (under 5% for .COM as of this writing).
+
+However, the DNS TXT record in this design does not directly supply the [=well-known file=]
+data — it supplies a hash that the user agent verifies against data obtained from the [=IDP=]'s
+config file, which is fetched over TLS. An attacker who tampers with the DNS response can
+cause the hash check to fail (denial of service) but cannot cause the user agent to accept
+different well-known data, because the well-known data itself comes from the TLS-authenticated
+config file. To successfully substitute well-known data, an attacker would need to compromise
+both DNS (to supply a matching hash) and TLS (to serve a malicious config file) simultaneously,
+which is strictly harder than compromising TLS alone — the current threat model for the
+existing [=well-known file=] fetch.
+
+<!-- ============================================================ -->
 # Privacy Considerations # {#privacy}
 <!-- ============================================================ -->
 
@@ -3561,6 +3680,53 @@ This design ensures:
     authentication data.
 1. The token format flexibility does not introduce new privacy risks.
 1. [=IDPs=] have flexibility in token design without compromising user privacy.
+
+<!-- ====================================================================== -->
+# Deployment Considerations # {#deployment}
+<!-- ====================================================================== -->
+
+*This section is non-normative.*
+
+<!-- ============================================================ -->
+## Well-Known File and Apex Domain Challenges ## {#deployment-well-known}
+<!-- ============================================================ -->
+
+The FedCM API requires a [=well-known file=] to be hosted at the [=IDP=]'s [=host/registrable
+domain=]. This serves as a critical anti-fingerprinting measure (see [[#manifest-fingerprinting]]).
+However, requiring the [=well-known file=] to be hosted at the [=host/registrable domain=]
+(typically the apex domain) can pose operational challenges for some organizations.
+
+**Apex domain limitations.** Apex domains (e.g., `idp.example` as opposed to `login.idp.example`)
+cannot use DNS CNAME records because they must hold NS and SOA records. This makes it difficult to
+route apex domains to modern cloud services that rely on CNAMEs for load balancing, failover, and
+geographic affinity. Some DNS providers offer workarounds such as ALIAS or ANAME records, but
+these are not universally supported and can degrade certain DNS features.
+
+**Split domain ownership.** It is common for different subdomains of a [=host/registrable domain=]
+to be operated by different teams or services within an organization. For example,
+`login.idp.example` might be operated by an authentication service, while `idp.example` (the apex)
+might be operated by a marketing team or point to an entirely different web application. Requiring
+the [=well-known file=] at the apex creates a runtime dependency between the authentication service
+and whichever service operates the apex domain.
+
+**White-label identity providers.** Organizations that delegate authentication to a white-label
+identity provider (such as Okta or Microsoft Entra B2C) typically CNAME a subdomain like
+`login.idp.example` to the provider's infrastructure. In this setup, the identity provider has no
+control over the apex domain and cannot host a file there on behalf of their customer.
+
+To address these challenges, a DNS TXT-based discovery mechanism is specified
+(see [[#well-known-discovery]]). This mechanism shares these design goals:
+
+- **Preserve the privacy properties** of the [=well-known file=] system, since the data source
+    remains under the control of the same [=host/registrable domain=].
+- **Avoid adding a runtime dependency** on the apex domain's web server.
+- **Enable delegation** to white-label identity providers.
+
+The mechanism uses a TXT record at `_web-identity.<registrable domain>` containing a hash of
+the well-known data. The [=IDP=] publishes this DNS record to authorize its config file endpoints;
+the user agent verifies the hash against the config data received over TLS. If no TXT record
+exists, the user agent falls back to the existing HTTP well-known fetch at the
+[=host/registrable domain=].
 
 <!-- ====================================================================== -->
 # Extensibility # {#extensibility}
