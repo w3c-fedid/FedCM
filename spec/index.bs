@@ -54,6 +54,9 @@ spec: login-status; urlPrefix: https://w3c-fedid.github.io/login-status
         text: unknown; url: unknown
         text: get the login status; url: get-the-login-status
         text: set the login status; url: set-the-login-status
+spec: service-workers; urlPrefix: https://w3c.github.io/ServiceWorker/
+    type: dfn
+        text: register; url: register-algorithm
 </pre>
 
 <pre class=link-defaults>
@@ -603,7 +606,7 @@ perform the following steps. This returns an {{USVString}} or failure.
         :  [=request/mode=]
         :: "cors"
 
-    1. Let |swJson| be the result of [=dispatch identity handler|dispatching identity handler=]
+    1. Let |swJson| be the result of [=dispatching identity handler=]
         given |config|, |options|, "`disconnect`", and |request|.
     1. If |swJson| is failure, return failure.
     1. If |swJson| is not null:
@@ -1273,7 +1276,7 @@ or failure.
             1. Let |swUrl| be the result of [=computing the manifest URL=] with |provider|,
                 |config|'s {{IdentityProviderAPIConfig/identity_handler}}'s {{IdentityHandlerConfig/service_worker}},
                 and |globalObject|.
-            1. If |swUrl| is not failure, <a href="https://w3c.github.io/ServiceWorker/#register-algorithm">register</a> a [=/service worker=] under the
+            1. If |swUrl| is not failure, [=register=] a [=/service worker=] under the
                 [=IDP=]'s [=/origin=] with script URL |swUrl|, following [[!SERVICE-WORKERS]],
                 and associate the registration with |provider|'s
                 {{IdentityProviderConfig/configURL}}.
@@ -1368,7 +1371,7 @@ dictionary IdentityHandlerConfig {
 
 enum IdentityRequestEndpoint {
   "accounts",
-  "id_assertion",
+  "id-assertion",
   "disconnect"
 };
 
@@ -1412,7 +1415,7 @@ The <dfn for="IdentityRequestEvent" attribute export>request</dfn> attribute get
 to which it was initialized. Its value is a browser-constructed {{Request}} object for the [=IDP=]
 endpoint. The request has its [=request/destination=] set to "`webidentity`", which causes the
 [=user agent=] to include the `Sec-Fetch-Dest: webidentity` [=forbidden request-header=]. The
-service worker can forward this request via <a href="https://fetch.spec.whatwg.org/#dom-global-fetch">`fetch(event.request)`</a> to preserve the header, which the
+service worker can forward this request via {{WindowOrWorkerGlobalScope/fetch()|fetch(event.request)}} to preserve the header, which the
 [=IDP=] server can use to verify the request originated from the FedCM API.
 
 <div algorithm>
@@ -1433,7 +1436,7 @@ The <dfn for="IdentityRequestEvent" method export>respondWith(|response|)</dfn> 
 
 <div class="note">
 The {{IdentityRequestEvent}} uses a single event type ("`identityrequest`") for all
-credentialed endpoints (accounts, id_assertion, disconnect), distinguished by the
+credentialed endpoints (accounts, id-assertion, disconnect), distinguished by the
 {{IdentityRequestEvent/endpoint}} attribute. An alternative design would define separate event
 types per operation (e.g., "`identityaccounts`", "`identityassertion`",
 "`identitydisconnect`"). The single-event design was chosen for the following reasons:
@@ -1502,7 +1505,7 @@ returns an {{IdentityProviderAccountList}}.
         Note: This fetch should only send Same-Site=None cookies. Specifying this will require
         [cookie layering](https://github.com/httpwg/http-extensions/issues/2084).
 
-    1. Let |swJson| be the result of [=dispatch identity handler|dispatching identity handler=]
+    1. Let |swJson| be the result of [=dispatching identity handler=]
         given |config|, |provider|, "`accounts`", and |request|.
     1. If |swJson| is failure, return failure.
     1. If |swJson| is not null:
@@ -1649,8 +1652,8 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
         :  [=request/mode=]
         :: "cors"
 
-    1. Let |swJson| be the result of [=dispatch identity handler|dispatching identity handler=]
-        given |config|, |provider|, "`id_assertion`", and |request|.
+    1. Let |swJson| be the result of [=dispatching identity handler=]
+        given |config|, |provider|, "`id-assertion`", and |request|.
     1. If |swJson| is failure, return failure.
     1. If |swJson| is not null:
         1. Let |swToken| be the result of [=converted to an IDL value|converting=] |swJson| to an
@@ -1961,7 +1964,7 @@ and a |responseBody|, run the following steps. This returns an [=ordered map=].
 <div algorithm>
 To <dfn>dispatch identity handler</dfn> given an {{IdentityProviderAPIConfig}} |config|,
 an {{IdentityProviderConfig}} |provider|, a [=string=] |endpoint|, and a [=/request=] |request|,
-run the following steps. This returns a JSON [=object=], null, or failure. A null result indicates
+run the following steps. This returns a JSON object, null, or failure. A null result indicates
 the [=/service worker=] did not handle the request; a failure result indicates the [=/service
 worker=] attempted to handle the request but failed.
 
@@ -1981,7 +1984,7 @@ worker=] attempted to handle the request but failed.
         Note: The [=active worker=] can be null if the [=/service worker=] has not yet finished
         installing and activating. This can only occur on the very first FedCM request to an
         [=IDP=] that declares an {{IdentityProviderAPIConfig/identity_handler}}, because the
-        [=user agent=] <a href="https://w3c.github.io/ServiceWorker/#register-algorithm">registers</a> the [=/service worker=] during the
+        [=user agent=] [=registers=] the [=/service worker=] during the
         [=fetch the config file|config file fetch=] (step 12) and then immediately proceeds to
         [=dispatch identity handler=] — a race with the [=/service worker=] lifecycle. On
         subsequent requests the [=/service worker=] is already active from the prior
@@ -3273,10 +3276,10 @@ The {{IdentityRequestEvent}} provides a {{IdentityRequestEvent/request}} member 
 browser-constructed {{Request}} with [=request/destination=] set to "`webidentity`". This
 causes the [=user agent=] to set the `Sec-Fetch-Dest: webidentity` [=forbidden request-header=]
 on the request, which the [=IDP=] server can use to verify that the request originated from
-the FedCM API. The service worker can forward this request via <a href="https://fetch.spec.whatwg.org/#dom-global-fetch">`fetch(event.request)`</a>. The
+the FedCM API. The service worker can forward this request via {{WindowOrWorkerGlobalScope/fetch()|fetch(event.request)}}. The
 {{IdentityRequestEvent}} does not expose `Cookie` or `Authorization` headers to the
 service worker. These are opaquely attached by the [=user agent=] when the service worker
-calls <a href="https://fetch.spec.whatwg.org/#dom-global-fetch">`fetch()`</a> with [=request/credentials mode=] set to "`include`". The service worker cannot read or modify
+calls {{WindowOrWorkerGlobalScope/fetch()}} with [=request/credentials mode=] set to "`include`". The service worker cannot read or modify
 cookie values.
 
 The [=user agent=] MAY enforce an implementation-defined timeout on the
@@ -3289,7 +3292,7 @@ and ensures that a service worker that has claimed ownership of a request cannot
 on failure.
 
 A single `identityrequest` event type is used for all credentialed endpoints (accounts,
-id_assertion, disconnect). The service worker determines which endpoints to handle by
+id-assertion, disconnect). The service worker determines which endpoints to handle by
 inspecting {{IdentityRequestEvent/endpoint}} and calling {{IdentityRequestEvent/respondWith()}}
 only for the endpoints it wants to intercept. For endpoints where the service worker does not
 call {{IdentityRequestEvent/respondWith()}}, the [=user agent=] falls back to the normal
