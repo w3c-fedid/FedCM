@@ -1271,30 +1271,6 @@ or failure.
         1. Set |accounts_url| to the result of [=computing the manifest URL=] with |provider|,
             |config|.{{IdentityProviderAPIConfig/accounts_endpoint}}, and |globalObject|.
         1. If |login_url| or |accounts_url| is failure, set |config| to failure.
-        1. If |config| is not failure and
-            |config|'s {{IdentityProviderAPIConfig/identity_handler}} is present:
-            1. Let |swUrl| be the result of [=computing the manifest URL=] with |provider|,
-                |config|'s {{IdentityProviderAPIConfig/identity_handler}}'s {{IdentityHandlerConfig/service_worker}},
-                and |globalObject|.
-            1. If |swUrl| is not failure, [=register=] a [=/service worker=] under the
-                [=IDP=]'s [=/origin=] with script URL |swUrl|, following [[!SERVICE-WORKERS]],
-                and associate the registration with |provider|'s
-                {{IdentityProviderConfig/configURL}}.
-        1. Otherwise, if |config| is not failure and
-            |config|'s {{IdentityProviderAPIConfig/identity_handler}} is not present:
-            1. If there is a [=/service worker registration=] associated with |provider|'s
-                {{IdentityProviderConfig/configURL}}, [=unregister=] it.
-
-                Note: This ensures that when an [=IDP=] removes the
-                {{IdentityProviderAPIConfig/identity_handler}} from its [=config file=],
-                the previously registered [=/service worker=] is cleaned up on the next
-                FedCM request.
-
-        Note: The [=/service worker registration=] created here is also subject to the
-        normal [=/service worker=] lifecycle and storage management. In particular,
-        `Clear-Site-Data: "storage"` sent by the [=IDP=]'s origin will unregister
-        all [=/service workers=] for that origin, including identity handlers,
-        per [[!SERVICE-WORKERS]].
     1. Wait for |config| to be set.
     1. If |config| is failure, return failure.
     1. If |skipWellKnown| is true, return |config|.
@@ -1362,11 +1338,6 @@ dictionary IdentityProviderAPIConfig {
   IdentityProviderBranding branding;
   boolean supports_use_other_account = false;
   USVString account_label;
-  IdentityHandlerConfig identity_handler;
-};
-
-dictionary IdentityHandlerConfig {
-  required USVString service_worker;
 };
 
 enum IdentityRequestEndpoint {
@@ -1962,35 +1933,25 @@ and a |responseBody|, run the following steps. This returns an [=ordered map=].
 </div>
 
 <div algorithm>
-To <dfn>dispatch identity handler</dfn> given an {{IdentityProviderAPIConfig}} |config|,
-an {{IdentityProviderConfig}} |provider|, a [=string=] |endpoint|, and a [=/request=] |request|,
+To <dfn>dispatch identity handler</dfn> given an {{IdentityProviderAPIConfig}} <var ignore>config</var>,
+an {{IdentityProviderConfig}} <var ignore>provider</var>, a [=string=] |endpoint|, and a [=/request=] |request|,
 run the following steps. This returns a JSON object, null, or failure. A null result indicates
 the [=/service worker=] did not handle the request; a failure result indicates the [=/service
 worker=] attempted to handle the request but failed.
 
-    1. If |config|'s {{IdentityProviderAPIConfig/identity_handler}} is not present, return null.
-    1. Let |registration| be the [=/service worker registration=] associated with |provider|'s
-        {{IdentityProviderConfig/configURL}}.
-    1. If |registration| is null, then:
-        1. The user agent SHOULD [=report a warning to the console=] that no service worker
-            registration was found for the identity handler.
-        1. Return null.
+    1. Let |registration| be the result of running <a spec=service-workers>Match Service Worker
+        Registration</a> given |request|'s [=request/url=] [[!SERVICE-WORKERS]].
+    1. If |registration| is null, return null.
     1. Let |activeWorker| be |registration|'s [=active worker=].
-    1. If |activeWorker| is null, then:
-        1. The user agent SHOULD [=report a warning to the console=] that the identity handler
-            service worker has no active worker.
-        1. Return null.
+    1. If |activeWorker| is null, return null.
 
-        Note: The [=active worker=] can be null if the [=/service worker=] has not yet finished
-        installing and activating. This can only occur on the very first FedCM request to an
-        [=IDP=] that declares an {{IdentityProviderAPIConfig/identity_handler}}, because the
-        [=user agent=] [=registers=] the [=/service worker=] during the
-        [=fetch the config file|config file fetch=] (step 12) and then immediately proceeds to
-        [=dispatch identity handler=] — a race with the [=/service worker=] lifecycle. On
-        subsequent requests the [=/service worker=] is already active from the prior
-        registration. In this case, the [=user agent=] falls back to the default credentialed
-        fetch, so the [=IDP=] still receives the request normally. No developer action is
-        required.
+        Note: If the [=IDP=] has not registered a [=/service worker=] whose scope covers
+        |request|'s [=request/url=], or the matched registration has no [=active worker=]
+        (e.g., the [=/service worker=] is still installing), the [=user agent=] falls
+        back to the default credentialed fetch. The [=user agent=] MUST NOT delay the fetch
+        waiting for a [=/service worker=] to become active. See [[#idp-guidance]] for how
+        [=IDPs=] should register and activate their [=/service worker=] to ensure reliable
+        interception.
     1. Let |result| be null.
     1. [=Fire functional event=] "`identityrequest`" using {{IdentityRequestEvent}} on
         |registration| with the following properties:
@@ -2013,19 +1974,19 @@ worker=] attempted to handle the request but failed.
 
         1. Let |respondWithPromise| be |dispatchedEvent|'s [=IdentityRequestEvent/respond with promise=].
         1. [=Upon rejection=] of |respondWithPromise|:
-            1. The user agent SHOULD [=report a warning to the console=] that the identity handler
-                {{IdentityRequestEvent/respondWith()}} promise was rejected.
+            1. The user agent [=reports a warning to the console=] indicating that the
+                identity handler {{IdentityRequestEvent/respondWith()}} promise was rejected.
             1. Set |result| to failure.
         1. [=Upon fulfillment=] of |respondWithPromise| with |response|:
             1. If |response| is not a {{Response}} object:
-                1. The user agent SHOULD [=report a warning to the console=] that the identity
-                    handler {{IdentityRequestEvent/respondWith()}} promise resolved with a
-                    non-Response value.
+                1. The user agent [=reports a warning to the console=] indicating that the
+                    identity handler {{IdentityRequestEvent/respondWith()}} promise resolved
+                    with a non-Response value.
                 1. Set |result| to failure and return.
             1. If |response|'s [=response/type=] is not "`basic`" and |response|'s [=response/type=]
                 is not "`default`":
-                1. The user agent SHOULD [=report a warning to the console=] that the identity
-                    handler response must be same-origin with the [=IDP=] or service
+                1. The user agent [=reports a warning to the console=] indicating that the
+                    identity handler response must be same-origin with the [=IDP=] or service
                     worker-constructed.
                 1. Set |result| to failure and return.
 
@@ -2037,14 +1998,14 @@ worker=] attempted to handle the request but failed.
                 credentialed fetch, which always targets same-origin [=IDP=] endpoints with
                 [=request/redirect mode=] set to "`error`".
             1. If |response|'s [=response/status=] is not an [=ok status=]:
-                1. The user agent SHOULD [=report a warning to the console=] that the identity
-                    handler response had a non-ok status.
+                1. The user agent [=reports a warning to the console=] indicating that the
+                    identity handler response had a non-ok status.
                 1. Set |result| to failure and return.
             1. Let |mimeType| be the result of <a>extracting a MIME TYPE</a> from |response|'s
                 <a for=response>header list</a>.
             1. If |mimeType| is failure or is not a [=JSON MIME Type=]:
-                1. The user agent SHOULD [=report a warning to the console=] that the identity
-                    handler response did not have a JSON MIME type.
+                1. The user agent [=reports a warning to the console=] indicating that the
+                    identity handler response did not have a JSON MIME type.
                 1. Set |result| to failure and return.
             1. [=Fully read=] |response|'s [=response/body=] given <var ignore>processBody</var> set to the following
                 steps given a [=byte sequence=] |responseBody|:
@@ -2408,17 +2369,6 @@ The {{IdentityProviderAPIConfig}} object's members have the following semantics:
     :   <dfn>account_label</dfn>
     ::  An optional string that needs to match the {{IdentityProviderAccount/label_hints}} provided
         by the IdP.
-    :   <dfn>identity_handler</dfn>
-    ::  An optional {{IdentityHandlerConfig}} that declares a [=/service worker=] capable of
-        intercepting credentialed FedCM requests.
-</dl>
-
-The {{IdentityHandlerConfig}} has the following member:
-<dl dfn-type="dict-member" dfn-for="IdentityHandlerConfig">
-    :   <dfn>service_worker</dfn> (required)
-    ::  A URL pointing to the service worker script, resolved relative to the [=config file=] URL.
-        The service worker's [=scope url=] defaults to the directory of this URL per
-        [[!SERVICE-WORKERS]].
 </dl>
 
 <div class="issue" heading="extension">
@@ -3264,9 +3214,9 @@ partners. The token content remains opaque to the user agent.
 
 **Consideration**
 
-When an [=IDP=] declares an {{IdentityProviderAPIConfig/identity_handler}} in its [=config file=],
-the [=user agent=] dispatches credentialed FedCM requests to the [=IDP=]'s [=/service worker=] before
-making network calls.
+When an [=IDP=] has [=registered=] a [=/service worker=] under its [=/origin=] whose scope
+covers its credentialed FedCM endpoint URLs, the [=user agent=] dispatches those credentialed
+FedCM requests to the [=/service worker=] before making network calls.
 
 The service worker runs under the [=IDP=]'s own [=/origin=] and is authored by the [=IDP=].
 It operates under the same trust boundary as the [=IDP=]'s server-side endpoints — no new
@@ -3301,6 +3251,79 @@ credentialed requests even if the service worker only handles a subset; the [[!S
 [=fire functional event|Should Skip Event=] optimization does not apply at the per-endpoint
 level. The activation cost is minimal because the service worker returns without calling
 {{IdentityRequestEvent/respondWith()}} for unhandled endpoints.
+
+<!-- ============================================================ -->
+### IDP Guidance ### {#idp-guidance}
+<!-- ============================================================ -->
+
+<div class="note">
+This section is non-normative.
+
+Identity Providers that implement a [=/service worker=]-based identity handler should follow
+the practices below to ensure the [=user agent=] reliably dispatches {{IdentityRequestEvent}}
+events to the [=/service worker=]. Because the [=user agent=] does not register the
+[=/service worker=] on the [=IDP=]'s behalf and does not delay FedCM requests waiting for a
+[=/service worker=] to become active, the [=IDP=] is responsible for ensuring a [=/service
+worker=] with an [=active worker=] exists at the time a FedCM request is made.
+
+### Registration Timing ### {#idp-guidance-registration-timing}
+
+[=IDPs=] should register the [=/service worker=] during the login flow — typically on the page
+loaded via {{IdentityProviderAPIConfig/login_url}} — and await the
+<a attribute for="ServiceWorkerContainer">ready</a> promise before signaling login completion
+(e.g., before calling `IdentityProvider.close()`). This ensures an [=active worker=] exists
+by the time the [=user agent=] resumes the FedCM flow and dispatches the first
+{{IdentityRequestEvent}}.
+
+<div class=example>
+```js
+// On the IDP's login page, after the user authenticates:
+await navigator.serviceWorker.register('/fedcm-sw.js', { scope: '/' });
+await navigator.serviceWorker.ready;   // blocks until an active worker exists
+IdentityProvider.close();                // now resume the FedCM flow
+```
+</div>
+
+### Immediate Activation ### {#idp-guidance-immediate-activation}
+
+[=IDPs=] should call `skipWaiting()` during the `install` event and `clients.claim()`
+during the `activate` event so that new [=/service worker=] versions become active
+promptly without requiring client navigation.
+
+<div class=example>
+```js
+// fedcm-sw.js
+self.addEventListener('install',  e => self.skipWaiting());
+self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
+```
+</div>
+
+### Script Freshness ### {#idp-guidance-script-freshness}
+
+[=IDPs=] should serve the [=/service worker=] script with cache-control headers that permit
+the [=user agent=] to pick up updates promptly (for example,
+`Cache-Control: max-age=0, must-revalidate`). This is particularly important because the
+[=/service worker=]'s primary trigger for update checks in FedCM flows is the dispatch of
+{{IdentityRequestEvent}} events, which may be infrequent for any given user.
+
+### Handler Coverage ### {#idp-guidance-handler-coverage}
+
+[=IDPs=] should register event listeners for {{IdentityRequestEvent}} covering every
+{{IdentityRequestEndpoint}} they intend to intercept. If the [=/service worker=] does not
+call {{IdentityRequestEvent/respondWith()}} for a given {{IdentityRequestEvent/endpoint}},
+the [=user agent=] falls back to the default credentialed fetch for that endpoint.
+
+### Scope Selection ### {#idp-guidance-scope-selection}
+
+[=IDPs=] should register the [=/service worker=] with a scope that covers the URLs of the
+credentialed endpoints declared in the [=config file=] (accounts, id-assertion, disconnect).
+Because the [=user agent=] locates the [=/service worker=] by running
+<a spec=service-workers>Match Service Worker Registration</a> against each endpoint URL,
+the scope-prefix matching rules of [[!SERVICE-WORKERS]] apply. A dedicated path prefix
+(e.g., placing all FedCM endpoints under `/fedcm/` and registering with scope `/fedcm/`) is
+the recommended pattern; a scope of `/` also works but causes the [=/service worker=] to
+receive all `fetch` events on the [=IDP=]'s origin.
+</div>
 
 <!-- ============================================================ -->
 ## Threats and Attacks ## {#security-threats-aattacks}
