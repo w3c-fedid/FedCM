@@ -1476,10 +1476,13 @@ returns an {{IdentityProviderAccountList}}.
         given |config|, |provider|, "`accounts`", |request|, and {{IdentityProviderAccountList}}.
     1. If |swAccountsList| is failure, return failure.
     1. If |swAccountsList| is not null:
-        1. If there is not an account in |swAccountsList| that has neither
-            {{IdentityProviderAccount/email}}, {{IdentityProviderAccount/name}},
+        1. If |swAccountsList|'s {{IdentityProviderAccountList/accounts}} is [=list/empty=],
+            return failure.
+        1. If there is an account in |swAccountsList|'s {{IdentityProviderAccountList/accounts}}
+            that has neither {{IdentityProviderAccount/email}}, {{IdentityProviderAccount/name}},
             {{IdentityProviderAccount/tel}}, nor {{IdentityProviderAccount/username}} set,
-            return |swAccountsList|.
+            return failure.
+        1. Return |swAccountsList|.
     1. Let |accountsList| be null.
     1. [=Fetch request=] with |request| and |globalObject|, and with <var ignore>processResponseConsumeBody</var>
         set to the following steps given a <a spec=fetch for=/>response</a> |response| and |responseBody|:
@@ -3259,23 +3262,25 @@ level. The activation cost is minimal because the service worker returns without
 <!-- ============================================================ -->
 
 <div class="note">
-This section is non-normative.
+This section is non-normative. It captures recommended practice for [=IDPs=]
+deploying a [=/service worker=]-based identity handler. Conformance is governed
+by the normative algorithms earlier in this specification (notably
+[=dispatch identity handler=]), not by the recommendations below.
 
-Identity Providers that implement a [=/service worker=]-based identity handler should follow
-the practices below to ensure the [=user agent=] reliably dispatches {{IdentityRequestEvent}}
-events to the [=/service worker=]. Because the [=user agent=] does not register the
-[=/service worker=] on the [=IDP=]'s behalf and does not delay FedCM requests waiting for a
-[=/service worker=] to become active, the [=IDP=] is responsible for ensuring a [=/service
+Because the [=user agent=] does not register the [=/service worker=] on the
+[=IDP=]'s behalf and does not delay FedCM requests waiting for a [=/service
+worker=] to become active, the [=IDP=] is responsible for ensuring a [=/service
 worker=] with an [=active worker=] exists at the time a FedCM request is made.
 
 ### Registration Timing ### {#idp-guidance-registration-timing}
 
-[=IDPs=] should register the [=/service worker=] during the login flow — typically on the page
-loaded via {{IdentityProviderAPIConfig/login_url}} — and await the
-<a attribute for="ServiceWorkerContainer">ready</a> promise before signaling login completion
-(e.g., before calling `IdentityProvider.close()`). This ensures an [=active worker=] exists
-by the time the [=user agent=] resumes the FedCM flow and dispatches the first
-{{IdentityRequestEvent}}.
+A recommended pattern is for [=IDPs=] to register the [=/service worker=]
+during the login flow — typically on the page loaded via
+{{IdentityProviderAPIConfig/login_url}} — and to await the
+<a attribute for="ServiceWorkerContainer">ready</a> promise before signaling
+login completion (e.g., before calling `IdentityProvider.close()`). This
+ensures an [=active worker=] exists by the time the [=user agent=] resumes
+the FedCM flow and dispatches the first {{IdentityRequestEvent}}.
 
 <div class=example>
 ```js
@@ -3288,43 +3293,48 @@ IdentityProvider.close();                // now resume the FedCM flow
 
 ### Immediate Activation ### {#idp-guidance-immediate-activation}
 
-[=IDPs=] should call `skipWaiting()` during the `install` event and `clients.claim()`
-during the `activate` event so that new [=/service worker=] versions become active
-promptly without requiring client navigation.
+A recommended pattern is to call `skipWaiting()` during the `install` event so
+that a newly installed [=/service worker=] version becomes the [=active worker=]
+immediately rather than entering the waiting state. This matters because the
+[=user agent=] dispatches {{IdentityRequestEvent}} events directly to the
+[=active worker=] from the browser process, often when no IDP client is open;
+without `skipWaiting()`, a fresh [=/service worker=] deployment will not take
+effect until all IDP clients have been closed and reopened.
 
 <div class=example>
 ```js
 // fedcm-sw.js
-self.addEventListener('install',  e => self.skipWaiting());
-self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
+self.addEventListener('install', e => self.skipWaiting());
 ```
 </div>
 
 ### Script Freshness ### {#idp-guidance-script-freshness}
 
-[=IDPs=] should serve the [=/service worker=] script with cache-control headers that permit
-the [=user agent=] to pick up updates promptly (for example,
-`Cache-Control: max-age=0, must-revalidate`). This is particularly important because the
-[=/service worker=]'s primary trigger for update checks in FedCM flows is the dispatch of
-{{IdentityRequestEvent}} events, which may be infrequent for any given user.
+[=IDPs=] are encouraged to serve the [=/service worker=] script with
+cache-control headers that permit the [=user agent=] to pick up updates
+promptly (for example, `Cache-Control: max-age=0, must-revalidate`). This is
+particularly important because the [=/service worker=]'s primary trigger for
+update checks in FedCM flows is the dispatch of {{IdentityRequestEvent}}
+events, which may be infrequent for any given user.
 
 ### Handler Coverage ### {#idp-guidance-handler-coverage}
 
-[=IDPs=] should register event listeners for {{IdentityRequestEvent}} covering every
-{{IdentityRequestEndpoint}} they intend to intercept. If the [=/service worker=] does not
-call {{IdentityRequestEvent/respondWith()}} for a given {{IdentityRequestEvent/endpoint}},
-the [=user agent=] falls back to the default credentialed fetch for that endpoint.
+[=IDPs=] typically register event listeners for {{IdentityRequestEvent}}
+covering every {{IdentityRequestEndpoint}} they intend to intercept. If the
+[=/service worker=] does not call {{IdentityRequestEvent/respondWith()}} for
+a given {{IdentityRequestEvent/endpoint}}, the [=user agent=] falls back to
+the default credentialed fetch for that endpoint.
 
 ### Scope Selection ### {#idp-guidance-scope-selection}
 
-[=IDPs=] should register the [=/service worker=] with a scope that covers the URLs of the
-credentialed endpoints declared in the [=config file=] (accounts, id-assertion, disconnect).
-Because the [=user agent=] locates the [=/service worker=] by running
-<a spec=service-workers>Match Service Worker Registration</a> against each endpoint URL,
-the scope-prefix matching rules of [[!SERVICE-WORKERS]] apply. A dedicated path prefix
-(e.g., placing all FedCM endpoints under `/fedcm/` and registering with scope `/fedcm/`) is
-the recommended pattern; a scope of `/` also works but causes the [=/service worker=] to
-receive all `fetch` events on the [=IDP=]'s origin.
+[=IDPs=] are encouraged to register the [=/service worker=] with a scope that
+covers the URLs of the credentialed endpoints declared in the [=config file=]
+(accounts, id-assertion, disconnect). Because the [=user agent=] locates the
+[=/service worker=] by running <a spec=service-workers>Match Service Worker
+Registration</a> against each endpoint URL, the scope-prefix matching rules
+of [[!SERVICE-WORKERS]] apply. A scope narrower than `/` is recommended so
+the [=/service worker=] does not receive unrelated `fetch` events on the
+[=IDP=]'s origin.
 </div>
 
 <!-- ============================================================ -->
