@@ -606,14 +606,10 @@ perform the following steps. This returns an {{USVString}} or failure.
         :  [=request/mode=]
         :: "cors"
 
-    1. Let |swJson| be the result of [=dispatching identity handler=]
-        given |config|, |options|, "`disconnect`", and |request|.
-    1. If |swJson| is failure, return failure.
-    1. If |swJson| is not null:
-        1. Let |swAccount| be the result of [=converted to an IDL value|converting=] |swJson| to
-            a {{DisconnectedAccount}}.
-        1. If that did not throw an exception, return |swAccount|'s
-            {{DisconnectedAccount/account_id}}.
+    1. Let |swAccount| be the result of [=dispatching identity handler=]
+        given |config|, |options|, "`disconnect`", |request|, and {{DisconnectedAccount}}.
+    1. If |swAccount| is failure, return failure.
+    1. If |swAccount| is not null, return |swAccount|'s {{DisconnectedAccount/account_id}}.
     1. Let |accountId| be null.
     1. [=Fetch request=] with |request| and |globalObject|, and with
         <var ignore>processResponseConsumeBody</var> set to the following steps given a
@@ -1476,16 +1472,14 @@ returns an {{IdentityProviderAccountList}}.
         Note: This fetch should only send Same-Site=None cookies. Specifying this will require
         [cookie layering](https://github.com/httpwg/http-extensions/issues/2084).
 
-    1. Let |swJson| be the result of [=dispatching identity handler=]
-        given |config|, |provider|, "`accounts`", and |request|.
-    1. If |swJson| is failure, return failure.
-    1. If |swJson| is not null:
-        1. Let |swAccountsList| be the result of [=converted to an IDL value|converting=] |swJson|
-            to an {{IdentityProviderAccountList}}.
-        1. If the previous step did not throw an exception, and there is not an account in
-            |swAccountsList| that has neither {{IdentityProviderAccount/email}},
-            {{IdentityProviderAccount/name}}, {{IdentityProviderAccount/tel}}, nor
-            {{IdentityProviderAccount/username}} set, return |swAccountsList|.
+    1. Let |swAccountsList| be the result of [=dispatching identity handler=]
+        given |config|, |provider|, "`accounts`", |request|, and {{IdentityProviderAccountList}}.
+    1. If |swAccountsList| is failure, return failure.
+    1. If |swAccountsList| is not null:
+        1. If there is not an account in |swAccountsList| that has neither
+            {{IdentityProviderAccount/email}}, {{IdentityProviderAccount/name}},
+            {{IdentityProviderAccount/tel}}, nor {{IdentityProviderAccount/username}} set,
+            return |swAccountsList|.
     1. Let |accountsList| be null.
     1. [=Fetch request=] with |request| and |globalObject|, and with <var ignore>processResponseConsumeBody</var>
         set to the following steps given a <a spec=fetch for=/>response</a> |response| and |responseBody|:
@@ -1623,13 +1617,9 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
         :  [=request/mode=]
         :: "cors"
 
-    1. Let |swJson| be the result of [=dispatching identity handler=]
-        given |config|, |provider|, "`id-assertion`", and |request|.
-    1. If |swJson| is failure, return failure.
-    1. If |swJson| is not null:
-        1. Let |swToken| be the result of [=converted to an IDL value|converting=] |swJson| to an
-            {{IdentityAssertionResponse}}.
-        1. If the previous step threw an exception, set |swJson| to null.
+    1. Let |swToken| be the result of [=dispatching identity handler=]
+        given |config|, |provider|, "`id-assertion`", |request|, and {{IdentityAssertionResponse}}.
+    1. If |swToken| is failure, return failure.
     1. Let |credential| be null.
     1. Let |processToken| be an algorithm that given an {{IdentityAssertionResponse}} |token|:
         1. If {{IdentityAssertionResponse/error}} was specified, let |errorInit| be the value and:
@@ -1674,7 +1664,7 @@ To <dfn>fetch an identity assertion</dfn> given a {{USVString}}
             |isAutoSelected|.
         1. Set |credential|'s {{IdentityCredential/configURL}} to |provider|'s
             {{IdentityProviderConfig/configURL}}.
-    1. If |swJson| is not null:
+    1. If |swToken| is not null:
         1. Run |processToken| with |swToken|.
     1. Otherwise:
         1. [=Fetch request=] with |request| and |globalObject|, and with
@@ -1934,10 +1924,17 @@ and a |responseBody|, run the following steps. This returns an [=ordered map=].
 
 <div algorithm>
 To <dfn>dispatch identity handler</dfn> given an {{IdentityProviderAPIConfig}} <var ignore>config</var>,
-an {{IdentityProviderConfig}} <var ignore>provider</var>, a [=string=] |endpoint|, and a [=/request=] |request|,
-run the following steps. This returns a JSON object, null, or failure. A null result indicates
-the [=/service worker=] did not handle the request; a failure result indicates the [=/service
-worker=] attempted to handle the request but failed.
+an {{IdentityProviderConfig}} <var ignore>provider</var>, a [=string=] |endpoint|, a [=/request=] |request|,
+and an IDL dictionary type |dictionaryType|,
+run the following steps. This returns an instance of |dictionaryType|, null, or failure. A null
+result indicates the [=/service worker=] did not handle the request; a failure result indicates
+the [=/service worker=] attempted to handle the request but failed.
+
+Note: IDL conversion is performed inside the [=/service worker=]'s <a for="/">event loop</a> task
+queued by [=Fire functional event=] below. The [=/service worker=]'s <a for="global object">realm</a>
+is current at that point, which is what {{IdentityRequestEvent/respondWith()}}'s settled value
+is already converted in. This avoids invoking [=converted to an IDL value=] from the
+calling [=in parallel=] context, which has no associated <a for="global object">realm</a>.
 
     1. Let |registration| be the result of running <a spec=service-workers>Match Service Worker
         Registration</a> given |request|'s [=request/url=] [[!SERVICE-WORKERS]].
@@ -2009,10 +2006,15 @@ worker=] attempted to handle the request but failed.
                 1. Set |result| to failure and return.
             1. [=Fully read=] |response|'s [=response/body=] given <var ignore>processBody</var> set to the following
                 steps given a [=byte sequence=] |responseBody|:
+                1. Assert: these steps are running on the [=/service worker=]'s <a for="/">event loop</a>;
+                    the [=/service worker=]'s <a for="global object">realm</a> is current.
                 1. Let |json| be the result of [=extract the JSON fetch response|extracting the JSON
                     fetch response=] from |response| and |responseBody|.
                 1. If the previous step threw an exception, set |result| to failure and return.
-                1. Set |result| to |json|.
+                1. Let |idlValue| be the result of [=converted to an IDL value|converting=]
+                    |json| to |dictionaryType|.
+                1. If the previous step threw an exception, set |result| to failure and return.
+                1. Set |result| to |idlValue|.
             1. If reading the body fails, set |result| to failure.
     1. Wait for |result| to be set.
     1. Return |result|.
