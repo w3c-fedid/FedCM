@@ -337,22 +337,6 @@ Approaches under consideration:
 
 Whichever approach is chosen, the spec requires the same end-state: the request that hits the wire after SW forwarding is byte-for-byte equivalent to the UA-direct request (optionally with allowlisted augmenting headers added).
 
-### c) Other Areas of Active Discussion
-
-- **Single event vs per-endpoint events.** The current design uses one `identityrequest` event with an `endpoint` field. A reviewer recommended three separate events (`accountsrequest`, `identityassertionrequest`, `disconnectrequest`). The single-event design was chosen because (a) it keeps the SW's `addEventListener` set small, (b) it lets IDPs share common framing logic across endpoints, and (c) it mirrors the precedent of `FetchEvent`. Open to revisit if there is consensus the per-endpoint design is clearer.
-- **RP-correlated SW endpoints.** A reviewer raised a privacy concern that if the SW (or its registration / config) could encode the RP identity, the SW would learn the RP and the cross-site privacy boundary FedCM aims to enforce would collapse. The current proposal does not provide any FedCM-specific mechanism for the IDP to dynamically inject an RP-keyed SW; the SW sees only what the IDP server already sees today (RP `client_id` in `id_assertion` / `disconnect` POST bodies, nothing in `accounts`). Whether any indirect path (e.g., via `client_metadata`) needs additional mitigation is still being analyzed.
-- **Augmenting header allowlist.** The SW needs to be able to attach additional headers when forwarding a FedCM request (the motivating use cases are DPoP, MFA step-up via an additional `Authorization`, and request signing). The current spec text in `index.bs` does not yet define the permitted set. The companion design notes (`Q:\cr\src\docs\local\SW-interception-of-FedCM-request.md` §3.4) propose a block-by-default allowlist with the following initial entries, pending working-group review:
-
-    | Header | Rationale |
-    |---|---|
-    | `DPoP` | Proof-of-possession of a service-worker-held key. Primary motivating use case. [RFC 9449](https://www.rfc-editor.org/rfc/rfc9449). |
-    | `Authorization` | Bearer tokens layered on top of the cookie session (MFA step-up, downstream service tokens). |
-    | `Signature` | HTTP Message Signatures ([RFC 9421](https://www.rfc-editor.org/rfc/rfc9421)). |
-    | `Signature-Input` | RFC 9421 metadata header accompanying `Signature`. |
-    | `Content-Digest` | [RFC 9530](https://www.rfc-editor.org/rfc/rfc9530) integrity digest for request body when used with HTTP Message Signatures. |
-
-    The spec also needs to define an explicit amendment process for adding new headers — file an issue with the header name, use case, applicable endpoints, security analysis, and IDP-side handling guidance; editors and security reviewers vet before the list grows.
-
 ## References
 
 - [FedCM Specification](https://fedidcg.github.io/FedCM/)
