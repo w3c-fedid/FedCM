@@ -1150,11 +1150,39 @@ An extension may use the following instead of the [=create identity credential/s
 
 
 <!-- ============================================================ -->
+### Well-known subdomain discovery ### {#well-known-discovery}
+<!-- ============================================================ -->
+
+As an alternative to hosting the [=well-known file=] at the [=host/registrable domain=],
+an [=IDP=] may host the [=well-known file=] at the fixed subdomain
+`web-identity.<registrable domain>`. The [=IDP=] configures this subdomain (e.g., via
+a DNS CNAME record) to point to its authentication infrastructure.
+
+This requires no special DNS record type support beyond standard A/AAAA/CNAME records,
+making it broadly deployable. However, it requires the [=IDP=] to configure the
+`web-identity.` subdomain and obtain a TLS certificate for it.
+
+The user agent attempts to fetch the [=well-known file=] from the subdomain first. If the
+fetch fails (e.g., the subdomain does not exist or does not serve the file), the user
+agent falls back to fetching the [=well-known file=] from the [=host/registrable domain=].
+
+See [[#deployment-well-known]] for the motivation.
+
+Example: the [=IDP=] sets a DNS CNAME record:
+
+```
+web-identity.idp.example.  CNAME  login.idp.example.
+```
+
+The user agent fetches `https://web-identity.idp.example/.well-known/web-identity`.
+
+<!-- ============================================================ -->
 ### Fetch the config file ### {#fetch-config-file}
 <!-- ============================================================ -->
 
-The <a>fetch the config file</a> algorithm fetches both the [=well-known file=] and the config file from
-the [=IDP=], checks that the config file is mentioned in the [=well-known file=], and returns the config.
+The <a>fetch the config file</a> algorithm fetches the config file from the [=IDP=], verifies
+that the config file is mentioned in the [=well-known file=] (fetched from the `web-identity.`
+subdomain or the [=host/registrable domain=] as a fallback), and returns the config.
 
 <div algorithm="fetch the config file">
 To <dfn>fetch the config file</dfn> given an {{IdentityProviderConfig}} |provider| and
@@ -1166,24 +1194,30 @@ or failure.
     1. Run a [[!CSP]] check with a [[CSP#directive-connect-src|connect-src]] directive on the URL
         passed as |configUrl|. If it fails, return failure.
     1. If |configUrl| is not a [=potentially trustworthy URL=], return failure.
-    1. Let |rootUrl| be a new [=/URL=].
-    1. Set |rootUrl|'s [=url/scheme=] to |configUrl|'s [=url/scheme=].
-    1. Set |rootUrl|'s [=url/host=] to |configUrl|'s [=url/host=]'s [=host/registrable domain=].
-    1. Set |rootUrl|'s [=url/path=] to the <a>list</a> «".well-known", "web-identity"».
+    1. Let |registrableDomain| be |configUrl|'s [=url/host=]'s [=host/registrable domain=].
     1. Let |config|, |wellKnown|, |accounts_url|, and |login_url| be null.
     1. Let |skipWellKnown| be false.
     1. Let |rpOrigin| be |globalObject|'s [=associated Document=]'s [=Document/origin=].
-    1. If |rpOrigin| is not an [=opaque origin=], and |rootUrl|'s [=url/host=] is equal
-        to |rpOrigin|'s [=host/registrable domain=], and |rootUrl|'s [=url/scheme=] is
+    1. If |rpOrigin| is not an [=opaque origin=], and |registrableDomain| is equal
+        to |rpOrigin|'s [=host/registrable domain=], and |configUrl|'s [=url/scheme=] is
         equal to |rpOrigin|'s [=origin/scheme=], set |skipWellKnown| to true.
 
         Note: Because domain cookies are valid across an entire site, there is no privacy
             benefit from doing the well-known check if the RP and IDP are in the same site.
     1. Otherwise:
-        1. Let |wellKnownRequest| be a new [=/request=] as follows:
+        1. Let |subdomainHost| be the [=string/concatenation=] of «"web-identity.", |registrableDomain|».
+        1. Let |subdomainUrl| be a new [=/URL=].
+        1. Set |subdomainUrl|'s [=url/scheme=] to |configUrl|'s [=url/scheme=].
+        1. Set |subdomainUrl|'s [=url/host=] to |subdomainHost|.
+        1. Set |subdomainUrl|'s [=url/path=] to the <a>list</a> «".well-known", "web-identity"».
+        1. Let |rootUrl| be a new [=/URL=].
+        1. Set |rootUrl|'s [=url/scheme=] to |configUrl|'s [=url/scheme=].
+        1. Set |rootUrl|'s [=url/host=] to |registrableDomain|.
+        1. Set |rootUrl|'s [=url/path=] to the <a>list</a> «".well-known", "web-identity"».
+        1. Let |subdomainRequest| be a new [=/request=] as follows:
 
             :  [=request/URL=]
-            :: |rootUrl|
+            :: |subdomainUrl|
             :  [=request/client=]
             :: null
             :  [=request/service-workers mode=]
@@ -1206,18 +1240,62 @@ or failure.
             with [=request/mode=] set to "user-agent-no-cors". See the relevant
             [pull request](https://github.com/whatwg/fetch/pull/1533) for details.
 
-        1. [=Fetch request=] with |wellKnownRequest| and |globalObject|, and with <var ignore>processResponseConsumeBody</var>
+        1. [=Fetch request=] with |subdomainRequest| and |globalObject|, and with <var ignore>processResponseConsumeBody</var>
             set to the following steps, given a <a spec=fetch for=/>response</a> |response| and |responseBody|:
             1. Let |json| be the result of [=extract the JSON fetch response=] from |response| and
                 |responseBody|.
-            1. Set |wellKnown| to the result of [=converted to an IDL value|converting=] |json|
+            1. Let |parsed| be the result of [=converted to an IDL value|converting=] |json|
                 to an {{IdentityProviderWellKnown}}.
             1. If one of the previous two steps threw an exception, or if the
-                [=list/size=] of |wellKnown|["{{IdentityProviderWellKnown/provider_urls}}"] is
-                greater than 1, set |wellKnown| to failure.
+                [=list/size=] of |parsed|["{{IdentityProviderWellKnown/provider_urls}}"] is
+                greater than 1, set |parsed| to failure.
 
                 Issue: [relax](https://github.com/fedidcg/FedCM/issues/333) the size of the
                 provider_urls array.
+            1. If |parsed| is not failure:
+                1. Set |wellKnown| to |parsed|.
+            1. Otherwise:
+                1. Let |rootRequest| be a new [=/request=] as follows:
+
+                    :  [=request/URL=]
+                    :: |rootUrl|
+                    :  [=request/client=]
+                    :: null
+                    :  [=request/service-workers mode=]
+                    :: "none"
+                    :  [=request/destination=]
+                    :: "webidentity"
+                    :  [=request/origin=]
+                    :: a unique [=opaque origin=]
+                    :  [=request/header list=]
+                    :: a [=list=] containing a single [=header=] with [=header/name=] set to `Accept` and
+                        [=header/value=] set to `application/json`
+                    :  [=request/referrer policy=]
+                    :: "no-referrer"
+                    :  [=request/credentials mode=]
+                    :: "omit"
+                    :  [=request/mode=]
+                    :: "no-cors"
+
+                1. [=Fetch request=] with |rootRequest| and |globalObject|, and with
+                    <var ignore>processResponseConsumeBody</var> set to the following steps, given a
+                    <a spec=fetch for=/>response</a> |response| and |responseBody|:
+                    1. Let |json| be the result of [=extract the JSON fetch response=] from
+                        |response| and |responseBody|.
+                    1. Set |wellKnown| to the result of [=converted to an IDL value|converting=]
+                        |json| to an {{IdentityProviderWellKnown}}.
+                    1. If one of the previous two steps threw an exception, or if the
+                        [=list/size=] of |wellKnown|["{{IdentityProviderWellKnown/provider_urls}}"]
+                        is greater than 1, set |wellKnown| to failure.
+
+                        Issue: [relax](https://github.com/fedidcg/FedCM/issues/333) the size of
+                        the provider_urls array.
+
+                    Note: The subdomain well-known fetch failed (e.g., the subdomain does not
+                        exist or does not serve the file), so the user agent falls back to
+                        fetching the [=well-known file=] from the [=host/registrable domain=].
+                        This fallback starts immediately when the subdomain fetch fails,
+                        without waiting for the config fetch to complete.
 
     1. Let |configRequest| be a new <a spec=fetch for=/>request</a> as follows:
 
@@ -1292,11 +1370,13 @@ the [=fetch the config file/check accounts and login url step=]:
 
 NOTE: a two-tier file system is used in order to prevent the [=IDP=] from easily determining the [=RP=]
 that a user is visiting by encoding the information in the config file path. This issue is solved by
-requiring a [=well-known file=] to be on the root of the [=IDP=]. The config file itself can be anywhere, but
-it will not be used if the user agent does not find it in the [=well-known file=]. This allows the [=IDP=]
-to keep their actual config files on an arbitary path while allowing the user agent to prevent config file
-path manipulation to fingerprint (for instance, by including the RP in the path). See
-[[#manifest-fingerprinting]].
+requiring a [=well-known file=] to be hosted at a location controlled by the [=IDP=]'s
+[=host/registrable domain=] — either at the [=host/registrable domain=] itself or at the
+fixed `web-identity.` subdomain (see [[#well-known-discovery]]). The config file itself can be
+anywhere, but it will not be used if the user agent does not find it in the [=well-known file=].
+This allows the [=IDP=] to keep their actual config files on an arbitary path while allowing the
+user agent to prevent config file path manipulation to fingerprint (for instance, by including
+the RP in the path). See [[#manifest-fingerprinting]].
 
 <xmp class="idl">
 dictionary IdentityProviderWellKnown {
@@ -2074,7 +2154,7 @@ network requests performed:
 
 NOTE: The browser uses the [=well-known file=] to prevent [[#manifest-fingerprinting]].
 
-The [=IDP=] exposes a <dfn>well-known file</dfn> in a pre-defined location, specifically at the "web-identity" file at the [=IDPs=]'s path ".well-known".
+The [=IDP=] exposes a <dfn>well-known file</dfn> in a pre-defined location, specifically at the "web-identity" file at the path ".well-known". By default, the user agent first attempts to fetch the [=well-known file=] from the fixed subdomain `web-identity.<registrable domain>` (see [[#well-known-discovery]]). If this fails, the user agent falls back to fetching from the [=IDP=]'s [=host/registrable domain=] (e.g., `idp.example`). This addresses operational challenges where the [=host/registrable domain=] is not operated by the authentication service.
 
 The [=well-known file=] is fetched in the [=fetch the config file=] algorithm:
 
@@ -2083,7 +2163,19 @@ The [=well-known file=] is fetched in the [=fetch the config file=] algorithm:
 (c) **without** revealing the [=RP=] in the <a http-header>Origin</a> or
     [[RFC9110#field.referer|Referer]] headers.
 
-For example:
+For example, the user agent first tries the `web-identity.` subdomain:
+
+<div class=example>
+```http
+GET /.well-known/web-identity HTTP/1.1
+Host: web-identity.idp.example
+Accept: application/json
+Sec-Fetch-Dest: webidentity
+```
+</div>
+
+If this fails (e.g., the subdomain does not exist), the user agent falls back to the
+[=host/registrable domain=]:
 
 <div class=example>
 ```http
@@ -2093,6 +2185,9 @@ Accept: application/json
 Sec-Fetch-Dest: webidentity
 ```
 </div>
+
+The [=IDP=] configures the `web-identity.` subdomain (e.g., via a CNAME record) to point
+to its authentication infrastructure. See [[#deployment-well-known]] for details.
 
 The file is parsed expecting a {{IdentityProviderWellKnown}} JSON object.
 
@@ -3561,6 +3656,52 @@ This design ensures:
     authentication data.
 1. The token format flexibility does not introduce new privacy risks.
 1. [=IDPs=] have flexibility in token design without compromising user privacy.
+
+<!-- ====================================================================== -->
+# Deployment Considerations # {#deployment}
+<!-- ====================================================================== -->
+
+*This section is non-normative.*
+
+<!-- ============================================================ -->
+## Well-Known File and Apex Domain Challenges ## {#deployment-well-known}
+<!-- ============================================================ -->
+
+The FedCM API requires a [=well-known file=] to be hosted at the [=IDP=]'s [=host/registrable
+domain=]. This serves as a critical anti-fingerprinting measure (see [[#manifest-fingerprinting]]).
+However, requiring the [=well-known file=] to be hosted at the [=host/registrable domain=]
+(typically the apex domain) can pose operational challenges for some organizations.
+
+**Apex domain limitations.** Apex domains (e.g., `idp.example` as opposed to `login.idp.example`)
+cannot use DNS CNAME records because they must hold NS and SOA records. This makes it difficult to
+route apex domains to modern cloud services that rely on CNAMEs for load balancing, failover, and
+geographic affinity. Some DNS providers offer workarounds such as ALIAS or ANAME records, but
+these are not universally supported and can degrade certain DNS features.
+
+**Split domain ownership.** It is common for different subdomains of a [=host/registrable domain=]
+to be operated by different teams or services within an organization. For example,
+`login.idp.example` might be operated by an authentication service, while `idp.example` (the apex)
+might be operated by a marketing team or point to an entirely different web application. Requiring
+the [=well-known file=] at the apex creates a runtime dependency between the authentication service
+and whichever service operates the apex domain.
+
+**White-label identity providers.** Organizations that delegate authentication to a white-label
+identity provider (such as Okta or Microsoft Entra B2C) typically CNAME a subdomain like
+`login.idp.example` to the provider's infrastructure. In this setup, the identity provider has no
+control over the apex domain and cannot host a file there on behalf of their customer.
+
+To address these challenges, a fixed subdomain mechanism is specified
+(see [[#well-known-discovery]]). The [=IDP=] hosts the [=well-known file=] at
+`web-identity.<registrable domain>` by configuring a CNAME (or A/AAAA records) for this
+subdomain. The user agent tries the subdomain first and falls back to the apex if the
+subdomain does not serve the file. This mechanism shares these design goals:
+
+- **Preserve the privacy properties** of the [=well-known file=] system, since the subdomain
+    is within the same [=host/registrable domain=].
+- **Avoid adding a runtime dependency** on the apex domain's web server.
+- **Enable delegation** to white-label identity providers.
+- **Require no special DNS record types** — only standard A/AAAA/CNAME records are needed,
+    making it broadly deployable across all DNS registrars.
 
 <!-- ====================================================================== -->
 # Extensibility # {#extensibility}
