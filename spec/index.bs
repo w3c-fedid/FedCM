@@ -1985,6 +1985,8 @@ The <dfn>in parallel steps for getUserInfo</dfn> given a {{Promise}} |promise| a
         and return.
     1. Let |configUrl| be the result of running [=parse url=] with |provider|'s
         {{IdentityProviderConfig/configURL}} and |globalObject|.
+    1. If |configUrl| is failure, [=queue to reject=] |promise| with "{{InvalidStateError}}"
+        and return.
     1. If both of the following are true, [=queue to reject=] |promise| with "{{NetworkError}}"
         and return:
         * There does not exist an account |account| such that [=compute the connection status=] of
@@ -1994,8 +1996,6 @@ The <dfn>in parallel steps for getUserInfo</dfn> given a {{Promise}} |promise| a
             lookups faster.
         * There is no third party cookie access for |configUrl|'s [=url/origin=] on |document|'s
             [=Document/origin=].
-    1. If |configUrl| is failure, [=queue to reject=] |promise| with "{{InvalidStateError}}"
-        and return.
     1. If |document|'s [=Document/origin=] is not [=same origin=] as |configUrl|'s [=url/origin=],
         [=queue to reject=] |promise| with "{{InvalidStateError}}" and return.
     1. Run a [[!CSP]] check with a [[CSP#directive-connect-src|connect-src]] directive on the URL
