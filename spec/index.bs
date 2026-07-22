@@ -961,6 +961,16 @@ the exception immediately.
         1. Return (failure, false).
     1. Let |allAccounts| be an empty [=list=].
     1. Build UI by adding the following for each (|providerOrigin|, |value|) in |providerMap|:
+
+        <div class="note">
+        Note: The visual formulation, placement, and timing of the UI described in these steps (such
+        as a modal dialog, bubble, bottom sheet, or a quiet URL bar indicator) are
+        implementation-defined. The user agent MAY defer presenting the account options until the
+        user interacts with a passive affordance, and MAY suppress or dismiss the UI (returning
+        (failure, false)) at any point based on user preferences, active page state, or cooldown
+        heuristics (such as exponential back-off after prior dismissals).
+        </div>
+
         1. If |value| is "logged-out", the user agent adds one of the following:
             * Nothing: no UI is shown regarding this [=IDP=].
             * Return (failure, false).
@@ -1645,8 +1655,15 @@ and a |globalObject|, run the following steps. This returns a boolean.
 
         Note: Omitted is different from an explicitly present empty list.
     1. Prompt the user to gather explicit intent to create an account. The user agent MAY use the
-        {{IdentityProviderBranding}} to inform the style choices of its UI. Additionally, if the user agent
-        <dfn>supports showing a permission prompt</dfn>:
+        {{IdentityProviderBranding}} to inform the style choices of its UI.
+
+        <div class="note">
+        Note: The user agent MAY combine gathering explicit intent to create an account (and
+        displaying the privacy policy and terms of service) with the account selection UI itself, or
+        present it as a distinct step.
+        </div>
+
+        Additionally, if the user agent <dfn>supports showing a permission prompt</dfn>:
 
         Note: Identity providers should support showing their own permission prompt using
             {{IdentityAssertionResponse/continue_on}} when the `disclosure_shown_for` parameter
