@@ -59,6 +59,13 @@ spec: service-workers; urlPrefix: https://w3c.github.io/ServiceWorker/
         text: register; url: register
         text: unregister; url: unregister
         text: soft update; url: soft-update
+        text: get registration; url: get-registration
+        text: create job; url: create-job
+        text: schedule job; url: schedule-job
+        text: registration map; url: dfn-scope-to-registration-map
+    type: dfn; for: job
+        text: update via cache mode; url: dfn-job-update-via-cache-mode
+        text: referrer; url: job-referrer
 </pre>
 
 <pre class=link-defaults>
@@ -1306,8 +1313,8 @@ or failure.
             |wellKnown|.{{IdentityProviderWellKnown/provider_urls}}[0], and |globalObject|.
         1. If |allowed_config_url| is not [=url/equal=] to |configUrl|, return failure.
     1. If |wellKnown|'s {{IdentityProviderWellKnown/identity_handler}} is present, then
-        [=in parallel=], [=register the identity handler=] given |configUrl|'s [=url/origin=] and
-        |wellKnown|'s {{IdentityProviderWellKnown/identity_handler}}.
+        [=in parallel=], [=register the identity handler=] given |configUrl| and |wellKnown|'s
+        {{IdentityProviderWellKnown/identity_handler}}.
     1. Otherwise, [=in parallel=], [=unregister the identity handler=] given |configUrl|'s
         [=url/origin=].
 
@@ -1316,6 +1323,11 @@ or failure.
         |configUrl| (see [=computing the manifest URL=]), so keying the handler this way guarantees
         its registration scope can cover the endpoints it intercepts, regardless of where the
         [=well-known file=] is hosted.
+
+        Note: These steps are only reached when the [=well-known file=] was fetched successfully, so
+        a network error or an unparsable [=well-known file=] leaves an existing registration
+        unchanged. An [=IDP=] disables interception by serving a [=well-known file=] without an
+        {{IdentityProviderWellKnown/identity_handler}} member, not by making the file unavailable.
     1. Return |config|.
 
 </div>
@@ -1366,10 +1378,10 @@ Each [=/origin=] has an associated <dfn>FedCM identity-handler storage key</dfn>
 [=storage key=] the [=user agent=] constructs for that [=/origin=]'s FedCM identity handler
 [[!STORAGE]]. It MUST be distinct from the [=/origin=]'s first-party [=storage key=], such that:
 
-1. it can only be produced by the [=user agent=]; page script MUST NOT be able to cause a
+1. no Web API surface accepts this [=storage key=] or otherwise allows page script to cause a
     [=service worker registration=] to be stored under it; and
-1. it is derivable from the [=/origin=] alone, so that a later FedCM flow can recompute it to look
-    up or [=unregister=] the [=/service worker=] without any persisted state.
+1. it is derivable from the [=/origin=] alone by the [=user agent=], so that a later FedCM flow can
+    recompute it to look up or [=unregister=] the [=/service worker=] without any persisted state.
 
 Note: This isolation ensures FedCM registrations neither collide with the [=IDP=]'s ordinary
 first-party [=/service workers=] nor are reachable or removable by unrelated code sharing the
@@ -1382,34 +1394,69 @@ worker match path used for client-controlled fetches. Because a credentialed Fed
 controlling client, this ensures the request reaches only a [=/service worker=] the [=user agent=]
 registered for that specific [=IDP=].
 
+The [=user agent=] MUST serialize [=register the identity handler=] and
+[=unregister the identity handler=] per [=/origin=]: at most one of them runs at a time for a given
+[=/origin=], and their effects are observable in the order they were dispatched.
+
+Note: Concurrent FedCM requests for the same [=IDP=] can otherwise observe different
+[=well-known files=] from the HTTP cache and race to opposite conclusions about whether an identity
+handler is declared.
+
 <div algorithm>
-To <dfn>register the identity handler</dfn> given an [=/origin=] |idpOrigin| and an
+To <dfn>register the identity handler</dfn> given a [=/URL=] |configUrl| and an
 {{IdentityHandler}} |handler|, run these steps:
 
     1. Assert: These steps are running [=in parallel=].
+    1. Let |idpOrigin| be |configUrl|'s [=url/origin=].
     1. Let |scriptURL| be the result of running the [=URL parser=] on |handler|'s
-        {{IdentityHandler/service_worker}} with |idpOrigin| as the base URL.
+        {{IdentityHandler/service_worker}} with |configUrl| as the base URL.
     1. If |scriptURL| is failure, return.
     1. If |scriptURL|'s [=url/origin=] is not [=same origin=] with |idpOrigin|, return.
 
-        Note: The declared script MUST be [=same origin=] with the [=config file=]. A
-        cross-origin declaration is ignored and credentialed requests fall back to the network.
-    1. Let |scope| be the [=string=] formed by |scriptURL| with its last path segment removed.
+        Note: A cross-origin declaration is ignored, and credentialed requests fall back to the
+        network. The [=same origin=] requirement is stated normatively on
+        {{IdentityHandler/service_worker}} above.
+    1. Let |scope| be the result of running the [=URL parser=] on "`./`" with |scriptURL| as the
+        base URL.
     1. Let |storageKey| be the [=FedCM identity-handler storage key=] for |idpOrigin|.
-    1. Let |registration| be the result of running <a spec=service-workers>Match Service Worker
-        Registration</a> given |storageKey| and |scope| [[!SERVICE-WORKERS]].
-    1. If |registration| is not null and its [=active worker=]'s script url is |scriptURL|:
+    1. Let |registration| be the result of running [=get registration=] given |storageKey| and
+        |scope| [[!SERVICE-WORKERS]].
+
+        Note: [=Get registration=] matches |scope| exactly. The [=user agent=] derived that
+        [=/scope=] itself, so it does not need the longest-prefix matching that
+        [=match service worker registration=] performs on behalf of a [=/service worker client=].
+    1. If |registration| is not null, |registration|'s [=active worker=] is not null, and
+        |registration|'s [=active worker=]'s [=service worker/script url=] [=url/equals=]
+        |scriptURL|, then:
         1. [=Soft update=] |registration|.
 
-            Note: The currently [=active worker=] handles the request that triggered this
-            invocation while the [=user agent=] checks for a newer version in parallel.
+            Note: The [=user agent=] proceeds with the [=active worker=] that is already
+            registered while it checks for a newer version in parallel, so update discovery never
+            delays a FedCM request.
         1. Return.
-    1. [=Register=] a [=/service worker=] with script URL |scriptURL|, scope |scope|,
-        and [=storage key=] |storageKey|, with its update-via-cache mode set to "`all`", and wait
-        until it has an [=active worker=].
+    1. [=Unregister the identity handler=] given |idpOrigin|.
+
+        Note: This clears a registration left over from an earlier declaration, including one whose
+        script never activated and one whose [=/scope=] no longer matches because the [=IDP=] moved
+        the script. At most one [=service worker registration=] exists under |storageKey|.
+    1. Let |job| be the result of running [=create job=] with *register*, |storageKey|, |scope|,
+        |scriptURL|, null, and null.
+    1. Set |job|'s [=job/update via cache mode=] to "`all`".
 
         Note: Setting update-via-cache to "`all`" lets the [=IDP=] control update discovery through
         the script's `Cache-Control`/`ETag` headers.
+    1. Set |job|'s [=job/referrer=] to |scriptURL|.
+
+        Note: [=Register=] compares |job|'s script URL and [=/scope=] against |job|'s
+        [=job/referrer=]'s [=/origin=], which [=create job=] otherwise derives from a
+        [=/service worker client=]. A FedCM registration has no client, so the [=user agent=] sets
+        the [=job/referrer=] to the declared script URL, which is [=same origin=] with both by
+        construction.
+    1. Invoke [=schedule job=] with |job|.
+
+        Note: The job has no [=/service worker client=] and no promise, so a script that fails to
+        fetch or install is not reported to the [=IDP=]. Credentialed requests fall back to the
+        network until a later FedCM flow retries the registration.
 </div>
 
 <div algorithm>
@@ -1417,7 +1464,16 @@ To <dfn>unregister the identity handler</dfn> given an [=/origin=] |idpOrigin|, 
 
     1. Assert: These steps are running [=in parallel=].
     1. Let |storageKey| be the [=FedCM identity-handler storage key=] for |idpOrigin|.
-    1. [=Unregister=] every [=service worker registration=] whose [=storage key=] is |storageKey|.
+    1. [=list/For each=] (|entryStorageKey|, |entryScope|) of the [=registration map=]'s
+        [=map/keys=]:
+        1. If |entryStorageKey| is not |storageKey|, [=iteration/continue=].
+        1. Let |job| be the result of running [=create job=] with *unregister*, |entryStorageKey|,
+            |entryScope|, null, null, and null.
+        1. Invoke [=schedule job=] with |job|.
+
+    Note: The [=user agent=] iterates the [=registration map=] rather than [=unregister=]ing one
+    known [=/scope=], because the {{IdentityProviderWellKnown/identity_handler}} declaration, and
+    with it the declared [=/scope=], may already be gone by the time these steps run.
 </div>
 
 The [=user agent=] [=unregister the identity handler|unregisters the identity handler=] when the
@@ -1429,9 +1485,10 @@ lifetime bounds how quickly adding or removing the {{IdentityProviderWellKnown/i
 member takes effect. [=IDPs=] are encouraged to serve it with a short `Cache-Control` `max-age` so
 that enabling or disabling the identity handler propagates promptly.
 
-The [=FedCM identity-handler storage key=] is part of the [=IDP=]'s [=/origin=]'s storage: when the
-[=IDP=]'s storage is cleared (for example, via [[CLEAR-SITE-DATA]]), the [=user agent=] MUST also
-remove [=service worker registration|registrations=] stored under it, so no FedCM-specific clearing
+The [=/origin=]'s storage, for the purposes of clearing storage [[!STORAGE]] and of any
+[[CLEAR-SITE-DATA]] operation targeting that [=/origin=], includes any
+[=service worker registration|registrations=] stored under the
+[=FedCM identity-handler storage key=] for that [=/origin=], so no FedCM-specific clearing
 mechanism is required.
 
 <xmp class="idl">
