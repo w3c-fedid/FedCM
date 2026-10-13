@@ -1090,6 +1090,16 @@ When asked to <dfn for="create identity credential">fetch accounts</dfn> given a
           Note: We require downloading the pictures here before we potentially filter the account
               list so that the identity provider cannot determine what hints were provided
               based on which fetches occurred.
+  1. Set |accountsList| to the result of [=filter accounts=] with |accountsList|, |provider|, and
+      |config|.
+  1. Return |accountsList|.
+
+</div>
+
+<div algorithm="filter accounts">
+To <dfn>filter accounts</dfn> given a [=list=] of {{IdentityProviderAccount}}s |accountList|, an
+{{IdentityProviderRequestOptions}} |provider|, and an {{IdentityProviderAPIConfig}} |config|, run
+the following steps. This returns a [=list=] of {{IdentityProviderAccount}}s.
   1. If |provider|'s {{IdentityProviderRequestOptions/loginHint}} is not empty:
       1. For every |account| in |accountList|, if |account|'s
           {{IdentityProviderAccount/login_hints}} does not [=list/contain=] |provider|'s
@@ -1106,7 +1116,7 @@ When asked to <dfn for="create identity credential">fetch accounts</dfn> given a
       1. For every |account| in |accountList|, if |account|'s
           {{IdentityProviderAccount/label_hints}} does not [=list/contain=]
           |config|.{{IdentityProviderAPIConfig/account_label}}, remove |account| from |accountList|.
-  1. Return |accountsList|.
+  1. Return |accountList|.
 
 </div>
 
