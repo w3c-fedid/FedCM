@@ -918,14 +918,12 @@ the exception immediately.
         1. Let |loginStatus| be the result of [=get the login status=] with |providerOrigin|.
         1. If |loginStatus| is [=unknown=], a user agent MAY set it to [=logged-out=].
         1. If |loginStatus| is [=logged-out=]:
-            1. If |mode| is {{IdentityCredentialRequestOptionsMode/active}} and |mediation| is not
-                "{{CredentialMediationRequirement/silent}}":
-                1. Let |result| be the result of running
-                    [=fetch the config file and show an IDP login dialog=] with
-                    |provider| and |globalObject|.
-                1. If |result| is failure, return (failure, true).
-                1. Otherwise, set |loginStatus| to [=logged-in=].
-            1. Otherwise, set |providerMap|[|providerOrigin|] to "logged-out" and [=continue=].
+            1. Let |outcome| be the result of running [=handle a logged-out IDP=] with |provider|,
+                |mode|, |mediation|, and |globalObject|.
+            1. If |outcome| is failure, return (failure, true).
+            1. If |outcome| is "logged-out", set |providerMap|[|providerOrigin|] to "logged-out" and
+                [=continue=].
+            1. Otherwise, set |loginStatus| to [=logged-in=].
         1. Let |requiresUserMediation| be |providerOrigin|'s [=requires user mediation=].
         1. If |requiresUserMediation| is true and |mediation| is
             "{{CredentialMediationRequirement/silent}}", [=continue=].
@@ -1047,6 +1045,21 @@ the exception immediately.
           Note: this wait means the [=user agent=] rejects the call only after the UI has been
               closed by the user.
     1. Return |credential|.
+</div>
+
+<div algorithm="handle a logged-out IDP">
+To <dfn>handle a logged-out IDP</dfn> given an {{IdentityProviderRequestOptions}} |provider|, an
+{{IdentityCredentialRequestOptionsMode}} |mode|, a {{CredentialMediationRequirement}} |mediation|,
+and a |globalObject|, run the following steps. This returns [=logged-in=], "logged-out", or
+failure.
+    1. If |mode| is {{IdentityCredentialRequestOptionsMode/active}} and |mediation| is not
+        "{{CredentialMediationRequirement/silent}}":
+        1. Let |result| be the result of running
+            [=fetch the config file and show an IDP login dialog=] with
+            |provider| and |globalObject|.
+        1. If |result| is failure, return failure.
+        1. Otherwise, return [=logged-in=].
+    1. Otherwise, return "logged-out".
 </div>
 
 <div algorithm="fetch accounts">
