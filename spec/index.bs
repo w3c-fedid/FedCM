@@ -918,14 +918,12 @@ the exception immediately.
         1. Let |loginStatus| be the result of [=get the login status=] with |providerOrigin|.
         1. If |loginStatus| is [=unknown=], a user agent MAY set it to [=logged-out=].
         1. If |loginStatus| is [=logged-out=]:
-            1. If |mode| is {{IdentityCredentialRequestOptionsMode/active}} and |mediation| is not
-                "{{CredentialMediationRequirement/silent}}":
-                1. Let |result| be the result of running
-                    [=fetch the config file and show an IDP login dialog=] with
-                    |provider| and |globalObject|.
-                1. If |result| is failure, return (failure, true).
-                1. Otherwise, set |loginStatus| to [=logged-in=].
-            1. Otherwise, set |providerMap|[|providerOrigin|] to "logged-out" and [=continue=].
+            1. Let |outcome| be the result of running [=handle a logged-out IDP=] with |provider|,
+                |mode|, |mediation|, and |globalObject|.
+            1. If |outcome| is failure, return (failure, true).
+            1. If |outcome| is "logged-out", set |providerMap|[|providerOrigin|] to "logged-out" and
+                [=continue=].
+            1. Otherwise, set |loginStatus| to [=logged-in=].
         1. Let |requiresUserMediation| be |providerOrigin|'s [=requires user mediation=].
         1. If |requiresUserMediation| is true and |mediation| is
             "{{CredentialMediationRequirement/silent}}", [=continue=].
@@ -1049,6 +1047,21 @@ the exception immediately.
     1. Return |credential|.
 </div>
 
+<div algorithm="handle a logged-out IDP">
+To <dfn>handle a logged-out IDP</dfn> given an {{IdentityProviderRequestOptions}} |provider|, an
+{{IdentityCredentialRequestOptionsMode}} |mode|, a {{CredentialMediationRequirement}} |mediation|,
+and a |globalObject|, run the following steps. This returns [=logged-in=], "logged-out", or
+failure.
+    1. If |mode| is {{IdentityCredentialRequestOptionsMode/active}} and |mediation| is not
+        "{{CredentialMediationRequirement/silent}}":
+        1. Let |result| be the result of running
+            [=fetch the config file and show an IDP login dialog=] with
+            |provider| and |globalObject|.
+        1. If |result| is failure, return failure.
+        1. Otherwise, return [=logged-in=].
+    1. Otherwise, return "logged-out".
+</div>
+
 <div algorithm="fetch accounts">
 When asked to <dfn for="create identity credential">fetch accounts</dfn> given an
 {{IdentityProviderAPIConfig}} |config|, an {{IdentityProviderRequestOptions}} |provider|, and a
@@ -1077,6 +1090,16 @@ When asked to <dfn for="create identity credential">fetch accounts</dfn> given a
           Note: We require downloading the pictures here before we potentially filter the account
               list so that the identity provider cannot determine what hints were provided
               based on which fetches occurred.
+  1. Set |accountsList| to the result of [=filter accounts=] with |accountsList|, |provider|, and
+      |config|.
+  1. Return |accountsList|.
+
+</div>
+
+<div algorithm="filter accounts">
+To <dfn>filter accounts</dfn> given a [=list=] of {{IdentityProviderAccount}}s |accountList|, an
+{{IdentityProviderRequestOptions}} |provider|, and an {{IdentityProviderAPIConfig}} |config|, run
+the following steps. This returns a [=list=] of {{IdentityProviderAccount}}s.
   1. If |provider|'s {{IdentityProviderRequestOptions/loginHint}} is not empty:
       1. For every |account| in |accountList|, if |account|'s
           {{IdentityProviderAccount/login_hints}} does not [=list/contain=] |provider|'s
@@ -1093,7 +1116,7 @@ When asked to <dfn for="create identity credential">fetch accounts</dfn> given a
       1. For every |account| in |accountList|, if |account|'s
           {{IdentityProviderAccount/label_hints}} does not [=list/contain=]
           |config|.{{IdentityProviderAPIConfig/account_label}}, remove |account| from |accountList|.
-  1. Return |accountsList|.
+  1. Return |accountList|.
 
 </div>
 
@@ -1197,45 +1220,8 @@ or failure.
 
         Note: Because domain cookies are valid across an entire site, there is no privacy
             benefit from doing the well-known check if the RP and IDP are in the same site.
-    1. Otherwise:
-        1. Let |wellKnownRequest| be a new [=/request=] as follows:
-
-            :  [=request/URL=]
-            :: |rootUrl|
-            :  [=request/client=]
-            :: null
-            :  [=request/service-workers mode=]
-            :: "none"
-            :  [=request/destination=]
-            :: "webidentity"
-            :  [=request/origin=]
-            :: a unique [=opaque origin=]
-            :  [=request/header list=]
-            :: a [=list=] containing a single [=header=] with [=header/name=] set to `Accept` and
-                [=header/value=] set to `application/json`
-            :  [=request/referrer policy=]
-            :: "no-referrer"
-            :  [=request/credentials mode=]
-            :: "omit"
-            :  [=request/mode=]
-            :: "no-cors"
-
-            Issue: The spec is yet to be updated so that all <a spec=fetch for=/>requests</a> are created
-            with [=request/mode=] set to "user-agent-no-cors". See the relevant
-            [pull request](https://github.com/whatwg/fetch/pull/1533) for details.
-
-        1. [=Fetch request=] with |wellKnownRequest| and |globalObject|, and with <var ignore>processResponseConsumeBody</var>
-            set to the following steps, given a <a spec=fetch for=/>response</a> |response| and |responseBody|:
-            1. Let |json| be the result of [=extract the JSON fetch response=] from |response| and
-                |responseBody|.
-            1. Set |wellKnown| to the result of [=converted to an IDL value|converting=] |json|
-                to an {{IdentityProviderWellKnown}}.
-            1. If one of the previous two steps threw an exception, or if the
-                [=list/size=] of |wellKnown|["{{IdentityProviderWellKnown/provider_urls}}"] is
-                greater than 1, set |wellKnown| to failure.
-
-                Issue: [relax](https://github.com/fedidcg/FedCM/issues/333) the size of the
-                provider_urls array.
+    1. Otherwise, [=in parallel=], set |wellKnown| to the result of running
+        [=fetch the well-known file=] with |rootUrl| and |globalObject|.
 
     1. Let |configRequest| be a new <a spec=fetch for=/>request</a> as follows:
 
@@ -1315,6 +1301,54 @@ it will not be used if the user agent does not find it in the [=well-known file=
 to keep their actual config files on an arbitary path while allowing the user agent to prevent config file
 path manipulation to fingerprint (for instance, by including the RP in the path). See
 [[#manifest-fingerprinting]].
+
+<div algorithm="fetch the well-known file">
+To <dfn>fetch the well-known file</dfn> given a [=/URL=] |rootUrl| and |globalObject|, run the
+following steps. This returns an {{IdentityProviderWellKnown}} or failure.
+    1. Let |wellKnown| be null.
+    1. Let |wellKnownRequest| be a new [=/request=] as follows:
+
+        :  [=request/URL=]
+        :: |rootUrl|
+        :  [=request/client=]
+        :: null
+        :  [=request/service-workers mode=]
+        :: "none"
+        :  [=request/destination=]
+        :: "webidentity"
+        :  [=request/origin=]
+        :: a unique [=opaque origin=]
+        :  [=request/header list=]
+        :: a [=list=] containing a single [=header=] with [=header/name=] set to `Accept` and
+            [=header/value=] set to `application/json`
+        :  [=request/referrer policy=]
+        :: "no-referrer"
+        :  [=request/credentials mode=]
+        :: "omit"
+        :  [=request/mode=]
+        :: "no-cors"
+
+        Issue: The spec is yet to be updated so that all <a spec=fetch for=/>requests</a> are created
+        with [=request/mode=] set to "user-agent-no-cors". See the relevant
+        [pull request](https://github.com/whatwg/fetch/pull/1533) for details.
+
+    1. [=Fetch request=] with |wellKnownRequest| and |globalObject|, and with <var ignore>processResponseConsumeBody</var>
+        set to the following steps, given a <a spec=fetch for=/>response</a> |response| and |responseBody|:
+        1. Let |json| be the result of [=extract the JSON fetch response=] from |response| and
+            |responseBody|.
+        1. Set |wellKnown| to the result of [=converted to an IDL value|converting=] |json|
+            to an {{IdentityProviderWellKnown}}.
+        1. If one of the previous two steps threw an exception, or if the
+            [=list/size=] of |wellKnown|["{{IdentityProviderWellKnown/provider_urls}}"] is
+            greater than 1, set |wellKnown| to failure.
+
+            Issue: [relax](https://github.com/fedidcg/FedCM/issues/333) the size of the
+            provider_urls array.
+
+    1. Wait for |wellKnown| to be set.
+    1. Return |wellKnown|.
+
+</div>
 
 <xmp class="idl">
 dictionary IdentityProviderWellKnown {
@@ -1405,9 +1439,7 @@ returns an {{IdentityProviderAccountList}}.
         1. [=converted to an IDL value|Convert=] |json| to an {{IdentityProviderAccountList}}, and
             store the result in |accountsList|.
         1. If one of the previous two steps threw an exception, or if there is an account in
-            |accountsList| that has neither {{IdentityProviderAccount/email}}, {{IdentityProviderAccount/name}},
-            {{IdentityProviderAccount/tel}}, nor {{IdentityProviderAccount/username}} set, set |accountsList|
-            to failure.
+            |accountsList| that is not [=displayable=], set |accountsList| to failure.
 
         Note: If the user agent only has space to display two attributes in its account choosers,
             it SHOULD display the first two that are set, in the order `name`, `username`,
@@ -1438,6 +1470,10 @@ dictionary IdentityProviderAccountList {
   sequence<IdentityProviderAccount> accounts;
 };
 </xmp>
+
+An {{IdentityProviderAccount}} |account| is <dfn>displayable</dfn> if at least one of |account|'s
+{{IdentityProviderAccount/email}}, {{IdentityProviderAccount/name}},
+{{IdentityProviderAccount/tel}}, or {{IdentityProviderAccount/username}} is set.
 
 <div algorithm>
 To <dfn>fetch the account picture</dfn> given an {{IdentityProviderAccount}} |account| and a
