@@ -1733,6 +1733,10 @@ and a |globalObject|, run the following steps. This returns a boolean.
                 :: The user's profile picture as given in {{IdentityProviderAccount}}.{{IdentityProviderAccount/picture}}.
 
                 Any other string is ignored for forwards compatibility.
+            1. If |metadata| is not failure and |metadata|["{{IdentityProviderClientMetadata/icons}}"]
+                is defined, the user agent MAY use |metadata|["{{IdentityProviderClientMetadata/icons}}"]
+                to display an [=RP=] icon over a browser-chosen icon (e.g., a favicon) in the
+                verification screen.
             1. The user agent MAY use the
                 {{IdentityCredentialRequestOptions/context}} and |provider|'s
                 {{IdentityCredentialRequestOptions/mode}} to customize the dialog shown.
@@ -1801,6 +1805,7 @@ an {{IdentityProviderRequestOptions}} |provider|, run the following steps. This 
 dictionary IdentityProviderClientMetadata {
   USVString privacy_policy_url;
   USVString terms_of_service_url;
+  sequence<IdentityProviderIcon> icons;
   boolean client_is_third_party_to_top_frame_origin = false;
 };
 </xmp>
@@ -2444,6 +2449,8 @@ The {{IdentityProviderClientMetadata}} object's members have the following seman
     ::  A link to the [=RP=]'s Privacy Policy.
     :   <dfn>terms_of_service_url</dfn>
     ::  A link to the [=RP=]'s Terms of Service.
+    :   <dfn>icons</dfn>
+    ::  An optional list of {{IdentityProviderIcon}} objects for the [=RP=], which will be used to display over a browser-chosen icon (e.g., a favicon) in the verification screen.
 </dl>
 
 For example:
@@ -2452,7 +2459,11 @@ For example:
 ```json
 {
   "privacy_policy_url": "https://rp.example/clientmetadata/privacy_policy.html",
-  "terms_of_service_url": "https://rp.example/clientmetadata/terms_of_service.html"
+  "terms_of_service_url": "https://rp.example/clientmetadata/terms_of_service.html",
+  "icons": [{
+    "url": "https://rp.example/icon.ico",
+    "size": 40
+  }]
 }
 ```
 </div>
