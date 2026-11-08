@@ -526,29 +526,29 @@ When asked to <dfn>attempt to disconnect</dfn> given an {{IdentityCredentialDisc
     1. Let |configUrl| be the result of running [=parse url=] with |options|'s
         {{IdentityProviderConfig/configURL}} and |globalObject|.
     1. If |configUrl| is failure, [=reject=] |promise| with an "{{InvalidStateError}}"
-        {{DOMException}}.
+        {{DOMException}} and return.
     1. Run a [[!CSP]] check with a [[CSP#directive-connect-src|connect-src]] directive on the URL
         passed as |configUrl|. If it fails, [=reject=] |promise| with a "{{NetworkError}}"
-        {{DOMException}}.
+        {{DOMException}} and return.
     1. If there is another pending {{IdentityCredential/disconnect}} call for this |globalObject|
         (e.g., it has not yet thrown an exception or its associated {{Promise}} has not yet been
-        resolved), [=reject=] |promise| with a "{{NetworkError}}" {{DOMException}}.
+        resolved), [=reject=] |promise| with a "{{NetworkError}}" {{DOMException}} and return.
     1. If |configUrl| is not a [=potentially trustworthy origin=], [=reject=] |promise| with a
-        "{{NetworkError}}" {{DOMException}}.
+        "{{NetworkError}}" {{DOMException}} and return.
     1. If the user has disabled the FedCM API on the |globalObject|, [=reject=] |promise| with a
-        "{{NetworkError}}" {{DOMException}}.
+        "{{NetworkError}}" {{DOMException}} and return.
     1. If [=connected accounts set=] does not [=list/contain=] the result of
         [=compute the connected account key=] given |options|,
         |options|.{{IdentityCredentialDisconnectOptions/accountHint}}, and |globalObject|, then [=reject=] |promise| with a "{{NetworkError}}"
-        {{DOMException}}. This check can be performed by iterating over the
+        {{DOMException}} and return. This check can be performed by iterating over the
         [=connected accounts set=] or by keeping a separate data structure to make this lookup fast.
     1. Let |config| be the result of running [=fetch the config file=] with |options| and
         |globalObject|.
-    1. If |config| is failure, [=reject=] |promise| with a "{{NetworkError}}" {{DOMException}}.
+    1. If |config| is failure, [=reject=] |promise| with a "{{NetworkError}}" {{DOMException}} and return.
     1. Let |disconnectUrl| be the result of [=computing the manifest URL=] given |options|,
         |config|.{{IdentityProviderAPIConfig/disconnect_endpoint}}, and |globalObject|.
     1. If |disconnectUrl| is failure, [=reject=] |promise| with a "{{NetworkError}}"
-        {{DOMException}}.
+        {{DOMException}} and return.
     1. [=Send a disconnect request=] with |disconnectUrl|, |options|, and |globalObject|, and let
         |result| be the result.
     1. Let |idpOrigin| be the [=url/origin=] corresponding to |configUrl|.
