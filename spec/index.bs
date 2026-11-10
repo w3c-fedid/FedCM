@@ -978,7 +978,7 @@ the exception immediately.
                 1. If |result| is failure, return (failure, true).
         1. Otherwise, if |value| is "mismatch", add contents indicating this |providerOrigin|
             to the user. The contents SHOULD provide an affordance for the user to trigger
-            the [=show an IDP login dialog=] algorithm with the relevant |config| and |provider|;
+            the [=show an IDP login dialog=] algorithm with the relevant |config|, |provider|, and |globalObject|;
             this dialog is the <dfn>confirm IDP login dialog</dfn>.
 
             Note: This situation happens when the browser expects the user
@@ -1003,8 +1003,9 @@ the exception immediately.
         1. Otherwise, |value| is a [=list=] of accounts. [=list/Extend=] |allAccounts| with |value|.
         1. If |options|.{{IdentityCredentialRequestOptions/mode}} is `"active"` and the provider's
             |config|.{{IdentityProviderAPIConfig/supports_use_other_account}} is true, add an
-            affordance to trigger [=show an IDP login dialog=] to let the user sign in to another
-            account. If that affordance is triggered:
+            affordance to trigger [=show an IDP login dialog=] with the relevant |config|,
+            |provider|, and |globalObject| to let the user sign in to another account.
+            If that affordance is triggered:
                 1. Let |result| be the result of that algorithm.
                 1. If |result| is failure, [=show accounts=].
                 1. Otherwise:
@@ -1876,13 +1877,9 @@ To <dfn>show an IDP login dialog</dfn> given an {{IdentityProviderAPIConfig}} |c
 {{IdentityProviderConfig}} |provider|, and a |globalObject|, run the following steps. This returns
 success or failure.
     1. Assert: these steps are running [=in parallel=].
-    1. Let |loginUrl| be null.
-    1. [=Queue a global task=] on the [=DOM manipulation task source=] given |globalObject| to set
-        |loginUrl| to the result of running [=url parser=] with
-        |config|.{{IdentityProviderAPIConfig/login_url}}.
-    1. Wait until |loginUrl| is not null.
-    1. Assert: |loginUrl| is not failure (the [=user agent=] has previously checked that
-        |config|.{{IdentityProviderAPIConfig/login_url}} is a valid URL).
+    1. Let |loginUrl| be the result of [=computing the manifest URL=] given |provider|,
+        |config|.{{IdentityProviderAPIConfig/login_url}}, and |globalObject|.
+    1. Assert: |loginUrl| is not failure (the [=user agent=] has previously checked this URL).
     1. Let |queryList| be a new [=list=].
     1. If |provider|'s {{IdentityProviderRequestOptions/loginHint}} is not empty, [=list/append=]
         ("login_hint", {{IdentityProviderRequestOptions/loginHint}}) to |queryList|.
@@ -1902,7 +1899,7 @@ success or failure.
             context of this new traversable:
             1. Close the traversable.
             1. Let |loginStatus| be the result of [=get the login status=]
-                with the [=/origin=] of the {{IdentityProviderAPIConfig/login_url}}.
+                with |loginUrl|'s [=url/origin=].
 
                 Note: The IDP login flow may set this value to logged-in using
                     either the [JavaScript](login-status.html#login-status-javascript) or
@@ -1947,7 +1944,7 @@ steps. This returns success or failure.
     1. Let |config| be the result of running [=fetch the config file=]
               with |provider| and |globalObject|.
     1. If |config| is failure, return failure.
-    1. [=Show an IDP login dialog=] with |config| and |provider|.
+    1. [=Show an IDP login dialog=] with |config|, |provider|, and |globalObject|.
     1. If that algorithm succeeds, return success.
     1. Otherwise, return failure.
 </div>
