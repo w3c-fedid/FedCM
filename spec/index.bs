@@ -906,7 +906,10 @@ the exception immediately.
         Note: The fetches performed in these steps to populate |providerMap| can be performed at the
             same time, e.g., the second [=IDP=]'s fetches can be started before the first ones finish,
             since these are indepedent.
-        1. Let |providerOrigin| be the [=/origin=] of |provider|'s {{IdentityProviderConfig/configURL}}.
+        1. Let |configUrl| be the result of running [=parse url=] with |provider|'s
+            {{IdentityProviderConfig/configURL}} and |globalObject|.
+        1. If |configUrl| is failure, [=continue=].
+        1. Let |providerOrigin| be |configUrl|'s [=url/origin=].
         1. If |providerMap| [=map/contains=] |providerOrigin|, return (failure, true).
         1. If |mediation| is "{{CredentialMediationRequirement/silent}}" and there does not exist an
             account |account| such that [=connected accounts set=] [=list/contains=] the result of
@@ -930,8 +933,8 @@ the exception immediately.
         1. Let |config| be the result of running [=fetch the config file=] with
             |provider| and |globalObject|.
         1. If |config| is failure, [=continue=].
-        1. [=Fetch accounts=] given |config|, |provider|, and |globalObject|, and let |accountsList|
-            be the result.
+        1. [=Fetch accounts=] given |config|, |provider|, |providerOrigin|, and
+            |globalObject|, and let |accountsList| be the result.
         1. If |accountsList| is empty:
             1. If |loginStatus| is [=logged-in=] and |mediation| is not
                 {{CredentialMediationRequirement/silent}}, set |providerMap|[|providerOrigin|] to
@@ -995,8 +998,8 @@ the exception immediately.
                 1. If |result| is failure, return (failure, true). The user
                     agent MAY show a dialog to the user before or after
                     returning failure indicating this failure.
-                1. Otherwise, [=fetch accounts=] with the relevant |config|, |provider|, and
-                    |globalObject|, and let |accountsList| be the result.
+                1. Otherwise, [=fetch accounts=] with the relevant |config|, |provider|,
+                    |providerOrigin|, and |globalObject|, and let |accountsList| be the result.
                 1. If |accountsList| is empty, show the [=confirm IDP login dialog=] again.
                 1. Otherwise, [=list/Extend=] |allAccounts| with |accountsList| and
                     [=show accounts=].
@@ -1008,8 +1011,8 @@ the exception immediately.
                 1. Let |result| be the result of that algorithm.
                 1. If |result| is failure, [=show accounts=].
                 1. Otherwise:
-                    1. [=Fetch accounts=] given |config|, |provider|, and |globalObject|, and let
-                        |accountsList| be the result.
+                    1. [=Fetch accounts=] given |config|, |provider|, |providerOrigin|, and
+                        |globalObject|, and let |accountsList| be the result.
                     1. If |accountsList| is empty, show the [=confirm IDP login dialog=].
                     1. Otherwise, [=list/extend=] |allAccounts| with |accountsList| and
                         [=show accounts=].
@@ -1064,8 +1067,9 @@ failure.
 
 <div algorithm="fetch accounts">
 When asked to <dfn for="create identity credential">fetch accounts</dfn> given an
-{{IdentityProviderAPIConfig}} |config|, an {{IdentityProviderRequestOptions}} |provider|, and a
-|globalObject|, run the following steps. This returns a possibly empty list of accounts.
+{{IdentityProviderAPIConfig}} |config|, an {{IdentityProviderRequestOptions}} |provider|, an
+[=/origin=] |providerOrigin|, and a |globalObject|, run the following steps. This returns
+a possibly empty list of accounts.
   1. Let |accountsList| be the result of [=fetch the accounts=] with |config|, |provider|, and
       |globalObject|.
   1. If |accountsList| is failure, or the size of |accountsList| is 0:
@@ -1163,8 +1167,12 @@ An extension may use the following instead of the [=create identity credential/s
                 an affordance to use another account. If that affordance is triggered:
                 1. [=Show an IDP login dialog=] with |config|, |provider| and |globalObject|.
                 1. If that returned success:
-                    1. [=Fetch accounts=] given |config|, |provider|, and |globalObject|, and let
-                        |accountsList| be the result.
+                    1. Let |configUrl| be the result of running [=parse url=] with |provider|'s
+                        {{IdentityProviderConfig/configURL}} and |globalObject|.
+                    1. Assert: |configUrl| is not failure.
+                    1. Let |providerOrigin| be |configUrl|'s [=url/origin=].
+                    1. [=Fetch accounts=] given |config|, |provider|, |providerOrigin|, and
+                        |globalObject|, and let |accountsList| be the result.
                     1. If |accountsList| is empty, show the [=confirm IDP login dialog=].
                     1. Otherwise, [=list/extend=] |allAccounts| with |accountsList| and
                         [=show accounts=] again.
