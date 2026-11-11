@@ -878,7 +878,8 @@ To <dfn>create an IdentityCredential</dfn> given a [=sequence=] of
 {{IdentityCredentialError}}, or a pair (failure, bool), where the bool indicates whether to throw
 the exception immediately.
     1. Assert: These steps are running [=in parallel=].
-    1. Let |mode| be |options|'s {{IdentityCredentialRequestOptions/mode}}.
+    1. Let |mode| be |options|'s {{CredentialRequestOptions/identity}}'s
+        {{IdentityCredentialRequestOptions/mode}}.
     1. If |mode| is {{IdentityCredentialRequestOptionsMode/active}}:
         1. If |providerList|'s [=list/size=] is not equal to 1, return (failure, true).
         1. Assert: |globalObject| is a {{Window}}.
@@ -1001,7 +1002,7 @@ the exception immediately.
                 1. Otherwise, [=list/Extend=] |allAccounts| with |accountsList| and
                     [=show accounts=].
         1. Otherwise, |value| is a [=list=] of accounts. [=list/Extend=] |allAccounts| with |value|.
-        1. If |options|.{{IdentityCredentialRequestOptions/mode}} is `"active"` and the provider's
+        1. If |mode| is {{IdentityCredentialRequestOptionsMode/active}} and the provider's
             |config|.{{IdentityProviderAPIConfig/supports_use_other_account}} is true, add an
             affordance to trigger [=show an IDP login dialog=] to let the user sign in to another
             account. If that affordance is triggered:
@@ -1140,7 +1141,7 @@ An extension may use the following instead of the [=create identity credential/s
         Document=]'s [=Document/origin=] to the user.
     1. If |allAccounts| is not [=list/empty=], also add UI to present the account options to the user as follows:
         1. Let |supportsUseOtherAccount| be `false`.
-        1. If |options|.{{IdentityCredentialRequestOptions/mode}} is `"active"`:
+        1. If |mode| is {{IdentityCredentialRequestOptionsMode/active}}:
             1. Assert that there is only one |provider|.
             1. Set |supportsUseOtherAccount| to the value of that provider's |config|.{{IdentityProviderAPIConfig/supports_use_other_account}}.
         1. If |allAccounts|'s size is 1, |supportsUseOtherAccount| is `false`, and
@@ -1149,9 +1150,9 @@ An extension may use the following instead of the [=create identity credential/s
             1. If [=compute the connection status=] of |selectedAccount|, the relevant |provider|,
                 and |globalObject| returns [=compute the connection status/connected=], show a
                 dialog to request user permission to sign in via |selectedAccount|, and set the
-                result in |permission|. The user agent MAY use |options|'s
-                {{IdentityCredentialRequestOptions/context}} and |options|'s
-                {{IdentityCredentialRequestOptions/mode}} to customize the dialog.
+                result in |permission|. The user agent MAY use <var ignore="">options</var>'s
+                {{CredentialRequestOptions/identity}}'s {{IdentityCredentialRequestOptions/context}}
+                and |mode| to customize the dialog.
             1. Otherwise, set |permission| to the result of running [=request permission to sign-up=]
                 algorithm with |selectedAccount|, the relevant |config|, the relevant |provider|,
                 and |globalObject|. Also set |permissionRequested| to true if the user agent
