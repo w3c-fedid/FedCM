@@ -2025,14 +2025,16 @@ if (userInfo.length > 0) {
 When invoking the {{IdentityProvider/getUserInfo()}} method given an {{IdentityProviderConfig}}
 |provider|, perform the following steps:
 
-    1. Let |promise| be a [=new=] {{Promise}} in the [=current global object=]'s [=relevant realm=].
-    1. [=In parallel=], run the [=in parallel steps for getUserInfo=] with |promise| and |provider|.
+    1. Let |globalObject| be the [=current global object=].
+    1. Let |promise| be a [=new=] {{Promise}} in |globalObject|'s [=relevant realm=].
+    1. [=In parallel=], run the [=in parallel steps for getUserInfo=] with |promise|,
+        |provider|, and |globalObject|.
     1. Return |promise|.
 </div>
 
 <div algorithm="in parallel steps for getUserInfo">
-The <dfn>in parallel steps for getUserInfo</dfn> given a {{Promise}} |promise| and an
-    {{IdentityProviderConfig}} |provider| are:
+The <dfn>in parallel steps for getUserInfo</dfn> given a {{Promise}} |promise|, an
+    {{IdentityProviderConfig}} |provider|, and a |globalObject| are:
     1. Let |document| be |globalObject|'s [=associated Document=].
     1. If |document| is not [=allowed to use=] the [=identity-credentials-get=]
         [=policy-controlled feature=], [=queue to reject=] |promise| with "{{NotAllowedError}}"
