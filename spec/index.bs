@@ -1282,6 +1282,10 @@ or failure.
         1. Let |allowed_config_url| be the result of [=computing the manifest URL=] with |provider|,
             |wellKnown|.{{IdentityProviderWellKnown/provider_urls}}[0], and |globalObject|.
         1. If |allowed_config_url| is not [=url/equal=] to |configUrl|, return failure.
+    1. If |config|["{{IdentityProviderAPIConfig/branding}}"] is not present and
+        |wellKnown|["{{IdentityProviderWellKnown/branding}}"] is present:
+        1. Set |config|["{{IdentityProviderAPIConfig/branding}}"] to
+            |wellKnown|["{{IdentityProviderWellKnown/branding}}"].
     1. Return |config|.
 
 </div>
@@ -1355,6 +1359,7 @@ dictionary IdentityProviderWellKnown {
   sequence<USVString> provider_urls;
   USVString accounts_endpoint;
   USVString login_url;
+  IdentityProviderBranding branding;
 };
 
 dictionary IdentityProviderIcon {
@@ -2170,6 +2175,8 @@ The {{IdentityProviderWellKnown}} JSON object has the following semantics:
     ::  A URL that points to the same location as the {{IdentityProviderAPIConfig/accounts_endpoint}} in [[#idp-api-config-file]]s.
     :   <dfn>login_url</dfn>
     ::  A URL that points to the same location as the {{IdentityProviderAPIConfig/login_url}} in [[#idp-api-config-file]]s.
+    :   <dfn>branding</dfn>
+    ::  A set of {{IdentityProviderBranding}} options.
 </dl>
 
 Either {{IdentityProviderWellKnown/provider_urls}} or both
@@ -2177,6 +2184,27 @@ Either {{IdentityProviderWellKnown/provider_urls}} or both
 required. If the [=config file=] contains the {{IdentityProviderAPIConfig/client_metadata_endpoint}},
 then both {{IdentityProviderWellKnown/accounts_endpoint}} and {{IdentityProviderWellKnown/login_url}}
 are required.
+
+The {{IdentityProviderWellKnown/branding}} member allows the [=user agent=] to access the [=IDP=]'s branding preferences without fetching the [=config file=].
+
+For example:
+
+<div class=example>
+```json
+{
+  "provider_urls": ["https://idp.example/config.json"],
+  "branding": {
+    "background_color": "green",
+    "color": "#FFEEAA",
+    "icons": [{
+      "url": "https://idp.example/icon.ico",
+      "size": 25
+    }],
+    "name": "IDP Example"
+  }
+}
+```
+</div>
 
 <!-- ============================================================ -->
 ## The config file ## {#idp-api-config-file}
